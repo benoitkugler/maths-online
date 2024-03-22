@@ -21,7 +21,8 @@ const (
 type Domain uint8
 
 const (
-	CalculMental   Domain = iota // Calcul mental
+	CalculMentalI  Domain = iota // Calcul mental I
+	CalculMentalII               // Calcul mental II
 	Puissances                   // Puissances et racines
 	Fractions                    // Fractions
 	Reduction                    // Réduction

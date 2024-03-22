@@ -140,27 +140,59 @@ type ListExercicesOut struct {
 }
 
 func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercicesOut, err error) {
-	groups, err := ed.SelectAllExercicegroups(ct.db)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	groups.RestrictVisible(userID)
-
 	query.normalize()
 
-	// restrict the groups to matching title and origin
-	matcher, err := newQuery(query.TitleQuery)
-	if err != nil {
-		return out, err
-	}
-	for _, group := range groups {
-		vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+	var groups ed.Exercicegroups
+	if isQueryTODO(query.TitleQuery) {
+		questions, err := ed.SelectAllQuestions(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		fromQuestions := ed.IdExerciceSet{}
+		for _, question := range questions {
+			if !question.NeedExercice.Valid {
+				continue // ignore standalone questions
+			}
+			if question.Parameters.HasTODO() {
+				fromQuestions.Add(question.NeedExercice.ID)
+			}
+		}
 
-		keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
-		if !keep {
-			delete(groups, group.Id)
+		exercices, err := ed.SelectAllExercices(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		idGroups := ed.IdExercicegroupSet{}
+		for _, exercice := range exercices {
+			if fromQuestions.Has(exercice.Id) || exercice.Parameters.HasTODO() {
+				idGroups.Add(exercice.IdGroup)
+			}
+		}
+		groups, err = ed.SelectExercicegroups(ct.db, idGroups.Keys()...)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+	} else {
+		groups, err = ed.SelectAllExercicegroups(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		// restrict the groups to matching title and origin
+		matcher, err := newQuery(query.TitleQuery)
+		if err != nil {
+			return out, err
+		}
+		for _, group := range groups {
+			vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+			keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+			if !keep {
+				delete(groups, group.Id)
+			}
 		}
 	}
+
+	groups.RestrictVisible(userID)
 
 	// load the tags ...
 	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, groups.IDs()...)
@@ -810,7 +842,11 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 		return ExerciceExt{}, utils.SQLError(err)
 	}
 
-	question, err := ed.Question{NeedExercice: args.IdExercice.AsOptional()}.Insert(tx)
+	question, err := ed.Question{
+		// as a convenience, start with an empty text block
+		Enonce:       questions.Enonce{questions.TextBlock{}},
+		NeedExercice: args.IdExercice.AsOptional(),
+	}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExerciceExt{}, utils.SQLError(err)

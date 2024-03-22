@@ -2,9 +2,11 @@ package expression
 
 import (
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
-func TestPythagorianTriplet_mergeTo(t *testing.T) {
+func TestPythagorianTriplet_instantiateTo(t *testing.T) {
 	tests := []struct {
 		Bound int
 	}{
@@ -12,11 +14,11 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 		{40},
 	}
 	for _, tt := range tests {
-		pt := PythagorianTriplet{
-			A: NewVar('a'), B: NewVar('b'), C: NewVar('c'),
-			Bound: tt.Bound,
+		pt := pythagorianTriplet{
+			a: NewVar('a'), b: NewVar('b'), c: NewVar('c'),
+			bound: tt.Bound,
 		}
-		out := buildParams(pt)
+		out := RandomParameters{specials: []intrinsic{pt}}
 
 		for range [100]int{} {
 			vr, err := out.Instantiate()
@@ -40,71 +42,8 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 	}
 }
 
-func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
-	tests := []struct {
-		RootsStart int
-		RootsEnd   int
-	}{
-		{-3, 3},
-	}
-	for _, tt := range tests {
-		qp := PolynomialCoeffs{
-			B:          NewVar('b'),
-			C:          NewVar('c'),
-			D:          NewVar('d'),
-			X1:         NewVar('u'),
-			X2:         NewVar('v'),
-			X3:         NewVar('w'),
-			RootsStart: tt.RootsStart,
-			RootsEnd:   tt.RootsEnd,
-		}
-		out := buildParams(qp)
-
-		for range [10]int{} {
-			vs, err := out.Instantiate()
-			if err != nil {
-				t.Fatal(err)
-			}
-			expr := mustParse(t, "4*((3/4)X^4 + bX^3 + cX^2 + dX)")
-			expr.Substitute(vs)
-
-			if v := expr.mustEvaluate(Vars{NewVar('X'): NewNb(0)}); v != 0 {
-				t.Fatal(v)
-			}
-
-			x1, x2, x3 := vs[NewVar('u')].mustEvaluate(nil), vs[NewVar('v')].mustEvaluate(nil), vs[NewVar('w')].mustEvaluate(nil)
-
-			derivative := mustParse(t, "3X^3 + 3bX^2 + 2cX + d")
-			derivative.Substitute(vs)
-
-			if v := derivative.mustEvaluate(Vars{NewVar('X'): NewNb(x1)}); v != 0 {
-				t.Fatalf("expected df(%v) = 0, got %v", x1, v)
-			}
-			if v := derivative.mustEvaluate(Vars{NewVar('X'): NewNb(x2)}); v != 0 {
-				t.Fatalf("expected df(%v) = 0, got %v", x2, v)
-			}
-			if v := derivative.mustEvaluate(Vars{NewVar('X'): NewNb(x3)}); v != 0 {
-				t.Fatalf("expected df(%v) = 0, got %v", x3, v)
-			}
-
-			// fmt.Println(expr.mustEvaluate(Variables{NewVariable('X'): x1}))
-			// fmt.Println(expr.mustEvaluate(Variables{NewVariable('X'): x2}))
-			// fmt.Println(expr.mustEvaluate(Variables{NewVariable('X'): x3}))
-
-			width := qp.RootsEnd - qp.RootsStart
-			minDist := float64(2*width)/9 - 1 // -1 to account for rouding error
-			if x1 > x2 || x2 > x3 {
-				t.Fatal(x1, x2, x3)
-			}
-			if x2-x1 < minDist || x3-x2 < minDist {
-				t.Fatal(width, minDist, x1, x2, x3)
-			}
-		}
-	}
-}
-
-func TestOrthogonalProjection_MergeTo(t *testing.T) {
-	op := OrthogonalProjection{
+func TestOrthogonalProjection_mergeTo(t *testing.T) {
+	op := orthogonalProjection{
 		Ax: Variable{Name: 'x', Indice: "A"},
 		Ay: Variable{Name: 'y', Indice: "A"},
 		Bx: Variable{Name: 'x', Indice: "B"},
@@ -119,30 +58,54 @@ func TestOrthogonalProjection_MergeTo(t *testing.T) {
 		expectedX, expectedY float64
 	}{
 		{
-			RandomParameters{
+			RandomParameters{defs: map[Variable]*Expr{
 				op.Ax: NewNb(0), op.Ay: NewNb(2),
 				op.Bx: NewNb(-1), op.By: NewNb(0),
 				op.Cx: NewNb(4), op.Cy: NewNb(0),
-			},
+			}},
 			0, 0,
 		},
 		{
-			RandomParameters{
+			RandomParameters{defs: map[Variable]*Expr{
 				op.Ax: NewNb(-1), op.Ay: NewNb(1),
 				op.Bx: NewNb(-1), op.By: NewNb(-1),
 				op.Cx: NewNb(1), op.Cy: NewNb(1),
-			},
+			}},
 			0, 0,
 		},
 	}
 	for _, tt := range tests {
-		op.MergeTo(tt.args)
+		op.mergeTo(&tt.args)
 		v, err := tt.args.Instantiate()
 		if err != nil {
 			t.Fatal(err)
 		}
 		if v[op.Hx].mustEvaluate(nil) != tt.expectedX || v[op.Hy].mustEvaluate(nil) != tt.expectedY {
 			t.Fatal()
+		}
+	}
+}
+
+func Test_numberPair_instantiateTo(t *testing.T) {
+	for difficulty := 1; difficulty < 5; difficulty++ {
+		for _, isMultiplicative := range []bool{true, false} {
+			np := numberPair{
+				a:                NewVar('a'),
+				b:                NewVar('b'),
+				difficulty:       uint8(difficulty),
+				isMultiplicative: isMultiplicative,
+			}
+
+			for range [100]int{} {
+				out := make(Vars)
+				err := np.instantiateTo(out)
+				tu.AssertNoErr(t, err)
+				gotA, gotB := out[np.a], out[np.b]
+				_, ok := gotA.isConstantTerm()
+				tu.Assert(t, ok)
+				_, ok = gotB.isConstantTerm()
+				tu.Assert(t, ok)
+			}
 		}
 	}
 }

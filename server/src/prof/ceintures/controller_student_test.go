@@ -100,7 +100,7 @@ func TestSelectEvaluateQuestions(t *testing.T) {
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1}, pass.Encrypter{})
 
-	out, err := ct.selectQuestions(SelectQuestionsIn{Stage: Stage{ce.CalculMental, ce.Blanche}})
+	out, err := ct.selectQuestions(SelectQuestionsIn{Stage: Stage{ce.CalculMentalI, ce.Blanche}})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Questions) == 3)
 
@@ -111,7 +111,7 @@ func TestSelectEvaluateQuestions(t *testing.T) {
 	}
 
 	ev, _ := ct.createEvolution(CreateEvolutionIn{Level: ce.Seconde})
-	stage := Stage{ce.CalculMental, ce.Blanche}
+	stage := Stage{ce.CalculMentalI, ce.Blanche}
 	out, _ = ct.selectQuestions(SelectQuestionsIn{Stage: stage})
 
 	var ids []ce.IdBeltquestion

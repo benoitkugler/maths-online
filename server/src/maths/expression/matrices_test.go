@@ -7,13 +7,13 @@ import (
 )
 
 func Test_matricesOperations(t *testing.T) {
-	m := RandomParameters{
+	m := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('A'): mustParse(t, "[[1;2]; [3;4]]"),
 		NewVar('B'): mustParse(t, "[[1;2]; [4;5]]"),
 		NewVar('C'): mustParse(t, "[[1;0]; [1;1]; [-1;1]]"),
 		NewVar('D'): mustParse(t, "[[2;0]; [0;5]]"),
 		NewVar('E'): mustParse(t, "[[2;x]; [0;5]]"),
-	}
+	}}
 	ops := []struct {
 		expr string
 		want matrix
@@ -37,7 +37,7 @@ func Test_matricesOperations(t *testing.T) {
 	}
 
 	for i, op := range ops {
-		m[NewVarI('o', strconv.Itoa(i))] = mustParse(t, op.expr)
+		m.defs[NewVarI('o', strconv.Itoa(i))] = mustParse(t, op.expr)
 	}
 	vars, err := m.Instantiate()
 	if err != nil {
@@ -79,11 +79,11 @@ func Test_matricesOperations_invalid(t *testing.T) {
 	}
 
 	for _, op := range ops {
-		m := RandomParameters{
+		m := RandomParameters{defs: map[Variable]*Expr{
 			NewVar('A'): mustParse(t, "[[1;2]; [3;4]]"),
 			NewVar('B'): mustParse(t, "[[1;2]; [4;5]; [6;7]]"),
 			NewVar('C'): mustParse(t, op),
-		}
+		}}
 		_, err := m.Instantiate()
 		if err == nil {
 			t.Fatal("expected error on invalid matrix operation")

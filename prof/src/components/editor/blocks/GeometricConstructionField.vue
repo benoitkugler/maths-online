@@ -6,20 +6,20 @@
     :items="[
       {
         title: 'Construire un point',
-        value: GeoFieldKind.GFPoint
+        value: GeoFieldKind.GFPoint,
       },
       {
         title: 'Construire un vecteur',
-        value: GeoFieldKind.GFVector
+        value: GeoFieldKind.GFVector,
       },
       {
         title: 'Construire une droite',
-        value: GeoFieldKind.GFAffineLine
+        value: GeoFieldKind.GFAffineLine,
       },
       {
         title: 'Construire une paire de vecteurs',
-        value: GeoFieldKind.GFVectorPair
-      }
+        value: GeoFieldKind.GFVectorPair,
+      },
     ]"
     label="Choisir le type du champ de réponse"
     hide-details
@@ -32,7 +32,7 @@
     v-if="props.modelValue.Field.Kind == GeoFieldKind.GFPoint"
     :model-value="(props.modelValue.Field.Data as GFPoint)"
     @update:model-value="
-      v => {
+      (v) => {
         props.modelValue.Field.Data = v;
         emitUpdate();
       }
@@ -42,7 +42,7 @@
     v-else-if="props.modelValue.Field.Kind == GeoFieldKind.GFVector"
     :model-value="(props.modelValue.Field.Data as GFVector)"
     @update:model-value="
-      v => {
+      (v) => {
         props.modelValue.Field.Data = v;
         emitUpdate();
       }
@@ -52,7 +52,7 @@
     v-else-if="props.modelValue.Field.Kind == GeoFieldKind.GFAffineLine"
     :model-value="(props.modelValue.Field.Data as GFAffineLine)"
     @update:model-value="
-      v => {
+      (v) => {
         props.modelValue.Field.Data = v;
         emitUpdate();
       }
@@ -62,7 +62,7 @@
     v-else-if="props.modelValue.Field.Kind == GeoFieldKind.GFVectorPair"
     :model-value="(props.modelValue.Field.Data as GFVectorPair)"
     @update:model-value="
-      v => {
+      (v) => {
         props.modelValue.Field.Data = v;
         emitUpdate();
       }
@@ -76,12 +76,12 @@
     :items="[
       {
         title: 'Figures (droites, cercles)',
-        value: FiguresOrGraphsKind.FigureBlock
+        value: FiguresOrGraphsKind.FigureBlock,
       },
       {
         title: 'Graphes (fonctions, suites)',
-        value: FiguresOrGraphsKind.FunctionsGraphBlock
-      }
+        value: FiguresOrGraphsKind.FunctionsGraphBlock,
+      },
     ]"
     label="Choisir le type de figure de fond"
     hide-details
@@ -93,7 +93,7 @@
     v-if="props.modelValue.Background.Kind == FiguresOrGraphsKind.FigureBlock"
     :model-value="(props.modelValue.Background.Data as FigureBlock)"
     @update:model-value="
-      v => {
+      (v) => {
         props.modelValue.Background.Data = v;
         emitUpdate();
       }
@@ -107,7 +107,7 @@
     "
     :model-value="(props.modelValue.Background.Data as FunctionsGraphBlock)"
     @update:model-value="
-      v => {
+      (v) => {
         props.modelValue.Background.Data = v;
         emitUpdate();
       }
@@ -126,12 +126,12 @@ import {
   type GFPoint,
   type GFVector,
   type GFAffineLine,
-  type GFVectorPair
+  type GFVectorPair,
 } from "@/controller/api_gen";
 import FigureBlockVue from "./FigureBlock.vue";
 import { GeoFieldKind } from "@/controller/api_gen";
 import FunctionsGraph from "./FunctionsGraph.vue";
-import type { FunctionsGraphBlock } from "@/controller/api_gen";
+import type { FunctionsGraphBlock, Int } from "@/controller/api_gen";
 import { xRune } from "@/controller/editor";
 import GFPointW from "./GFPointW.vue";
 import GFVectorW from "./GFVectorW.vue";
@@ -161,17 +161,17 @@ function onChangeBackgroundKind(kind: FiguresOrGraphsKind) {
         ShowGrid: true,
         ShowOrigin: true,
         Bounds: {
-          Width: 10,
-          Height: 10,
-          Origin: { X: 3, Y: 3 }
+          Width: 10 as Int,
+          Height: 10 as Int,
+          Origin: { X: 3, Y: 3 },
         },
         Drawings: {
           Lines: [],
           Points: [],
           Segments: [],
           Circles: [],
-          Areas: []
-        }
+          Areas: [],
+        },
       };
       break;
     case FiguresOrGraphsKind.FunctionsGraphBlock:
@@ -181,17 +181,17 @@ function onChangeBackgroundKind(kind: FiguresOrGraphsKind) {
             Function: "abs(x) + sin(x)",
             Decoration: {
               Label: "f",
-              Color: ""
+              Color: "",
             },
             Variable: { Name: xRune, Indice: "" },
             From: "-5",
-            To: "5"
-          }
+            To: "5",
+          },
         ],
         SequenceExprs: [],
         FunctionVariations: [],
         Areas: [],
-        Points: []
+        Points: [],
       };
   }
 }
@@ -203,8 +203,8 @@ function onChangeFieldKind(kind: GeoFieldKind) {
       const data: GFPoint = {
         Answer: {
           X: "3",
-          Y: "4"
-        }
+          Y: "4",
+        },
       };
       props.modelValue.Field.Data = data;
       break;
@@ -213,13 +213,13 @@ function onChangeFieldKind(kind: GeoFieldKind) {
       const data: GFVector = {
         Answer: {
           X: "3",
-          Y: "4"
+          Y: "4",
         },
         MustHaveOrigin: true,
         AnswerOrigin: {
           X: "0",
-          Y: "1"
-        }
+          Y: "1",
+        },
       };
       props.modelValue.Field.Data = data;
       break;
@@ -228,14 +228,14 @@ function onChangeFieldKind(kind: GeoFieldKind) {
       const data: GFAffineLine = {
         Label: "D",
         A: "1",
-        B: "-2"
+        B: "-2",
       };
       props.modelValue.Field.Data = data;
       break;
     }
     case GeoFieldKind.GFVectorPair: {
       const data: GFVectorPair = {
-        Criterion: VectorPairCriterion.VectorColinear
+        Criterion: VectorPairCriterion.VectorColinear,
       };
       props.modelValue.Field.Data = data;
       break;

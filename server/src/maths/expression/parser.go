@@ -28,7 +28,7 @@ type varMap map[int]Variable
 
 // Positions returns the indices in the original expression rune slice
 // of every occurence of the given variables
-func (vm varMap) Positions(subset RandomParameters) []int {
+func (vm varMap) Positions(subset map[Variable]bool) []int {
 	var out []int
 	for index, v := range vm {
 		if _, has := subset[v]; has {
@@ -584,12 +584,19 @@ func (rd specialFunction) validate(pos int) error {
 		// so that the error is detected during parameter setup
 		start, end, err := startEnd(rd.args[0], rd.args[1], nil)
 		if err == nil {
-			return rd.validateStartEnd(start, end, pos)
+			return rd.kind.validateStartEnd(start, end, pos)
 		}
 	case randChoice:
 		if len(rd.args) == 0 {
 			return ErrInvalidExpr{
 				Reason: "randChoice doit préciser au moins un argument",
+				Pos:    pos,
+			}
+		}
+	case randMatrixInt:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "randMatrix attend exactement 4 arguments",
 				Pos:    pos,
 			}
 		}
@@ -609,10 +616,10 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
-	case sumFn:
-		if len(rd.args) != 4 {
+	case sumFn, prodFn:
+		if len(rd.args) != 4 && len(rd.args) != 5 {
 			return ErrInvalidExpr{
-				Reason: "sum requiert exactement 4 arguments",
+				Reason: "sum et prod requierent exactement 4 ou 5 arguments",
 				Pos:    pos,
 			}
 		}
@@ -621,12 +628,19 @@ func (rd specialFunction) validate(pos int) error {
 		// so that a potential error is detected during parameter setup
 		start, end, err := startEnd(rd.args[1], rd.args[2], nil)
 		if err == nil {
-			return rd.validateStartEnd(start, end, pos)
+			return rd.kind.validateStartEnd(start, end, pos)
 		}
 	case matCoeff:
 		if len(rd.args) != 3 {
 			return ErrInvalidExpr{
 				Reason: "coeff requiert exactement 3 arguments",
+				Pos:    pos,
+			}
+		}
+	case matSet:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "set requiert exactement 4 arguments",
 				Pos:    pos,
 			}
 		}

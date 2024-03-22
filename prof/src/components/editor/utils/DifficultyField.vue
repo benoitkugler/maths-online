@@ -1,6 +1,6 @@
 <template>
   <v-select
-    style="max-width: 200px"
+    style="max-width: 300px"
     :items="[
       DifficultyTag.DiffEmpty,
       DifficultyTag.Diff1,

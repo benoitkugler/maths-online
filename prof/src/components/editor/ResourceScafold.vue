@@ -149,9 +149,9 @@
       </v-col>
 
       <v-spacer></v-spacer>
+      <!-- Variants tabs -->
       <v-col cols="6" align-self="center" v-if="titleToEdit == null">
         <v-tabs
-          style="max-width: 90vh"
           density="compact"
           show-arrows
           color="grey"
@@ -192,7 +192,7 @@
                     </v-btn>
                   </template>
                   <v-list>
-                    <v-list-item @click="variantToEdit = copy(variant)" link>
+                    <v-list-item @click="variantToEdit = copy(variant)">
                       <template v-slot:prepend>
                         <v-icon
                           icon="mdi-pencil"
@@ -206,7 +206,6 @@
                       @click="
                         props.readonly ? {} : emit('duplicateVariant', variant)
                       "
-                      :link="!props.readonly"
                     >
                       <template v-slot:prepend>
                         <v-icon
@@ -219,7 +218,6 @@
                     </v-list-item>
                     <v-list-item
                       @click="props.readonly ? {} : (variantToDelete = variant)"
-                      :link="!props.readonly"
                     >
                       <template v-slot:prepend>
                         <v-icon

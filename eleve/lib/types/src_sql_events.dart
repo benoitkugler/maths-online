@@ -84,6 +84,39 @@ Map<String, dynamic> eventNotificationToJson(EventNotification item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/sql/events.Stats
+class Stats {
+  final List<int> occurences;
+  final int totalPoints;
+  final int flames;
+  final int rank;
+
+  const Stats(this.occurences, this.totalPoints, this.flames, this.rank);
+
+  @override
+  String toString() {
+    return "Stats($occurences, $totalPoints, $flames, $rank)";
+  }
+}
+
+Stats statsFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return Stats(
+      listIntFromJson(json['Occurences']),
+      intFromJson(json['TotalPoints']),
+      intFromJson(json['Flames']),
+      intFromJson(json['Rank']));
+}
+
+Map<String, dynamic> statsToJson(Stats item) {
+  return {
+    "Occurences": listIntToJson(item.occurences),
+    "TotalPoints": intToJson(item.totalPoints),
+    "Flames": intToJson(item.flames),
+    "Rank": intToJson(item.rank)
+  };
+}
+
 List<EventK> listEventKFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -93,4 +126,15 @@ List<EventK> listEventKFromJson(dynamic json) {
 
 List<dynamic> listEventKToJson(List<EventK> item) {
   return item.map(eventKToJson).toList();
+}
+
+List<int> listIntFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(intFromJson).toList();
+}
+
+List<dynamic> listIntToJson(List<int> item) {
+  return item.map(intToJson).toList();
 }

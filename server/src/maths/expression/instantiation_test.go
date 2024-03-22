@@ -102,6 +102,45 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 			Vars{NewVar('f'): mustParse(t, "i^2")},
 			false,
 		},
+		// random matrix
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; -1; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(-1; 2; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; 2; x; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; 2; 20; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1.5; 2; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; 2.2; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(2; 3; 5; 5)"},
+			Vars{NewVar('A'): &Expr{atom: matrix{
+				{newNb(5), newNb(5), newNb(5)},
+				{newNb(5), newNb(5), newNb(5)},
+			}}},
+			false,
+		},
 		// substitution in min (or max) functions
 		{
 			map[Variable]string{NewVar('f'): "min(i^2; j)", NewVar('j'): "4"},
@@ -144,6 +183,9 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 		{map[Variable]string{NewVar('A'): "det(2)"}, nil, true},
 		{map[Variable]string{NewVar('A'): "trans(2)"}, nil, true},
 		{map[Variable]string{NewVar('A'): "inv(2)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "set([[1]];2;2;1)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "set(0;2;2;1)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "set([[1; 2];[3;4]];2;2;10)"}, Vars{NewVar('A'): mustParse(t, "[[1; 2];[3;10]]")}, false},
 		{map[Variable]string{NewVar('A'): "coeff([[1; 2];[3;4]]; 2; 2)"}, Vars{NewVar('A'): newNb(4)}, false},
 		{map[Variable]string{
 			NewVar('A'): "coeff([[1; 2];[3;4]]; 2; j)",
@@ -181,9 +223,9 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rv := make(RandomParameters)
+		rv := NewRandomParameters()
 		for v, e := range tt.rv {
-			rv[v] = mustParse(t, e)
+			rv.defs[v] = mustParse(t, e)
 		}
 
 		got, err := rv.Instantiate()
@@ -208,7 +250,7 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 
 func Test_randChoice(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{NewVar('P'): mustParse(t, "randChoice(A;B;C)")}
+		rv := RandomParameters{defs: map[Variable]*Expr{NewVar('P'): mustParse(t, "randChoice(A;B;C)")}}
 		vars, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -226,36 +268,36 @@ func Test_randChoice(t *testing.T) {
 
 func TestCycle(t *testing.T) {
 	// test that zero length cycles are properly accepted
-	params := RandomParameters{
+	params := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
 		NewVar('c'): mustParse(t, "choiceFrom(c;d; randint(1;2))"),
-	}
+	}}
 	err := params.Validate()
 	tu.AssertNoErr(t, err)
 
-	params = RandomParameters{
+	params = RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "a"),
 		NewVar('b'): mustParse(t, "b"),
-	}
+	}}
 	err = params.Validate()
 	tu.AssertNoErr(t, err)
 
 	// test that non trivial cycle are not accepted
-	params = RandomParameters{
+	params = RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
 		NewVar('b'): mustParse(t, "randChoice(a;b)"),
-	}
+	}}
 	err = params.Validate()
 	tu.Assert(t, err != nil)
 }
 
 func TestInstantiateMinMax(t *testing.T) {
-	pr := RandomParameters{
+	pr := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'):       mustParse(t, "randChoice(1;2;3)"),
 		NewVar('b'):       mustParse(t, "randChoice(8;9;10)"),
 		NewVarI('s', "1"): mustParse(t, "min(a; b)"),
 		NewVarI('s', "2"): mustParse(t, "max(a; b)"),
-	}
+	}}
 	vars, err := pr.Instantiate()
 	tu.AssertNoErr(t, err)
 
@@ -269,11 +311,31 @@ func TestInstantiateMinMax(t *testing.T) {
 }
 
 func TestCycleFunc(t *testing.T) {
-	params := RandomParameters{
+	params := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
 		NewVar('c'): mustParse(t, "min(a; n)"),
 		NewVar('d'): mustParse(t, "binom(a; n)"),
-	}
+	}}
 	err := params.Validate()
 	tu.AssertNoErr(t, err)
+}
+
+func TestInstantiateWithIntrinsics(t *testing.T) {
+	params := NewRandomParameters()
+	err := params.ParseIntrinsic("a, b = number_pair_sum(1)")
+	tu.AssertNoErr(t, err)
+	err = params.ParseVariable(NewVar('A'), "[[a;b]]")
+	tu.AssertNoErr(t, err)
+	v, err := params.Instantiate()
+	tu.AssertNoErr(t, err)
+	A := v[NewVar('A')].atom.(matrix)
+	a, b := A[0][0], A[0][1]
+	an, ok := a.isConstantTerm()
+	tu.Assert(t, ok)
+	bn, ok := b.isConstantTerm()
+	tu.Assert(t, ok)
+	_, ok = IsInt(an)
+	tu.Assert(t, ok)
+	_, ok = IsInt(bn)
+	tu.Assert(t, ok)
 }

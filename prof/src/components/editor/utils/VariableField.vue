@@ -13,9 +13,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Variable } from "@/controller/api_gen";
+import type { Int, Variable } from "@/controller/api_gen";
 import { variableToString } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 
 interface Props {
   modelValue: Variable;
@@ -47,7 +47,7 @@ function onVariableChange(s: string) {
     indice = chunks[0].substr(1) + indice;
   }
 
-  const variable = { Name: chunks[0].codePointAt(0)!, Indice: indice };
+  const variable = { Name: chunks[0].codePointAt(0)! as Int, Indice: indice };
 
   emit("update:model-value", variable);
 }

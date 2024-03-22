@@ -16,6 +16,9 @@ ALTER TABLE classroom_codes
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
+ALTER TABLE students
+    ADD CONSTRAINT Clients_gomacro CHECK (gomacro_validate_json_array_teac_Client (Clients));
+
 ALTER TABLE teachers
     ADD CONSTRAINT Contact_gomacro CHECK (gomacro_validate_json_teac_Contact (Contact));
 
@@ -320,4 +323,25 @@ ALTER TABLE review_participations
 
 ALTER TABLE review_participations
     ADD CONSTRAINT Comments_gomacro CHECK (gomacro_validate_json_array_revi_Comment (Comments));
+
+ALTER TABLE beltevolutions
+    ADD UNIQUE (IdStudent);
+
+ALTER TABLE beltevolutions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE beltevolutions
+    ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_12_array_11_cein_Stat (Stats));
+
+ALTER TABLE beltevolutions
+    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_12_cein_Rank (Advance));
+
+ALTER TABLE beltquestions
+    ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));
+
+ALTER TABLE beltquestions
+    ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
+
+ALTER TABLE beltquestions
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 

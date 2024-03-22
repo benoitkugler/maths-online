@@ -24,7 +24,7 @@ func (pr ProofFieldBlock) instantiate(params expression.Vars, ID int) (instance,
 	}, nil
 }
 
-func (pr ProofFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
+func (pr ProofFieldBlock) setupValidator(*expression.RandomParameters) (validator, error) {
 	err := pr.Answer.validate()
 	return noOpValidator{}, err
 }

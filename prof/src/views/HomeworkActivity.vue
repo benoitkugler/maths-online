@@ -114,6 +114,7 @@ import {
   type Travail,
   PublicStatus,
   type IdSheet,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, onActivated, onMounted } from "vue";
@@ -187,7 +188,7 @@ async function createSheet() {
   sheetToUpdate.value = res;
 }
 
-async function createTravail(idClassroom: number) {
+async function createTravail(idClassroom: Int) {
   const res = await controller.HomeworkCreateTravail({
     "id-classroom": idClassroom,
   });
@@ -202,7 +203,7 @@ async function createTravail(idClassroom: number) {
   sheetToUpdate.value = res.Sheet;
 }
 
-async function createTravailWith(idSheet: number, idClassroom: number) {
+async function createTravailWith(idSheet: Int, idClassroom: Int) {
   const res = await controller.HomeworkCreateTravailWith({
     IdClassroom: idClassroom,
     IdSheet: idSheet,
@@ -238,7 +239,7 @@ async function deleteSheet() {
   sheetToDelete.value = null;
 }
 
-async function duplicateSheet(idSheet: number) {
+async function duplicateSheet(idSheet: Int) {
   const res = await controller.HomeworkCopySheet({
     IdSheet: idSheet,
   });
@@ -364,7 +365,7 @@ async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
 }
 
 async function setSheetFavorite(sheet: Sheet) {
-  sheet.Anonymous = { Valid: false, ID: 0 };
+  sheet.Anonymous = { Valid: false, ID: 0 as Int };
   const res = await controller.HomeworkUpdateSheet(sheet);
   if (res === undefined) return;
 
@@ -380,7 +381,7 @@ async function updateTravail(travail: Travail) {
   cl.Travaux![index] = travail;
 }
 
-async function copyTravailTo(tr: Travail, idClassroom: number) {
+async function copyTravailTo(tr: Travail, idClassroom: Int) {
   const res = await controller.HomeworkCopyTravail({
     IdTravail: tr.Id,
     IdClassroom: idClassroom,

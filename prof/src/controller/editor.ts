@@ -41,7 +41,12 @@ import {
   PublicStatus,
   type QuestiongroupExt,
   type ExercicegroupExt,
+  Int,
+  Parameters,
+  Enonce,
+  ErrQuestionInvalid,
 } from "./api_gen";
+import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
 
 export const ExpressionColor = "orange";
@@ -176,9 +181,9 @@ export interface TypedBlock<K extends BlockKind> {
   Data: BlockKindTypes[K];
 }
 
-export const xRune = "x".codePointAt(0)!;
-export const yRune = "y".codePointAt(0)!;
-export const nRune = "n".codePointAt(0)!;
+export const xRune = "x".codePointAt(0)! as Int;
+export const yRune = "y".codePointAt(0)! as Int;
+export const nRune = "n".codePointAt(0)! as Int;
 
 /** extractPoints returns the names of indices A for which 'x_A' and 'y_A' are defined */
 export function extractPoints(vars: Variable[]) {
@@ -242,7 +247,7 @@ const signTableExample: SignTableBlock = {
 
 function newTreeNode(value: number): TreeNodeAnswer {
   return {
-    Value: value,
+    Value: value as Int,
     Children: [],
     Probabilities: [],
   };
@@ -256,16 +261,16 @@ function newTree() {
         {
           Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
           Probabilities: ["0.7", "0.2", "0.1"],
-          Value: 0,
+          Value: 0 as Int,
         },
         {
           Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
           Probabilities: ["0.7", "0.2", "0.1"],
-          Value: 1,
+          Value: 1 as Int,
         },
       ],
       Probabilities: ["0.7", "0.3"],
-      Value: 0,
+      Value: 0 as Int,
     },
   };
 }
@@ -300,8 +305,8 @@ export function newBlock(kind: BlockKind): Block {
           ShowGrid: true,
           ShowOrigin: true,
           Bounds: {
-            Width: 10,
-            Height: 10,
+            Width: 10 as Int,
+            Height: 10 as Int,
             Origin: { X: 3, Y: 3 },
           },
           Drawings: {
@@ -456,8 +461,8 @@ export function newBlock(kind: BlockKind): Block {
               ShowGrid: true,
               ShowOrigin: true,
               Bounds: {
-                Width: 10,
-                Height: 10,
+                Width: 10 as Int,
+                Height: 10 as Int,
                 Origin: { X: 3, Y: 3 },
               },
               Drawings: {
@@ -674,7 +679,7 @@ export function personnalOrigin(): Origin {
   return {
     PublicStatus: PublicStatus.NotAdmin,
     Visibility: Visibility.Personnal,
-    IsInReview: { InReview: false, Id: -1 },
+    IsInReview: { InReview: false, Id: -1 as Int },
   };
 }
 
@@ -689,7 +694,7 @@ export function emptyAssertion(): ProofAssertion {
 }
 
 export interface VariantG {
-  Id: number;
+  Id: Int;
   Subtitle: string;
   Difficulty: DifficultyTag;
   HasCorrection?: boolean;
@@ -743,7 +748,7 @@ export function areTagsEquals(tags1: Tags, tags2: Tags) {
 
 /** either a questiongroup or an exercicegroup */
 export interface ResourceGroup {
-  Id: number;
+  Id: Int;
   Title: string;
   Variants: VariantG[];
   Tags: Tags;
@@ -768,4 +773,25 @@ export function exerciceToResource(group: ExercicegroupExt): ResourceGroup {
     Variants: group.Variants || [],
     Origin: group.Origin,
   };
+}
+
+export async function readClipboardForBlock() {
+  const json = await navigator.clipboard.readText();
+  const parsed = JSON.parse(json);
+  if (!(parsed["Data"] && parsed["Kind"])) return;
+  return parsed as Block;
+}
+
+export interface QuestionPage {
+  id: number;
+  parameters: Parameters;
+  sharedParameters: Parameters;
+  enonce: Enonce;
+  correction: Enonce;
+}
+
+export interface SaveQuestionOut {
+  IsValid: boolean;
+  Error: ErrQuestionInvalid;
+  Preview: LoopbackServerEvent;
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
@@ -100,6 +101,21 @@ func TestStudentCRUD(t *testing.T) {
 	if err = ct.updateStudent(st.Student, teacher.Id+1); err == nil {
 		t.Fatal()
 	}
+
+	encID := ct.studentKey.EncryptID(int64(st.Student.Id))
+	profile, err := ct.checkStudentClassroom(encID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, profile.IsOK)
+	tu.Assert(t, profile.Advance.Rank == 0)
+
+	// add 300 * 10 = 3000 points
+	for range [10]int{} {
+		_, err = events.RegisterEvents(ct.db, st.Student.Id, events.E_IsyTriv_Win)
+		tu.AssertNoErr(t, err)
+	}
+	profile, err = ct.checkStudentClassroom(encID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, profile.Advance.Rank == 1)
 
 	if err = ct.deleteStudent(st.Student.Id, teacher.Id); err != nil {
 		t.Fatal(err)

@@ -9,49 +9,52 @@ import (
 )
 
 const latexHeader = `
-	% Required packages 
-	% \usepackage{amsmath}
-	% \usepackage[inline]{enumitem}
-	% \usepackage{amssymb}
-	% \usepackage[table]{xcolor}
-	% \usepackage{tikz}
-	% \usepackage{environ}
-	
-	\definecolor{isyroPropColor}{gray}{0.9}
+% ------------------- HEADER START ---------------------------- %
+% Required packages 
+\usepackage{amsmath}
+\usepackage[inline]{enumitem}
+\usepackage{amssymb}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usepackage{environ}
 
-	% Custom commands and settings used by Isyro
-	\newcommand{\isyroFieldHeight}{\phantom{$\sum_{\sum}^{\sum}$}} %% field height
+\definecolor{isyroPropColor}{gray}{0.9}
 
-	\newcommand{\isyroNumberField}{
-		\fbox{\begin{minipage}{1cm}\isyroFieldHeight \end{minipage}}
-	}
-	
-	\newcommand{\isyroExpressionField}[1]{
-		\fbox{\begin{minipage}{#1 cm}\isyroFieldHeight \\ \isyroFieldHeight \end{minipage}}
-	}
-	
-	\newcommand{\isyroQCMSquare}{\raisebox{-.25\height}{\huge$\square$}}
-	
-	\newcommand{\R}{\mathbb{R}}
-	\newcommand{\Q}{\mathbb{Q}}
-	\newcommand{\D}{\mathbb{D}}
-	\newcommand{\Z}{\mathbb{Z}}
-	\newcommand{\N}{\mathbb{N}}
+% Custom commands and settings used by Isyro
+\newcommand{\isyroFieldHeight}{\phantom{$\sum_{\sum}^{\sum}$}} %% field height
 
-	% Hack to adjust the figure to the page width
-	% See https://tex.stackexchange.com/questions/6388/how-to-scale-a-tikzpicture-to-textwidth
-	\makeatletter
-	\newsavebox{\measure@tikzpicture}
-	\NewEnviron{scaletikzpicturetowidth}[1]{%
-		\def\tikz@width{#1}%
-		\def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
-			\BODY
-		\end{lrbox}%
-		\pgfmathparse{#1/\wd\measure@tikzpicture}%
-		\edef\tikzscale{\pgfmathresult}%
+\newcommand{\isyroNumberField}{
+	\fbox{\begin{minipage}{1cm}\isyroFieldHeight \end{minipage}}
+}
+
+\newcommand{\isyroExpressionField}[1]{
+	\fbox{\begin{minipage}{#1 cm}\isyroFieldHeight \\ \isyroFieldHeight \end{minipage}}
+}
+
+\newcommand{\isyroQCMSquare}{\raisebox{-.25\height}{\huge$\square$}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+
+% Hack to adjust the figure to the page width
+% See https://tex.stackexchange.com/questions/6388/how-to-scale-a-tikzpicture-to-textwidth
+\makeatletter
+\newsavebox{\measure@tikzpicture}
+\NewEnviron{scaletikzpicturetowidth}[1]{%
+	\def\tikz@width{#1}%
+	\def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
 		\BODY
-	}
-	\makeatother
+	\end{lrbox}%
+	\pgfmathparse{#1/\wd\measure@tikzpicture}%
+	\edef\tikzscale{\pgfmathresult}%
+	\BODY
+}
+\makeatother
+
+% ------------------- HEADER END ---------------------------- %
 `
 
 func (qu EnonceInstance) toLatex(standalone bool) string {

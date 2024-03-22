@@ -7,10 +7,10 @@ import (
 )
 
 func TestPanics(t *testing.T) {
-	testutils.ShouldPanic(t, func() { (invalidFn).eval(real{}, real{}, nil) })
-	testutils.ShouldPanic(t, func() { (invalidConstant).eval(real{}, real{}, nil) })
-	testutils.ShouldPanic(t, func() { (invalidOperator).eval(real{}, real{}, nil) })
-	testutils.ShouldPanic(t, func() { (specialFunction{kind: invalidSpecialFunction}).eval(real{}, real{}, nil) })
+	testutils.ShouldPanic(t, func() { (invalidFn).eval(nil, nil, nil) })
+	testutils.ShouldPanic(t, func() { (invalidConstant).eval(nil, nil, nil) })
+	testutils.ShouldPanic(t, func() { (invalidOperator).eval(nil, nil, nil) })
+	testutils.ShouldPanic(t, func() { (specialFunction{kind: invalidSpecialFunction}).eval(nil, nil, nil) })
 
 	testutils.ShouldPanic(t, func() { _ = (invalidFn).String() })
 	testutils.ShouldPanic(t, func() { _ = (invalidConstant).String() })

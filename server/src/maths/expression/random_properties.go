@@ -10,15 +10,60 @@ import (
 
 // RandomParameters stores a set of random parameters definitions,
 // which may be related, but cannot contain cycles.
-type RandomParameters map[Variable]*Expr
+type RandomParameters struct {
+	// special functions, called before resolving [defs]
+	specials []intrinsic
+
+	defs map[Variable]*Expr
+}
+
+func NewRandomParameters() *RandomParameters {
+	return &RandomParameters{defs: make(map[Variable]*Expr, 10)}
+}
+
+// IsDefined returns true if the variable [v] is defined (regular variables
+// and special functions included)
+func (rp RandomParameters) IsDefined(v Variable) bool {
+	for _, spe := range rp.specials {
+		if spe.isDef(v) {
+			return true
+		}
+	}
+	_, has := rp.defs[v]
+	return has
+}
+
+func (rp RandomParameters) DefinedVariables() []Variable {
+	var out []Variable
+	for _, spe := range rp.specials {
+		out = append(out, spe.vars()...)
+	}
+	for v := range rp.defs {
+		out = append(out, v)
+	}
+	return out
+}
+
+// ParseVariable parses the given expression and adds it to the parameters
+func (rp RandomParameters) ParseVariable(v Variable, expr string) error {
+	e, err := Parse(expr)
+	if err != nil {
+		return err
+	}
+	if _, has := rp.defs[v]; has {
+		return ErrDuplicateParameter{Duplicate: v}
+	}
+	rp.defs[v] = e
+	return nil
+}
 
 // addAnonymousParam register the given expression under a new variable, not used yet,
 // chosen among a private range
 func (rp RandomParameters) addAnonymousParam(expr *Expr) Variable {
 	for ru := firstPrivateVariable; ru > 0; ru++ {
 		v := Variable{Name: ru}
-		if _, has := rp[v]; !has {
-			rp[v] = expr
+		if _, has := rp.defs[v]; !has {
+			rp.defs[v] = expr
 			return v
 		}
 	}
@@ -86,9 +131,10 @@ func binomialCoefficient(k, n int) int {
 	return res
 }
 
-func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
-	switch rd.kind {
-	case randInt, randPrime:
+func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) error {
+	_ = exhaustiveSpecialFunctionSwitch
+	switch kind {
+	case randInt, randPrime, randMatrixInt:
 		start, okStart := IsInt(start)
 		end, okEnd := IsInt(end)
 		if !(okStart && okEnd) {
@@ -105,25 +151,25 @@ func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
 			}
 		}
 
-		if rd.kind == randPrime && start < 0 {
+		if kind == randPrime && start < 0 {
 			return ErrInvalidExpr{
 				Reason: "randPrime n'accepte que des nombres positifs",
 				Pos:    pos,
 			}
 		}
 
-		if rd.kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
+		if kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
 			return ErrInvalidExpr{
 				Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", start, end),
 				Pos:    pos,
 			}
 		}
-	case sumFn:
+	case sumFn, prodFn:
 		_, okStart := IsInt(start)
 		_, okEnd := IsInt(end)
 		if !(okStart && okEnd) {
 			return ErrInvalidExpr{
-				Reason: "sum attend deux entiers comme indices limites",
+				Reason: "sum et prod attendent deux entiers comme indices limites",
 				Pos:    pos,
 			}
 		}

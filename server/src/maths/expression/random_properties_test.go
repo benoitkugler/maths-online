@@ -8,10 +8,10 @@ import (
 
 func TestRandomVariables_range(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{
+		rv := RandomParameters{defs: map[Variable]*Expr{
 			NewVar('a'): mustParse(t, "3*randInt(1; 10)"),
 			NewVar('b'): mustParse(t, "-a"),
-		}
+		}}
 		values, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -24,10 +24,10 @@ func TestRandomVariables_range(t *testing.T) {
 			t.Fatal(a)
 		}
 
-		rv = RandomParameters{
+		rv = RandomParameters{defs: map[Variable]*Expr{
 			NewVar('a'): mustParse(t, "randInt(1; 10)"),
 			NewVar('b'): mustParse(t, "sgn(2*randInt(0;1)-1) * a"),
-		}
+		}}
 		values, err = rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -67,28 +67,28 @@ func TestExpression_IsValidNumber(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, false,
+			"2a - sin(a) + exp(1 + a)", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "2")}}, false, false,
 		},
 		{
-			"2a + b", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, true,
+			"2a + b", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "2")}}, false, true,
 		},
 		{
 			"1/0", RandomParameters{}, false, true,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;4)")}, false, true,
+			"1/a", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "randInt(0;4)")}}, false, true,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false, false,
+			"1/a", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "randInt(1;4)")}}, false, false,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randDecDen()")}, true, false,
+			"1/a", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "randDecDen()")}}, true, false,
 		},
 		{
-			"(v_f - v_i) / v_i", RandomParameters{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}, true, false,
+			"(v_f - v_i) / v_i", RandomParameters{defs: map[Variable]*Expr{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}}, true, false,
 		},
 		{
-			"round(1/3; 3)", nil, true, false,
+			"round(1/3; 3)", RandomParameters{}, true, false,
 		},
 	}
 	for _, tt := range tests {

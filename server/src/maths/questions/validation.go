@@ -27,7 +27,7 @@ func (err ErrParameters) Error() string {
 // It the error is not nil, it will be of type `ErrParameters`.
 // Once called without error, `ToMap` may be safely used.
 func (pr Parameters) Validate() error {
-	params := make(expression.RandomParameters)
+	params := expression.NewRandomParameters()
 	for _, item := range pr {
 		err := item.mergeTo(params)
 		if err != nil {
@@ -38,12 +38,10 @@ func (pr Parameters) Validate() error {
 		}
 	}
 
-	for v := range params {
-		if v.Name == 'e' {
-			return ErrParameters{
-				Origin:  v.String(),
-				Details: "La variable e n'est pas autorisée (car utilisée pour exp).",
-			}
+	if params.IsDefined(expression.Variable{Name: 'e'}) {
+		return ErrParameters{
+			Origin:  "e = ",
+			Details: "La variable e n'est pas autorisée (car utilisée pour exp).",
 		}
 	}
 
@@ -94,7 +92,7 @@ func (e ErrQuestionInvalid) Error() string {
 	}
 }
 
-func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) {
+func (en Enonce) validate(params *expression.RandomParameters) (bool, errEnonce) {
 	en = en.expandText()
 
 	// setup the validators
@@ -108,7 +106,7 @@ func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) 
 	}
 
 	// reuse memory
-	inst := expression.NewInstantiater(params)
+	inst := expression.NewInstantiater(*params)
 	const nbTries = 1_000
 	for try := 0; try < nbTries; try++ {
 		// instantiate the parameters for this try
@@ -291,14 +289,14 @@ type functionValidator struct {
 	expression.FunctionExpr
 }
 
-func newFunctionValidator(fn FunctionDefinition, params expression.RandomParameters) (functionValidator, error) {
+func newFunctionValidator(fn FunctionDefinition, params *expression.RandomParameters) (functionValidator, error) {
 	fnExpr, from, to, err := fn.parse()
 	if err != nil {
 		return functionValidator{}, err
 	}
 
 	// check that the function variable is not used
-	if params[fn.Variable] != nil {
+	if params.IsDefined(fn.Variable) {
 		return functionValidator{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 

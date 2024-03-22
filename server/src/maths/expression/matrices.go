@@ -14,11 +14,22 @@ func (A matrix) dims() (rows, cols int) {
 	return len(A), len(A[0])
 }
 
-func newEmpty(n, m int) matrix {
+func newMatrixEmpty(n, m int) matrix {
 	out := make(matrix, n)
 	vals := make([]*Expr, n*m)
 	for i := range out {
 		out[i] = vals[i*m : (i+1)*m]
+	}
+	return out
+}
+
+func (A matrix) copy() matrix {
+	n, m := A.dims()
+	out := newMatrixEmpty(n, m)
+	for i, row := range A {
+		for j, cell := range row {
+			out[i][j] = cell.Copy()
+		}
 	}
 	return out
 }
@@ -30,14 +41,11 @@ func prod(a, b *Expr) *Expr { return &Expr{atom: mult, left: a, right: b} }
 // factor . A
 func (A matrix) scale(factor *Expr) matrix {
 	mA, nA := A.dims()
-	out := make(matrix, mA)
-	for i := range out {
-		row := make([]*Expr, nA)
+	out := newMatrixEmpty(mA, nA)
+	for i, row := range A {
 		for j := range row {
-			Aij := A[i][j]
-			row[j] = prod(factor, Aij)
+			out[i][j] = prod(factor, A[i][j])
 		}
-		out[i] = row
 	}
 	return out
 }
@@ -50,15 +58,11 @@ func (A matrix) plus(B matrix) (matrix, error) {
 		return nil, fmt.Errorf("matrices de dimensions incompatibles (%d, %d != %d, %d)", mA, nA, mB, nB)
 	}
 
-	out := make(matrix, mA)
-	for i := range out {
-		row := make([]*Expr, nA)
+	out := newMatrixEmpty(mA, nA)
+	for i, row := range A {
 		for j := range row {
-			Aij := A[i][j]
-			Bij := B[i][j]
-			row[j] = add(Aij, Bij)
+			out[i][j] = add(A[i][j], B[i][j])
 		}
-		out[i] = row
 	}
 
 	return out, nil
@@ -107,7 +111,7 @@ func newNumberMatrixFrom(A matrix) (numberMatrix, bool) {
 
 func (A numberMatrix) toExprMatrix() matrix {
 	n, m := A.dims()
-	out := newEmpty(n, m)
+	out := newMatrixEmpty(n, m)
 	for i, row := range A {
 		for j, v := range row {
 			out[i][j] = NewNb(v)
@@ -282,7 +286,7 @@ func (A matrix) trace() (*Expr, error) {
 	return s, nil
 }
 
-func (A matrix) instantiate(ctx *paramsInstantiater) (matrix, error) {
+func (A matrix) instantiate(ctx *resolver) (matrix, error) {
 	out := make(matrix, len(A))
 	var err error
 	for i, row := range A {
@@ -298,7 +302,7 @@ func (A matrix) instantiate(ctx *paramsInstantiater) (matrix, error) {
 	return out, nil
 }
 
-func matricesOperation(op operator, left, right *Expr, ctx *paramsInstantiater) (*Expr, error) {
+func matricesOperation(op operator, left, right *Expr, ctx *resolver) (*Expr, error) {
 	switch op {
 	case plus:
 		if leftA, ok := left.atom.(matrix); ok {

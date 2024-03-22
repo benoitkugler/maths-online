@@ -160,6 +160,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		// sets
 		"\u00AC(A \u222A B_1)",
 		"A \u222A B_1 \u2229 (\u00AC C \u222A D)",
+		`sum(k; 1; 10; k^2; "expand")`,
+		`prod(k; 1; 10; 3; "expand")`,
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -277,9 +279,9 @@ func TestInstantiateMinusZero(t *testing.T) {
 	exprB := mustParse(t, "0 * 1 / (-5)")
 	tu.Assert(t, exprB.String() == "0")
 
-	rp := RandomParameters{
+	rp := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('b'): exprB,
-	}
+	}}
 	vs, err := rp.Instantiate()
 	tu.AssertNoErr(t, err)
 
@@ -313,13 +315,13 @@ func TestPrintFractions(t *testing.T) {
 		Vars RandomParameters
 		want string
 	}{
-		{"6 / 49", nil, "6/49"},
-		{"3 / 49", nil, "3/49"},
-		{"1 / 4", nil, "1/4"},
-		{"0.25", nil, "0,25"},
-		{"x", RandomParameters{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}, "1/3"},
-		{"x", RandomParameters{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}, "1/3"},
-		{"x", RandomParameters{NewVar('x'): mustParse(t, "forceDecimal(3 / 4)")}, "0,75"},
+		{"6 / 49", RandomParameters{}, "6/49"},
+		{"3 / 49", RandomParameters{}, "3/49"},
+		{"1 / 4", RandomParameters{}, "1/4"},
+		{"0.25", RandomParameters{}, "0,25"},
+		{"x", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}}, "1/3"},
+		{"x", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}}, "1/3"},
+		{"x", RandomParameters{defs: map[Variable]*Expr{NewVar('x'): mustParse(t, "forceDecimal(3 / 4)")}}, "0,75"},
 	} {
 		e := mustParse(t, tt.expr)
 		vars, err := tt.Vars.Instantiate()

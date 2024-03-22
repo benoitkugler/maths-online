@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 type ErrDuplicateParameter struct {
@@ -12,7 +13,7 @@ func (err ErrDuplicateParameter) Error() string {
 	return fmt.Sprintf("Paramètre %s défini deux fois", err.Duplicate)
 }
 
-func checkDuplicates(params RandomParameters, vars ...Variable) error {
+func checkDuplicates(params map[Variable]*Expr, vars ...Variable) error {
 	for _, v := range vars {
 		if _, has := params[v]; has {
 			return ErrDuplicateParameter{Duplicate: v}
@@ -21,102 +22,60 @@ func checkDuplicates(params RandomParameters, vars ...Variable) error {
 	return nil
 }
 
-// Intrinsic maps some variables to expression,
-// serving as shortcut for complex conditions
-type Intrinsic interface {
-	// MergeTo returns an `ErrDuplicateParameter` error if parameters are already defined
-	MergeTo(params RandomParameters) error
+type intrinsic interface {
+	instantiateTo(target Vars) error
+	isDef(v Variable) bool // returns true if v is an OUTPUT variable
+	vars() []Variable
 }
 
-// buildParams is a convenience shortcut to build the
-// parameters associated with the given intrinsic.
-func buildParams(it Intrinsic) RandomParameters {
-	out := make(RandomParameters)
-	_ = it.MergeTo(out)
-	return out
-}
-
-// PythagorianTriplet are 3 positive integers (a,b,c) such that a^2 + b^2 = c^2
-type PythagorianTriplet struct {
-	A, B, C Variable
-	// Bound roughly defines the magnitude of a, b, c, such that
-	// a <= 2*Bound^2.
+// pythagorianTriplet are 3 positive integers (a,b,c) such that a^2 + b^2 = c^2
+type pythagorianTriplet struct {
+	a, b, c Variable
+	// bound roughly defines the magnitude of a, b, c, such that
+	// a <= 2*bound^2.
 	// It must be >= 2
-	Bound int
+	bound int
 }
 
-func (pt PythagorianTriplet) MergeTo(params RandomParameters) error {
-	if err := checkDuplicates(params, pt.A, pt.B, pt.C); err != nil {
+func (pt pythagorianTriplet) isDef(v Variable) bool {
+	return v == pt.a || v == pt.b || v == pt.c
+}
+
+func (pt pythagorianTriplet) vars() []Variable {
+	return []Variable{pt.a, pt.b, pt.c}
+}
+
+func (pt pythagorianTriplet) instantiateTo(target Vars) error {
+	if err := checkDuplicates(target, pt.a, pt.b, pt.c); err != nil {
 		return err
 	}
 
 	const seedStart = 1
-	p := params.addAnonymousParam(MustParse(fmt.Sprintf("2 * randInt(%d;%d)", seedStart, pt.Bound)))
+
+	p := 2 * randomInt(seedStart, pt.bound)
 	// q = 1 yield b = 0, avoid this edge case
-	q := params.addAnonymousParam(MustParse(fmt.Sprintf("randInt(%d;%d)", seedStart+1, pt.Bound)))
-	a := MustParse(fmt.Sprintf("%s*%s", p, q))                  // p * q
-	c := MustParse(fmt.Sprintf("(%s %s^2 + %s)  / 2", p, q, p)) // (p q^2 + p)  / 2
-	b := MustParse(fmt.Sprintf("%s-%s", pt.C, p))               // c - p
+	q := randomInt(seedStart+1, pt.bound)
+	a := p * q
+	c := (p*q*q + p) / 2
+	b := c - p
 
-	params[pt.A] = a
-	params[pt.B] = b
-	params[pt.C] = c
-
-	return nil
-}
-
-// PolynomialCoeffs are the coefficient of
-// P = 3/4 X^4 +bX^3 + cX^2 + dX, such that the roots of
-// P' are integers in the given range, which must be at least with length 2.
-type PolynomialCoeffs struct {
-	B, C, D              Variable
-	X1, X2, X3           Variable
-	RootsStart, RootsEnd int
-}
-
-func (qp PolynomialCoeffs) MergeTo(params RandomParameters) error {
-	if err := checkDuplicates(params, qp.B, qp.C, qp.D, qp.X1, qp.X2, qp.X3); err != nil {
-		return err
-	}
-
-	width := qp.RootsEnd - qp.RootsStart
-	// ensure no solutions are too close
-	// |--_|_-_|_--|
-	x1 := MustParse(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart, qp.RootsStart+2*width/9))
-	x2 := MustParse(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart+4*width/9, qp.RootsStart+5*width/9))
-	x3 := MustParse(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart+7*width/9, qp.RootsEnd))
-
-	// we solve
-	// P' = 4a X^3 + 3bX^2 + 2cX + d = 4a(X - x1)(X - x2)(X - x3)
-	// 3b = 4a * ( -x1 - x2 - x3  )
-	// 2c = 4a * ( x1 x2 + x1 x3 + x2 x3 )
-	// d = 4a * -(x1 x2 x3 )
-
-	// for now we simply choose a = 3/4 and e = 0
-	b := MustParse(fmt.Sprintf("-(%s + %s + %s)", qp.X1, qp.X2, qp.X3))
-	c := MustParse(fmt.Sprintf("3 * (%s * %s + %s * %s + %s * %s) / 2", qp.X1, qp.X2, qp.X1, qp.X3, qp.X2, qp.X3))
-	d := MustParse(fmt.Sprintf("-3 * %s * %s * %s", qp.X1, qp.X2, qp.X3))
-
-	params[qp.X1] = x1
-	params[qp.X2] = x2
-	params[qp.X3] = x3
-	params[qp.B] = b
-	params[qp.C] = c
-	params[qp.D] = d
+	target[pt.a] = rat{a, 1}.toExpr()
+	target[pt.b] = rat{b, 1}.toExpr()
+	target[pt.c] = rat{c, 1}.toExpr()
 
 	return nil
 }
 
-// OrthogonalProjection compute the coordinates of H, the orthogonal
+// orthogonalProjection compute the coordinates of H, the orthogonal
 // projection of A on (BC).
-type OrthogonalProjection struct {
+type orthogonalProjection struct {
 	Ax, Ay, Bx, By, Cx, Cy Variable // arguments
 
 	Hx, Hy Variable // output
 }
 
-func (op OrthogonalProjection) MergeTo(params RandomParameters) error {
-	if err := checkDuplicates(params, op.Hx, op.Hy); err != nil {
+func (op orthogonalProjection) mergeTo(params *RandomParameters) error {
+	if err := checkDuplicates(params.defs, op.Hx, op.Hy); err != nil {
 		return err
 	}
 
@@ -132,8 +91,107 @@ func (op OrthogonalProjection) MergeTo(params RandomParameters) error {
 	// xv - yu = -d
 	norm := params.addAnonymousParam(MustParse(fmt.Sprintf("%s^2 + %s^2", u, v)))
 
-	params[op.Hx] = MustParse(fmt.Sprintf("(-%s * %s / %s) + %s", d, v, norm, op.Ax))
-	params[op.Hy] = MustParse(fmt.Sprintf("(%s * %s / %s) + %s", d, u, norm, op.Ay))
+	params.defs[op.Hx] = MustParse(fmt.Sprintf("(-%s * %s / %s) + %s", d, v, norm, op.Ax))
+	params.defs[op.Hy] = MustParse(fmt.Sprintf("(%s * %s / %s) + %s", d, u, norm, op.Ay))
 
 	return nil
+}
+
+// numberPair generates random number suitable
+// to be added (or multiplied), according to a difficulty level (from 1 to 5)
+// Example :
+// a,b = number_pair_add(1) # difficulty one
+type numberPair struct {
+	a, b             Variable // output
+	difficulty       uint8    // in [1, 5]
+	isMultiplicative bool
+}
+
+func (np numberPair) instantiateTo(target Vars) error {
+	if err := checkDuplicates(target, np.a, np.b); err != nil {
+		return err
+	}
+
+	ranges := addPairTable[np.difficulty]
+	if np.isMultiplicative {
+		ranges = multPairTable[np.difficulty]
+	}
+	selectedRange := ranges[rand.Intn(len(ranges))]
+	a := randomInt(selectedRange.a[0], selectedRange.a[1])
+	b := randomInt(selectedRange.b[0], selectedRange.b[1])
+
+	target[np.a] = rat{a, 1}.toExpr()
+	target[np.b] = rat{b, 1}.toExpr()
+
+	return nil
+}
+
+func (np numberPair) isDef(v Variable) bool {
+	return v == np.a || v == np.b
+}
+
+func (np numberPair) vars() []Variable {
+	return []Variable{np.a, np.b}
+}
+
+var (
+	addPairTable = [...][]pairRange{
+		1: {
+			{p{1, 8}, p{1, 1}},
+			{p{3, 7}, p{1, 2}},
+			{p{4, 6}, p{1, 3}},
+			{p{5, 5}, p{1, 4}},
+		},
+		2: {
+			{p{1, 4}, p{1, 5}},
+			{p{1, 3}, p{1, 6}},
+			{p{1, 2}, p{1, 7}},
+			{p{1, 1}, p{1, 8}},
+		},
+		3: {
+			{p{1, 10}, p{1, 10}},
+		},
+		4: {
+			{p{-10, -5}, p{-10, -5}},
+			{p{-10, -5}, p{5, 10}},
+			{p{5, 10}, p{-10, -5}},
+			{p{5, 10}, p{5, 10}},
+		},
+		5: {
+			{p{-20, -10}, p{-20, -10}},
+			{p{-20, -10}, p{10, 20}},
+			{p{10, 20}, p{-20, -10}},
+			{p{10, 20}, p{10, 20}},
+		},
+	}
+	multPairTable = [...][]pairRange{
+		1: {
+			{p{1, 5}, p{1, 5}},
+		},
+		2: {
+			{p{1, 7}, p{1, 7}},
+		},
+		3: {
+			{p{1, 7}, p{1, 7}},
+			{p{-7, -1}, p{-7, -1}},
+			{p{1, 7}, p{-7, -1}},
+		},
+		4: {
+			{p{4, 10}, p{4, 10}},
+			{p{-10, -4}, p{-10, -4}},
+			{p{4, 10}, p{-10, -4}},
+		},
+		5: {
+			{p{5, 12}, p{5, 12}},
+			{p{-12, -5}, p{-12, -5}},
+			{p{5, 12}, p{-12, -5}},
+		},
+	}
+)
+
+type p = [2]int
+
+type pairRange struct {
+	a p
+	b p
 }

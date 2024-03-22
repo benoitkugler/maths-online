@@ -102,6 +102,20 @@
             "Output": "sql/events/gen_randdata_test.go"
         }
     ],
+    "sql/ceintures/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/ceintures/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/ceintures/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/ceintures/gen_randdata_test.go"
+        }
+    ],
     "maths/questions/blocks_field_proof.go": [
         {
             "Mode": "go/unions",

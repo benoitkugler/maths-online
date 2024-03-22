@@ -3,6 +3,8 @@ package expression
 import (
 	"reflect"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 // an empty string return nil
@@ -334,6 +336,7 @@ func TestExpression_Substitute(t *testing.T) {
 		{"[[x; y]; [1; 2]]", Vars{NewVar('x'): newNb(3)}, "[[3; y]; [1; 2]]"},
 		{"binom(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "binom(l; n)"},
 		{"min(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "min(l; n)"},
+		{"[[ x; y; z]]", Vars{NewVar('x'): newNb(1), NewVar('y'): newNb(1), NewVar('z'): newNb(1)}, "[[ 1; 1; 1]]"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -348,7 +351,9 @@ func TestExpression_Substitute(t *testing.T) {
 
 func TestExpressionNegativeParams(t *testing.T) {
 	e := mustParse(t, "m*x + 1")
-	pr := RandomParameters{NewVar('a'): mustParse(t, "-3"), NewVar('b'): mustParse(t, "2"), NewVar('m'): mustParse(t, "a/b")}
+	pr := RandomParameters{defs: map[Variable]*Expr{
+		NewVar('a'): mustParse(t, "-3"), NewVar('b'): mustParse(t, "2"), NewVar('m'): mustParse(t, "a/b"),
+	}}
 	vars, err := pr.Instantiate()
 	if err != nil {
 		t.Fatal(err)
@@ -379,7 +384,7 @@ func TestExpressionNegativeParams(t *testing.T) {
 }
 
 func TestBug51(t *testing.T) {
-	params := RandomParameters{
+	params := RandomParameters{defs: map[Variable]*Expr{
 		NewVar(109):       mustParse(t, "randChoice(2;4;5;8;10)*randChoice(-1;1)"),
 		NewVar(112):       mustParse(t, "randint(1;50)*randChoice(-1;0;1)"),
 		NewVarI(97, "0"):  mustParse(t, "randChoice(2;4;5;8;10)*randChoice(-1;1)"),
@@ -389,7 +394,7 @@ func TestBug51(t *testing.T) {
 		NewVar(116):       mustParse(t, "(x_1==x_0)+1"),
 		NewVar(97):        mustParse(t, "t*a_0"),
 		NewVarI(120, "2"): mustParse(t, "-b/a"),
-	}
+	}}
 
 	expr := mustParse(t, "-p")
 	for range [100]int{} {
@@ -401,4 +406,18 @@ func TestBug51(t *testing.T) {
 		expr2.Substitute(vars)
 		_ = expr2.AsLaTeX() // check for crashes
 	}
+}
+
+func TestBug300(t *testing.T) {
+	params := RandomParameters{defs: map[Variable]*Expr{
+		NewVar('x'): mustParse(t, "1"),
+		NewVar('y'): mustParse(t, "2"),
+		NewVar('z'): mustParse(t, "3"),
+	}}
+	vars, err := params.Instantiate()
+	tu.AssertNoErr(t, err)
+
+	e := mustParse(t, "[[ x; y; z]]")
+	e.Substitute(vars)
+	tu.Assert(t, e.String() == "[[1 ; 2 ; 3]]")
 }

@@ -37,11 +37,7 @@
             density="compact"
             chips
             multiple
-            :items="[
-              DifficultyTag.Diff1,
-              DifficultyTag.Diff2,
-              DifficultyTag.Diff3
-            ]"
+            :items="diffChoices"
             :model-value="actualTags"
             @update:model-value="updateTags"
           >
@@ -74,10 +70,10 @@ const emit = defineEmits<{
   (e: "update", randomMonoquestion: RandomMonoquestion): void;
 }>();
 
-const diffChoices = [
+const diffChoices: DifficultyTag[] = [
   DifficultyTag.Diff1,
   DifficultyTag.Diff2,
-  DifficultyTag.Diff3
+  DifficultyTag.Diff3,
 ];
 
 const actualTags = computed(() => {

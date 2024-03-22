@@ -8,11 +8,46 @@ import (
 	"strconv"
 )
 
-type varEvaluer interface {
-	resolve(v Variable) (real, error)
+func (rvv *resolver) resolve(v Variable) (*Expr, error) {
+	expr, err := rvv.instantiate(v)
+	if err != nil {
+		return nil, err
+	}
+	// zero cycle are allowed in parameters, but not when evaluating
+	if resolved, isVar := expr.atom.(Variable); isVar && v == resolved {
+		return nil, errors.New("variable cycle")
+	}
+
+	return expr, nil
 }
 
-var _ varEvaluer = (*evalResolver)(nil)
+func (rvv *resolver) setTmpVariable(v Variable, value float64) {
+	rvv.tmpVariable = v
+	rvv.tmpValue = Expr{atom: Number(value)}
+}
+
+func (rvv *resolver) clearTmpVariable() {
+	rvv.tmpVariable = Variable{}
+	rvv.tmpValue = Expr{}
+}
+
+func (expr *Expr) tryEval(ctx *resolver) *Expr {
+	if mat, ok := expr.atom.(matrix); ok {
+		out := make(matrix, len(mat))
+		for i, row := range mat {
+			out[i] = make([]*Expr, len(row))
+			for j := range row {
+				out[i][j] = mat[i][j].tryEval(ctx)
+			}
+		}
+		return &Expr{atom: out}
+	}
+	v, err := expr.evalReal(ctx)
+	if err == nil {
+		return v.toExpr()
+	}
+	return expr
+}
 
 // Vars maps variables to a chosen value.
 type Vars map[Variable]*Expr
@@ -34,39 +69,10 @@ type evalResolver struct {
 }
 
 // handle cycle
-func (vrs Vars) resolver() *evalResolver {
-	return &evalResolver{
-		defs:    vrs,
-		seen:    make(map[Variable]bool),
-		results: make(map[Variable]real),
-	}
-}
-
-func (vrs *evalResolver) resolve(v Variable) (real, error) {
-	if value, has := vrs.results[v]; has {
-		return value, nil
-	}
-
-	if vrs.seen[v] {
-		return real{}, ErrCycleVariable{v}
-	}
-
-	expr, ok := vrs.defs[v]
-	if !ok {
-		return real{}, ErrMissingVariable{v}
-	}
-
-	vrs.seen[v] = true
-
-	// recurse
-	value, err := expr.evalReal(vrs)
-	if err != nil {
-		return real{}, err
-	}
-
-	vrs.results[v] = value
-
-	return value, nil
+func (vrs Vars) resolver() *resolver {
+	out := newParamsInstantiater()
+	out.defs = vrs
+	return out
 }
 
 // Evaluate uses the given variables values to evaluate the formula.
@@ -111,18 +117,6 @@ func (expr *Expr) mustEvaluate(vars Vars) float64 {
 	return out
 }
 
-type singleVarResolver struct {
-	v     Variable
-	value float64
-}
-
-func (res singleVarResolver) resolve(v Variable) (real, error) {
-	if res.v != v {
-		return real{}, ErrMissingVariable{v}
-	}
-	return newReal(res.value), nil
-}
-
 type FunctionExpr struct {
 	Function *Expr
 	Variable Variable // usually x
@@ -138,8 +132,10 @@ type FunctionDefinition struct {
 // Closure returns a function computing f(x), where f is defined by the expression.
 // The closure will silently return NaN if the expression is invalid.
 func (f FunctionExpr) Closure() func(float64) float64 {
+	var ctx resolver
 	return func(xValue float64) float64 {
-		out, err := f.Function.evalFloat(singleVarResolver{f.Variable, xValue})
+		ctx.setTmpVariable(f.Variable, xValue)
+		out, err := f.Function.evalFloat(&ctx)
 		if err != nil {
 			return math.NaN()
 		}
@@ -209,32 +205,32 @@ func isFloatExceedingPrecision(v float64) bool {
 	return s[len(s)-1] != '0'
 }
 
-func (expr *Expr) evalFloat(bindings varEvaluer) (float64, error) {
-	r, err := expr.evalReal(bindings)
+func (expr *Expr) evalFloat(ctx *resolver) (float64, error) {
+	r, err := expr.evalReal(ctx)
 	return r.eval(), err
 }
 
-func (expr *Expr) evalReal(bindings varEvaluer) (real, error) {
+func (expr *Expr) evalReal(ctx *resolver) (real, error) {
+	return expr.atom.eval(expr.left, expr.right, ctx)
+}
+
+func (op operator) eval(left_, right_ *Expr, ctx *resolver) (real, error) {
 	var (
 		left, right = newRealInt(0), newRealInt(0) // 0 is a valid default value
 		err         error
 	)
-	if expr.left != nil {
-		left, err = expr.left.evalReal(bindings)
+	if left_ != nil {
+		left, err = left_.evalReal(ctx)
 		if err != nil {
 			return real{}, err
 		}
 	}
-	if expr.right != nil {
-		right, err = expr.right.evalReal(bindings)
+	if right_ != nil {
+		right, err = right_.evalReal(ctx)
 		if err != nil {
 			return real{}, err
 		}
 	}
-	return expr.atom.eval(left, right, bindings)
-}
-
-func (op operator) eval(left, right real, _ varEvaluer) (real, error) {
 	return op.evaluate(left, right), nil
 }
 
@@ -310,26 +306,33 @@ func (c constant) evalRat() real {
 	}
 }
 
-func (c constant) eval(_, _ real, _ varEvaluer) (real, error) {
+func (c constant) eval(_, _ *Expr, _ *resolver) (real, error) {
 	return c.evalRat(), nil
 }
 
-func (v Number) eval(_, _ real, _ varEvaluer) (real, error) { return newReal(float64(v)), nil }
+func (v Number) eval(_, _ *Expr, _ *resolver) (real, error) {
+	return newReal(float64(v)), nil
+}
 
-func (indice) eval(_, _ real, _ varEvaluer) (real, error) {
+func (indice) eval(_, _ *Expr, _ *resolver) (real, error) {
 	return real{}, errors.New("Une expression indicée ne peut pas être évaluée.")
 }
 
-func (matrix) eval(_, _ real, _ varEvaluer) (real, error) {
+func (matrix) eval(_, _ *Expr, _ *resolver) (real, error) {
 	return real{}, errors.New("Une matrice ne peut pas être évaluée.")
 }
 
-func (va Variable) eval(_, _ real, b varEvaluer) (real, error) {
+func (va Variable) eval(_, _ *Expr, b *resolver) (real, error) {
 	if b == nil {
 		return real{}, ErrMissingVariable{Missing: va}
 	}
 
-	return b.resolve(va)
+	expr, err := b.resolve(va)
+	if err != nil {
+		return real{}, err
+	}
+
+	return expr.evalReal(b)
 }
 
 func roundTo(v float64, digits int) float64 {
@@ -337,12 +340,19 @@ func roundTo(v float64, digits int) float64 {
 	return math.Round(v*exp) / exp
 }
 
-func (round roundFunc) eval(_, right real, _ varEvaluer) (real, error) {
-	return newReal(roundTo(right.eval(), round.nbDigits)), nil
+func (round roundFunc) eval(_, right *Expr, b *resolver) (real, error) {
+	v, err := right.evalFloat(b)
+	if err != nil {
+		return real{}, err
+	}
+	return newReal(roundTo(v, round.nbDigits)), nil
 }
 
-func (fn function) eval(_, right real, _ varEvaluer) (real, error) {
-	arg := right.eval()
+func (fn function) eval(_, right *Expr, b *resolver) (real, error) {
+	arg, err := right.evalFloat(b)
+	if err != nil {
+		return real{}, err
+	}
 	switch fn {
 	case logFn:
 		return newReal(math.Log(arg)), nil
@@ -383,7 +393,7 @@ func (fn function) eval(_, right real, _ varEvaluer) (real, error) {
 		}
 		return newRealInt(0), nil
 	case forceDecimalFn:
-		return real{val: right.eval(), isRational: false}, nil
+		return real{val: arg, isRational: false}, nil
 	case detFn, traceFn, transposeFn, invertFn:
 		return real{}, errors.New("internal error: matrice functions are not evaluable")
 	default:
@@ -410,7 +420,7 @@ const (
 
 var decimalDividors = generateDivisors(maxDecDen, thresholdDecDen)
 
-func startEnd(startE, endE *Expr, res varEvaluer) (float64, float64, error) {
+func startEnd(startE, endE *Expr, res *resolver) (float64, float64, error) {
 	start, err := startE.evalFloat(res)
 	if err != nil {
 		return 0, 0, err
@@ -423,7 +433,7 @@ func startEnd(startE, endE *Expr, res varEvaluer) (float64, float64, error) {
 	return start, end, nil
 }
 
-func minMax(args []*Expr, res varEvaluer) (float64, float64, error) {
+func minMax(args []*Expr, res *resolver) (float64, float64, error) {
 	if len(args) == 0 {
 		return 0, 0, ErrInvalidExpr{
 			Reason: "min et max requierent au moins un argument",
@@ -449,27 +459,29 @@ func minMax(args []*Expr, res varEvaluer) (float64, float64, error) {
 	return min, max, nil
 }
 
+func randomInt(start, end int) int { return start + rand.Intn(end-start+1) }
+
 // return a random number
-func (r specialFunction) evalRat(res varEvaluer) (real, error) {
+func (r specialFunction) evalRat(ctx *resolver) (real, error) {
 	switch r.kind {
 	case randInt:
-		start, end, err := startEnd(r.args[0], r.args[1], res)
+		start, end, err := startEnd(r.args[0], r.args[1], ctx)
 		if err != nil {
 			return real{}, err
 		}
 
-		err = r.validateStartEnd(start, end, 0)
+		err = r.kind.validateStartEnd(start, end, 0)
 		if err != nil {
 			return real{}, err
 		}
-		return newRealInt(int(start) + rand.Intn(int(end-start)+1)), nil
+		return newRealInt(randomInt(int(start), int(end))), nil
 	case randPrime:
-		start, end, err := startEnd(r.args[0], r.args[1], res)
+		start, end, err := startEnd(r.args[0], r.args[1], ctx)
 		if err != nil {
 			return real{}, err
 		}
 
-		err = r.validateStartEnd(start, end, 0)
+		err = r.kind.validateStartEnd(start, end, 0)
 		if err != nil {
 			return real{}, err
 		}
@@ -477,29 +489,29 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 		return newRealInt(generateRandPrime(int(start), int(end))), nil
 	case randChoice:
 		index := rand.Intn(len(r.args))
-		return r.args[index].evalReal(res)
+		return r.args[index].evalReal(ctx)
 	case choiceFrom:
 		// the parsing step ensure len(r.args) >= 2
-		choice, err := choiceFromSelect(r.args, res)
+		choice, err := choiceFromSelect(r.args, ctx)
 		if err != nil {
 			return real{}, err
 		}
-		return choice.evalReal(res)
+		return choice.evalReal(ctx)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
 		return newRealInt(decimalDividors[index]), nil
 	case minFn:
-		min, _, err := minMax(r.args, res)
+		min, _, err := minMax(r.args, ctx)
 		return newReal(min), err
 	case maxFn:
-		_, max, err := minMax(r.args, res)
+		_, max, err := minMax(r.args, ctx)
 		return newReal(max), err
-	case sumFn:
-		start, end, err := startEnd(r.args[1], r.args[2], res)
+	case sumFn, prodFn:
+		start, end, err := startEnd(r.args[1], r.args[2], ctx)
 		if err != nil {
 			return real{}, err
 		}
-		err = r.validateStartEnd(start, end, 0)
+		err = r.kind.validateStartEnd(start, end, 0)
 		if err != nil {
 			return real{}, err
 		}
@@ -507,57 +519,73 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 		// extract the variable
 		indice, ok := r.args[0].atom.(Variable)
 		if !ok {
-			return real{}, errors.New("Le premier argument de sum() doit être une variable.")
+			return real{}, errors.New("Le premier argument de sum() ou prod() doit être une variable.")
 		}
 		expr := r.args[3]
 		if start > end { //  ensure start <= end
 			start, end = end, start
 		}
-		sum := newRealInt(0)
+		result := newRealInt(0)
+		if r.kind == prodFn {
+			result = newRealInt(1)
+		}
 		for indiceVal := int(start); indiceVal <= int(end); indiceVal++ {
-			out, err := expr.evalReal(singleVarResolver{indice, float64(indiceVal)})
+			ctx.setTmpVariable(indice, float64(indiceVal))
+			vi, err := expr.evalReal(ctx)
 			if err != nil {
 				return real{}, fmt.Errorf("Impossible d'évaluer le terme d'indice %s = %d : %s", indice, indiceVal, err)
 			}
-			sum = sumReal(sum, out)
+			ctx.clearTmpVariable()
+
+			if r.kind == sumFn {
+				result = sumReal(result, vi)
+			} else {
+				result = multReal(result, vi)
+			}
 		}
-		return sum, nil
+		return result, nil
 	case matCoeff:
 		mat, i, j := r.args[0], r.args[1], r.args[2]
+		mat, err := mat.instantiate(ctx)
+		if err != nil {
+			return real{}, err
+		}
 		if mat, ok := mat.atom.(matrix); ok {
 			n, m := mat.dims()
-			i, err := evalIntInRange(i, res, 1, n)
+			i, err := evalIntInRange(i, ctx, 1, n)
 			if err != nil {
 				return real{}, fmt.Errorf("Le deuxième argument de coeff() doit être un indice de ligne : %s", err)
 			}
-			j, err := evalIntInRange(j, res, 1, m)
+			j, err := evalIntInRange(j, ctx, 1, m)
 			if err != nil {
 				return real{}, fmt.Errorf("Le troisième argument de coeff() doit être un indice de colonne : %s", err)
 			}
 			// human -> computer convention
 			i--
 			j--
-			return mat[i][j].evalReal(res)
+			return mat[i][j].evalReal(ctx)
 		} else {
 			return real{}, fmt.Errorf("Le premier argument de coeff() doit être une matrice.")
 		}
 	case binomial:
 		// the parsing step ensure len(r.args) == 2
-		k, err := evalInt(r.args[0], res)
+		k, err := evalInt(r.args[0], ctx)
 		if err != nil {
 			return real{}, fmt.Errorf("Le premier argument de binom() doit être un entier (%s).", err)
 		}
-		n, err := evalInt(r.args[1], res)
+		n, err := evalInt(r.args[1], ctx)
 		if err != nil {
 			return real{}, fmt.Errorf("Le second argument de binom() doit être un entier (%s).", err)
 		}
 		return newRealInt(binomialCoefficient(k, n)), nil
+	case randMatrixInt:
+		return real{}, errors.New("La fonction randMatrix() ne peut pas être évaluée.")
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
 }
 
-func evalInt(arg *Expr, res varEvaluer) (int, error) {
+func evalInt(arg *Expr, res *resolver) (int, error) {
 	i, err := arg.evalFloat(res)
 	if err != nil {
 		return 0, err
@@ -569,7 +597,7 @@ func evalInt(arg *Expr, res varEvaluer) (int, error) {
 	return i_, nil
 }
 
-func evalIntInRange(arg *Expr, res varEvaluer, min, max int) (int, error) {
+func evalIntInRange(arg *Expr, res *resolver, min, max int) (int, error) {
 	i, err := evalInt(arg, res)
 	if err != nil {
 		return 0, err
@@ -582,7 +610,7 @@ func evalIntInRange(arg *Expr, res varEvaluer, min, max int) (int, error) {
 
 // evaluate the selector and return the expression at the index
 // args must have length >= 2
-func choiceFromSelect(args []*Expr, res varEvaluer) (choice *Expr, err error) {
+func choiceFromSelect(args []*Expr, res *resolver) (choice *Expr, err error) {
 	choices, selector := args[:len(args)-1], args[len(args)-1]
 	index, err := evalIntInRange(selector, res, 1, len(choices))
 	if err != nil {
@@ -593,8 +621,8 @@ func choiceFromSelect(args []*Expr, res varEvaluer) (choice *Expr, err error) {
 }
 
 // return a random number
-func (r specialFunction) eval(_, _ real, res varEvaluer) (real, error) {
-	return r.evalRat(res)
+func (r specialFunction) eval(_, _ *Expr, ctx *resolver) (real, error) {
+	return r.evalRat(ctx)
 }
 
 // --------------------------- numbers computations ---------------------------

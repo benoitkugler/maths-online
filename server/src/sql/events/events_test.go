@@ -242,3 +242,27 @@ func TestAdvance_TotalPoints(t *testing.T) {
 		}
 	}
 }
+
+func Test_progressionScale_findRank(t *testing.T) {
+	tests := []struct {
+		ratio float64
+		want  int
+	}{
+		{0, 0},
+		{4.99, 0},
+		{5, 1},
+		{15, 2},
+		{30, 3},
+		{50, 4},
+		{73, 5},
+		{99.999, 5},
+		{100, 6},
+		{110, 6},
+	}
+	// 0, 5, 15, 30, 50, 73, 100,
+	for _, tt := range tests {
+		if got := defaultProgressionScale.findRank(tt.ratio); got != tt.want {
+			t.Errorf("progressionScale.findRank(%v) = %v, want %v", tt.ratio, got, tt.want)
+		}
+	}
+}

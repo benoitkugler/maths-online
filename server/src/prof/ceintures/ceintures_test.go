@@ -65,8 +65,8 @@ func (sh Scheme) isWellFormed(level ce.Level) bool {
 func TestWellFormed(t *testing.T) {
 	brokenScheme := Scheme{
 		Ps: []Prerequisite{
-			{Need: Stage{ce.CalculMental, ce.Blanche}, Pending: Stage{ce.Developpement, ce.Jaune}},
-			{Need: Stage{ce.Developpement, ce.Jaune}, Pending: Stage{ce.CalculMental, ce.Blanche}},
+			{Need: Stage{ce.CalculMentalI, ce.Blanche}, Pending: Stage{ce.Developpement, ce.Jaune}},
+			{Need: Stage{ce.Developpement, ce.Jaune}, Pending: Stage{ce.CalculMentalI, ce.Blanche}},
 		},
 	}
 	tu.Assert(t, !brokenScheme.isWellFormed(ce.Seconde))
@@ -131,5 +131,5 @@ func TestPending(t *testing.T) {
 
 var allNoire ce.Advance = [...]ce.Rank{
 	ce.Noire, ce.Noire, ce.Noire, ce.Noire, ce.Noire, ce.Noire,
-	ce.Noire, ce.Noire, ce.Noire, ce.Noire, ce.Noire,
+	ce.Noire, ce.Noire, ce.Noire, ce.Noire, ce.Noire, ce.Noire,
 }

@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     :model-value="props.modelValue"
-    @update:model-value="v => emit('update:modelValue', v)"
+    @update:model-value="(v) => emit('update:modelValue', v)"
     width="1000px"
   >
     <v-card
@@ -41,7 +41,9 @@
               euclidienne de x par 3. <br /><br />
               Un symbole spécial, un mot ou un code LaTeX peuvent être insérés
               directement en utilisant des guillemets :
-              <C>x = "moyenne"</C> , <C>A = ">"</C> ou <C>B = "\ge"</C>.
+              <C>x = "moyenne"</C> , <C>A = ">"</C> ou <C>B = "\ge"</C>. <br />
+              Une matrice est définie par une liste de lignes :
+              <C>A = [[1;2;3];[4;5;6]]</C>
             </v-expansion-panel-text>
           </v-expansion-panel>
           <v-expansion-panel title="Fonctions usuelles">
@@ -123,17 +125,58 @@
                     </v-col>
                   </v-row>
                 </v-list-item>
+
                 <v-list-item>
                   <v-row>
                     <v-col cols="6">
                       <v-list-item-title
-                        ><C>H = projection(A, B, C)</C></v-list-item-title
+                        ><C>H = projection(A, B, C)</C> ou
+                        <C>x_H, y_H = projection(A, B, C)</C></v-list-item-title
                       >
                     </v-col>
                     <v-col align-self="center">
                       <div class="text-grey">
                         Calcule le projeté orthogonal du point <i>A</i> sur
                         <i>(BC)</i>, de coordonnées (<C>x_H</C>, <C>y_H</C>)
+                        <br />
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+
+                <v-list-item>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title
+                        ><C
+                          >a, b = number_pair_sum(difficulty)</C
+                        ></v-list-item-title
+                      >
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        Renvoie deux entiers aléatoires à utiliser dans une
+                        addition.
+                        <i>difficulty</i> est en entier entre 1 et 5 permettant
+                        d'ajuster la difficulté du calcul
+                        <br />
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+                <v-list-item>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title
+                        ><C>
+                          a, b = number_pair_prod(difficulty)</C
+                        ></v-list-item-title
+                      >
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        Idem que <i>number_pair_sum</i>, mais pensée pour un
+                        produit.
                         <br />
                       </div>
                     </v-col>
@@ -179,22 +222,30 @@ const emit = defineEmits<{
 
 const fonctionsDesc = [
   [
+    "randInt(-2; 10)",
+    "Renvoie un entier aléatoire entre un minimium et un maximum (inclus), ici -2 et 10.",
+  ],
+  [
     "randChoice(-4;12;99)",
-    "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}."
+    "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
   ],
   [
     "choiceFrom(A; B; C; D; k)",
-    "Renvoie l'expression à l'index k parmi celles proposées (ici, k est entre 1 et 4)."
+    "Renvoie l'expression à l'index k parmi celles proposées (ici, k est entre 1 et 4).",
   ],
   ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [
     "randDecDen()",
-    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)."
+    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal).",
+  ],
+  [
+    "randMatrix(n, p, min, max)",
+    "Renvoie une matrice de taille n x p à coefficients entiers aléatoires compris entre min et max (inclus).",
   ],
   ["round(x; 3)", "Arrondi x à trois chiffres après la virgule."],
   [
     "forceDecimal(x)",
-    "Affiche x sous forme décimale, même si x est rationnel."
+    "Affiche x sous forme décimale, même si x est rationnel.",
   ],
   ["floor(x)", "Renvoie la partie entière de x."],
   ["binom(k; n)", "Renvoie le coefficient binomial k parmi n."],
@@ -203,9 +254,16 @@ const fonctionsDesc = [
   ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs."],
   ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs."],
   [
-    "sum(k; 1; n; k^2)",
-    "Renvoie la somme d'une expression évaluée pour une plage d'indice"
+    `sum(k; 1; n; k^2; "expand")`,
+    "Renvoie la somme d'une expression évaluée pour une plage d'indice. Le dernier paramètre est optionel : s'il est présent, le symbole Sigma n'est pas utilisé.",
   ],
+  [`prod(k; 1; n; k^2; "expand")`, "Idem que sum, mais pour un produit."],
+  ["coeff(A; i; j)", "Renvoie le coefficient en case (i, j) de la matrice A."],
+  ["set(A; i; j, v)", "Renvoie la matrice A avec en case (i, j) la valeur v."],
+  ["trans(A) ou transpose(A)", "Renvoie la transposée de A."],
+  ["trace(A)", "Renvoie la trace de A."],
+  ["det(A)", "Renvoie le déterminant de A."],
+  ["inv(A)", "Renvoie l'inverse de A."],
   ["exp(x)", "Fonction exponentielle"],
   ["ln(x)", "Fonction logarithme"],
   ["sin(x)", "Fonction sinus"],
@@ -215,7 +273,7 @@ const fonctionsDesc = [
   ["acos(x)", "Fonction arccos"],
   ["atan(x)", "Fonction arctan"],
   ["abs(x)", "Fonction valeur absolue"],
-  ["sqrt(x)", "Fonction racine carrée"]
+  ["sqrt(x)", "Fonction racine carrée"],
 ] as const;
 
 const compsDesc = [
@@ -223,7 +281,7 @@ const compsDesc = [
   ["(a > b)", "a est strictement supérieur à b"],
   ["(a >= b)", "a est supérieur ou égal à b"],
   ["(a < b)", "a est strictement inférieur à b"],
-  ["(a <= b)", "a est inférieur ou égal à b"]
+  ["(a <= b)", "a est inférieur ou égal à b"],
 ] as const;
 </script>
 

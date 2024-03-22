@@ -9,34 +9,78 @@ import (
 )
 
 // Interpolated is a string with $<static math>$ or &<expression>&
-// delimiters.
-// && are allowed in $$.
+// delimiters, with && are allowed in $$.
+// Also, $$ ... $$ may be used to define a FormulaBlock, and
+// # ... # to define NumberFieldBlock
 type Interpolated string
 
-type textOrFormula struct {
-	s         string
-	isFormula bool
+const (
+	iText uint8 = iota
+	iFormula
+	iNumberField
+)
+
+type textChunck struct {
+	s    string
+	kind uint8
 }
 
-// parseFormula looks for $$ $$ lines
-func (s Interpolated) parseFormula() (out []textOrFormula) {
+func splitNumberField(text string) (out []textChunck) {
+	for i := strings.IndexByte(text, '#'); i != -1; i = strings.IndexByte(text, '#') {
+		before, after := text[:i], text[i+1:]
+		close := strings.IndexByte(after, '#')
+		if close == -1 {
+			out = append(out, textChunck{s: text, kind: iText})
+			return out
+		}
+		expr := after[:close]
+		if before != "" {
+			out = append(out, textChunck{s: before, kind: iText})
+		}
+		out = append(out, textChunck{s: expr, kind: iNumberField})
+		text = after[close+1:]
+	}
+	if text != "" {
+		out = append(out, textChunck{s: text, kind: iText})
+	}
+	return out
+}
+
+// parseFormula looks for $$ $$ lines and # # chunks
+func (s Interpolated) parseFormula() (out []textChunck) {
+	if s == "" {
+		// always return at least one chunk
+		return []textChunck{{"", iText}}
+	}
 	lines := strings.Split(string(s), "\n")
-	var currentLines []string
+	var (
+		currentLines []string
+		tmp          []textChunck
+	)
 	for _, line := range lines {
 		lineT := strings.TrimSpace(line)
 		if lineT != "$$" && strings.HasPrefix(lineT, "$$") && strings.HasSuffix(lineT, "$$") {
 			// found a formula
 			if len(currentLines) != 0 {
-				out = append(out, textOrFormula{strings.Join(currentLines, "\n"), false})
+				tmp = append(tmp, textChunck{strings.Join(currentLines, "\n"), iText})
 				currentLines = nil
 			}
-			out = append(out, textOrFormula{lineT[2 : len(lineT)-2], true})
+			tmp = append(tmp, textChunck{lineT[2 : len(lineT)-2], iFormula})
 		} else {
 			currentLines = append(currentLines, line)
 		}
 	}
 	if len(currentLines) != 0 {
-		out = append(out, textOrFormula{strings.Join(currentLines, "\n"), false})
+		tmp = append(tmp, textChunck{strings.Join(currentLines, "\n"), iText})
+	}
+
+	// parse lines again to look for #
+	for _, line := range tmp {
+		if line.kind == iFormula {
+			out = append(out, line)
+			continue
+		}
+		out = append(out, splitNumberField(line.s)...)
 	}
 	return out
 }

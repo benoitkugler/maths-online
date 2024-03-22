@@ -26,11 +26,10 @@
   >
     <ExerciceVariantPannel
       :exercice-header="ownVariants[variantIndex]"
-      :is-readonly="isReadonly"
+      :readonly="isReadonly"
       :all-tags="props.allTags"
       :show-variant-meta="true"
       @update="(ex) => (ownVariants[variantIndex] = ex)"
-      @preview="(ex) => emit('preview', ex)"
     ></ExerciceVariantPannel>
   </ResourceScafold>
 </template>
@@ -38,6 +37,7 @@
 <script setup lang="ts">
 import type {
   ExercicegroupExt,
+  Int,
   LoopbackShowExercice,
   Sheet,
   Tags,
@@ -64,7 +64,6 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
-  (e: "preview", ex: LoopbackShowExercice): void;
 }>();
 
 const router = useRouter();
@@ -101,7 +100,7 @@ async function updateExercicegroup() {
     IdExercice: ownVariants.value[variantIndex.value].Id,
     Parameters: [], // ignored
     Questions: [], // ignored
-    CurrentQuestion: -1,
+    CurrentQuestion: -1 as Int,
     ShowCorrection: false,
   });
   if (res == undefined) return;

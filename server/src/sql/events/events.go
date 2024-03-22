@@ -195,14 +195,44 @@ type Stats struct {
 	Occurences  [NbEvents]int
 	TotalPoints int
 	Flames      int
+
+	Rank int
 }
 
-func (adv Advance) Stats() Stats {
+// in percent of the maxRankThreshold
+type progressionScale [7]float64
+
+func (ps *progressionScale) findRank(ratio float64) int {
+	// find the first threshold higher than ratio
+	for rank, threshold := range ps {
+		if threshold > ratio {
+			// return the previous rank
+			return rank - 1
+		}
+	}
+	return len(ps) - 1
+}
+
+var defaultProgressionScale = progressionScale{
+	0, 5, 15, 30, 50, 73, 100,
+}
+
+// Stats aggregate the events and compute the associated rank.
+//
+// The rank is computed using [maxRankThreshold], the amount of points required to access the
+// last rank, and a fixed progression scale :
+//
+//	| Rank		| 0 | 1 | 2 	|	3 	| 4		| 5		| 6
+//	| Ratio (%)	| 0 | 5 | 15 	|	30 	| 50	| 73	| 100
+func (adv Advance) Stats(maxRankThreshold int) Stats {
 	oc := adv.occurences()
+	points := totalPoints(oc)
+	advanceRatio := 100. * float64(points) / float64(maxRankThreshold)
 	return Stats{
 		Occurences:  oc,
-		TotalPoints: totalPoints(oc),
+		TotalPoints: points,
 		Flames:      adv.flames(),
+		Rank:        defaultProgressionScale.findRank(advanceRatio),
 	}
 }
 

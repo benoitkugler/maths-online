@@ -33,12 +33,15 @@ const (
 	randInt specialFunctionKind = iota
 	randPrime
 	randChoice
-	choiceFrom // the last argument is used as selector
+	randMatrixInt // random matrix with integer coeff
+	choiceFrom    // the last argument is used as selector
 	randDenominator
 	minFn
 	maxFn
-	sumFn // sum of an expression over a variable
+	sumFn  // sum of an expression over a variable
+	prodFn // product of an expression over a variable
 	matCoeff
+	matSet   // update a matrix
 	binomial // coefficient binomial (n, k)
 
 	invalidSpecialFunction
@@ -52,6 +55,8 @@ func (sf specialFunctionKind) String() string {
 		return "randPrime"
 	case randChoice:
 		return "randChoice"
+	case randMatrixInt:
+		return "randMatrix"
 	case choiceFrom:
 		return "choiceFrom"
 	case randDenominator:
@@ -62,8 +67,12 @@ func (sf specialFunctionKind) String() string {
 		return "max"
 	case sumFn:
 		return "sum"
+	case prodFn:
+		return "prod"
 	case matCoeff:
 		return "coeff"
+	case matSet:
+		return "set"
 	case binomial:
 		return "binom"
 	default:
@@ -429,6 +438,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = randInt
 	case "randprime":
 		fn = randPrime
+	case "randmatrix":
+		fn = randMatrixInt
 	case "randchoice":
 		fn = randChoice
 	case "choicefrom":
@@ -441,8 +452,12 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = maxFn
 	case "sum":
 		fn = sumFn
+	case "prod":
+		fn = prodFn
 	case "coeff":
 		fn = matCoeff
+	case "set":
+		fn = matSet
 	case "binom":
 		fn = binomial
 	default:

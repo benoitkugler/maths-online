@@ -116,7 +116,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
     });
   }
 
-  void _showAppSettings() async {
+  void _showProfile() async {
     final newSettings = await Navigator.of(context).push(
         MaterialPageRoute<UserSettings>(
             builder: (_) => Settings(widget.buildMode, widget.handler)));
@@ -139,7 +139,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
     settings.hasBeenLaunched = true;
     widget.handler.save(settings);
 
-    if (goTo != null && goTo) _showAppSettings();
+    if (goTo != null && goTo) _showProfile();
   }
 
   void _saveTrivialMeta(String gameCode, String gameMeta) async {
@@ -240,13 +240,13 @@ class __AppScaffoldState extends State<_AppScaffold> {
         actions: [
           IconButton(
             onPressed: () => _showAudioSettings(),
-            icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
+            icon: const Icon(Icons.library_music),
             tooltip: "Choisir la musique",
           ),
           IconButton(
-            onPressed: () => _showAppSettings(),
-            icon: const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
-            tooltip: "Paramètres",
+            onPressed: () => _showProfile(),
+            icon: const Icon(Icons.account_circle),
+            tooltip: "Afficher ton profil",
           ),
         ],
       ),

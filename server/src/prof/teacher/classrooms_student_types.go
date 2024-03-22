@@ -1,6 +1,9 @@
 package teacher
 
-import tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+import (
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+)
 
 type StudentHeader struct {
 	Id                 tc.IdStudent
@@ -28,8 +31,12 @@ type AttachStudentToClassroom2Out struct {
 }
 
 type CheckStudentClassroomOut struct {
-	IsOK bool // if not, ignore `meta`
+	IsOK bool // if false, ignore the other fields
 	Meta StudentClassroomHeader
+
+	// Advance exposes the global advance of the student,
+	// as defined by its events.
+	Advance events.Stats
 }
 
 type StudentClient struct {

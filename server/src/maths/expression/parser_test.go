@@ -492,6 +492,13 @@ var expressions = [...]struct {
 	{"choiceFrom( x;", nil, true},
 	{"choiceFrom( x,y )", nil, true},
 	{"choiceFrom(x;y); )", nil, true},
+	// random matrix
+	{"randMatrix(1;2)", nil, true},
+	{"randMatrix()", nil, true},
+	{"randMatrix(2;3;5; 1)", &Expr{atom: specialFunction{
+		kind: randMatrixInt,
+		args: []*Expr{newNb(2), newNb(3), newNb(5), newNb(1)},
+	}}, false},
 	{
 		"2 + 3 * randInt(2; 12)", &Expr{
 			atom:  plus,
@@ -546,8 +553,14 @@ var expressions = [...]struct {
 	{"min()", nil, true},
 	{"sum()", nil, true},
 	{"sum(1;2;3)", nil, true},
-	{"sum(1;2;3;4;5)", nil, true},
+	{"sum(1;2;3;4;5;6)", nil, true},
 	{"sum(k; 1; n; k^2)", &Expr{atom: specialFunction{kind: sumFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: pow, left: newVarExpr('k'), right: newNb(2)},
+	}}}, false},
+	{"prod()", nil, true},
+	{"prod(1;2;3)", nil, true},
+	{"prod(1;2;3;4;5;6)", nil, true},
+	{"prod(k; 1; n; k^2)", &Expr{atom: specialFunction{kind: prodFn, args: []*Expr{
 		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: pow, left: newVarExpr('k'), right: newNb(2)},
 	}}}, false},
 	// comparison
@@ -680,6 +693,9 @@ var expressions = [...]struct {
 		"coeff(A; i)", nil, true,
 	},
 	{
+		"set(A; i)", nil, true,
+	},
+	{
 		"binom(1)", nil, true,
 	},
 	{
@@ -767,9 +783,9 @@ func TestVarMap_Positions(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rv := make(RandomParameters)
+		rv := make(map[Variable]bool)
 		for _, v := range tt.args {
-			rv[v] = nil
+			rv[v] = true
 		}
 
 		_, vm, err := parseBytes([]byte(tt.expr))

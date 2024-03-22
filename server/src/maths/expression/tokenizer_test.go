@@ -21,6 +21,7 @@ func TestTokens(t *testing.T) {
 		{"7log(10)", []tokenData{nT("7"), mult, logFn, openPar, nT("10"), closePar}},
 		{"7randPrime(1;10)", []tokenData{nT("7"), mult, randPrime, openPar, nT("1"), semicolon, nT("10"), closePar}},
 		{"randChoice(1;2)", []tokenData{randChoice, openPar, nT("1"), semicolon, nT("2"), closePar}},
+		{"randMatrix(1;2)", []tokenData{randMatrixInt, openPar, nT("1"), semicolon, nT("2"), closePar}},
 		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
 		{"choiceFrom()", []tokenData{choiceFrom, openPar, closePar}},
 		{"choiceFrom(x ; 2 )", []tokenData{choiceFrom, openPar, x, semicolon, nT("2"), closePar}},

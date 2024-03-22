@@ -139,6 +139,7 @@ import {
   type Trivial,
   type TrivialExt,
   PublicStatus,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, computed, onMounted, onActivated, watchEffect } from "vue";
@@ -227,8 +228,9 @@ async function createConfig() {
 
 async function updateConfig(config: Trivial) {
   // remove empty categories
-  config.Questions.Tags = config.Questions.Tags.map((q) =>
-    (q || []).filter((v) => v && v.length != 0)
+  config.Questions.Tags.forEach(
+    (q, i) =>
+      (config.Questions.Tags[i] = (q || []).filter((v) => v && v.length != 0))
   );
   const res = await controller.UpdateTrivialPoursuit(config);
   if (res === undefined) {
@@ -316,7 +318,7 @@ async function launchSession(groups: GroupsStrategy) {
   showMonitor.value = true;
 }
 
-const sessionMeta = ref<RunningSessionMetaOut>({ NbGames: 0 });
+const sessionMeta = ref<RunningSessionMetaOut>({ NbGames: 0 as Int });
 async function fetchSessionMeta() {
   const res = await controller.GetTrivialRunningSessions();
   if (res == undefined) {
