@@ -242,9 +242,9 @@ func (r specialFunction) expandSequence() (string, error) {
 		term.Substitute(Vars{k: v.toExpr()})
 		chunks = append(chunks, term.AsLaTeX())
 	}
-	sep := "+"
+	sep := " + "
 	if r.kind == prodFn {
-		sep = "\\times"
+		sep = " \\times "
 	}
 	return strings.Join(chunks, sep), nil
 }
