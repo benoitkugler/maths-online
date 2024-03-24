@@ -1,6 +1,6 @@
 {
     "name": "prof",
-    "version": "1.7.11",
+    "version": "1.7.12",
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc --noEmit && vite build",

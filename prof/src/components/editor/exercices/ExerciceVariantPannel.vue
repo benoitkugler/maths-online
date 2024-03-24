@@ -7,6 +7,7 @@
     :on-save="saveQuestion"
     :on-export-latex="exportLatex"
     @update="writeChanges"
+    ref="editor"
   >
     <!-- navigation between questions -->
     <template v-slot:top-left>
@@ -54,7 +55,7 @@
       :exercice="exercice"
       :is-readonly="props.readonly"
       @update="notifieUpdate"
-      @preview="(qu: LoopbackShowExercice) => emit('preview', qu)"
+      @preview="updatePreview"
     ></SkeletonDetails>
   </v-dialog>
 </template>
@@ -65,7 +66,6 @@ import {
   type ExerciceExt,
   type ExerciceHeader,
   type ExerciceQuestionExt,
-  type IdExercice,
   type LoopbackShowExercice,
   type TagsDB,
   Int,
@@ -88,7 +88,6 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update", ex: ExerciceHeader): void;
-  (e: "preview", ex: LoopbackShowExercice): void;
 }>();
 
 const questionIndex = ref(0 as Int);
@@ -104,9 +103,11 @@ const exercice = ref<ExerciceExt>({
   Questions: [],
 });
 
+defineExpose({ refreshExercicePreview });
+
 onMounted(async () => {
   await fetchExercice();
-  refreshExercicePreview(props.exerciceHeader.Id);
+  refreshExercicePreview();
 });
 
 watch(
@@ -114,7 +115,7 @@ watch(
   async (newV, oldV) => {
     if (newV.Id != oldV.Id) {
       await fetchExercice();
-      refreshExercicePreview(props.exerciceHeader.Id);
+      refreshExercicePreview();
 
       // reset the question index if needed
       if (questionIndex.value >= (exercice.value.Questions?.length || 0))
@@ -125,17 +126,25 @@ watch(
 
 const showSkeletonDetails = ref(false);
 
-async function refreshExercicePreview(id: IdExercice) {
+async function refreshExercicePreview() {
   const res = await controller.EditorSaveExerciceAndPreview({
     OnlyPreview: true,
-    IdExercice: id,
+    IdExercice: props.exerciceHeader.Id,
     Parameters: [], // ignored
     Questions: [], // ignored
     CurrentQuestion: -1 as Int,
     ShowCorrection: false,
   });
   if (res == undefined) return;
-  emit("preview", res.Preview);
+  updatePreview(res.Preview);
+}
+
+const editor = ref<InstanceType<typeof QuestionPageEditor> | null>(null);
+function updatePreview(content: LoopbackShowExercice) {
+  editor.value?.updatePreview({
+    Kind: LoopbackServerEventKind.LoopbackShowExercice,
+    Data: content,
+  });
 }
 
 async function fetchExercice() {

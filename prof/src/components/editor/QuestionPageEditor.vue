@@ -222,6 +222,7 @@ import { History } from "@/controller/editor_history";
 import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
 import { watch } from "vue";
+import { LoopbackServerEvent } from "@/controller/loopback_gen";
 
 const props = defineProps<{
   question: QuestionPage;
@@ -244,6 +245,12 @@ watch(
     }
   }
 );
+
+defineExpose({ updatePreview });
+
+function updatePreview(content: LoopbackServerEvent) {
+  preview.value?.preview(content);
+}
 
 const inner = ref(copy(props.question));
 // updated on saved, used to implement dirty feature
@@ -346,7 +353,7 @@ async function save() {
     errorContent.value = null;
     errorParameters.value = null;
 
-    preview.value?.preview(res.Preview); // TODO:
+    preview.value?.preview(res.Preview);
   } else {
     onQuestionError(res.Error);
   }

@@ -37,7 +37,6 @@
 
 <script setup lang="ts">
 import type {
-  LoopbackShowQuestion,
   Question,
   QuestiongroupExt,
   Sheet,
