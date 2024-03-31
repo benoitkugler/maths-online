@@ -7,7 +7,7 @@
       <v-list
         v-if="data != null"
         select-strategy="classic"
-        v-model:selected="selected"
+        :selected="selected"
         class="my-1 overflow-y-auto"
         style="max-height: 55vh"
       >
@@ -18,6 +18,7 @@
           :value="classroom.id"
           rounded
           class="my-1"
+          @click="() => onSelect(classroom.id)"
         >
           <template v-slot:append="{ isActive }">
             <v-list-item-action end>
@@ -35,8 +36,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Int, Trivial, TrivialSelfaccess } from "@/controller/api_gen";
+import type {
+  IdClassroom,
+  Trivial,
+  TrivialSelfaccess,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { reactive } from "vue";
+import { computed } from "vue";
 import { ref, onActivated, onMounted } from "vue";
 
 interface Props {
@@ -52,7 +59,8 @@ const emit = defineEmits<{
 onMounted(() => fetch());
 onActivated(() => fetch());
 
-const selected = ref<Int[]>([]);
+const crible = reactive(new Set<IdClassroom>());
+const selected = computed(() => Array.from(crible.keys()));
 const data = ref<TrivialSelfaccess | null>(null);
 
 async function fetch() {
@@ -61,7 +69,17 @@ async function fetch() {
   });
   if (res == undefined) return;
   data.value = res;
-  selected.value = res.Actives || [];
+  crible.clear();
+  (res.Actives || []).forEach((id) => crible.add(id));
+}
+
+function onSelect(id: IdClassroom) {
+  if (crible.has(id)) {
+    crible.delete(id);
+  } else {
+    crible.add(id);
+  }
+  console.log(crible);
 }
 
 async function save() {
