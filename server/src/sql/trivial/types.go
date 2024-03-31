@@ -64,15 +64,22 @@ func (cat CategoriesQuestions) Levels() []string {
 
 // MatchMatiere returns true if [matiere] is in one of the
 // categories.
+//
+// If there is no matiere defined at all, [Autre] will match.
 func (cat CategoriesQuestions) MatchMatiere(matiere teacher.MatiereTag) bool {
+	hasMatiere := false
 	for _, qc := range cat.Tags {
 		for _, l := range qc {
 			for _, tag := range l {
+				hasMatiere = hasMatiere || tag.Section == editor.Matiere
 				if tag.Section == editor.Matiere && tag.Tag == string(matiere) {
 					return true
 				}
 			}
 		}
+	}
+	if !hasMatiere {
+		return matiere == teacher.Autre
 	}
 	return false
 }
