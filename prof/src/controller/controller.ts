@@ -127,13 +127,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessEditorCreateQuestiongroup(data: QuestiongroupExt): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question créée avec succès.");
-    }
-  }
-
   protected onSuccessEditorSaveQuestionMeta(): void {
     this.inRequest = false;
     if (this.showMessage) {

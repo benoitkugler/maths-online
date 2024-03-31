@@ -77,7 +77,7 @@
       </v-col>
     </v-row>
 
-    <v-card-text class="pt-1 pb-2" :hidden="props.hideContent">
+    <v-card-text class="pt-1 pb-2 px-2" :hidden="props.hideContent">
       <slot></slot>
     </v-card-text>
   </v-card>

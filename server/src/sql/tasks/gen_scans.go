@@ -961,8 +961,12 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *QuestionHistory) Scan(src interface{}) error  { return (*pq.BoolArray)(s).Scan(src) }
-func (s QuestionHistory) Value() (driver.Value, error) { return pq.BoolArray(s).Value() }
+func (s *QuestionHistory) Scan(src interface{}) error {
+	return (*pq.BoolArray)(s).Scan(src)
+}
+func (s QuestionHistory) Value() (driver.Value, error) {
+	return pq.BoolArray(s).Value()
+}
 
 func IdMonoquestionArrayToPQ(ids []IdMonoquestion) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))

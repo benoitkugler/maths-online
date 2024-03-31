@@ -217,15 +217,32 @@ extension RC on Rank {
 
 class CeintureIcon extends StatelessWidget {
   final Rank rank;
-  const CeintureIcon(this.rank, {super.key});
+  final double scale;
+  final bool withBackground;
+  const CeintureIcon(this.rank,
+      {super.key, this.scale = 1, this.withBackground = false});
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      "assets/images/yellow-belt.png",
-      color: rank.color,
-      width: 48,
-      height: 32,
-    );
+    return Container(
+        height: 48 * scale,
+        width: 48 * scale,
+        decoration: BoxDecoration(
+            boxShadow: withBackground
+                ? [BoxShadow(color: rank.color, blurRadius: 2, spreadRadius: 2)]
+                : null,
+            shape: BoxShape.circle,
+            color: !withBackground
+                ? Colors.transparent
+                : rank == Rank.blanche
+                    ? Colors.grey
+                    : Colors.white),
+        child: Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: Image.asset(
+            "assets/images/yellow-belt.png",
+            color: rank.color,
+          ),
+        ));
   }
 }

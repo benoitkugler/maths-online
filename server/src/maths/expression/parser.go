@@ -235,7 +235,7 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 
 	var leftIsOptional bool
 	switch op {
-	case plus, minus: // an expression before the sign is optional
+	case plus, minus, complement: // an expression before the sign is optional
 		leftIsOptional = true
 	}
 

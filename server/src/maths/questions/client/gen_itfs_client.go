@@ -56,6 +56,10 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 		var data RadioAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "SetAnswer":
+		var data SetAnswer
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "SignTableAnswer":
 		var data SignTableAnswer
 		err = json.Unmarshal(wr.Data, &data)
@@ -108,6 +112,8 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "ProofAnswer", Data: data}
 	case RadioAnswer:
 		wr = wrapper{Kind: "RadioAnswer", Data: data}
+	case SetAnswer:
+		wr = wrapper{Kind: "SetAnswer", Data: data}
 	case SignTableAnswer:
 		wr = wrapper{Kind: "SignTableAnswer", Data: data}
 	case TableAnswer:
@@ -135,6 +141,7 @@ const (
 	PointAnswerAnKind           = "PointAnswer"
 	ProofAnswerAnKind           = "ProofAnswer"
 	RadioAnswerAnKind           = "RadioAnswer"
+	SetAnswerAnKind             = "SetAnswer"
 	SignTableAnswerAnKind       = "SignTableAnswer"
 	TableAnswerAnKind           = "TableAnswer"
 	TreeAnswerAnKind            = "TreeAnswer"
@@ -310,6 +317,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data RadioFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "SetFieldBlock":
+		var data SetFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "SignTableBlock":
 		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
@@ -386,6 +397,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "ProofFieldBlock", Data: data}
 	case RadioFieldBlock:
 		wr = wrapper{Kind: "RadioFieldBlock", Data: data}
+	case SetFieldBlock:
+		wr = wrapper{Kind: "SetFieldBlock", Data: data}
 	case SignTableBlock:
 		wr = wrapper{Kind: "SignTableBlock", Data: data}
 	case SignTableFieldBlock:
@@ -425,6 +438,7 @@ const (
 	OrderedListFieldBlockBlKind           = "OrderedListFieldBlock"
 	ProofFieldBlockBlKind                 = "ProofFieldBlock"
 	RadioFieldBlockBlKind                 = "RadioFieldBlock"
+	SetFieldBlockBlKind                   = "SetFieldBlock"
 	SignTableBlockBlKind                  = "SignTableBlock"
 	SignTableFieldBlockBlKind             = "SignTableFieldBlock"
 	TableBlockBlKind                      = "TableBlock"

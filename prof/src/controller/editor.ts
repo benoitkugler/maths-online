@@ -42,7 +42,12 @@ import {
   type QuestiongroupExt,
   type ExercicegroupExt,
   Int,
+  Parameters,
+  Enonce,
+  ErrQuestionInvalid,
+  SetFieldBlock,
 } from "./api_gen";
+import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
 
 export const ExpressionColor = "orange";
@@ -143,6 +148,7 @@ export const sortedBlockKindLabels = [
   ],
   [BlockKind.TableFieldBlock, { label: "Tableau", isAnswerField: true }],
   [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }],
+  [BlockKind.SetFieldBlock, { label: "Ensembles", isAnswerField: true }],
 ] as const;
 
 export const BlockKindLabels: {
@@ -170,6 +176,7 @@ interface BlockKindTypes {
   [BlockKind.TableFieldBlock]: TableFieldBlock;
   [BlockKind.VectorFieldBlock]: VectorFieldBlock;
   [BlockKind.ProofFieldBlock]: ProofFieldBlock;
+  [BlockKind.SetFieldBlock]: SetFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -587,6 +594,16 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
+    case BlockKind.SetFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: "¬A ∩ B ",
+          AdditionalSets: ["C"],
+        },
+      };
+      return out;
+    }
     default:
       throw "Unexpected Kind";
   }
@@ -776,4 +793,18 @@ export async function readClipboardForBlock() {
   const parsed = JSON.parse(json);
   if (!(parsed["Data"] && parsed["Kind"])) return;
   return parsed as Block;
+}
+
+export interface QuestionPage {
+  id: number;
+  parameters: Parameters;
+  sharedParameters: Parameters;
+  enonce: Enonce;
+  correction: Enonce;
+}
+
+export interface SaveQuestionOut {
+  IsValid: boolean;
+  Error: ErrQuestionInvalid;
+  Preview: LoopbackServerEvent;
 }

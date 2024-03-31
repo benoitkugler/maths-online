@@ -287,6 +287,9 @@ func (op operator) evaluate(left, right real) real {
 		}
 		f := evalFactorial(argInt)
 		return newRealInt(f)
+	case union, intersection, complement:
+		// should not append
+		return real{}
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}

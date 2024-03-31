@@ -10,6 +10,7 @@ import 'package:eleve/questions/probas_tree.dart';
 import 'package:eleve/questions/proof.dart';
 import 'package:eleve/questions/radio.dart';
 import 'package:eleve/questions/repere.dart';
+import 'package:eleve/questions/sets.dart';
 import 'package:eleve/questions/sign_table.dart';
 import 'package:eleve/questions/sign_table_field.dart';
 import 'package:eleve/questions/table.dart';
@@ -126,6 +127,8 @@ Map<int, FieldController> _createFieldControllers(
       fields[block.iD] = VectorController(block, onChange);
     } else if (block is ProofFieldBlock) {
       fields[block.iD] = ProofController(block, onChange);
+    } else if (block is SetFieldBlock) {
+      fields[block.iD] = SetController(onChange, block.sets);
     }
   }
   return fields;
@@ -428,6 +431,15 @@ class _FieldsBuilder {
     rows.add(ProofFieldW(_color, ct));
   }
 
+  void _handleSetFieldBlock(SetFieldBlock element) {
+    final ct = fields[element.iD] as SetController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(SetFieldW(_color, ct));
+  }
+
   /// populate [rows]
   void _build() {
     for (var element in _content) {
@@ -477,6 +489,8 @@ class _FieldsBuilder {
         _handleVectorFieldBlock(element);
       } else if (element is ProofFieldBlock) {
         _handleProofFieldBlock(element);
+      } else if (element is SetFieldBlock) {
+        _handleSetFieldBlock(element);
       }
 
       lastIsText = element is TextBlock;

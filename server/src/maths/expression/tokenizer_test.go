@@ -67,6 +67,10 @@ func TestTokens(t *testing.T) {
 			"x¹ ; x² ; x³ ; x⁴ ; x⁵ ; x⁶ ; x⁷; x⁸; x⁹",
 			[]tokenData{x, pow, nT("1"), semicolon, x, pow, nT("2"), semicolon, x, pow, nT("3"), semicolon, x, pow, nT("4"), semicolon, x, pow, nT("5"), semicolon, x, pow, nT("6"), semicolon, x, pow, nT("7"), semicolon, x, pow, nT("8"), semicolon, x, pow, nT("9")},
 		},
+		// sets
+		{"A \u222A B", []tokenData{NewVar('A'), union, NewVar('B')}},
+		{"A \u2229 B", []tokenData{NewVar('A'), intersection, NewVar('B')}},
+		{"\u00AC B", []tokenData{complement, NewVar('B')}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

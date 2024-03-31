@@ -705,6 +705,18 @@ var expressions = [...]struct {
 	{ // x is a variable, not a multiplication
 		"104 + 31x11 ", nil, true,
 	},
+	// sets
+	{"\u00AC A_{i+j}", &Expr{atom: complement, right: &Expr{left: newVarExpr('A'), atom: indice{}, right: &Expr{left: newVarExpr('i'), atom: plus, right: newVarExpr('j')}}}, false},
+	{
+		"\u00AC A \u222A (B \u2229 C)", &Expr{
+			left: &Expr{
+				atom:  complement,
+				right: newVarExpr('A'),
+			},
+			atom:  union,
+			right: &Expr{left: newVarExpr('B'), atom: intersection, right: newVarExpr('C')},
+		}, false,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {

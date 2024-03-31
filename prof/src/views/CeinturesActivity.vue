@@ -1,5 +1,5 @@
 <template>
-  <v-container class="pb-1 fill-height" fluid>
+  <v-container class="pa-2 fill-height" fluid>
     <v-fade-transition hide-on-leave>
       <v-skeleton-loader
         v-if="scheme == null"

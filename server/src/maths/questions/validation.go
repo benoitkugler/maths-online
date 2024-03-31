@@ -597,3 +597,14 @@ type vectorValidator struct {
 func (v vectorValidator) validate(vars expression.Vars) error {
 	return v.answer.validate(vars, true)
 }
+
+type setValidator struct {
+	answer *expression.Expr
+}
+
+func (sv setValidator) validate(vars expression.Vars) error {
+	e := sv.answer.Copy()
+	e.Substitute(vars)
+	_, err := e.ToBinarySet()
+	return err
+}

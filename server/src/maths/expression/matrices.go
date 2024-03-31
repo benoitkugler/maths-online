@@ -395,7 +395,7 @@ func matricesOperation(op operator, left, right *Expr, ctx *resolver) (*Expr, er
 				return &Expr{atom: m.toExprMatrix()}, nil
 			}
 		}
-	case equals, greater, strictlyGreater, lesser, strictlyLesser, div, mod, rem, factorial:
+	case equals, greater, strictlyGreater, lesser, strictlyLesser, div, mod, rem, factorial, union, intersection, complement:
 		// pass
 	default:
 		panic(exhaustiveOperatorSwitch)

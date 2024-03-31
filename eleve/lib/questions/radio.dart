@@ -6,7 +6,7 @@ class RadioController extends FieldController {
   List<TextLine> proposals;
   int? index;
 
-  RadioController(void Function() onChange, this.proposals) : super(onChange);
+  RadioController(super.onChange, this.proposals);
 
   @override
   bool hasValidData() {

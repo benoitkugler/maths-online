@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression/sets"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
@@ -1158,4 +1159,38 @@ func (v VectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect boo
 
 func (v VectorFieldInstance) correctAnswer() client.Answer {
 	return client.VectorNumberAnswer{X: expression.RoundFloat(v.Answer.X), Y: expression.RoundFloat(v.Answer.Y)}
+}
+
+type SetFieldInstance struct {
+	ID     int
+	Answer sets.BinarySet
+}
+
+func (v SetFieldInstance) fieldID() int { return v.ID }
+
+func (v SetFieldInstance) toClient() client.Block {
+	return client.SetFieldBlock{
+		ID:   v.ID,
+		Sets: v.Answer.Sets,
+	}
+}
+
+func (v SetFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.SetAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     v.ID,
+			Reason: fmt.Sprintf("expected SetAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (v SetFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.SetAnswer).Root
+	return v.Answer.IsEquivalent(ans.ToBin())
+}
+
+func (v SetFieldInstance) correctAnswer() client.Answer {
+	return client.SetAnswer{Root: v.Answer.ToList().Expr}
 }

@@ -114,6 +114,7 @@ export enum BlockKind {
   OrderedListFieldBlock = "OrderedListFieldBlock",
   ProofFieldBlock = "ProofFieldBlock",
   RadioFieldBlock = "RadioFieldBlock",
+  SetFieldBlock = "SetFieldBlock",
   SignTableBlock = "SignTableBlock",
   SignTableFieldBlock = "SignTableFieldBlock",
   TableBlock = "TableBlock",
@@ -140,6 +141,7 @@ export interface Block {
     | OrderedListFieldBlock
     | ProofFieldBlock
     | RadioFieldBlock
+    | SetFieldBlock
     | SignTableBlock
     | SignTableFieldBlock
     | TableBlock
@@ -409,6 +411,11 @@ export interface RadioFieldBlock {
 export interface Rp {
   expression: string;
   variable: Variable;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.SetFieldBlock
+export interface SetFieldBlock {
+  Answer: string;
+  AdditionalSets: Interpolated[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableBlock
 export interface SignTableBlock {
@@ -874,7 +881,7 @@ export interface SaveQuestionAndPreviewIn {
 export interface SaveQuestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
-  Question: LoopbackShowQuestion;
+  Preview: LoopbackShowQuestion;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionMetaIn
 export interface SaveQuestionMetaIn {

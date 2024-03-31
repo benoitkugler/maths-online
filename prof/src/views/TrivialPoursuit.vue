@@ -56,11 +56,11 @@
     @update:model-value="selfaccessConfig = null"
     max-width="870px"
   >
-    <selfaccess-config
+    <SelfaccessConfig
       v-if="selfaccessConfig != null"
       :config="selfaccessConfig"
       @close="selfaccessConfig = null"
-    ></selfaccess-config>
+    ></SelfaccessConfig>
   </v-dialog>
 
   <v-dialog
@@ -88,7 +88,7 @@
       </v-btn>
       <matiere-select
         v-model:matiere="matiere"
-        @update:matiere="_init"
+        @update:matiere="fetchConfigs"
       ></matiere-select>
     </template>
 
@@ -103,6 +103,11 @@
       </v-row>
     </v-alert>
 
+    <v-card v-if="!configsByLevels.length">
+      <v-card-text class="font-italic text-center">
+        Aucune partie n'est définie pour cette matière.
+      </v-card-text>
+    </v-card>
     <v-card v-for="level in configsByLevels" :key="level[0]" class="ma-2">
       <v-card-title class="bg-pink-lighten-3">
         {{ level[0] || "Non classé" }}
@@ -195,13 +200,17 @@ const configsByLevels = computed(() => {
 const isLaunching = ref(false);
 
 onMounted(_init);
-onActivated(_init);
+onActivated(fetchConfigs);
 
 async function _init() {
-  fetchSessionMeta();
-
   await controller.ensureSettings();
   matiere.value = controller.settings.FavoriteMatiere;
+
+  fetchConfigs();
+}
+
+async function fetchConfigs() {
+  fetchSessionMeta();
 
   const res = await controller.GetTrivialPoursuit({ matiere: matiere.value });
 

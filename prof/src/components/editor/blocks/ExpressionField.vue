@@ -17,7 +17,7 @@
         label="Réponse"
         hint="Expression"
         persistent-hint
-        :color="color"
+        :color="ExpressionColor"
         @blur="emitUpdate"
       >
       </v-text-field>
@@ -48,8 +48,8 @@
 
 <script setup lang="ts">
 import type { ExpressionFieldBlock, Variable } from "@/controller/api_gen";
-import { ComparisonLevel, TextKind } from "@/controller/api_gen";
-import { colorByKind } from "@/controller/editor";
+import { ComparisonLevel } from "@/controller/api_gen";
+import { ExpressionColor } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
@@ -58,7 +58,6 @@ interface Props {
   availableParameters: Variable[];
 }
 const props = defineProps<Props>();
-const color = colorByKind[TextKind.Expression];
 
 const emit = defineEmits<{
   (event: "update:modelValue", value: ExpressionFieldBlock): void;

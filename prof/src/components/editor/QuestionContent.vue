@@ -1,22 +1,24 @@
 <template>
   <div
+    v-if="rows.length == 0"
     @drop="onDropJSON"
     @dragover="onDragoverJSON"
-    class="d-flex ma-4"
-    style="
-      border: 2px solid green;
-      border-radius: 10px;
-      height: 65vh;
-      justify-content: center;
-      align-items: center;
-    "
-    v-if="rows.length == 0"
+    @dragleave="hasDragOverJSON = false"
+    class="d-flex ma-2"
+    :style="{
+      border: hasDragOverJSON ? '2px dashed lightblue' : '2px solid lightblue',
+      'border-radius': '10px',
+      height: '95%',
+      'justify-content': 'center',
+      'align-items': 'center',
+    }"
   >
     Importer une question en faisant glisser un fichier (.isyro.json) ...
   </div>
+
   <div
     v-else
-    style="height: 70vh; overflow-y: auto"
+    style="height: 72vh; overflow-y: auto"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
   >
@@ -59,7 +61,6 @@ import DropZone from "@/components/DropZone.vue";
 import type {
   Block,
   ExpressionFieldBlock,
-  Question,
   Variable,
 } from "@/controller/api_gen";
 import { BlockKind } from "@/controller/api_gen";
@@ -86,6 +87,7 @@ import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import VectorFieldVue from "./blocks/VectorField.vue";
 import TreeB from "./blocks/TreeB.vue";
+import SetFieldVue from "./blocks/SetField.vue";
 import { computed } from "vue";
 import { ref } from "vue";
 import { type Component } from "vue";
@@ -104,7 +106,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update:modelValue", content: Block[]): void;
-  (e: "importQuestion", content: Question): void;
+  (e: "importQuestion", json: string): void;
   (e: "addSyntaxHint", expr: ExpressionFieldBlock): void;
 }>();
 
@@ -158,6 +160,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(VectorFieldVue) };
     case BlockKind.ProofFieldBlock:
       return { Props: data, Component: markRaw(ProofFieldVue) };
+    case BlockKind.SetFieldBlock:
+      return { Props: data, Component: markRaw(SetFieldVue) };
     default:
       throw "dataToBlock: unexpected Kind";
   }
@@ -174,9 +178,10 @@ watch(props, () => {
 });
 
 function addBlock(kind: BlockKind) {
-  props.modelValue.push(newBlock(kind));
+  const l = props.modelValue;
+  l.push(newBlock(kind));
   areExpanded.value.push(true);
-  emit("update:modelValue", props.modelValue);
+  emit("update:modelValue", l);
 
   nextTick(() => {
     const L = blockWidgets.value?.length;
@@ -187,9 +192,10 @@ function addBlock(kind: BlockKind) {
 }
 
 function addExistingBlock(block: Block) {
-  props.modelValue.push(block);
+  const l = props.modelValue;
+  l.push(block);
   areExpanded.value.push(true);
-  emit("update:modelValue", props.modelValue);
+  emit("update:modelValue", l);
 
   nextTick(() => {
     const L = blockWidgets.value?.length;
@@ -200,14 +206,16 @@ function addExistingBlock(block: Block) {
 }
 
 function updateBlock(index: number, data: Block["Data"]) {
-  props.modelValue[index].Data = data;
-  emit("update:modelValue", props.modelValue);
+  const l = props.modelValue;
+  l[index].Data = data;
+  emit("update:modelValue", l);
 }
 
 function removeBlock(index: number) {
-  props.modelValue.splice(index, 1);
+  const l = props.modelValue;
+  l.splice(index, 1);
   areExpanded.value.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emit("update:modelValue", l);
 }
 
 /** take the block at the index `origin` and insert it right before
@@ -225,7 +233,7 @@ function onDragStart() {
   setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
-function onDragEnd(ev: DragEvent) {
+function onDragEnd(_: DragEvent) {
   showDropZone.value = false;
 }
 
@@ -233,13 +241,16 @@ async function onDropJSON(ev: DragEvent) {
   if (ev.dataTransfer?.files.length) {
     ev.preventDefault();
     const content = (await ev.dataTransfer?.files[0].text()) || "";
-    const question = JSON.parse(content);
-    emit("importQuestion", question);
+    emit("importQuestion", content);
+    hasDragOverJSON.value = false;
   }
 }
 
+const hasDragOverJSON = ref(false);
+
 function onDragoverJSON(ev: DragEvent) {
   if (ev.dataTransfer?.files.length || ev.dataTransfer?.items.length) {
+    hasDragOverJSON.value = true;
     ev.preventDefault();
   }
 }
