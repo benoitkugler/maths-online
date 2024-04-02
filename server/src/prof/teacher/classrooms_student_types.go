@@ -36,7 +36,7 @@ type CheckStudentClassroomOut struct {
 
 	// Advance exposes the global advance of the student,
 	// as defined by its events.
-	Advance events.Stats
+	Advance events.StudentAdvance
 }
 
 type StudentClient struct {

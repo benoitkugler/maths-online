@@ -181,7 +181,7 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 
 type StudentExt struct {
 	Student tc.Student
-	Success evs.Stats
+	Success evs.StudentAdvance
 }
 
 func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]StudentExt, error) {
@@ -360,7 +360,7 @@ func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher
 
 	return StudentExt{
 		Student: st,
-		Success: evs.Stats{},
+		Success: evs.StudentAdvance{},
 	}, nil
 }
 

@@ -27,7 +27,7 @@ class ClassroomCard extends StatefulWidget {
 
 class _Profile {
   final StudentClassroomHeader meta;
-  final Stats advance;
+  final StudentAdvance advance;
   const _Profile(this.meta, this.advance);
 }
 
@@ -115,14 +115,16 @@ class _LoadedProfile extends StatelessWidget {
               const Icon(Icons.account_circle),
               const SizedBox(width: 12),
               Text(
-                "Connecté",
+                "Compte enregistré",
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ],
           ),
           const SizedBox(height: 24),
           AdvanceSummary(profile.advance),
+          const SizedBox(height: 12),
           const Divider(thickness: 2),
+          const SizedBox(height: 12),
           _FormRow(
               "Nom",
               Text("${meta.student.surname} ${meta.student.name}",

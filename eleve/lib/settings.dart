@@ -54,11 +54,11 @@ class _SettingsState extends State<Settings> {
       settings.studentPseudo = pseudo;
     });
     await widget.handler.save(settings);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: Theme.of(context).colorScheme.secondary,
       content: const Text("Paramètres enregistrés"),
     ));
-    Navigator.of(context).pop(settings);
   }
 
   void _showJoinClassroom() async {
@@ -161,7 +161,6 @@ class _NotRegistred extends StatefulWidget {
 
 class _NotRegistredState extends State<_NotRegistred> {
   final TextEditingController _controller = TextEditingController();
-  var isEditing = false;
 
   @override
   void initState() {
@@ -196,34 +195,16 @@ class _NotRegistredState extends State<_NotRegistred> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (!isEditing) const Text("Pseudo : "),
-              isEditing
-                  ? Expanded(
-                      child: TextField(
-                        autofocus: true,
-                        textAlign: TextAlign.center,
-                        controller: _controller,
-                        decoration: const InputDecoration(
-                            labelText: "Pseudo",
-                            hintText: "Définit ton nom de joueur..."),
-                      ),
-                    )
-                  : Text(widget.pseudo),
+              const Text("Pseudo : "),
+              Text(widget.pseudo),
               IconButton(
                   splashRadius: 24,
-                  onPressed: () {
-                    if (isEditing) {
-                      widget.onSavePseudo(_controller.text);
-                    }
-                    setState(() => isEditing = !isEditing);
-                  },
-                  icon: isEditing
-                      ? const Icon(Icons.check, color: Colors.green)
-                      : const Icon(Icons.edit))
+                  onPressed: showEditPseudo,
+                  icon: const Icon(Icons.edit))
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(thickness: 2),
+          const Divider(thickness: 4),
           const SizedBox(height: 24),
           ElevatedButton.icon(
               onPressed: widget.onJoinClassroom,
@@ -232,5 +213,33 @@ class _NotRegistredState extends State<_NotRegistred> {
         ],
       ),
     );
+  }
+
+  void showEditPseudo() async {
+    final valid = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text("Modifier son pseudo"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    autofocus: true,
+                    textAlign: TextAlign.center,
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                        labelText: "Pseudo",
+                        hintText: "Définit ton nom de joueur..."),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                      },
+                      child: const Text("Enregistrer"))
+                ],
+              ),
+            ));
+    if (valid ?? false) widget.onSavePseudo(_controller.text);
   }
 }

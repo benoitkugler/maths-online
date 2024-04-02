@@ -1,32 +1,30 @@
 import 'package:flutter/material.dart';
 
+class ProgressionLayer {
+  // in [0; 1]
+  final double advance;
+  final Color color;
+  final bool stripped;
+  const ProgressionLayer(this.advance, this.color, this.stripped);
+}
+
 class ProgressionBar extends StatelessWidget {
-  final int total;
-  final int completed;
-  final int started;
+  final Color background;
+  final List<ProgressionLayer> layers;
 
   const ProgressionBar(
-      {required this.total,
-      required this.completed,
-      required this.started,
-      Key? key})
+      {required this.background, required this.layers, Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       final width = constraints.maxWidth;
-      final startedWidth = width * started.toDouble() / total;
-      final completedWidth = width * completed.toDouble() / total;
       return Stack(
         children: [
-          _Layer(Colors.grey, width),
-          _Layer(
-            Colors.yellow.shade200,
-            startedWidth,
-            stripe: true,
-          ),
-          _Layer(Colors.lightGreenAccent, completedWidth),
+          _Layer(background, width),
+          ...layers.map(
+              (l) => _Layer(l.color, width * l.advance, stripped: l.stripped)),
         ],
       );
     });
@@ -36,8 +34,8 @@ class ProgressionBar extends StatelessWidget {
 class _Layer extends StatelessWidget {
   final Color color;
   final double width;
-  final bool stripe;
-  const _Layer(this.color, this.width, {Key? key, this.stripe = false})
+  final bool stripped;
+  const _Layer(this.color, this.width, {Key? key, this.stripped = false})
       : super(key: key);
 
   @override
@@ -46,7 +44,7 @@ class _Layer extends StatelessWidget {
       width: width,
       height: 12,
       decoration: BoxDecoration(
-          gradient: stripe
+          gradient: stripped
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: const Alignment(-0.95, 0),

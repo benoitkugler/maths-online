@@ -84,36 +84,43 @@ Map<String, dynamic> eventNotificationToJson(EventNotification item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/server/src/sql/events.Stats
-class Stats {
+// github.com/benoitkugler/maths-online/server/src/sql/events.StudentAdvance
+class StudentAdvance {
   final List<int> occurences;
   final int totalPoints;
   final int flames;
   final int rank;
+  final int pointsCurrentRank;
+  final int pointsNextRank;
 
-  const Stats(this.occurences, this.totalPoints, this.flames, this.rank);
+  const StudentAdvance(this.occurences, this.totalPoints, this.flames,
+      this.rank, this.pointsCurrentRank, this.pointsNextRank);
 
   @override
   String toString() {
-    return "Stats($occurences, $totalPoints, $flames, $rank)";
+    return "StudentAdvance($occurences, $totalPoints, $flames, $rank, $pointsCurrentRank, $pointsNextRank)";
   }
 }
 
-Stats statsFromJson(dynamic json_) {
+StudentAdvance studentAdvanceFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Stats(
+  return StudentAdvance(
       listIntFromJson(json['Occurences']),
       intFromJson(json['TotalPoints']),
       intFromJson(json['Flames']),
-      intFromJson(json['Rank']));
+      intFromJson(json['Rank']),
+      intFromJson(json['PointsCurrentRank']),
+      intFromJson(json['PointsNextRank']));
 }
 
-Map<String, dynamic> statsToJson(Stats item) {
+Map<String, dynamic> studentAdvanceToJson(StudentAdvance item) {
   return {
     "Occurences": listIntToJson(item.occurences),
     "TotalPoints": intToJson(item.totalPoints),
     "Flames": intToJson(item.flames),
-    "Rank": intToJson(item.rank)
+    "Rank": intToJson(item.rank),
+    "PointsCurrentRank": intToJson(item.pointsCurrentRank),
+    "PointsNextRank": intToJson(item.pointsNextRank)
   };
 }
 

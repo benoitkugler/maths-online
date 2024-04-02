@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:eleve/activities/homework/progression_bar.dart';
 import 'package:eleve/activities/homework/sheet.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
@@ -8,6 +7,7 @@ import 'package:eleve/exercice/home.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/animated_logo.dart';
 import 'package:eleve/shared/errors.dart';
+import 'package:eleve/shared/progression_bar.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
@@ -497,6 +497,7 @@ class _SheetSummary extends StatelessWidget {
     final ma = sheetMark(sheet.tasks);
 
     final hasNotation = sheet.sheet.noted;
+    final total = sheet.tasks.length;
     final started = sheet.tasks.where((ex) => ex.hasProgression).length;
     final completed = sheet.tasks
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
@@ -537,10 +538,12 @@ class _SheetSummary extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ProgressionBar(
-                        total: sheet.tasks.length,
-                        completed: completed,
-                        started: started),
+                    child: ProgressionBar(background: Colors.grey, layers: [
+                      ProgressionLayer(started.toDouble() / total,
+                          Colors.yellow.shade200, true),
+                      ProgressionLayer(completed.toDouble() / total,
+                          Colors.lightGreenAccent, false),
+                    ]),
                   ),
                 ),
                 Padding(

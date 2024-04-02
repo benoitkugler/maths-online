@@ -191,12 +191,13 @@ func (adv Advance) occurences() (occurences [NbEvents]int) {
 	return
 }
 
-type Stats struct {
+type StudentAdvance struct {
 	Occurences  [NbEvents]int
 	TotalPoints int
 	Flames      int
 
-	Rank int
+	Rank                              int
+	PointsCurrentRank, PointsNextRank int
 }
 
 // in percent of the maxRankThreshold
@@ -224,15 +225,24 @@ var defaultProgressionScale = progressionScale{
 //
 //	| Rank		| 0 | 1 | 2 	|	3 	| 4		| 5		| 6
 //	| Ratio (%)	| 0 | 5 | 15 	|	30 	| 50	| 73	| 100
-func (adv Advance) Stats(maxRankThreshold int) Stats {
+func (adv Advance) Stats(maxRankThreshold int) StudentAdvance {
+	progScale := defaultProgressionScale
 	oc := adv.occurences()
 	points := totalPoints(oc)
 	advanceRatio := 100. * float64(points) / float64(maxRankThreshold)
-	return Stats{
-		Occurences:  oc,
-		TotalPoints: points,
-		Flames:      adv.flames(),
-		Rank:        defaultProgressionScale.findRank(advanceRatio),
+	rank := progScale.findRank(advanceRatio)
+	currentRankPoints := int(progScale[rank]*float64(maxRankThreshold)) / 100
+	nextRankPoints := -1
+	if rank+1 < len(progScale) {
+		nextRankPoints = int(progScale[rank+1]*float64(maxRankThreshold)) / 100
+	}
+	return StudentAdvance{
+		Occurences:        oc,
+		TotalPoints:       points,
+		Flames:            adv.flames(),
+		Rank:              rank,
+		PointsCurrentRank: currentRankPoints,
+		PointsNextRank:    nextRankPoints,
 	}
 }
 

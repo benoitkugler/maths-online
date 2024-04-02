@@ -88,7 +88,7 @@ Map<String, dynamic> attachStudentToClassroom2OutToJson(
 class CheckStudentClassroomOut {
   final bool isOK;
   final StudentClassroomHeader meta;
-  final Stats advance;
+  final StudentAdvance advance;
 
   const CheckStudentClassroomOut(this.isOK, this.meta, this.advance);
 
@@ -103,7 +103,7 @@ CheckStudentClassroomOut checkStudentClassroomOutFromJson(dynamic json_) {
   return CheckStudentClassroomOut(
       boolFromJson(json['IsOK']),
       studentClassroomHeaderFromJson(json['Meta']),
-      statsFromJson(json['Advance']));
+      studentAdvanceFromJson(json['Advance']));
 }
 
 Map<String, dynamic> checkStudentClassroomOutToJson(
@@ -111,7 +111,7 @@ Map<String, dynamic> checkStudentClassroomOutToJson(
   return {
     "IsOK": boolToJson(item.isOK),
     "Meta": studentClassroomHeaderToJson(item.meta),
-    "Advance": statsToJson(item.advance)
+    "Advance": studentAdvanceToJson(item.advance)
   };
 }
 
