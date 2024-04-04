@@ -86,7 +86,7 @@ class _PlayerAvatar extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              rankIcon(6, width: 42),
+              rankIcon(rank, width: 42),
               const SizedBox(width: 4),
               Text(name),
             ],
