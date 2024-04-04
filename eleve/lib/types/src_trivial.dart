@@ -278,12 +278,14 @@ class LobbyUpdate implements ServerEvent {
   final String pseudo;
   final PlayerID iD;
   final bool isJoining;
+  final Map<PlayerID, int> playerRanks;
 
-  const LobbyUpdate(this.playerPseudos, this.pseudo, this.iD, this.isJoining);
+  const LobbyUpdate(this.playerPseudos, this.pseudo, this.iD, this.isJoining,
+      this.playerRanks);
 
   @override
   String toString() {
-    return "LobbyUpdate($playerPseudos, $pseudo, $iD, $isJoining)";
+    return "LobbyUpdate($playerPseudos, $pseudo, $iD, $isJoining, $playerRanks)";
   }
 }
 
@@ -293,7 +295,8 @@ LobbyUpdate lobbyUpdateFromJson(dynamic json_) {
       dictStringToStringFromJson(json['PlayerPseudos']),
       stringFromJson(json['Pseudo']),
       stringFromJson(json['ID']),
-      boolFromJson(json['IsJoining']));
+      boolFromJson(json['IsJoining']),
+      dictStringToIntFromJson(json['PlayerRanks']));
 }
 
 Map<String, dynamic> lobbyUpdateToJson(LobbyUpdate item) {
@@ -301,7 +304,8 @@ Map<String, dynamic> lobbyUpdateToJson(LobbyUpdate item) {
     "PlayerPseudos": dictStringToStringToJson(item.playerPseudos),
     "Pseudo": stringToJson(item.pseudo),
     "ID": stringToJson(item.iD),
-    "IsJoining": boolToJson(item.isJoining)
+    "IsJoining": boolToJson(item.isJoining),
+    "PlayerRanks": dictStringToIntToJson(item.playerRanks)
   };
 }
 
@@ -827,6 +831,18 @@ Map<String, dynamic> dictStringToEventNotificationToJson(
     Map<PlayerID, EventNotification> item) {
   return item.map((k, v) =>
       MapEntry(stringToJson(k).toString(), eventNotificationToJson(v)));
+}
+
+Map<PlayerID, int> dictStringToIntFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as Map<String, dynamic>)
+      .map((k, v) => MapEntry(k as PlayerID, intFromJson(v)));
+}
+
+Map<String, dynamic> dictStringToIntToJson(Map<PlayerID, int> item) {
+  return item.map((k, v) => MapEntry(stringToJson(k).toString(), intToJson(v)));
 }
 
 Map<PlayerID, List<IdQuestion>> dictStringToListIntFromJson(dynamic json) {

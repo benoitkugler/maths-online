@@ -162,6 +162,14 @@ func (r *Room) nbActivePlayers() int {
 	return out
 }
 
+func (r *Room) playerRanks() map[serial]int {
+	out := make(map[serial]int)
+	for _, player := range r.players {
+		out[player.pl.ID] = player.pl.Rank
+	}
+	return out
+}
+
 func (r *Room) playerPseudos() map[serial]string {
 	// check for duplicates, and use suffix to differentiate them
 	byPseudo := make(map[string][]Player)
@@ -252,6 +260,7 @@ func (r *Room) removePlayer(player Player) Events {
 		Pseudo:        playerName,
 		IsJoining:     false,
 		PlayerPseudos: r.playerPseudos(),
+		PlayerRanks:   r.playerRanks(),
 	}}
 
 	switch r.game.phase {
@@ -407,6 +416,7 @@ func (r *Room) reconnectPlayer(player Player, connection Connection) {
 	pc.conn = connection // use the new client connection
 	pc.pl.Pseudo = player.Pseudo
 	pc.pl.PseudoSuffix = player.PseudoSuffix
+	pc.pl.Rank = player.Rank
 
 	events := Events{PlayerReconnected{
 		ID:     pc.pl.ID,

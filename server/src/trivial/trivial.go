@@ -81,6 +81,9 @@ type Player struct {
 	// PseudoSuffix is added to [Pseudo] when two players
 	// have the same pseudo
 	PseudoSuffix string
+
+	// Isyro global rank for registrer players, or 0
+	Rank int
 }
 
 // playerConn stores a player profile and the underlying connection,

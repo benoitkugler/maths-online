@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	evts "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils"
@@ -352,6 +354,7 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 		if player.Pseudo == "" {
 			player.Pseudo = ct.store.generateName() // finally generate a random pseudo
 		}
+		// player.Rank = 0
 	} else { // fetch name from DB
 		studentID, err = ct.studentKey.DecryptID(student.StudentID)
 		if err != nil {
@@ -363,8 +366,14 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 			return utils.SQLError(err)
 		}
 
+		events, err := evts.SelectEventsByIdStudents(ct.db, teacher.IdStudent(studentID))
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
 		player.Pseudo = student.Surname
 		player.PseudoSuffix = student.Name
+		player.Rank = evts.NewAdvance(events).Stats(tcAPI.DefaultMaxRankTreshold).Rank
 	}
 
 	// then add the player

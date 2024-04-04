@@ -200,7 +200,7 @@ func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]Studen
 	for _, student := range students {
 		out = append(out, StudentExt{
 			Student: student,
-			Success: evs.NewAdvance(m[student.Id]).Stats(defaultMaxRankTreshold),
+			Success: evs.NewAdvance(m[student.Id]).Stats(DefaultMaxRankTreshold),
 		})
 	}
 

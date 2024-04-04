@@ -131,8 +131,9 @@ type PlayerReconnected struct {
 type LobbyUpdate struct {
 	PlayerPseudos map[serial]string // the new players in the lobby
 	Pseudo        string
-	ID            serial // the player who joined or left
-	IsJoining     bool   // false for leaving
+	ID            serial         // the player who joined or left
+	IsJoining     bool           // false for leaving
+	PlayerRanks   map[serial]int // Added in v1.8
 }
 
 type GameStart struct{}

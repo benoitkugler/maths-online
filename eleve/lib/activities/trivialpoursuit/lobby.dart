@@ -1,15 +1,18 @@
+import 'package:eleve/classroom/student_advance.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart';
 
 class GameLobby extends StatelessWidget {
   final Map<PlayerID, String> players;
+  final Map<PlayerID, int> playerRanks;
   final PlayerID player;
 
   /// if [onStart] is not null, shows "start game" button
   final void Function()? onStart;
 
-  const GameLobby(this.players, this.player, this.onStart, {Key? key})
+  const GameLobby(this.players, this.playerRanks, this.player, this.onStart,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -41,7 +44,8 @@ class GameLobby extends StatelessWidget {
               runSpacing: 15,
               alignment: WrapAlignment.spaceEvenly,
               children: sorted
-                  .map((e) => _PlayerAvatar(players[e]!, e == player))
+                  .map((e) =>
+                      _PlayerAvatar(players[e]!, playerRanks[e]!, e == player))
                   .toList(),
             ),
           ),
@@ -59,8 +63,9 @@ class GameLobby extends StatelessWidget {
 
 class _PlayerAvatar extends StatelessWidget {
   final String name;
+  final int rank;
   final bool isCurrentPlayer;
-  const _PlayerAvatar(this.name, this.isCurrentPlayer, {Key? key})
+  const _PlayerAvatar(this.name, this.rank, this.isCurrentPlayer, {Key? key})
       : super(key: key);
 
   @override
@@ -74,13 +79,18 @@ class _PlayerAvatar extends StatelessWidget {
           ],
           color:
               isCurrentPlayer ? Colors.yellow : Colors.white.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(5))
-          // boxShadow:
-          ),
+          borderRadius: const BorderRadius.all(Radius.circular(5))),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Text(name),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              rankIcon(6, width: 42),
+              const SizedBox(width: 4),
+              Text(name),
+            ],
+          ),
         ),
       ),
     );

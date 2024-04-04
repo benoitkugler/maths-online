@@ -123,6 +123,7 @@ func (r *Room) Join(player Player, connection Connection) error {
 			Pseudo:        r.serialToPseudo(player.ID),
 			IsJoining:     true,
 			PlayerPseudos: r.playerPseudos(),
+			PlayerRanks:   r.playerRanks(),
 		}})
 
 		// ... and check if the new player triggers a game start, after a brief pause

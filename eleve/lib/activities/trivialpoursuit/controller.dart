@@ -75,7 +75,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   bool hasGameStarted = false;
 
-  Map<PlayerID, String> lobby = {};
+  LobbyUpdate lobby = const LobbyUpdate({}, "", "", false, {});
 
   GameState state = const GameState(
       {"": PlayerStatus("", QuestionReview([], []), [], false)}, 0, "");
@@ -201,7 +201,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   void _onLobbyUpdate(LobbyUpdate event) {
     setState(() {
-      lobby = event.playerPseudos;
+      lobby = event;
     });
 
     if (event.iD == playerID) {
@@ -564,7 +564,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
             onTapTile,
             highligthedTiles,
             state.pawnTile)
-        : GameLobby(lobby, playerID, widget.isSelfLaunched ? _startGame : null);
+        : GameLobby(lobby.playerPseudos, lobby.playerRanks, playerID,
+            widget.isSelfLaunched ? _startGame : null);
   }
 
   @override

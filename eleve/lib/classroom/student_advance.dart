@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:eleve/shared/progression_bar.dart';
 import 'package:eleve/types/src_sql_events.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,6 @@ class AdvanceSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final advance = StudentAdvance([], 100, 2, 1, 0, 300);
     final color = _rankColors[advance.rank];
     return InkWell(
       borderRadius: BorderRadius.circular(4),
@@ -17,42 +18,52 @@ class AdvanceSummary extends StatelessWidget {
         builder: (context) => _EventsDetailsView(advance),
       )),
       child: Container(
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
             border: Border.all(color: Colors.lightBlue.withOpacity(0.5)),
             borderRadius: BorderRadius.circular(4)),
         child: Column(
           children: [
-            _rankIcon(advance.rank),
+            rankIcon(advance.rank),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Card(
-                  shadowColor: color,
-                  elevation: 6,
-                  color: color,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Text(_rankLabels[advance.rank],
-                              style: Theme.of(context).textTheme.titleMedium),
-                          Chip(
-                              elevation: 8,
-                              backgroundColor: Colors.teal,
-                              label: Row(
-                                children: [
-                                  Text("${advance.totalPoints}"),
-                                  const SizedBox(width: 8),
-                                  Image.asset("assets/images/crown.png",
-                                      width: 20, color: Colors.white)
-                                ],
-                              )),
-                        ]),
-                  )),
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Container(
+                  decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(color: color, spreadRadius: 2, blurRadius: 2)
+                      ],
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: color)),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(_rankLabels[advance.rank],
+                            style: Theme.of(context).textTheme.titleMedium),
+                        Chip(
+                            elevation: 8,
+                            backgroundColor: Colors.teal,
+                            label: Row(
+                              children: [
+                                Text("${advance.totalPoints}"),
+                                const SizedBox(width: 8),
+                                Image.asset("assets/images/crown.png",
+                                    width: 20, color: Colors.white)
+                              ],
+                            )),
+                      ])),
             ),
             if (advance.pointsNextRank > advance.pointsCurrentRank)
-              _RankBar(advance.pointsCurrentRank, advance.totalPoints,
-                  advance.pointsNextRank)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: _RankBar(advance.pointsCurrentRank, advance.totalPoints,
+                    advance.pointsNextRank),
+              ),
+            if (advance.flames > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: FlamesBar(advance.flames),
+              )
           ],
         ),
       ),
@@ -75,13 +86,13 @@ const _rankColors = [
   Color.fromARGB(255, 158, 122, 55),
   Colors.grey,
   Color.fromARGB(255, 148, 112, 100),
-  Color.fromARGB(255, 202, 219, 218),
+  Color.fromARGB(255, 176, 190, 190),
   Color.fromARGB(255, 216, 197, 23),
-  Color.fromARGB(255, 112, 241, 235)
+  Color.fromARGB(255, 100, 216, 210)
 ];
 
-Image _rankIcon(int rank) {
-  return Image.asset("assets/images/ranks/rank-$rank.png", width: 80);
+Image rankIcon(int rank, {double width = 80}) {
+  return Image.asset("assets/images/ranks/rank-$rank.png", width: width);
 }
 
 class _RankBar extends StatelessWidget {
@@ -95,22 +106,19 @@ class _RankBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final advance = (current - start).toDouble() / (end - start);
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: ProgressionBar(
-                background: Colors.grey,
-                layers: [ProgressionLayer(advance, Colors.teal, false)]),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: Text("$current / $end",
-                style: Theme.of(context).textTheme.labelSmall),
-          )
-        ],
-      ),
+    return Row(
+      children: [
+        Expanded(
+          child: ProgressionBar(
+              background: Colors.grey,
+              layers: [ProgressionLayer(advance, Colors.teal, false)]),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Text("$current / $end",
+              style: Theme.of(context).textTheme.labelSmall),
+        )
+      ],
     );
   }
 }
@@ -144,11 +152,44 @@ class _EventOccurences extends StatelessWidget {
     return ListTile(
       leading: Chip(
           elevation: occurences == 0 ? 0 : 4,
-          // shadowColor: occurences == 0 ? null : Colors.white,
           backgroundColor: occurences == 0 ? Colors.grey : Colors.teal,
           label: Text("$occurences")),
       title: Text(eventKLabel(event)),
       titleAlignment: ListTileTitleAlignment.center,
+    );
+  }
+}
+
+class FlamesBar extends StatelessWidget {
+  final int flames;
+  const FlamesBar(this.flames, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Colors.orangeAccent.shade700;
+    final iconsNumber = min(flames, 10);
+    return Container(
+      decoration: BoxDecoration(
+          boxShadow: [BoxShadow(color: color, blurRadius: 2, spreadRadius: 2)],
+          borderRadius: BorderRadius.circular(4),
+          color: Colors.white),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.filled(
+                  iconsNumber,
+                  Image.asset("assets/images/fire.png",
+                      width: 20, color: color))),
+          Chip(
+            backgroundColor: color,
+            elevation: 4,
+            visualDensity: VisualDensity.compact,
+            label: Text("$flames"),
+          )
+        ],
+      ),
     );
   }
 }

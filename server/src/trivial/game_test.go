@@ -682,10 +682,10 @@ func TestSampleQuestion(t *testing.T) {
 
 func TestPseudos(t *testing.T) {
 	r := Room{players: map[PlayerID]*playerConn{
-		"1": {pl: Player{"1", "Ben", "Kugler"}},
-		"2": {pl: Player{"2", "Ben", "Symp"}},
-		"3": {pl: Player{"3", "Ben", ""}},
-		"4": {pl: Player{"4", "George", "Kugler"}},
+		"1": {pl: Player{"1", "Ben", "Kugler", 0}},
+		"2": {pl: Player{"2", "Ben", "Symp", 0}},
+		"3": {pl: Player{"3", "Ben", "", 0}},
+		"4": {pl: Player{"4", "George", "Kugler", 0}},
 	}}
 	tu.Assert(t, r.serialToPseudo("1") == "Ben K.")
 	tu.Assert(t, r.serialToPseudo("2") == "Ben S.")
