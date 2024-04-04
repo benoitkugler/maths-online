@@ -94,7 +94,7 @@ class _CodeTile extends StatelessWidget {
         children: [
           const Icon(Icons.key),
           const SizedBox(width: 6),
-          Text(code),
+          SelectableText(code),
         ],
       ),
     );
