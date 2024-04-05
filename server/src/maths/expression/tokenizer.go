@@ -38,8 +38,10 @@ const (
 	randDenominator
 	minFn
 	maxFn
-	sumFn  // sum of an expression over a variable
-	prodFn // product of an expression over a variable
+	sumFn   // sum of an expression over a variable
+	prodFn  // product of an expression over a variable
+	unionFn // big union of an expression over a variable
+	interFn // big intersection of an expression over a variable
 	matCoeff
 	matSet   // update a matrix
 	binomial // coefficient binomial (n, k)
@@ -69,6 +71,10 @@ func (sf specialFunctionKind) String() string {
 		return "sum"
 	case prodFn:
 		return "prod"
+	case unionFn:
+		return "union"
+	case interFn:
+		return "inter"
 	case matCoeff:
 		return "coeff"
 	case matSet:
@@ -454,6 +460,10 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = sumFn
 	case "prod":
 		fn = prodFn
+	case "union":
+		fn = unionFn
+	case "inter":
+		fn = interFn
 	case "coeff":
 		fn = matCoeff
 	case "set":

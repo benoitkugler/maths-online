@@ -616,10 +616,10 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
-	case sumFn, prodFn:
+	case sumFn, prodFn, unionFn, interFn:
 		if len(rd.args) != 4 && len(rd.args) != 5 {
 			return ErrInvalidExpr{
-				Reason: "sum et prod requierent exactement 4 ou 5 arguments",
+				Reason: fmt.Sprintf("%s() requiert exactement 4 ou 5 arguments", rd.kind.String()),
 				Pos:    pos,
 			}
 		}

@@ -563,6 +563,18 @@ var expressions = [...]struct {
 	{"prod(k; 1; n; k^2)", &Expr{atom: specialFunction{kind: prodFn, args: []*Expr{
 		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: pow, left: newVarExpr('k'), right: newNb(2)},
 	}}}, false},
+	{"inter()", nil, true},
+	{"inter(1;2;3)", nil, true},
+	{"inter(1;2;3;4;5;6)", nil, true},
+	{"inter(k; 1; n; A_k)", &Expr{atom: specialFunction{kind: interFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: NewVarI('A', "k")},
+	}}}, false},
+	{"union()", nil, true},
+	{"union(1;2;3)", nil, true},
+	{"union(1;2;3;4;5;6)", nil, true},
+	{"union(k; 1; n; A_k)", &Expr{atom: specialFunction{kind: unionFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: NewVarI('A', "k")},
+	}}}, false},
 	// comparison
 	{"1 <", nil, true},
 	{">= 4", nil, true},

@@ -164,7 +164,7 @@ func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) er
 				Pos:    pos,
 			}
 		}
-	case sumFn, prodFn:
+	case sumFn, prodFn, unionFn, interFn:
 		_, okStart := IsInt(start)
 		_, okEnd := IsInt(end)
 		if !(okStart && okEnd) {

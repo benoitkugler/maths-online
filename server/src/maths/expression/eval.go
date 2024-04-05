@@ -578,8 +578,8 @@ func (r specialFunction) evalRat(ctx *resolver) (real, error) {
 			return real{}, fmt.Errorf("Le second argument de binom() doit être un entier (%s).", err)
 		}
 		return newRealInt(binomialCoefficient(k, n)), nil
-	case randMatrixInt:
-		return real{}, errors.New("La fonction randMatrix() ne peut pas être évaluée.")
+	case randMatrixInt, unionFn, interFn:
+		return real{}, fmt.Errorf("La fonction %s() ne peut pas être évaluée.", r.kind.String())
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}

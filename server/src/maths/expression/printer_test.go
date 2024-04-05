@@ -162,6 +162,10 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"A \u222A B_1 \u2229 (\u00AC C \u222A D)",
 		`sum(k; 1; 10; k^2; "expand")`,
 		`prod(k; 1; 10; 3; "expand")`,
+		`union(k; 1; 10; A_k)`,
+		`inter(k; 1; 10; B_k)`,
+		`union(k; 1; 10; A_{k}; "expand")`,
+		`inter(k; 1; 10; B_{k}; "expand")`,
 	} {
 		e, err := Parse(expr)
 		if err != nil {

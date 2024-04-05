@@ -392,7 +392,7 @@ func (expr *Expr) instantiate(ctx *resolver) (*Expr, error) {
 			out := matV.copy()
 			out[in-1][jn-1] = value // adjust to computer convention
 			return &Expr{atom: out}, nil
-		case minFn, maxFn, matCoeff, binomial, sumFn, prodFn: // no-op, simply recurse
+		case minFn, maxFn, matCoeff, binomial, sumFn, prodFn, unionFn, interFn: // no-op, simply recurse
 			inst := specialFunction{
 				kind: atom.kind,
 				args: make([]*Expr, len(atom.args)),

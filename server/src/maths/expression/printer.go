@@ -248,9 +248,17 @@ func (r specialFunction) expandSequence() (string, error) {
 		term.Substitute(Vars{k: v.toExpr()})
 		chunks = append(chunks, term.AsLaTeX())
 	}
-	sep := " + "
-	if r.kind == prodFn {
+
+	var sep string
+	switch r.kind {
+	case sumFn:
+		sep = " + "
+	case prodFn:
 		sep = " \\times "
+	case unionFn:
+		sep = " \\cup "
+	case interFn:
+		sep = " \\cap "
 	}
 	return strings.Join(chunks, sep), nil
 }
@@ -261,7 +269,7 @@ func (r specialFunction) asLaTeX(_, _ *Expr) string {
 	case binomial:
 		k, n := r.args[0], r.args[1]
 		return fmt.Sprintf(`\binom{%s}{%s}`, n.AsLaTeX(), k.AsLaTeX())
-	case sumFn, prodFn:
+	case sumFn, prodFn, unionFn, interFn:
 		k, start, end, expr := r.args[0], r.args[1], r.args[2], r.args[3]
 		if len(r.args) == 5 && (r.args[4].atom == Variable{Indice: "expand"}) {
 			// try to write the sequence explicitely
@@ -271,10 +279,18 @@ func (r specialFunction) asLaTeX(_, _ *Expr) string {
 			}
 			// else, default to general notation
 		}
-		if r.kind == sumFn {
-			return fmt.Sprintf(`\sum_{%s=%s}^{%s} %s`, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
+		var latexOp string
+		switch r.kind {
+		case sumFn:
+			latexOp = "sum"
+		case prodFn:
+			latexOp = "prod"
+		case unionFn:
+			latexOp = "bigcup"
+		case interFn:
+			latexOp = "bigcap"
 		}
-		return fmt.Sprintf(`\prod_{%s=%s}^{%s} %s`, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
+		return fmt.Sprintf(`\%s_{%s=%s}^{%s} %s`, latexOp, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
 	default:
 		return fmt.Sprintf(`\text{%s}`, r.String())
 	}
