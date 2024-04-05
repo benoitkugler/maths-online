@@ -8,20 +8,22 @@ class _Node {
   List<_Node> args;
   SetOp op;
   Set leaf;
-  _Node(this.args, this.op, this.leaf);
+  bool explicitParenthesis;
+  _Node(this.args, this.op, this.leaf, this.explicitParenthesis);
 
-  factory _Node.empty() => _Node([], SetOp.sUnion, 0);
-  factory _Node.leaf(Set s) => _Node([], SetOp.sLeaf, s);
-  factory _Node.comp(_Node kid) => _Node([kid], SetOp.sComplement, 0);
+  factory _Node.empty() => _Node([], SetOp.sUnion, 0, false);
+  factory _Node.leaf(Set s) => _Node([], SetOp.sLeaf, s, false);
+  factory _Node.comp(_Node kid) => _Node([kid], SetOp.sComplement, 0, false);
 
   ListNode toListNode() =>
       ListNode(args.map((e) => e.toListNode()).toList(), op, leaf);
 
-  factory _Node.fromListNode(ListNode n) =>
-      _Node(n.args.map((e) => _Node.fromListNode(e)).toList(), n.op, n.leaf);
+  factory _Node.fromListNode(ListNode n) => _Node(
+      n.args.map((e) => _Node.fromListNode(e)).toList(), n.op, n.leaf, false);
 
-  _Node shallowCopy() => _Node(args, op, leaf);
-  _Node deepCopy() => _Node(args.map((e) => e.deepCopy()).toList(), op, leaf);
+  _Node shallowCopy() => _Node(args, op, leaf, false);
+  _Node deepCopy() =>
+      _Node(args.map((e) => e.deepCopy()).toList(), op, leaf, false);
 
   bool get uOrI => op == SetOp.sUnion || op == SetOp.sInter;
 
@@ -135,6 +137,7 @@ class SetController extends FieldController {
       if (_cursor.args.isNotEmpty && _cursor.args.last.isEmpty()) {
         // change the cursor
         _cursor = _cursor.args.last;
+        _cursor.explicitParenthesis = true;
       }
     } else if (_cursor.op == SetOp.sComplement) {
     } else if (_cursor.op == SetOp.sLeaf) {}
@@ -165,7 +168,8 @@ class SetController extends FieldController {
         // replace by the given op applied to this and empty
         // and update the cursor
         final newCursor = _Node.empty();
-        _cursor.replace(_Node([_cursor.shallowCopy(), newCursor], op, 0));
+        _cursor
+            .replace(_Node([_cursor.shallowCopy(), newCursor], op, 0, false));
         _cursor = newCursor;
       }
     } else if (_cursor.op == SetOp.sComplement) {
@@ -173,7 +177,8 @@ class SetController extends FieldController {
         // remove the comp
         _cursor.replace(_cursor.args.isEmpty ? _Node.empty() : _cursor.args[0]);
       } else {
-        _cursor.replace(_Node([_cursor.shallowCopy(), _Node.empty()], op, 0));
+        _cursor.replace(
+            _Node([_cursor.shallowCopy(), _Node.empty()], op, 0, false));
       }
     } else if (_cursor.op == SetOp.sLeaf && op == SetOp.sComplement) {
       _cursor.replace(_Node.comp(_cursor.shallowCopy()));
@@ -211,8 +216,10 @@ class _SetFieldWState extends State<SetFieldW> {
           Row(
             children: [
               IconButton(
-                onPressed: () => setState(() => ct._clear()),
-                icon: const Icon(Icons.clear),
+                onPressed: ct._history.isEmpty
+                    ? null
+                    : () => setState(() => ct._restoreHistory()),
+                icon: const Icon(Icons.undo),
                 splashRadius: 20,
               ),
               Expanded(
@@ -220,18 +227,21 @@ class _SetFieldWState extends State<SetFieldW> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: _NodeW(
-                        false, widget.controller._answer, ct._sets, ct._cursor,
-                        onTap: (cr) => setState(() => ct._cursor = cr)),
+                      false,
+                      widget.controller._answer,
+                      ct._sets,
+                      ct._cursor,
+                      onTap: (cr) => setState(() => ct._cursor = cr),
+                      isRoot: true,
+                    ),
                   ),
                 ),
               ),
               IconButton(
-                onPressed: ct._history.isEmpty
-                    ? null
-                    : () => setState(() => ct._restoreHistory()),
-                icon: const Icon(Icons.undo),
+                onPressed: () => setState(() => ct._clear()),
+                icon: const Icon(Icons.clear),
                 splashRadius: 20,
-              )
+              ),
             ],
           ),
           Wrap(
@@ -301,26 +311,32 @@ class _Control extends StatelessWidget {
   }
 }
 
+enum _ShowParenthesis { never, auto, always }
+
 // wrapper dispatching the concrete type
 class _NodeW extends StatelessWidget {
-  final bool showParenthesis;
+  final bool isRoot;
+  final bool parenthesisHint;
   final _Node node;
   final List<_IndexedSet> sets;
   final _Node cursor;
 
   final void Function(_Node) onTap;
 
-  const _NodeW(this.showParenthesis, this.node, this.sets, this.cursor,
-      {required this.onTap, super.key});
+  const _NodeW(this.parenthesisHint, this.node, this.sets, this.cursor,
+      {required this.onTap, this.isRoot = false, super.key});
 
   Widget kid() {
+    final sp = node.explicitParenthesis
+        ? _ShowParenthesis.always
+        : parenthesisHint
+            ? _ShowParenthesis.auto
+            : _ShowParenthesis.never;
     switch (node.op) {
       case SetOp.sUnion:
-        return _UniOrInt("\\cup", showParenthesis, node.args, sets, cursor,
-            onTap: onTap);
+        return _UniOrInt("\\cup", sp, node.args, sets, cursor, onTap: onTap);
       case SetOp.sInter:
-        return _UniOrInt("\\cap", showParenthesis, node.args, sets, cursor,
-            onTap: onTap);
+        return _UniOrInt("\\cap", sp, node.args, sets, cursor, onTap: onTap);
       case SetOp.sComplement:
         return _ComplementW(
             node.args.isEmpty ? null : node.args.first, sets, cursor,
@@ -340,6 +356,9 @@ class _NodeW extends StatelessWidget {
             ? const EdgeInsets.symmetric(vertical: 2)
             : const EdgeInsets.all(2),
         child: Container(
+          padding: isRoot
+              ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+              : null,
           decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(4)),
               color: isCursor
@@ -356,7 +375,7 @@ const textStyle = TextStyle(fontSize: 20);
 
 class _UniOrInt extends StatelessWidget {
   final String operator;
-  final bool showParenthesis;
+  final _ShowParenthesis showParenthesis;
   final List<_Node> args;
   final List<_IndexedSet> sets;
   final _Node cursor;
@@ -369,10 +388,10 @@ class _UniOrInt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (args.isEmpty) {
-      // display an empty square
-      return const SizedBox(height: 20, width: 10);
-    }
+    // if (args.isEmpty) {
+    //   // display an empty square
+    //   return const SizedBox(height: 20, width: 10);
+    // }
     // add the n sign
     final l = <Widget>[];
     for (var i = 0; i < args.length; i++) {
@@ -381,7 +400,9 @@ class _UniOrInt extends StatelessWidget {
         l.add(textMath(operator, textStyle));
       }
     }
-    if (args.length >= 2 && showParenthesis) {
+    final withParenthesis = showParenthesis == _ShowParenthesis.always ||
+        (showParenthesis == _ShowParenthesis.auto && args.length >= 2);
+    if (withParenthesis) {
       // add ()
       l.insert(0, textMath("(", textStyle));
       l.add(textMath(")", textStyle));
