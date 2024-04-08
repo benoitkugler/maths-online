@@ -16,7 +16,7 @@ const (
 )
 
 func bs(root BinNode, N int) BinarySet {
-	return BinarySet{Leaves: make([]string, N), Root: root}
+	return BinarySet{Sets: make([]string, N), Root: root}
 }
 
 func TestNormalize(t *testing.T) {

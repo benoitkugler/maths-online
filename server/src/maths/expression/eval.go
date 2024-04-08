@@ -49,6 +49,18 @@ func (expr *Expr) tryEval(ctx *resolver) *Expr {
 	return expr
 }
 
+// reduce recursively try to evaluate and simplify its content
+func (expr *Expr) reduce() {
+	if expr == nil {
+		return
+	}
+	if v, err := expr.evalReal(nil); err == nil {
+		*expr = *v.toExpr()
+	}
+	expr.left.reduce()
+	expr.right.reduce()
+}
+
 // Vars maps variables to a chosen value.
 type Vars map[Variable]*Expr
 

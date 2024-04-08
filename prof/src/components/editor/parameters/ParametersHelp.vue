@@ -255,7 +255,8 @@ const fonctionsDesc = [
   ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs."],
   [
     `sum(k; 1; n; k^2; "expand")`,
-    "Renvoie la somme d'une expression évaluée pour une plage d'indice. Le dernier paramètre est optionel : s'il est présent, le symbole Sigma n'est pas utilisé.",
+    `Renvoie la somme d'une expression évaluée pour une plage d'indice. Le dernier paramètre est optionel : s'il est présent, le symbole Sigma n'est pas utilisé.
+    Utiliser "expand-eval" pour aussi évaluer chaque terme.`,
   ],
   [`prod(k; 1; n; k^2; "expand")`, "Idem que sum, mais pour un produit."],
   [`union(k; 1; n; A_{k}; "expand")`, "Idem que sum, mais pour une union."],

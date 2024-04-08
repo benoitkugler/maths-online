@@ -533,3 +533,19 @@ func TestEvalCycle(t *testing.T) {
 	tu.Assert(t, err != nil)
 	_ = err.Error()
 }
+
+func TestExpr_reduce(t *testing.T) {
+	tests := []struct {
+		expr string
+		want string
+	}{
+		{"2", "2"},
+		{"A_{2*3}", "A_{6}"},
+		{"A_{2*3 + k}", "A_{6 + k}"},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		expr.reduce()
+		tu.Assert(t, expr.String() == tt.want)
+	}
+}

@@ -230,7 +230,7 @@ func (r roundFunc) asLaTeX(_, right *Expr) string {
 }
 
 // try to write the sequence explicitely
-func (r specialFunction) expandSequence() (string, error) {
+func (r specialFunction) expandSequence(eval bool) (string, error) {
 	start, err := evalInt(r.args[1], nil)
 	if err != nil {
 		return "", err
@@ -246,6 +246,9 @@ func (r specialFunction) expandSequence() (string, error) {
 		v := newRealInt(i)
 		term := expr.Copy()
 		term.Substitute(Vars{k: v.toExpr()})
+		if eval {
+			term.reduce()
+		}
 		chunks = append(chunks, term.AsLaTeX())
 	}
 
@@ -271,11 +274,21 @@ func (r specialFunction) asLaTeX(_, _ *Expr) string {
 		return fmt.Sprintf(`\binom{%s}{%s}`, n.AsLaTeX(), k.AsLaTeX())
 	case sumFn, prodFn, unionFn, interFn:
 		k, start, end, expr := r.args[0], r.args[1], r.args[2], r.args[3]
-		if len(r.args) == 5 && (r.args[4].atom == Variable{Indice: "expand"}) {
-			// try to write the sequence explicitely
-			code, err := r.expandSequence()
-			if err == nil {
-				return code
+		if len(r.args) == 5 {
+			switch r.args[4].atom {
+			case Variable{Indice: "expand-eval"}:
+				// try to write the sequence explicitely
+				code, err := r.expandSequence(true)
+				if err == nil {
+					return code
+				}
+				fallthrough // try only expanding
+			case Variable{Indice: "expand"}:
+				// try to write the sequence explicitely
+				code, err := r.expandSequence(false)
+				if err == nil {
+					return code
+				}
 			}
 			// else, default to general notation
 		}
