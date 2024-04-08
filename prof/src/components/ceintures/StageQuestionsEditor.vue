@@ -1,5 +1,6 @@
 <template>
   <v-card width="100%">
+    <!-- Suppression confirmation -->
     <v-dialog
       :model-value="toDelete != null"
       @update:model-value="toDelete = null"
@@ -17,6 +18,40 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Question settings -->
+    <v-dialog
+      :model-value="settingsToEdit != null"
+      @update:model-value="settingsToEdit = null"
+      width="600px"
+    >
+      <v-card title="Réglages de la question" v-if="settingsToEdit != null">
+        <v-card-text>
+          <v-row
+            ><v-col>
+              <v-select
+                label="Nombre de répétitions"
+                variant="outlined"
+                density="compact"
+                v-model="settingsToEdit.Repeat"
+                :items="[
+                  { title: '1', value: 1 },
+                  { title: '2', value: 2 },
+                  { title: '3', value: 3 },
+                  { title: '4', value: 4 },
+                  { title: '5', value: 5 },
+                ]"
+              >
+              </v-select> </v-col
+          ></v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="success" @click="updateQuestion">Enregistrer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-card-text class="py-1 px-2">
       <v-row no-gutters>
         <v-col cols="auto" align-self="center">
@@ -112,21 +147,18 @@
                   </v-btn>
                 </template>
                 <v-list>
-                  <!-- <v-list-item
-                      @click="
-                        props.readonly ? {} : emit('duplicateVariant', variant)
-                      "
-                      :link="!props.readonly"
-                    >
-                      <template v-slot:prepend>
-                        <v-icon
-                          icon="mdi-content-copy"
-                          color="info"
-                          size="small"
-                        ></v-icon>
-                      </template>
-                      Dupliquer
-                    </v-list-item> -->
+                  <v-list-item
+                    @click="
+                      props.readonly ? {} : (settingsToEdit = copy(question))
+                    "
+                    :link="!props.readonly"
+                  >
+                    <template v-slot:prepend>
+                      <v-icon icon="mdi-cog" color="info" size="small"></v-icon>
+                    </template>
+                    Réglages
+                  </v-list-item>
+                  <v-divider></v-divider>
                   <v-list-item
                     @click="props.readonly ? {} : (toDelete = question.Id)"
                     :link="!props.readonly"
@@ -189,7 +221,7 @@ import { ref, watch } from "vue";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { computed } from "vue";
-import { rankColors } from "@/controller/utils";
+import { copy, rankColors } from "@/controller/utils";
 import RankIcon from "./RankIcon.vue";
 import QuestionPageEditor from "../editor/QuestionPageEditor.vue";
 import { QuestionPage, SaveQuestionOut } from "@/controller/editor";
@@ -285,5 +317,19 @@ async function saveQuestion(
 async function exportLatex() {
   const res = await controller.EditorQuestionExportLateX(page.value);
   return res;
+}
+
+const settingsToEdit = ref<Beltquestion | null>(null);
+async function updateQuestion() {
+  const qu = settingsToEdit.value;
+  if (qu == null) return;
+  settingsToEdit.value = null;
+  const res = await controller.CeinturesUpdateQuestion({
+    Id: qu.Id,
+    Repeat: qu.Repeat,
+  });
+  if (res === undefined) return;
+  questions.value.find((q) => q.Id == qu.Id)!.Repeat = qu.Repeat;
+  controller.showMessage("Réglages modifiés avec succès.");
 }
 </script>

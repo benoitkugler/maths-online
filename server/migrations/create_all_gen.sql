@@ -4,7 +4,8 @@
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
     IdTeacher integer NOT NULL,
-    Name text NOT NULL
+    Name text NOT NULL,
+    MaxRankThreshold integer NOT NULL
 );
 
 CREATE TABLE classroom_codes (
@@ -2814,7 +2815,8 @@ CREATE TABLE beltquestions (
     Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
-    Correction jsonb NOT NULL
+    Correction jsonb NOT NULL,
+    Repeat integer NOT NULL
 );
 
 -- constraints
@@ -2823,6 +2825,9 @@ ALTER TABLE beltevolutions
 
 ALTER TABLE beltevolutions
     ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE beltquestions
+    ADD CHECK (Repeat > 0);
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_11_cein_Stat (data jsonb)
     RETURNS boolean

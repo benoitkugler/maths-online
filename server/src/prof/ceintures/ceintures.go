@@ -47,6 +47,7 @@ var mathScheme = Scheme{
 	Levels: [ce.NbDomains]ce.Level{
 		ce.Derivation: ce.Terminale,
 		ce.Matrices:   ce.PostBac,
+		// others : ca.Seconde
 	},
 }
 

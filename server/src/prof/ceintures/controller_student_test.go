@@ -64,7 +64,7 @@ func createQuestions(t *testing.T, db *sql.DB) {
 		for r := ce.Rank(0); r < ce.NbRanks; r++ {
 			i := 1 + rand.Intn(3)
 			for n := 0; n < i; n++ {
-				_, err = ce.Beltquestion{Domain: d, Rank: r, Enonce: questions.Enonce{
+				_, err = ce.Beltquestion{Domain: d, Rank: r, Repeat: 1, Enonce: questions.Enonce{
 					questions.TextBlock{Parts: "1+1="},
 					questions.RadioFieldBlock{
 						Answer: "1",

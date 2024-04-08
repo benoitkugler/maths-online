@@ -127,6 +127,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/ceintures/scheme", ce.CeinturesGetScheme)
 	gr.POST("/api/prof/ceintures/pending", ce.CeinturesGetPending)
 	gr.POST("/api/prof/ceintures/questions", ce.CeinturesGetQuestions)
+	gr.POST("/api/prof/ceintures/question-meta", ce.CeinturesUpdateQuestion)
 	gr.PUT("/api/prof/ceintures/question", ce.CeinturesCreateQuestion)
 	gr.POST("/api/prof/ceintures/question", ce.CeinturesSaveQuestion)
 	gr.DELETE("/api/prof/ceintures/question", ce.CeinturesDeleteQuestion)

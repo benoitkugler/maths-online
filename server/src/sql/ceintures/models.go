@@ -21,6 +21,7 @@ type Beltevolution struct {
 // a domain and color.
 //
 // gomacro:SQL _SELECT KEY(Domain, Rank)
+// gomacro:SQL ADD CHECK(Repeat > 0)
 type Beltquestion struct {
 	Id IdBeltquestion
 
@@ -32,6 +33,10 @@ type Beltquestion struct {
 	// Correction an optional content describing the expected solution,
 	// to be instantiated with the same parameters as [Enonce]
 	Correction questions.Enonce
+
+	// Repeat is the number of times the question is proposed,
+	// defaulting to 1
+	Repeat int
 }
 
 func (qu Beltquestion) Page() questions.QuestionPage {

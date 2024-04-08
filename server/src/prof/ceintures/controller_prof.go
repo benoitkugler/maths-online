@@ -139,11 +139,46 @@ func (ct *Controller) CeinturesCreateQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) createQuestion(stage Stage) (ce.Beltquestion, error) {
-	qu, err := ce.Beltquestion{Domain: stage.Domain, Rank: stage.Rank}.Insert(ct.db)
+	qu, err := ce.Beltquestion{
+		Domain: stage.Domain,
+		Rank:   stage.Rank,
+		Repeat: 1,
+	}.Insert(ct.db)
 	if err != nil {
 		return qu, utils.SQLError(err)
 	}
 	return qu, nil
+}
+
+type UpdateBeltquestionIn struct {
+	Id     ce.IdBeltquestion
+	Repeat int
+}
+
+func (ct *Controller) CeinturesUpdateQuestion(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	if userID != ct.admin.Id {
+		return errAccess
+	}
+
+	var args UpdateBeltquestionIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	qu, err := ce.SelectBeltquestion(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	qu.Repeat = args.Repeat
+
+	_, err = qu.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
 }
 
 type SaveBeltQuestionIn struct {

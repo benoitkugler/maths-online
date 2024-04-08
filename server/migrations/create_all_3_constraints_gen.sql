@@ -330,6 +330,9 @@ ALTER TABLE beltevolutions
 ALTER TABLE beltevolutions
     ADD FOREIGN KEY (IdStudent) REFERENCES students;
 
+ALTER TABLE beltquestions
+    ADD CHECK (Repeat > 0);
+
 ALTER TABLE beltevolutions
     ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_12_array_11_cein_Stat (Stats));
 

@@ -685,6 +685,11 @@ export interface Stage {
   Domain: Domain;
   Rank: Rank;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.UpdateBeltquestionIn
+export interface UpdateBeltquestionIn {
+  Id: IdBeltquestion;
+  Repeat: Int;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
   Chapter: string;
@@ -1316,6 +1321,7 @@ export interface Beltquestion {
   Parameters: Parameters;
   Enonce: Enonce;
   Correction: Enonce;
+  Repeat: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
 export const Domain = {
@@ -3933,6 +3939,26 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessCeinturesGetQuestions(data: Beltquestion[] | null): void {}
+
+  protected async rawCeinturesUpdateQuestion(params: UpdateBeltquestionIn) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question-meta";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** CeinturesUpdateQuestion wraps rawCeinturesUpdateQuestion and handles the error */
+  async CeinturesUpdateQuestion(params: UpdateBeltquestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesUpdateQuestion(params);
+      this.onSuccessCeinturesUpdateQuestion();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesUpdateQuestion(): void {}
 
   protected async rawCeinturesCreateQuestion(params: Stage) {
     const fullUrl = this.baseUrl + "/api/prof/ceintures/question";

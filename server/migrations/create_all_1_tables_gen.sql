@@ -1,7 +1,8 @@
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
     IdTeacher integer NOT NULL,
-    Name text NOT NULL
+    Name text NOT NULL,
+    MaxRankThreshold integer NOT NULL
 );
 
 CREATE TABLE classroom_codes (
@@ -214,6 +215,7 @@ CREATE TABLE beltquestions (
     Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
-    Correction jsonb NOT NULL
+    Correction jsonb NOT NULL,
+    Repeat integer NOT NULL
 );
 

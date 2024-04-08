@@ -183,6 +183,7 @@ func scanOneBeltquestion(row scanner) (Beltquestion, error) {
 		&item.Parameters,
 		&item.Enonce,
 		&item.Correction,
+		&item.Repeat,
 	)
 	return item, err
 }
@@ -251,22 +252,22 @@ func ScanBeltquestions(rs *sql.Rows) (Beltquestions, error) {
 // Insert one Beltquestion in the database and returns the item with id filled.
 func (item Beltquestion) Insert(tx DB) (out Beltquestion, err error) {
 	row := tx.QueryRow(`INSERT INTO beltquestions (
-		domain, rank, parameters, enonce, correction
+		domain, rank, parameters, enonce, correction, repeat
 		) VALUES (
-		$1, $2, $3, $4, $5
+		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction)
+		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat)
 	return ScanBeltquestion(row)
 }
 
 // Update Beltquestion in the database and returns the new version.
 func (item Beltquestion) Update(tx DB) (out Beltquestion, err error) {
 	row := tx.QueryRow(`UPDATE beltquestions SET (
-		domain, rank, parameters, enonce, correction
+		domain, rank, parameters, enonce, correction, repeat
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
-		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Id)
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING *;
+		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Id)
 	return ScanBeltquestion(row)
 }
 
