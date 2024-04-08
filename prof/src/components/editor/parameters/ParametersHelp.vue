@@ -258,6 +258,11 @@ const fonctionsDesc = [
     "Renvoie la somme d'une expression évaluée pour une plage d'indice. Le dernier paramètre est optionel : s'il est présent, le symbole Sigma n'est pas utilisé.",
   ],
   [`prod(k; 1; n; k^2; "expand")`, "Idem que sum, mais pour un produit."],
+  [`union(k; 1; n; A_{k}; "expand")`, "Idem que sum, mais pour une union."],
+  [
+    `inter(k; 1; n; A_{k}; "expand")`,
+    "Idem que sum, mais pour une intersection.",
+  ],
   ["coeff(A; i; j)", "Renvoie le coefficient en case (i, j) de la matrice A."],
   ["set(A; i; j, v)", "Renvoie la matrice A avec en case (i, j) la valeur v."],
   ["trans(A) ou transpose(A)", "Renvoie la transposée de A."],
