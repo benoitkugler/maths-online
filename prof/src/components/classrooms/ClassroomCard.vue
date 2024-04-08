@@ -19,7 +19,12 @@
         <v-icon icon="mdi-delete"></v-icon>
       </v-btn>
       <v-spacer></v-spacer>
-      <v-btn @click.stop="emit('update')"> Renommer </v-btn>
+      <v-btn @click.stop="emit('update')">
+        <template v-slot:append>
+          <v-icon>mdi-cog</v-icon>
+        </template>
+        Modifier
+      </v-btn>
     </v-card-actions>
   </v-card>
 </template>

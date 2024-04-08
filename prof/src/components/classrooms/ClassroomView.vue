@@ -204,20 +204,42 @@
                 >{{ formatDate(student.Student.Birthday) }}
               </v-list-item-subtitle>
             </v-col>
-            <v-col cols="2" align-self="center">
-              <v-menu location="left">
-                <template v-slot:activator="{ isActive, props }">
-                  <v-chip color="teal" v-on="{ isActive }" v-bind="props">
-                    {{ student.Success.TotalPoints }}
-                    <v-icon>mdi-crown</v-icon>
+            <v-col cols="4" align-self="center">
+              <v-row justify="center">
+                <v-col>
+                  <v-tooltip>
+                    <template v-slot:activator="{ isActive, props }">
+                      <v-chip v-on="{ isActive }" v-bind="props">
+                        {{ rankLabels[student.Success.Rank] }}
+                      </v-chip>
+                    </template>
+                    Guilde {{ student.Success.Rank }} /
+                    {{ rankLabels.length - 1 }}
+                  </v-tooltip>
+                </v-col>
+                <v-col cols="auto">
+                  <v-menu location="left">
+                    <template v-slot:activator="{ isActive, props }">
+                      <v-chip
+                        color="teal"
+                        class="mx-1"
+                        v-on="{ isActive }"
+                        v-bind="props"
+                      >
+                        {{ student.Success.TotalPoints }}
+                        <v-icon>mdi-crown</v-icon>
+                      </v-chip>
+                    </template>
+                    <DetailsSuccess :stats="student.Success"></DetailsSuccess>
+                  </v-menu>
+                </v-col>
+                <v-col cols="auto">
+                  <v-chip color="orange" class="mx-1">
+                    {{ student.Success.Flames }}
+                    <v-icon>mdi-fire</v-icon>
                   </v-chip>
-                </template>
-                <DetailsSuccess :stats="student.Success"></DetailsSuccess>
-              </v-menu>
-              <v-chip color="orange" class="mx-2">
-                {{ student.Success.Flames }}
-                <v-icon>mdi-fire</v-icon>
-              </v-chip>
+                </v-col>
+              </v-row>
             </v-col>
           </v-row>
         </v-list-item>
@@ -338,6 +360,16 @@ async function generateClassroomCode() {
   };
   setTimeout(refresh, timeout);
 }
+
+const rankLabels = [
+  "Novice",
+  "Guilde de Pythagore",
+  "Guilde de Thalès",
+  "Guilde d'Al-Kashi",
+  "Guilde de Newton",
+  "Guilde de Gauss",
+  "Guilde d'Einstein",
+];
 </script>
 
 <style></style>

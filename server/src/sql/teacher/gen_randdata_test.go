@@ -12,6 +12,7 @@ func randClassroom() Classroom {
 	s.Id = randIdClassroom()
 	s.IdTeacher = randIdTeacher()
 	s.Name = randstring()
+	s.MaxRankThreshold = randint()
 
 	return s
 }
@@ -117,6 +118,10 @@ func randTime() Time {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
+}
+
+func randint() int {
+	return int(rand.Intn(1000000))
 }
 
 func randint64() int64 {

@@ -2,7 +2,8 @@
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
     IdTeacher integer NOT NULL,
-    Name text NOT NULL
+    Name text NOT NULL,
+    MaxRankThreshold integer NOT NULL
 );
 
 CREATE TABLE classroom_codes (

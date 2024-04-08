@@ -26,18 +26,18 @@ type ClassroomExt struct {
 	NbStudents int
 }
 
-func (ct *Controller) checkAcces(userID tc.IdTeacher, classroomID tc.IdClassroom) error {
+func (ct *Controller) checkAcces(userID tc.IdTeacher, classroomID tc.IdClassroom) (tc.Classroom, error) {
 	// check the access
 	classroom, err := tc.SelectClassroom(ct.db, classroomID)
 	if err != nil {
-		return utils.SQLError(err)
+		return tc.Classroom{}, utils.SQLError(err)
 	}
 
 	if classroom.IdTeacher != userID {
-		return accessForbidden
+		return tc.Classroom{}, accessForbidden
 	}
 
-	return nil
+	return classroom, nil
 }
 
 // check that the user has the ownership on the student
@@ -47,7 +47,7 @@ func (ct *Controller) checkStudentOwnership(userID tc.IdTeacher, studentID tc.Id
 		return utils.SQLError(err)
 	}
 
-	if err := ct.checkAcces(userID, student.IdClassroom); err != nil {
+	if _, err := ct.checkAcces(userID, student.IdClassroom); err != nil {
 		return err
 	}
 
@@ -81,7 +81,11 @@ func (ct *Controller) TeacherGetClassrooms(c echo.Context) error {
 func (ct *Controller) TeacherCreateClassroom(c echo.Context) error {
 	userID := JWTTeacher(c)
 
-	_, err := tc.Classroom{IdTeacher: userID, Name: "Nouvelle classe"}.Insert(ct.db)
+	_, err := tc.Classroom{
+		IdTeacher:        userID,
+		Name:             "Nouvelle classe",
+		MaxRankThreshold: 40_000,
+	}.Insert(ct.db)
 	if err != nil {
 		return err
 	}
@@ -98,16 +102,25 @@ func (ct *Controller) TeacherUpdateClassroom(c echo.Context) error {
 	}
 
 	// check the access
-	if err := ct.checkAcces(userID, args.Id); err != nil {
+	classroom, err := ct.checkAcces(userID, args.Id)
+	if err != nil {
 		return err
 	}
 
-	args, err := args.Update(ct.db)
+	// basic check on MaxRank
+	if !(100 <= args.MaxRankThreshold && args.MaxRankThreshold <= 1_000_000) {
+		return errors.New("Seuil de la dernière guilde invalide")
+	}
+
+	classroom.Name = args.Name
+	classroom.MaxRankThreshold = args.MaxRankThreshold
+
+	classroom, err = classroom.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	return c.JSON(200, args)
+	return c.JSON(200, classroom)
 }
 
 // TeacherDeleteClassroom remove the classrooms and all related students
@@ -129,7 +142,7 @@ func (ct *Controller) TeacherDeleteClassroom(c echo.Context) error {
 
 func (ct *Controller) deleteClassroom(idClassroom tc.IdClassroom, userID tc.IdTeacher) error {
 	// check the access
-	if err := ct.checkAcces(userID, idClassroom); err != nil {
+	if _, err := ct.checkAcces(userID, idClassroom); err != nil {
 		return err
 	}
 
@@ -167,11 +180,12 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	}
 
 	// check the access
-	if err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
+	classroom, err := ct.checkAcces(userID, tc.IdClassroom(idClassroom))
+	if err != nil {
 		return err
 	}
 
-	out, err := ct.getClassroomStudents(tc.IdClassroom(idClassroom))
+	out, err := ct.getClassroomStudents(classroom)
 	if err != nil {
 		return err
 	}
@@ -184,8 +198,8 @@ type StudentExt struct {
 	Success evs.StudentAdvance
 }
 
-func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]StudentExt, error) {
-	students, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
+func (ct *Controller) getClassroomStudents(classroom tc.Classroom) ([]StudentExt, error) {
+	students, err := tc.SelectStudentsByIdClassrooms(ct.db, classroom.Id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -200,7 +214,7 @@ func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]Studen
 	for _, student := range students {
 		out = append(out, StudentExt{
 			Student: student,
-			Success: evs.NewAdvance(m[student.Id]).Stats(DefaultMaxRankTreshold),
+			Success: evs.NewAdvance(m[student.Id]).Stats(classroom.MaxRankThreshold),
 		})
 	}
 
@@ -278,7 +292,7 @@ func (ct *Controller) TeacherImportStudents(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter %s : %s", idClassroomS, err)
 	}
 
-	if err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
+	if _, err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
@@ -349,7 +363,7 @@ func (ct *Controller) TeacherAddStudent(c echo.Context) error {
 
 func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher) (StudentExt, error) {
 	// check the access
-	if err := ct.checkAcces(userID, idClassroom); err != nil {
+	if _, err := ct.checkAcces(userID, idClassroom); err != nil {
 		return StudentExt{}, err
 	}
 
@@ -449,7 +463,7 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 	}
 
 	// check the access
-	if err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
+	if _, err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 

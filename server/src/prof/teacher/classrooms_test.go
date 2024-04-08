@@ -68,7 +68,7 @@ func Test_importPronoteFile(t *testing.T) {
 	err = ct.importPronoteFile(f, classroom.Id)
 	tu.AssertNoErr(t, err)
 
-	out, err := ct.getClassroomStudents(classroom.Id)
+	out, err := ct.getClassroomStudents(classroom)
 	tu.AssertNoErr(t, err)
 
 	if len(out) != 31 {
@@ -86,7 +86,7 @@ func TestStudentCRUD(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB, admin: tc.Teacher{Id: teacher.Id}}
-	classroom, err := tc.Classroom{IdTeacher: teacher.Id}.Insert(db)
+	classroom, err := tc.Classroom{IdTeacher: teacher.Id, MaxRankThreshold: 40_000}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	st, err := ct.addStudent(classroom.Id, teacher.Id)

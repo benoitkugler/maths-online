@@ -1187,7 +1187,7 @@ export const PublicStatusLabels: { [key in PublicStatus]: string } = {
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentExt
 export interface StudentExt {
   Student: Student;
-  Success: Stats;
+  Success: StudentAdvance;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentHeader
 export interface StudentHeader {
@@ -1515,12 +1515,14 @@ export interface TagSection {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Tags
 export type Tags = TagSection[] | null;
-// github.com/benoitkugler/maths-online/server/src/sql/events.Stats
-export interface Stats {
+// github.com/benoitkugler/maths-online/server/src/sql/events.StudentAdvance
+export interface StudentAdvance {
   Occurences: Ar11_Int;
   TotalPoints: Int;
   Flames: Int;
   Rank: Int;
+  PointsCurrentRank: Int;
+  PointsNextRank: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
 export type IdSheet = Int;
@@ -1629,6 +1631,7 @@ export interface Classroom {
   id: IdClassroom;
   id_teacher: IdTeacher;
   name: string;
+  MaxRankThreshold: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Client
 export interface Client {

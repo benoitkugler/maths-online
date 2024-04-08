@@ -20,10 +20,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Stats } from "@/controller/api_gen";
+import { StudentAdvance } from "@/controller/api_gen";
 
 interface Props {
-  stats: Stats;
+  stats: StudentAdvance;
 }
 
 const props = defineProps<Props>();
@@ -31,7 +31,7 @@ const props = defineProps<Props>();
 const enum EK {
   isytriv,
   homework,
-  misc
+  misc,
 }
 
 const events = [
@@ -45,7 +45,7 @@ const events = [
   { kind: EK.misc, title: "Modifier sa playlist" }, // E_Misc_SetPlaylist
   { kind: EK.misc, title: "Se connecter 3 jours de suite" }, // E_ConnectStreak3
   { kind: EK.misc, title: "Se connecter 7 jours de suite" }, // E_ConnectStreak7
-  { kind: EK.misc, title: "Se connecter 30 jours de suite" } // E_ConnectStreak30
+  { kind: EK.misc, title: "Se connecter 30 jours de suite" }, // E_ConnectStreak30
 ] as const;
 
 const colors = ["blue", "green", "grey"];

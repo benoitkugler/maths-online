@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
-	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	evts "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
@@ -366,6 +365,11 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 			return utils.SQLError(err)
 		}
 
+		classroom, err := teacher.SelectClassroom(ct.db, student.IdClassroom)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
 		events, err := evts.SelectEventsByIdStudents(ct.db, teacher.IdStudent(studentID))
 		if err != nil {
 			return utils.SQLError(err)
@@ -373,7 +377,7 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 
 		player.Pseudo = student.Surname
 		player.PseudoSuffix = student.Name
-		player.Rank = evts.NewAdvance(events).Stats(tcAPI.DefaultMaxRankTreshold).Rank
+		player.Rank = evts.NewAdvance(events).Stats(classroom.MaxRankThreshold).Rank
 	}
 
 	// then add the player

@@ -44,13 +44,30 @@
   >
     <v-card title="Modifier la classe" v-if="classroomToUpdate != null">
       <v-card-text class="my-2">
-        <v-text-field
-          label="Nom"
-          v-model="classroomToUpdate.name"
-          variant="outlined"
-          density="compact"
-          hide-details
-        ></v-text-field>
+        <v-row>
+          <v-col>
+            <v-text-field
+              label="Nom"
+              v-model="classroomToUpdate.name"
+              variant="outlined"
+              density="compact"
+              hide-details
+            ></v-text-field
+          ></v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-select
+              label="Seuil de la dernière guilde"
+              hint="Nombre de points nécessaires pour débloquer la dernière guilde."
+              persistent-hint
+              v-model="classroomToUpdate.MaxRankThreshold"
+              variant="outlined"
+              density="compact"
+              :items="maxRankItems"
+            ></v-select>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-btn @click="classroomToUpdate = null" color="warning">Retour</v-btn>
@@ -153,6 +170,12 @@ async function updateClassroom() {
 }
 
 const classroomToShow = ref<Classroom | null>(null);
+
+const maxRankItems = [
+  { title: "15 000 : plus tranquille", value: 15_000 },
+  { title: "25 000 : normal", value: 25_000 },
+  { title: "40 000 : intense", value: 40_000 },
+];
 </script>
 
 <style>

@@ -31,6 +31,7 @@ func scanOneClassroom(row scanner) (Classroom, error) {
 		&item.Id,
 		&item.IdTeacher,
 		&item.Name,
+		&item.MaxRankThreshold,
 	)
 	return item, err
 }
@@ -99,22 +100,22 @@ func ScanClassrooms(rs *sql.Rows) (Classrooms, error) {
 // Insert one Classroom in the database and returns the item with id filled.
 func (item Classroom) Insert(tx DB) (out Classroom, err error) {
 	row := tx.QueryRow(`INSERT INTO classrooms (
-		idteacher, name
+		idteacher, name, maxrankthreshold
 		) VALUES (
-		$1, $2
+		$1, $2, $3
 		) RETURNING *;
-		`, item.IdTeacher, item.Name)
+		`, item.IdTeacher, item.Name, item.MaxRankThreshold)
 	return ScanClassroom(row)
 }
 
 // Update Classroom in the database and returns the new version.
 func (item Classroom) Update(tx DB) (out Classroom, err error) {
 	row := tx.QueryRow(`UPDATE classrooms SET (
-		idteacher, name
+		idteacher, name, maxrankthreshold
 		) = (
-		$1, $2
-		) WHERE id = $3 RETURNING *;
-		`, item.IdTeacher, item.Name, item.Id)
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.IdTeacher, item.Name, item.MaxRankThreshold, item.Id)
 	return ScanClassroom(row)
 }
 

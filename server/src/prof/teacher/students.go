@@ -75,7 +75,7 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 			TeacherMail:       mail,
 			TeacherContactURL: url,
 		},
-		Advance: evs.NewAdvance(events).Stats(DefaultMaxRankTreshold),
+		Advance: evs.NewAdvance(events).Stats(classroom.MaxRankThreshold),
 	}, nil
 }
 
@@ -222,6 +222,3 @@ func (ct *Controller) StudentUpdatePlaylist(c echo.Context) error {
 
 	return c.JSON(200, notif)
 }
-
-// in the future this might be overriden by the teacher
-const DefaultMaxRankTreshold = 40000
