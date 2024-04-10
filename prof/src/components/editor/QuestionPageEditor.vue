@@ -246,10 +246,14 @@ watch(
   }
 );
 
-defineExpose({ updatePreview });
+defineExpose({ updatePreview, previewData });
 
 function updatePreview(content: LoopbackServerEvent) {
   preview.value?.preview(content);
+}
+
+function previewData() {
+  return preview.value?.data();
 }
 
 const inner = ref(copy(props.question));

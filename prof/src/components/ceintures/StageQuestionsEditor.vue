@@ -120,6 +120,7 @@
             show-arrows
             color="grey"
             v-model="questionIndex"
+            @update:model-value="refreshPreview"
             align-tabs="end"
           >
             <v-tab
@@ -202,6 +203,7 @@
         @update="writeChanges"
         @save="saveQuestion"
         @export-latex="exportLatex"
+        ref="editor"
       ></QuestionPageEditor>
     </v-card-text>
   </v-card>
@@ -215,8 +217,9 @@ import {
   RankLabels,
   DomainLabels,
   Stage,
+  LoopbackShowCeinture,
+  Int,
 } from "@/controller/api_gen";
-import ClientPreview from "../editor/ClientPreview.vue";
 import { ref, watch } from "vue";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
@@ -247,17 +250,19 @@ const rankItems = Object.keys(RankLabels)
   .map((r) => Number(r) as Rank)
   .filter((r) => r != Rank.StartRank);
 
-const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
-
 const questionIndex = ref(0);
 const questions = ref<Beltquestion[]>([]);
 async function fetchQuestions() {
   const res = await controller.CeinturesGetQuestions(props.stage);
   if (res === undefined) return;
-  // reset questionIndex
+  // reset questionIndex..
   questionIndex.value = 0;
+  // .. and preview
+  editor.value?.updatePreview({
+    Kind: LoopbackServerEventKind.LoopbackPaused,
+    Data: {},
+  });
   questions.value = res || [];
-  preview.value?.pause();
 }
 
 async function createQuestion() {
@@ -333,5 +338,22 @@ async function updateQuestion() {
   if (res === undefined) return;
   questions.value.find((q) => q.Id == qu.Id)!.Repeat = qu.Repeat;
   controller.showMessage("Réglages modifiés avec succès.");
+}
+
+const editor = ref<InstanceType<typeof QuestionPageEditor> | null>(null);
+
+function refreshPreview() {
+  const data = editor.value?.previewData();
+
+  if (
+    data === undefined ||
+    data.Kind != LoopbackServerEventKind.LoopbackShowCeinture
+  ) {
+    return;
+  }
+  const d = data.Data as LoopbackShowCeinture;
+  d.QuestionIndex = questionIndex.value as Int;
+  data.Data = d;
+  editor.value?.updatePreview(data);
 }
 </script>

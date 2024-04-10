@@ -26,12 +26,13 @@ interface Props {
 
 const props = defineProps<Props>();
 
-defineExpose({ pause, preview });
+defineExpose({ pause, preview, data });
 
 const iframe = ref<HTMLIFrameElement | null>(null);
 
 /** transfer the given payload to the flutter embedded app */
 function sendEvent(previewEvent: LoopbackServerEvent) {
+  currentData.value = previewEvent;
   if (iframe.value == null) return;
   iframe.value.contentWindow?.postMessage(JSON.stringify(previewEvent), "*");
 }
@@ -45,6 +46,14 @@ function pause() {
 
 function preview(data: LoopbackServerEvent) {
   sendEvent(data);
+}
+
+const currentData = ref<LoopbackServerEvent>({
+  Kind: LoopbackServerEventKind.LoopbackPaused,
+  Data: {},
+});
+function data() {
+  return currentData.value;
 }
 
 const src = computed(() =>
