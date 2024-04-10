@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"math"
 	"reflect"
 	"testing"
 
@@ -338,4 +339,16 @@ func TestInstantiateWithIntrinsics(t *testing.T) {
 	tu.Assert(t, ok)
 	_, ok = IsInt(bn)
 	tu.Assert(t, ok)
+}
+
+func TestCos(t *testing.T) {
+	e := mustParse(t, "sqrt(16+9-2*4*3*cos(27*pi/180))")
+	v, err := e.Evaluate(Vars{})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !math.IsNaN(v))
+
+	e = mustParse(t, "sqrt(b*b+c*c-2*b*c*cos(d*pi/180))")
+	v, err = e.Evaluate(Vars{NewVar('b'): newNb(4), NewVar('c'): newNb(3), NewVar('d'): newNb(27)})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !math.IsNaN(v))
 }

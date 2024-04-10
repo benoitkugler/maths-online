@@ -387,6 +387,7 @@ func (fn function) eval(_, right *Expr, b *resolver) (real, error) {
 	case floorFn:
 		return newRealInt(int(math.Floor(arg))), nil
 	case sqrtFn:
+		fmt.Println(arg)
 		return newReal(math.Sqrt(arg)), nil
 	case sgnFn:
 		if arg > 0 {
@@ -782,8 +783,8 @@ func (r1 *real) add(r2 real) {
 		r1.rat = sumRat(r1.rat, r2.rat)
 	} else {
 		// use eval to handle the case where r1 or r2 is rational
-		r1.isRational = false
 		r1.val = r1.eval() + r2.eval()
+		r1.isRational = false
 	}
 }
 
