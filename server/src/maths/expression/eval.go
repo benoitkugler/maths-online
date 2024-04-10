@@ -387,7 +387,6 @@ func (fn function) eval(_, right *Expr, b *resolver) (real, error) {
 	case floorFn:
 		return newRealInt(int(math.Floor(arg))), nil
 	case sqrtFn:
-		fmt.Println(arg)
 		return newReal(math.Sqrt(arg)), nil
 	case sgnFn:
 		if arg > 0 {
