@@ -254,6 +254,8 @@ const questions = ref<Beltquestion[]>([]);
 async function fetchQuestions() {
   const res = await controller.CeinturesGetQuestions(props.stage);
   if (res === undefined) return;
+  // reset questionIndex
+  questionIndex.value = 0;
   questions.value = res || [];
   preview.value?.pause();
 }
