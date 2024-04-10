@@ -77,9 +77,16 @@
               </template>
               <v-list>
                 <v-list-item
-                  @click="paste"
+                  @click="copyQuestionToClipboard"
+                  title="Copier"
+                  subtitle="la question et ses paramètres"
+                  prepend-icon="mdi-content-copy"
+                >
+                </v-list-item>
+                <v-list-item
+                  @click="pasteQuestionOrBlock"
                   title="Coller"
-                  subtitle="un bloc"
+                  subtitle="un bloc ou une question"
                   prepend-icon="mdi-content-paste"
                 >
                 </v-list-item>
@@ -194,6 +201,7 @@
 
 <script setup lang="ts">
 import {
+  Block,
   BlockKind,
   Enonce,
   ErrParameters,
@@ -211,12 +219,7 @@ import QuestionContent from "./QuestionContent.vue";
 import SnackErrorEnonce from "./SnackErrorEnonce.vue";
 import ParametersEditor from "./parameters/ParametersEditor.vue";
 import SnackErrorParameters from "./parameters/SnackErrorParameters.vue";
-import {
-  QuestionPage,
-  SaveQuestionOut,
-  readClipboardForBlock,
-  saveData,
-} from "@/controller/editor";
+import { QuestionPage, SaveQuestionOut, saveData } from "@/controller/editor";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { History } from "@/controller/editor_history";
 import { controller } from "@/controller/controller";
@@ -384,30 +387,6 @@ function onQuestionError(err: ErrQuestionInvalid) {
   }
 }
 
-function exportJSON() {
-  saveData(inner.value, `question.isyro.json`);
-}
-
-function doImportJSON(json: string) {
-  const imported: QuestionPage = JSON.parse(json);
-  // do not erase the id
-  imported.id = props.question.id;
-  inner.value = imported;
-  history.add(copy(inner.value));
-  update();
-}
-
-const showImportJSON = ref(false);
-const importedFiles = ref<File[]>([]);
-async function onImportJSON() {
-  showImportJSON.value = false;
-  if (!importedFiles.value.length) return;
-
-  const file = importedFiles.value[0];
-  const content = await file.text();
-  doImportJSON(content);
-}
-
 async function addSyntaxHint(block: ExpressionFieldBlock) {
   if (questionEnonceNode.value == null) return;
 
@@ -440,13 +419,58 @@ async function exportLatex() {
   }
 }
 
-async function paste() {
-  const block = await readClipboardForBlock();
-  if (block === undefined) return;
-  if (modeEnonce.value) {
-    questionEnonceNode.value?.addExistingBlock(block);
-  } else {
-    questionCorrectionNode.value?.addExistingBlock(block);
+function exportJSON() {
+  saveData(inner.value, `question.isyro.json`);
+}
+
+function doImportJSON(json: string) {
+  const imported: QuestionPage = JSON.parse(json);
+  importQuestion(imported);
+}
+
+const showImportJSON = ref(false);
+const importedFiles = ref<File[]>([]);
+async function onImportJSON() {
+  showImportJSON.value = false;
+  if (!importedFiles.value.length) return;
+
+  const file = importedFiles.value[0];
+  const content = await file.text();
+  doImportJSON(content);
+}
+
+function importQuestion(imported: QuestionPage) {
+  // do not erase the id
+  imported.id = props.question.id;
+  inner.value = imported;
+  history.add(copy(inner.value));
+  update();
+}
+
+async function copyQuestionToClipboard() {
+  await navigator.clipboard.writeText(JSON.stringify(inner.value));
+}
+
+async function pasteQuestionOrBlock() {
+  const json = await navigator.clipboard.readText();
+  let parsed;
+  try {
+    parsed = JSON.parse(json);
+  } catch (error) {
+    return;
+  }
+  // do we have a block, a question, or nothing
+  if (parsed["Data"] && parsed["Kind"]) {
+    // block
+    const block = parsed as Block;
+    if (modeEnonce.value) {
+      questionEnonceNode.value?.addExistingBlock(block);
+    } else {
+      questionCorrectionNode.value?.addExistingBlock(block);
+    }
+  } else if (parsed["id"] && parsed["enonce"]) {
+    // question
+    importQuestion(parsed as QuestionPage);
   }
 }
 </script>

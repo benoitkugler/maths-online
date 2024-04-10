@@ -788,13 +788,6 @@ export function exerciceToResource(group: ExercicegroupExt): ResourceGroup {
   };
 }
 
-export async function readClipboardForBlock() {
-  const json = await navigator.clipboard.readText();
-  const parsed = JSON.parse(json);
-  if (!(parsed["Data"] && parsed["Kind"])) return;
-  return parsed as Block;
-}
-
 export interface QuestionPage {
   id: number;
   parameters: Parameters;

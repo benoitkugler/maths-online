@@ -3,6 +3,7 @@
     <v-col cols="5" align-self="center">
       <interpolated-text
         v-model="props.modelValue.Label"
+        @update:model-value="emitUpdate()"
         label="Préfixe (optionnel)"
         hint="Ajouté devant le champ de réponse."
       >
@@ -50,8 +51,8 @@
 import type { ExpressionFieldBlock, Variable } from "@/controller/api_gen";
 import { ComparisonLevel } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
 import InterpolatedText from "../utils/InterpolatedText.vue";
+import { computed } from "vue";
 
 interface Props {
   modelValue: ExpressionFieldBlock;
