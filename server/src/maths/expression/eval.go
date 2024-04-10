@@ -773,11 +773,24 @@ func (r real) toExpr() *Expr {
 }
 
 func sumReal(r1, r2 real) real {
+	r1.add(r2)
+	return r1
+}
+
+func (r1 *real) add(r2 real) {
 	if r1.isRational && r2.isRational {
-		return real{isRational: true, rat: sumRat(r1.rat, r2.rat)}
+		r1.rat = sumRat(r1.rat, r2.rat)
+	} else {
+		// use eval to handle the case where r1 or r2 is rational
+		r1.isRational = false
+		r1.val = r1.eval() + r2.eval()
 	}
-	// use eval to handle the case where r1 or r2 is rational
-	return real{isRational: false, val: r1.eval() + r2.eval()}
+}
+
+// transforms r to -r
+func (r *real) opposite() {
+	r.val = -r.val
+	r.rat.p = -r.rat.p
 }
 
 // return r1 - r2

@@ -252,7 +252,7 @@ func (expr *Expr) instantiate(ctx *resolver) (*Expr, error) {
 			if err != nil {
 				return nil, err
 			}
-			return newNb(d), nil
+			return d.toExpr(), nil
 		case transposeFn:
 			mat, ok := right.atom.(matrix)
 			if !ok {
