@@ -31,15 +31,15 @@ class Board extends StatelessWidget {
     // center, start
     _ShapeDescriptor(Categorie.purple, _Circle(middle, _RL(9))),
     // two vertical tiles
-    _ShapeDescriptor(Categorie.blue,
+    _ShapeDescriptor(Categorie.yellow,
         _RoundedTrapezoide(middle, _RL(9), 180 + 20, 180 - 40, _RP(59, 30))),
     _ShapeDescriptor(
-        Categorie.green,
+        Categorie.blue,
         _RoundedTrapezoide(middle, _RL(innerRingRadius),
             270 - angularSection / 2, angularSection, _RP(40 + 19, 30))),
     // cross
     _ShapeDescriptor(
-        Categorie.blue,
+        Categorie.purple,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 - angularSection / 2, angularSection)),
     // 5 regular sections
@@ -48,11 +48,11 @@ class Board extends StatelessWidget {
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2, angularSection)),
     _ShapeDescriptor(
-        Categorie.orange,
+        Categorie.blue,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + angularSection, angularSection)),
     _ShapeDescriptor(
-        Categorie.purple,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
@@ -60,41 +60,41 @@ class Board extends StatelessWidget {
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Categorie.orange,
+        Categorie.purple,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 4 * angularSection, angularSection)),
     // cross
     _ShapeDescriptor(
-        Categorie.yellow,
+        Categorie.green,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 5 * angularSection, angularSection)),
     // 5 regular sections
     _ShapeDescriptor(
-        Categorie.orange,
+        Categorie.blue,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 0 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Categorie.yellow,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 1 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Categorie.purple,
+        Categorie.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Categorie.orange,
+        Categorie.blue,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Categorie.green,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 4 * angularSection, angularSection)),
     // two last vertical tiles
     _ShapeDescriptor(
-        Categorie.blue,
+        Categorie.orange,
         _RoundedTrapezoide(middle, _RL(innerRingRadius),
             90 - angularSection / 2, angularSection, _RP(41, 70))),
-    _ShapeDescriptor(Categorie.yellow,
+    _ShapeDescriptor(Categorie.green,
         _RoundedTrapezoide(middle, _RL(9), 20, 180 - 40, _RP(41, 70))),
   ];
 

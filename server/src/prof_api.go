@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/benoitkugler/maths-online/server/src/prof/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/prof/editor"
 	"github.com/benoitkugler/maths-online/server/src/prof/homework"
 	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
@@ -12,6 +13,7 @@ import (
 func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	edit *editor.Controller, tc *teacher.Controller,
 	home *homework.Controller, review *reviews.Controller,
+	ce *ceintures.Controller,
 ) {
 	e.POST("/prof/inscription", tc.AskInscription)
 	e.GET(teacher.ValidateInscriptionEndPoint, tc.ValidateInscription)
@@ -65,6 +67,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/editor/questiongroup/duplicate", edit.EditorDuplicateQuestiongroup)
 	gr.PUT("/api/prof/editor/questiongroup", edit.EditorCreateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup", edit.EditorUpdateQuestiongroup)
+	gr.DELETE("/api/prof/editor/questiongroup", edit.EditorDeleteQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup/tags", edit.EditorUpdateQuestionTags)
 	gr.POST("/api/prof/editor/questiongroup/visibility", edit.EditorUpdateQuestiongroupVis)
 	gr.GET("/api/prof/editor/question", edit.EditorGetQuestions)
@@ -78,6 +81,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/editor/exercicegroups", edit.EditorGetExercicesIndex)
 	gr.POST("/api/prof/editor/exercicegroups", edit.EditorSearchExercices)
 	gr.POST("/api/prof/editor/exercicegroup", edit.EditorUpdateExercicegroup)
+	gr.DELETE("/api/prof/editor/exercicegroup", edit.EditorDeleteExercicegroup)
 	gr.POST("/api/prof/editor/exercicegroup/tags", edit.EditorUpdateExerciceTags)
 	gr.GET("/api/prof/editor/exercicegroup/duplicate", edit.EditorDuplicateExercicegroup)
 	gr.GET("/api/prof/editor/exercice", edit.EditorGetExerciceContent)
@@ -114,7 +118,19 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/homework/sheet/monoquestion", home.HomeworkUpdateMonoquestion)
 	gr.POST("/api/prof/homework/sheet/randommonoquestion", home.HomeworkUpdateRandomMonoquestion)
 	gr.POST("/api/prof/homework/sheet", home.HomeworkReorderSheetTasks)
+	gr.GET("/api/prof/homework/sheet/missing-hint", home.HomeworkMissingTasksHint)
 	gr.POST("/api/prof/homework/marks", home.HomeworkGetMarks)
+	gr.GET("/api/prof/homework/dispences", home.HomeworkGetDispenses)
+	gr.POST("/api/prof/homework/dispences", home.HomeworkSetDispense)
+
+	// ceintures
+	gr.GET("/api/prof/ceintures/scheme", ce.CeinturesGetScheme)
+	gr.POST("/api/prof/ceintures/pending", ce.CeinturesGetPending)
+	gr.POST("/api/prof/ceintures/questions", ce.CeinturesGetQuestions)
+	gr.POST("/api/prof/ceintures/question-meta", ce.CeinturesUpdateQuestion)
+	gr.PUT("/api/prof/ceintures/question", ce.CeinturesCreateQuestion)
+	gr.POST("/api/prof/ceintures/question", ce.CeinturesSaveQuestion)
+	gr.DELETE("/api/prof/ceintures/question", ce.CeinturesDeleteQuestion)
 
 	// review page
 	gr.PUT("/api/prof/review", review.ReviewCreate)

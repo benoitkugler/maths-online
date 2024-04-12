@@ -4,12 +4,11 @@ import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/types/src.dart';
-import 'package:eleve/types/src_maths_questions.dart' as ServerQuestions;
+import 'package:eleve/types/src_prof_preview.dart';
+import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
-import 'package:eleve/types/src_prof_editor.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:eleve/types/src_trivial.dart';
@@ -19,22 +18,55 @@ void main() async {
   runApp(const _QuestionTestApp());
 }
 
-class _FieldAPI implements FieldAPI {
-  _FieldAPI();
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-}
-
 final questionComplexe = Question([
   TextBlock([T("A question to exercice many fields")], false, false, false),
   const NumberFieldBlock(0, 10),
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
-  const FigurePointFieldBlock(
-      Figure(Drawings({}, [], [], [], []), bounds, true, true), 3)
+  TreeBlock(
+      [
+        [T("A")],
+        [T("B")],
+        [T("C")]
+      ],
+      const TreeNodeAnswer([
+        TreeNodeAnswer([
+          TreeNodeAnswer([], [], 0),
+          TreeNodeAnswer([], [], 0),
+        ], [
+          "",
+          "7"
+        ], 1),
+        TreeNodeAnswer([
+          TreeNodeAnswer([], [], 0),
+          TreeNodeAnswer([], [], 0),
+        ], [
+          "0.1",
+          "x"
+        ], 0),
+      ], [
+        "x",
+        "1/3"
+      ], 0)),
+  TreeFieldBlock([
+    [2, 2],
+    [2, 3],
+  ], [
+    [T("A")],
+    [T("B")],
+    [T("C")]
+  ], 10),
+  const GeometricConstructionFieldBlock(
+      3,
+      GFPoint(),
+      FunctionsGraphBlock([], [], [],
+          [FunctionPoint("#FF0000", "A point", Coord(5, 5))], bounds)),
+  const GeometricConstructionFieldBlock(4, GFPoint(),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+  const GeometricConstructionFieldBlock(5, GFVector("test", true),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+  const GeometricConstructionFieldBlock(6, GFVectorPair(),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
 ], []);
 
 const questionComplexeAnswers = {
@@ -42,29 +74,44 @@ const questionComplexeAnswers = {
   1: ExpressionAnswer("4 / (2x)"),
   2: ExpressionAnswer("x^2 + 4 /8 "),
   3: PointAnswer(IntCoord(3, 8)),
+  4: PointAnswer(IntCoord(3, 8)),
+  5: DoublePointAnswer(IntCoord(3, 8), IntCoord(3, 8)),
+  6: DoublePointPairAnswer(
+      IntCoord(3, 8), IntCoord(3, 8), IntCoord(3, 8), IntCoord(3, 8)),
+  10: TreeAnswer(TreeNodeAnswer([], [], 0))
 };
 
-Question numberQuestion(String title) {
-  return Question([
-    TextBlock([T(title)], false, false, false),
-    const NumberFieldBlock(0, 10)
-  ], [
-    TextBlock(List.filled(40, T("Une très belle correction : $title")), false,
-        true, true)
-  ]);
+Question numberQuestion(String title, {bool withCorrection = true}) {
+  return Question(
+      [
+        TextBlock([T(title)], false, false, false),
+        const NumberFieldBlock(0, 10)
+      ],
+      withCorrection
+          ? [
+              TextBlock(
+                  List.filled(40, T("Une très belle correction : $title")),
+                  false,
+                  true,
+                  true)
+            ]
+          : []);
 }
 
 final qu1 = numberQuestion("Test 1");
-final qu2 = numberQuestion("Test 2");
+final qu2 = numberQuestion("Test 2", withCorrection: false);
 final qu3 = numberQuestion("Test 3");
 
-final quI1 = InstantiatedQuestion(1, qu1, []);
-final quI2 = InstantiatedQuestion(2, qu2, []);
-final quI3 = InstantiatedQuestion(3, qu3, []);
+final quI1 = InstantiatedQuestion(1, qu1, DifficultyTag.diff1, []);
+final quI2 = InstantiatedQuestion(2, qu2, DifficultyTag.diff2, []);
+final quI3 = InstantiatedQuestion(3, qu3, DifficultyTag.diffEmpty, []);
 
-final quI1bis = InstantiatedQuestion(1, numberQuestion("Variante 1"), []);
-final quI2bis = InstantiatedQuestion(2, numberQuestion("Variante 2"), []);
-final quI3bis = InstantiatedQuestion(3, numberQuestion("Variante 3"), []);
+final quI1bis = InstantiatedQuestion(
+    1, numberQuestion("Variante 1"), DifficultyTag.diff3, []);
+final quI2bis = InstantiatedQuestion(
+    2, numberQuestion("Variante 2"), DifficultyTag.diff2, []);
+final quI3bis = InstantiatedQuestion(
+    3, numberQuestion("Variante 3"), DifficultyTag.diff2, []);
 
 const qu1Answer = {0: NumberAnswer(0)};
 const qu2Answer = {0: NumberAnswer(1)};
@@ -164,7 +211,6 @@ class _TrivialInGame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InGameQuestionRoute(
-        _FieldAPI(),
         ShowQuestion(60, Categorie.blue, 0, questionComplexe),
         (a) => onValid(a, context));
   }
@@ -184,7 +230,6 @@ class _TrivialLast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LastQuestionRoute(
-      _FieldAPI(),
       ShowQuestion(60, Categorie.blue, 0, questionComplexe),
       onDone,
       questionComplexeAnswers,
@@ -194,17 +239,12 @@ class _TrivialLast extends StatelessWidget {
 
 class _DecrassageAPI implements DecrassageAPI {
   @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-
-  @override
   Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
     await Future<void>.delayed(const Duration(seconds: 1));
     return [
-      InstantiatedQuestion(1, qu1, []),
-      InstantiatedQuestion(2, qu2, []),
-      InstantiatedQuestion(3, qu3, []),
+      InstantiatedQuestion(1, qu1, DifficultyTag.diff1, []),
+      InstantiatedQuestion(2, qu2, DifficultyTag.diff2, []),
+      InstantiatedQuestion(3, qu3, DifficultyTag.diffEmpty, []),
     ];
   }
 
@@ -245,8 +285,7 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   void initState() {
     controller = LoopackQuestionController(
         LoopbackShowQuestion(questionComplexe, [], false,
-            const ServerQuestions.QuestionPage(null, null, null)),
-        _FieldAPI(),
+            const server_questions.QuestionPage(null, null, null)),
         onValid);
     super.initState();
   }
@@ -301,28 +340,22 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
   _ExerciceSequentialAPI();
 
   @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-
-  @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final questionIndex = params.answers.keys.first;
-    final answer = params.answers[questionIndex]!;
+    final questionIndex = params.answerIndex;
+    final answer = params.answer;
+    // the correct answer is the index of the question
     final isCorrect =
         questionIndex == (answer.answer.data[0] as NumberAnswer).value;
-    final res = {
-      questionIndex: QuestionAnswersOut({0: isCorrect}, {})
-    };
     params.progression.questions[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        res,
         ProgressionExt(
             params.progression.questions,
             isCorrect
                 ? (questionIndex == 2 ? -1 : questionIndex + 1)
                 : questionIndex),
-        [quI1bis, quI2bis, quI3bis]);
+        [quI1bis, quI2bis, quI3bis],
+        questionIndex,
+        QuestionAnswersOut({0: isCorrect}, {}));
   }
 }
 
@@ -331,8 +364,8 @@ class _ExerciceSequential extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceSequentialAPI(),
-        ExerciceController(workSequencial, null, _FieldAPI()));
+    return ExerciceW(
+        _ExerciceSequentialAPI(), ExerciceController(workSequencial, null));
   }
 }
 
@@ -346,7 +379,7 @@ class _LoopbackExerciceSequential extends StatefulWidget {
 
 class _LoopbackExerciceSequentialState
     extends State<_LoopbackExerciceSequential> {
-  ExerciceController ct = ExerciceController(workSequencial, null, _FieldAPI());
+  ExerciceController ct = ExerciceController(workSequencial, null);
 
   @override
   Widget build(BuildContext context) {
@@ -368,29 +401,19 @@ class _ExerciceParallelAPI implements ExerciceAPI {
   _ExerciceParallelAPI();
 
   @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-
-  @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final res = <int, QuestionAnswersOut>{};
-    for (var item in params.answers.entries) {
-      final questionIndex = item.key;
-      final answer = item.value.answer;
-      final isCorrect = questionIndex == (answer.data[0] as NumberAnswer).value;
-      params.progression.questions[questionIndex].add(isCorrect);
-      res[questionIndex] = QuestionAnswersOut({0: isCorrect}, {});
-    }
-    params.progression.questions
-        .indexWhere((l) => l.every((sucess) => !sucess));
+    final questionIndex = params.answerIndex;
+    final answer = params.answer.answer;
+    final isCorrect = questionIndex == (answer.data[0] as NumberAnswer).value;
+    params.progression.questions[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        res,
         ProgressionExt(
             params.progression.questions,
             params.progression.questions
                 .indexWhere((l) => l.every((sucess) => !sucess))),
-        [quI1bis, quI2bis, quI3bis]);
+        [quI1bis, quI2bis, quI3bis],
+        questionIndex,
+        QuestionAnswersOut({0: isCorrect}, {}));
   }
 }
 
@@ -399,8 +422,8 @@ class _ExerciceParallel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceParallelAPI(),
-        ExerciceController(workParallel, null, _FieldAPI()));
+    return ExerciceW(
+        _ExerciceParallelAPI(), ExerciceController(workParallel, null));
   }
 }
 
@@ -413,7 +436,7 @@ class _LoopbackExerciceParallel extends StatefulWidget {
 }
 
 class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
-  ExerciceController ct = ExerciceController(workParallel, null, _FieldAPI());
+  ExerciceController ct = ExerciceController(workParallel, null);
 
   @override
   Widget build(BuildContext context) {

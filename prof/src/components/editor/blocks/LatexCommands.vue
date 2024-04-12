@@ -159,7 +159,7 @@ const commands = [
   },
   {
     description: "Barre (moyenne, contraire)",
-    command: `\\bar{x}`,
+    command: `\\overline{x}`,
   },
   {
     description: "Symbole parallèle",
@@ -176,6 +176,10 @@ const commands = [
   {
     description: "Système de deux équations",
     command: `\\begin{cases}  x+y &=2 \\\\   x-3y &=4 \\\\ \\end{cases}`,
+  },
+  {
+    description: "Flèche à l'envers (attribution d'une variable)",
+    command: `\\leftarrow`,
   },
 ];
 

@@ -8,7 +8,10 @@ import (
 	"fmt"
 	"sort"
 
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
+	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
@@ -28,26 +31,46 @@ func newClassroomTravaux(cl teacher.Classroom, travailMap ho.Travails) Classroom
 		}
 	}
 
-	// show Noted first
-	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Id < out.Travaux[j].Id })
-	sort.SliceStable(out.Travaux, func(i, j int) bool { return out.Travaux[i].Noted && !out.Travaux[j].Noted })
+	// show most recent first
+	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Id > out.Travaux[j].Id })
 	return out
 }
 
 type TaskExt struct {
 	Id             tasks.IdTask
 	IdWork         taAPI.WorkID
-	Title          string // title of the underlying exercice or question
+	Title          string      // title of the underlying exercice or question
+	Tags           editor.Tags // of the underlying group (exercice or question)
+	GroupID        int64       // of the underlying group (exercice or question)
 	Bareme         taAPI.TaskBareme
 	NbProgressions int // the number of student having started this task
 }
 
 // [progressions] is the list of all links item related to [task]
-func newTaskExt(task tasks.Task, work taAPI.WorkMeta, progressions tasks.Progressions) TaskExt {
+func newTaskExt(task tasks.Task, work taAPI.WorkMeta, progressions tasks.Progressions,
+	exTags map[editor.IdExercicegroup]editor.ExercicegroupTags, quTags map[editor.IdQuestiongroup]editor.QuestiongroupTags,
+) TaskExt {
 	baremes := work.Bareme()
+	var (
+		tags    editor.Tags
+		groupID int64
+	)
+	switch work := work.(type) {
+	case taAPI.ExerciceData:
+		tags = exTags[work.Exercice.IdGroup].Tags()
+		groupID = int64(work.Exercice.IdGroup)
+	case taAPI.MonoquestionData:
+		tags = quTags[work.Group.Id].Tags()
+		groupID = int64(work.Group.Id)
+	case taAPI.RandomMonoquestionData:
+		tags = quTags[work.Group.Id].Tags()
+		groupID = int64(work.Group.Id)
+	}
 	return TaskExt{
 		Id:             task.Id,
 		IdWork:         taAPI.NewWorkID(task),
+		Tags:           tags,
+		GroupID:        groupID,
 		Title:          work.Title(),
 		NbProgressions: len(progressions.ByIdStudent()),
 		Bareme:         baremes,
@@ -67,13 +90,14 @@ func loadTaskExt(db ho.DB, idTask tasks.IdTask) (TaskExt, error) {
 		return TaskExt{}, utils.SQLError(err)
 	}
 
-	return newTaskExt(task, loader.GetWork(task), progressions), nil
+	return newTaskExt(task, loader.GetWork(task), progressions, loader.ExerciceTags, loader.QuestionTags), nil
 }
 
 type SheetExt struct {
 	Sheet     ho.Sheet
 	Tasks     []TaskExt
 	NbTravaux int
+	Origin    tcAPI.Origin
 }
 
 // sheetLoader is an helper type to
@@ -86,6 +110,8 @@ type sheetLoader struct {
 	progressions map[tasks.IdTask]tasks.Progressions
 
 	travaux map[ho.IdSheet]ho.Travails
+
+	reviews map[ho.IdSheet]reviews.ReviewSheet
 }
 
 func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error) {
@@ -112,8 +138,14 @@ func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err erro
 		return out, utils.SQLError(err)
 	}
 
+	links3, err := reviews.SelectReviewSheetsByIdSheets(db, idSheets...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	out.links = links1.ByIdSheet()
 	out.progressions = links2.ByIdTask()
+	out.reviews = links3.ByIdSheet()
 
 	return out, nil
 }
@@ -124,26 +156,64 @@ func (loader sheetLoader) tasksForSheet(id ho.IdSheet) ho.SheetTasks {
 	return links
 }
 
-func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
+func (loader sheetLoader) newSheetExt(sheet ho.Sheet, userID, adminID uID) SheetExt {
+	var inReview tcAPI.OptionalIdReview
+	if rev, has := loader.reviews[sheet.Id]; has {
+		inReview = tcAPI.OptionalIdReview{InReview: true, Id: rev.IdReview}
+	}
 	out := SheetExt{
 		Sheet:     sheet,
 		NbTravaux: len(loader.travaux[sheet.Id]),
+		Origin: tcAPI.Origin{
+			Visibility:   tcAPI.NewVisibility(sheet.IdTeacher, userID, adminID, sheet.Public),
+			PublicStatus: tcAPI.NewPublicStatus(sheet.IdTeacher, userID, adminID, sheet.Public),
+			IsInReview:   inReview,
+		},
 	}
 	links := loader.tasksForSheet(sheet.Id)
 	for _, link := range links {
 		task := loader.tasks.Tasks[link.IdTask]
 		work := loader.tasks.GetWork(task)
-		out.Tasks = append(out.Tasks, newTaskExt(task, work, loader.progressions[task.Id]))
+		out.Tasks = append(out.Tasks, newTaskExt(task, work, loader.progressions[task.Id], loader.tasks.ExerciceTags, loader.tasks.QuestionTags))
 	}
 	return out
 }
 
-func (loader sheetLoader) buildSheetExts(sheets ho.Sheets) map[ho.IdSheet]SheetExt {
+func (loader sheetLoader) buildSheetExts(sheets ho.Sheets, userID, adminID uID) map[ho.IdSheet]SheetExt {
 	out := make(map[ho.IdSheet]SheetExt, len(sheets))
 	for idSheet, v := range sheets {
-		out[idSheet] = loader.newSheetExt(v)
+		out[idSheet] = loader.newSheetExt(v, userID, adminID)
 	}
 	return out
+}
+
+func (ld sheetLoader) isSheetComplete(db ho.DB, idStudent teacher.IdStudent, idSheet ho.IdSheet) (bool, error) {
+	m, err := ld.tasks.LoadProgressions(db)
+	if err != nil {
+		return false, err
+	}
+	for _, task := range ld.tasksForSheet(idSheet) {
+		pr := m[task.IdTask][idStudent]
+		if !pr.IsComplete() {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func LoadSheet(db ho.DB, id ho.IdSheet, userID, adminID uID) (SheetExt, error) {
+	sheet, err := ho.SelectSheet(db, id)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	loader, err := newSheetsLoader(db, []ho.IdSheet{id})
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	out := loader.newSheetExt(sheet, userID, adminID)
+	return out, nil
 }
 
 func updateSheetTasksOrder(tx *sql.Tx, idSheet ho.IdSheet, l []tasks.IdTask) error {

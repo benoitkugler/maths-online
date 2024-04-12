@@ -7,11 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
-	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/prof/preview"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/homework"
@@ -60,6 +59,11 @@ func (ct *Controller) EditorGetQuestionsIndex(c echo.Context) error {
 }
 
 func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
 	groups, err := ed.SelectAllQuestiongroups(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -72,7 +76,7 @@ func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	return buildIndex(questionsToIndex(groups, tags)), nil
+	return buildIndexFor(questionsToIndex(groups, tags), user.FavoriteMatiere), nil
 }
 
 type SearchQuestionsIn = Query
@@ -106,6 +110,11 @@ func (ct *Controller) EditorCreateQuestiongroup(c echo.Context) error {
 }
 
 func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return QuestiongroupExt{}, utils.SQLError(err)
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return QuestiongroupExt{}, utils.SQLError(err)
@@ -126,15 +135,27 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
+	// add the favorite matiere as tag
+	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
+	err = ed.InsertQuestiongroupTag(tx, ed.QuestiongroupTag{
+		Tag:             ts.Tag,
+		Section:         ts.Section,
+		IdQuestiongroup: group.Id,
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return QuestiongroupExt{}, utils.SQLError(err)
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
-	origin, _ := questionOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
+	origin := questionOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	return QuestiongroupExt{
 		Group:    group,
-		Tags:     nil,
+		Tags:     ed.Tags{ts},
 		Origin:   origin,
 		Variants: []QuestionHeader{newQuestionHeader(qu)},
 	}, nil
@@ -293,14 +314,32 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// EditorDeleteQuestiongroup remove the whole group.
+// An information is returned if the question is used in monoquestions (tasks)
+func (ct *Controller) EditorDeleteQuestiongroup(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.deleteQuestiongroup(ed.IdQuestiongroup(id), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
 type TaskDetails struct {
 	Id    tasks.IdTask
 	Sheet homework.Sheet
 }
 
-type QuestionExerciceUses []TaskDetails // the task containing the [Monoquestions]
+type TaskUses []TaskDetails // the task containing the [Monoquestions]
 
-func newQuestionExericeUses(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, error) {
+func loadTaskDetails(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, error) {
 	links, err := homework.SelectSheetTasksByIdTasks(db, idTasks...)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -325,7 +364,7 @@ func newQuestionExericeUses(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, er
 
 // getQuestionUses returns the item using the given question
 // exercices are not considered since questions in exercices can't be accessed directly
-func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionExerciceUses, err error) {
+func getQuestionUses(db ed.DB, id ed.IdQuestion) (out TaskUses, err error) {
 	monoquestions, err := tasks.SelectMonoquestionsByIdQuestions(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -336,12 +375,45 @@ func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionExerciceUses, err 
 		return out, utils.SQLError(err)
 	}
 
-	return newQuestionExericeUses(db, tasks.IDs())
+	return loadTaskDetails(db, tasks.IDs())
+}
+
+// getQuestiongroupUses returns the item using the given questiongroup
+// or its variants
+func getQuestiongroupUses(db ed.DB, id ed.IdQuestiongroup) (out TaskUses, err error) {
+	// load the variants
+	variants, err := ed.SelectQuestionsByIdGroups(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	monoquestions, err := tasks.SelectMonoquestionsByIdQuestions(db, variants.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	randomMonoquestions, err := tasks.SelectRandomMonoquestionsByIdQuestiongroups(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	tasks1, err := tasks.SelectTasksByIdMonoquestions(db, monoquestions.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	tasks2, err := tasks.SelectTasksByIdRandomMonoquestions(db, randomMonoquestions.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	// tasks1 and tasks2 are disjoint, by design
+	return loadTaskDetails(db, append(tasks1.IDs(), tasks2.IDs()...))
 }
 
 type DeleteQuestionOut struct {
 	Deleted   bool
-	BlockedBy QuestionExerciceUses // non empty iff Deleted == false
+	BlockedBy TaskUses // non empty iff Deleted == false
 }
 
 func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuestionOut, error) {
@@ -385,6 +457,48 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuesti
 		if err != nil {
 			return DeleteQuestionOut{}, utils.SQLError(err)
 		}
+	}
+
+	return DeleteQuestionOut{Deleted: true}, nil
+}
+
+func (ct *Controller) deleteQuestiongroup(id ed.IdQuestiongroup, userID uID) (DeleteQuestionOut, error) {
+	group, err := ed.SelectQuestiongroup(ct.db, id)
+	if err != nil {
+		return DeleteQuestionOut{}, utils.SQLError(err)
+	}
+	if group.IdTeacher != userID {
+		return DeleteQuestionOut{}, errAccessForbidden
+	}
+	uses, err := getQuestiongroupUses(ct.db, id)
+	if err != nil {
+		return DeleteQuestionOut{}, err
+	}
+	if len(uses) != 0 {
+		return DeleteQuestionOut{
+			Deleted:   false,
+			BlockedBy: uses,
+		}, nil
+	}
+
+	// delete the variants then the group
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return DeleteQuestionOut{}, err
+	}
+	_, err = ed.DeleteQuestionsByIdGroups(tx, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return DeleteQuestionOut{}, err
+	}
+	_, err = ed.DeleteQuestiongroupById(tx, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return DeleteQuestionOut{}, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return DeleteQuestionOut{}, err
 	}
 
 	return DeleteQuestionOut{Deleted: true}, nil
@@ -552,7 +666,7 @@ type SaveQuestionAndPreviewIn struct {
 
 type ListQuestionsOut struct {
 	Groups      []QuestiongroupExt
-	NbQuestions int // Numver of variants in [Groups]
+	NbQuestions int // Number of variants in [Groups]
 }
 
 // QuestiongroupExt adds the question and tags to a QuestionGroup
@@ -567,7 +681,7 @@ type QuestiongroupExt struct {
 func NewQuestiongroupExt(group ed.Questiongroup, variants []ed.Question, tags ed.Tags,
 	inReview tcAPI.OptionalIdReview, userID, adminID uID,
 ) QuestiongroupExt {
-	origin, _ := questionOrigin(group, inReview, userID, adminID)
+	origin := questionOrigin(group, inReview, userID, adminID)
 	groupExt := QuestiongroupExt{
 		Group:  group,
 		Origin: origin,
@@ -602,73 +716,37 @@ func newQuestionHeader(question ed.Question) QuestionHeader {
 	}
 }
 
-func questionOrigin(qu ed.Questiongroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) (tcAPI.Origin, bool) {
-	vis := tcAPI.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
-	if vis.Restricted() {
-		return tcAPI.Origin{}, false
-	}
+func questionOrigin(qu ed.Questiongroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) tcAPI.Origin {
 	return tcAPI.Origin{
-		AllowPublish: userID == adminID,
-		IsPublic:     qu.Public,
-		Visibility:   vis,
+		Visibility:   tcAPI.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public),
 		IsInReview:   inReview,
-	}, true
-}
-
-func isQueryVariant(query string) (int64, bool) {
-	if strings.HasPrefix(query, "variante:") {
-		idS := strings.TrimPrefix(query, "variante:")
-		id, err := strconv.ParseInt(idS, 10, 64)
-		return id, err == nil
+		PublicStatus: tcAPI.NewPublicStatus(qu.IdTeacher, userID, adminID, qu.Public),
 	}
-	return 0, false
-}
-
-type itemGroupQuery interface {
-	match(id int64, title string) bool
-}
-
-func newQuery(title string) (itemGroupQuery, error) {
-	// special case for pattern id:id1, id2, ...
-	if strings.HasPrefix(title, "id:") {
-		idsString := strings.TrimSpace(title[len("id:"):])
-		if len(idsString) != 0 {
-			out := make(queryByIds)
-			ids := strings.Split(idsString, ",")
-
-			for _, id := range ids {
-				idV, err := strconv.Atoi(id)
-				if err != nil {
-					return nil, fmt.Errorf("Requête invalide: entier attendu (%s)", err)
-				}
-				out[int64(idV)] = true
-			}
-			return out, nil
-		}
-	}
-	return queryByTitle(normalizeTitle(title)), nil
-}
-
-type queryByTitle string
-
-func (qt queryByTitle) match(_ int64, title string) bool {
-	itemTitle := normalizeTitle(title)
-	return qt == "" || strings.Contains(itemTitle, string(qt))
-}
-
-type queryByIds map[int64]bool
-
-func (qt queryByIds) match(id int64, _ string) bool { return qt[id] }
-
-func normalizeTitle(title string) string {
-	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
 }
 
 func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
 	query.normalize()
 
 	var groups ed.Questiongroups
-	if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
+	if isQueryTODO(query.TitleQuery) {
+		questions, err := ed.SelectAllQuestions(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		ids := ed.IdQuestiongroupSet{}
+		for _, question := range questions {
+			if question.NeedExercice.Valid {
+				continue // ignore exercices
+			}
+			if question.Parameters.HasTODO() {
+				ids.Add(question.IdGroup.ID)
+			}
+		}
+		groups, err = ed.SelectQuestiongroups(ct.db, ids.Keys()...)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+	} else if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
 		qu, err := ed.SelectQuestion(ct.db, ed.IdQuestion(idVariant))
 		if err == sql.ErrNoRows {
 			return out, fmt.Errorf("La question %d n'existe pas.", idVariant)
@@ -728,8 +806,9 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
-		tagIndex := tagsMap[group.Id].Tags().BySection()
-		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
+		tags := tagsMap[group.Id].Tags()
+		tagIndex := tags.BySection()
+		if !query.matchTags(tagIndex) {
 			continue
 		}
 
@@ -744,7 +823,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
 
-		groupExt := NewQuestiongroupExt(group, questions, tagsMap[group.Id].Tags(), inReview, userID, ct.admin.Id)
+		groupExt := NewQuestiongroupExt(group, questions, tags, inReview, userID, ct.admin.Id)
 
 		out.NbQuestions += len(groupExt.Variants)
 
@@ -808,9 +887,7 @@ func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) 
 	}
 
 	var out CheckQuestionParametersOut
-	for vr := range params.Parameters.ToMap() {
-		out.Variables = append(out.Variables, vr)
-	}
+	out.Variables = params.Parameters.ToMap().DefinedVariables()
 	sort.Slice(out.Variables, func(i, j int) bool {
 		return out.Variables[i].String() < out.Variables[j].String()
 	})
@@ -865,9 +942,9 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 }
 
 type SaveQuestionAndPreviewOut struct {
-	Error    questions.ErrQuestionInvalid
-	IsValid  bool
-	Question LoopbackShowQuestion
+	Error   questions.ErrQuestionInvalid
+	IsValid bool
+	Preview preview.LoopbackShowQuestion
 }
 
 // For non personnal questions, only preview.
@@ -927,14 +1004,14 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
-	questionOut := LoopbackShowQuestion{
+	questionOut := preview.LoopbackShowQuestion{
 		Question:       question.ToClient(),
 		Params:         taAPI.NewParams(instanceParams),
 		Origin:         params.Page,
 		ShowCorrection: params.ShowCorrection,
 	}
 
-	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil
+	return SaveQuestionAndPreviewOut{IsValid: true, Preview: questionOut}, nil
 }
 
 // EditorQuestionExportLateX instantiate the given question and generates a LaTeX version,

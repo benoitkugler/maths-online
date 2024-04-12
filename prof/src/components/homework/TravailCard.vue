@@ -3,22 +3,65 @@
     <v-card-text>
       <v-row justify="space-between">
         <v-col align-self="center" cols="auto">
+          <v-menu v-if="sheet.Origin.Visibility == Visibility.Admin">
+            <template v-slot:activator="{ isActive, props }">
+              <v-card
+                v-on="{ isActive }"
+                v-bind="props"
+                variant="elevated"
+                :title="sheet.Sheet.Title"
+                :subtitle="subtitle"
+                :color="color"
+              >
+              </v-card>
+            </template>
+            <PreviewSheet :sheet="sheet"></PreviewSheet>
+          </v-menu>
           <v-card
-            class="pb-2"
-            variant="outlined"
+            v-else
+            variant="elevated"
             @click="emit('editSheet', props.sheet)"
+            :title="sheet.Sheet.Title"
+            :subtitle="subtitle"
+            :color="color"
           >
-            <v-card-title>{{ sheet.Sheet.Title }} </v-card-title>
-            <v-card-subtitle>
-              {{ subtitle }}
-            </v-card-subtitle>
           </v-card>
         </v-col>
         <v-col cols="auto" align-self="center">
+          <v-menu>
+            <template v-slot:activator="{ isActive, props }">
+              <v-btn
+                density="comfortable"
+                icon
+                size="small"
+                class="mr-1"
+                v-bind="props"
+                v-on="{ isActive }"
+              >
+                <v-icon color="secondary"> mdi-heart </v-icon>
+              </v-btn>
+            </template>
+            <v-card v-if="sheet.Sheet.Anonymous.Valid">
+              <v-card-text> Feuille anonyme </v-card-text>
+              <v-card-actions>
+                <v-spacer> </v-spacer>
+                <v-btn @click="emit('setFavorite', sheet.Sheet)"
+                  >Enregistrer dans les favoris</v-btn
+                >
+              </v-card-actions>
+            </v-card>
+            <v-card v-else :color="colorForOrigin(sheet.Origin)">
+              <v-card-text v-if="sheet.Origin.Visibility == Visibility.Admin">
+                Feuille favorite de la base officielle
+              </v-card-text>
+              <v-card-text v-else> Feuille favorite personelle </v-card-text>
+            </v-card>
+          </v-menu>
+
           <v-tooltip
-            text="Enregistrer cette feuille dans les favoris"
+            text="Modifier les exceptions..."
             location="top"
-            v-if="sheet.Sheet.Anonymous.Valid"
+            v-if="travail.Noted"
           >
             <template v-slot:activator="{ isActive, props }">
               <v-btn
@@ -28,9 +71,9 @@
                 class="mr-1"
                 v-bind="props"
                 v-on="{ isActive }"
-                @click="emit('setFavorite', sheet.Sheet)"
+                @click="emit('showDispenses')"
               >
-                <v-icon color="secondary"> mdi-heart </v-icon>
+                <v-icon> mdi-account-supervisor </v-icon>
               </v-btn>
             </template>
           </v-tooltip>
@@ -72,10 +115,30 @@
           </v-btn>
         </v-col>
       </v-row>
-      <v-row justify="space-between" class="mt-0">
+
+      <v-row>
+        <v-col align-self="center">
+          <span class="text-grey text-subtitle-1 ml-1">
+            Afficher à partir du
+          </span>
+        </v-col>
+        <v-col cols="auto" align-self="center">
+          <DateTimeChip
+            title="Modifier le début du travail"
+            :model-value="travail.ShowAfter"
+            @update:model-value="
+              (v) => {
+                travail.ShowAfter = v;
+                emit('update', travail);
+              }
+            "
+          ></DateTimeChip>
+        </v-col>
+      </v-row>
+      <v-row justify="space-between" class="mt-2" no-gutters>
         <v-col cols="auto" align-self="center">
           <v-switch
-            label="Accès à durée limité"
+            label="Limiter l'accès"
             v-model="travail.Noted"
             @update:model-value="emit('update', travail)"
             hide-details
@@ -84,48 +147,21 @@
           </v-switch>
         </v-col>
 
-        <v-col v-if="travail.Noted" cols="auto" align-self="center">
-          Clôture :
-          <v-menu
-            offset-y
-            :close-on-content-click="false"
-            :model-value="deadlineToEdit != null"
-            @update:model-value="deadlineToEdit = null"
-          >
-            <template v-slot:activator="{ isActive, props }">
-              <v-chip
-                v-on="isActive"
-                v-bind="props"
-                style="text-align: right"
-                class="ml-1"
-                color="primary"
-                variant="outlined"
-                @click="deadlineToEdit = travail.Deadline"
-              >
-                {{ deadline }}
-              </v-chip>
-            </template>
-            <v-card width="300px">
-              <v-card-text class="pb-0" v-if="deadlineToEdit != null">
-                <TimeField v-model="deadlineToEdit"></TimeField>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="success"
-                  @click="
-                    travail.Deadline = deadlineToEdit!;
-                    deadlineToEdit = null;
-                    emit('update', travail);
-                  "
-                  >Enregistrer</v-btn
-                >
-              </v-card-actions>
-            </v-card>
-          </v-menu>
-        </v-col>
-        <v-col cols="auto" align-self="center" v-else>
-          <v-chip> Feuille en accès libre </v-chip>
+        <v-col cols="auto" align-self="center">
+          <DateTimeChip
+            prefix="clôture le"
+            title="Modifier la clôture du travail"
+            v-if="travail.Noted"
+            :model-value="travail.Deadline"
+            @update:model-value="
+              (v) => {
+                travail.Deadline = v;
+                emit('update', travail);
+              }
+            "
+            :min-date="travail.ShowAfter"
+          ></DateTimeChip>
+          <v-chip v-else> Feuille en accès libre, sans clôture</v-chip>
         </v-col>
       </v-row>
     </v-card-text>
@@ -133,17 +169,18 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Classroom,
-  Sheet,
-  SheetExt,
-  Time,
-  Travail,
+import {
+  Visibility,
+  type Classroom,
+  type Sheet,
+  type SheetExt,
+  type Travail,
+  Int,
 } from "@/controller/api_gen";
-import { formatTime } from "@/controller/utils";
 import { computed } from "vue";
-import TimeField from "./TimeField.vue";
-import { $ref } from "vue/macros";
+import PreviewSheet from "./PreviewSheet.vue";
+import DateTimeChip from "../DateTimeChip.vue";
+import { colorForOrigin } from "@/controller/utils";
 
 interface Props {
   travail: Travail;
@@ -156,9 +193,10 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "delete"): void;
   (e: "update", tr: Travail): void;
-  (e: "copy", idTarget: number): void;
+  (e: "copy", idTarget: Int): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "editSheet", sheet: SheetExt): void;
+  (e: "showDispenses"): void;
 }>();
 
 const nbTasks = computed(() => props.sheet.Tasks?.length || 0);
@@ -173,7 +211,12 @@ const subtitle = computed(() => {
   }
 });
 
-const deadline = computed(() => formatTime(props.travail.Deadline));
-
-let deadlineToEdit = $ref<Time | null>(null);
+const color = computed(() => {
+  const baseColor = "grey-lighten-3";
+  if (!props.travail.Noted) return baseColor;
+  const now = new Date(Date.now());
+  const start = new Date(props.travail.ShowAfter);
+  const end = new Date(props.travail.Deadline);
+  return start <= now && now <= end ? "blue-lighten-2" : baseColor;
+});
 </script>

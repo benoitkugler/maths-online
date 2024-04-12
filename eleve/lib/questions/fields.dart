@@ -1,12 +1,7 @@
-import 'dart:convert';
-
-import 'package:eleve/build_mode.dart';
 import 'package:eleve/shared/hyperlink.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
-import 'package:http/http.dart' as http;
 
 abstract class FieldController {
   bool _hasError = false;
@@ -51,32 +46,10 @@ abstract class FieldController {
   void setData(Answer answer);
 }
 
-/// [FieldAPI] provides the server calls required
-/// by the fields widgets.
-abstract class FieldAPI {
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression);
-}
-
-/// [ServerFieldAPI] is the default implementation of [FieldAPI]
-class ServerFieldAPI implements FieldAPI {
-  final BuildMode buildMode;
-  const ServerFieldAPI(this.buildMode);
-
-  /// checkExpressionSyntaxCall implements [FieldAPI] with a server call
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    final uri = Uri.parse(buildMode.serverURL("/api/check-expression"))
-        .replace(queryParameters: {"expression": expression});
-
-    final resp = await http.get(uri);
-    return checkExpressionOutFromJson(jsonDecode(resp.body));
-  }
-}
-
 Math textMath(String content, TextStyle style, {Key? key}) {
-  style = style.copyWith(fontSize: (style.fontSize ?? 12) - 1);
   // remove bold since it also changes the font, with indesirable visual effect
-  style = style.copyWith(fontWeight: FontWeight.normal);
+  style = style.copyWith(
+      fontSize: (style.fontSize ?? 12) - 1, fontWeight: FontWeight.normal);
   return Math.tex(
     content,
     key: key,

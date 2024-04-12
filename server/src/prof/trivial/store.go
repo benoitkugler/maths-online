@@ -2,18 +2,30 @@ package trivial
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
+type playerID struct {
+	game gameID
+	id   pass.EncryptedID // empty for anonymous students
+}
+
 // gameStore is the global storage for game rooms,
 // safe for concurrent use
 type gameStore struct {
+	db         *sql.DB
+	studentKey pass.Encrypter
+
 	// demoPin is used to create testing games on the fly
 	demoPin string
 
@@ -26,15 +38,17 @@ type gameStore struct {
 	teacherSessions map[sessionID]teacher.IdTeacher
 
 	// map registred players to their game room
-	playerIDs map[tv.PlayerID]gameID
+	playerIDs map[tv.PlayerID]playerID
 }
 
 // initialize the maps
-func newGameStore(demoPin string) gameStore {
+func newGameStore(db *sql.DB, studentKey pass.Encrypter, demoPin string) gameStore {
 	return gameStore{
+		db:              db,
+		studentKey:      studentKey,
 		games:           make(map[gameID]*tv.Room),
 		teacherSessions: make(map[sessionID]teacher.IdTeacher),
-		playerIDs:       make(map[tv.PlayerID]gameID),
+		playerIDs:       make(map[tv.PlayerID]playerID),
 		demoPin:         demoPin,
 	}
 }
@@ -120,7 +134,7 @@ type createGame struct {
 
 // createGame locks, creates, registers and starts the eveng loop of new game
 func (gs *gameStore) createGame(params createGame) {
-	game := tv.NewRoom(tv.RoomID(params.ID.String()), params.Options)
+	game := tv.NewRoom(tv.RoomID(params.ID.String()), params.Options, successHandler{key: gs.studentKey, db: gs.db, players: gs.playerIDs})
 
 	// register the controller...
 	gs.lock.Lock()
@@ -144,7 +158,7 @@ func (gs *gameStore) createGame(params createGame) {
 		}
 	}()
 
-	ProgressLogger.Printf("Creating game %s (launch: %s)", params.ID, params.Options.Launch)
+	ProgressLogger.Printf("Creating game %s (%T, launch: %s)", params.ID, params.ID, params.Options.Launch)
 }
 
 // TODO:
@@ -206,24 +220,24 @@ func (gs *gameStore) stopGame(id gameID, restart bool) {
 }
 
 // locks and add a new player in the map player -> games
-func (gs *gameStore) registerPlayer(gameID gameID) tv.PlayerID {
+func (gs *gameStore) registerPlayer(gameID gameID, idStudent pass.EncryptedID) tv.PlayerID {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	playerID := tv.PlayerID(utils.RandomID(false, 20, func(s string) bool {
+	pID := tv.PlayerID(utils.RandomID(false, 20, func(s string) bool {
 		_, has := gs.playerIDs[tv.PlayerID(s)]
 		return has
 	}))
-	gs.playerIDs[playerID] = gameID
+	gs.playerIDs[pID] = playerID{game: gameID, id: idStudent}
 
-	return playerID
+	return pID
 }
 
 func (gs *gameStore) generateName() string {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	allPlayers := make(map[tv.Player]bool)
+	allPlayers := make(map[string]bool)
 	for _, game := range gs.games {
 		for p := range game.Summary().Successes {
 			allPlayers[p] = true
@@ -233,8 +247,73 @@ func (gs *gameStore) generateName() string {
 	nameFromID := func(s string) string { return fmt.Sprintf("Joueur %s", s) }
 
 	id := utils.RandomID(true, 6, func(s string) bool {
-		return allPlayers[tv.Player{Pseudo: nameFromID(s)}]
+		return allPlayers[nameFromID(s)]
 	})
 
 	return nameFromID(id)
+}
+
+// success handler
+
+var _ tv.SuccessHandler = successHandler{}
+
+type successHandler struct {
+	players map[tv.PlayerID]playerID // shared with the game store
+	db      *sql.DB
+	key     pass.Encrypter // student key
+}
+
+func (sh successHandler) studentID(player tv.PlayerID) (teacher.IdStudent, bool) {
+	id := sh.players[player].id
+	if id == "" {
+		return 0, false
+	}
+
+	idStudent, err := sh.key.DecryptID(id)
+	if err != nil {
+		log.Printf("internal error: %s", err)
+		return 0, false
+	}
+	return teacher.IdStudent(idStudent), true
+}
+
+// OnQuestion implements trivial.SuccessHandler.
+func (sh successHandler) OnQuestion(player tv.PlayerID, correct bool, hasStreak3 bool) evs.EventNotification {
+	id, ok := sh.studentID(player)
+	if !ok {
+		return evs.EventNotification{}
+	}
+
+	var ev evs.EventK
+	if correct {
+		ev = evs.E_All_QuestionRight
+	} else {
+		ev = evs.E_All_QuestionWrong
+	}
+	events := []evs.EventK{ev}
+	if hasStreak3 {
+		events = append(events, evs.E_IsyTriv_Streak3)
+	}
+	notif, err := evs.RegisterEvents(sh.db, id, events...)
+	if err != nil {
+		log.Printf("internal error: %s", err)
+		return evs.EventNotification{}
+	}
+
+	return notif
+}
+
+// OnWin implements trivial.SuccessHandler.
+func (sh successHandler) OnWin(player tv.PlayerID) evs.EventNotification {
+	id, ok := sh.studentID(player)
+	if !ok {
+		return evs.EventNotification{}
+	}
+	notif, err := evs.RegisterEvents(sh.db, id, evs.E_IsyTriv_Win)
+	if err != nil {
+		log.Printf("internal error: %s", err)
+		return evs.EventNotification{}
+	}
+
+	return notif
 }

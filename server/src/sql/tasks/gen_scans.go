@@ -225,6 +225,19 @@ func ScanProgressions(rs *sql.Rows) (Progressions, error) {
 	return structs, nil
 }
 
+func InsertProgression(db DB, item Progression) error {
+	_, err := db.Exec(`INSERT INTO progressions (
+			idstudent, idtask, index, history
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdStudent, item.IdTask, item.Index, item.History)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links Progression in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyProgressions(tx *sql.Tx, items ...Progression) error {
@@ -339,7 +352,7 @@ func DeleteProgressionsByIdTasks(tx DB, idTasks_ ...IdTask) (Progressions, error
 }
 
 // SelectProgressionsByIdStudentAndIdTask selects the items matching the given fields.
-func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item []Progression, err error) {
+func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item Progressions, err error) {
 	rows, err := tx.Query("SELECT * FROM progressions WHERE IdStudent = $1 AND IdTask = $2", idStudent, idTask)
 	if err != nil {
 		return nil, err
@@ -349,7 +362,7 @@ func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, 
 
 // DeleteProgressionsByIdStudentAndIdTask deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item []Progression, err error) {
+func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item Progressions, err error) {
 	rows, err := tx.Query("DELETE FROM progressions WHERE IdStudent = $1 AND IdTask = $2 RETURNING *", idStudent, idTask)
 	if err != nil {
 		return nil, err
@@ -358,7 +371,7 @@ func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, 
 }
 
 // SelectProgressionByIdStudentAndIdTaskAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectProgressionByIdStudentAndIdTaskAndIndex(tx DB, idStudent teacher.IdStudent, idTask IdTask, index int) (item Progression, found bool, err error) {
+func SelectProgressionByIdStudentAndIdTaskAndIndex(tx DB, idStudent teacher.IdStudent, idTask IdTask, index int16) (item Progression, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM progressions WHERE IdStudent = $1 AND IdTask = $2 AND Index = $3", idStudent, idTask, index)
 	item, err = ScanProgression(row)
 	if err == sql.ErrNoRows {
@@ -571,6 +584,19 @@ func ScanRandomMonoquestionVariants(rs *sql.Rows) (RandomMonoquestionVariants, e
 	return structs, nil
 }
 
+func InsertRandomMonoquestionVariant(db DB, item RandomMonoquestionVariant) error {
+	_, err := db.Exec(`INSERT INTO random_monoquestion_variants (
+			idstudent, idrandommonoquestion, index, idquestion
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdStudent, item.IdRandomMonoquestion, item.Index, item.IdQuestion)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links RandomMonoquestionVariant in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyRandomMonoquestionVariants(tx *sql.Tx, items ...RandomMonoquestionVariant) error {
@@ -721,7 +747,7 @@ func DeleteRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions_ ...editor
 }
 
 // SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion selects the items matching the given fields.
-func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item []RandomMonoquestionVariant, err error) {
+func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item RandomMonoquestionVariants, err error) {
 	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2", idStudent, idRandomMonoquestion)
 	if err != nil {
 		return nil, err
@@ -731,7 +757,7 @@ func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, i
 
 // DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item []RandomMonoquestionVariant, err error) {
+func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item RandomMonoquestionVariants, err error) {
 	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 RETURNING *", idStudent, idRandomMonoquestion)
 	if err != nil {
 		return nil, err
@@ -740,7 +766,7 @@ func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, i
 }
 
 // SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion, index int) (item RandomMonoquestionVariant, found bool, err error) {
+func SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion, index int16) (item RandomMonoquestionVariant, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 AND Index = $3", idStudent, idRandomMonoquestion, index)
 	item, err = ScanRandomMonoquestionVariant(row)
 	if err == sql.ErrNoRows {
@@ -935,8 +961,12 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *QuestionHistory) Scan(src interface{}) error  { return (*pq.BoolArray)(s).Scan(src) }
-func (s QuestionHistory) Value() (driver.Value, error) { return pq.BoolArray(s).Value() }
+func (s *QuestionHistory) Scan(src interface{}) error {
+	return (*pq.BoolArray)(s).Scan(src)
+}
+func (s QuestionHistory) Value() (driver.Value, error) {
+	return pq.BoolArray(s).Value()
+}
 
 func IdMonoquestionArrayToPQ(ids []IdMonoquestion) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))

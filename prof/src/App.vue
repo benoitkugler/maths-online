@@ -54,7 +54,7 @@
           class="my-1"
           :to="{ name: 'trivial' }"
           color="pink-lighten-3"
-          >Triv'Maths</v-btn
+          >Isy'Triv</v-btn
         >
       </v-list-item>
 
@@ -65,6 +65,15 @@
           :to="{ name: 'homework' }"
           color="pink-lighten-3"
           >Travail à la maison</v-btn
+        >
+      </v-list-item>
+      <v-list-item>
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'ceintures' }"
+          color="pink-lighten-3"
+          >Ceintures de calcul</v-btn
         >
       </v-list-item>
       <v-divider></v-divider>
@@ -148,42 +157,43 @@
 
 <script setup lang="ts">
 import logoSrc from "@/assets/logo.png";
-import { computed } from "@vue/reactivity";
 import { useRoute } from "vue-router";
-import { $ref } from "vue/macros";
 import { controller, IsDev } from "./controller/controller";
 import LogginScreen from "./views/LogginScreen.vue";
+import { ref } from "vue";
+import { computed } from "vue";
 
-let showSideBar = $ref(false);
+const showSideBar = ref(false);
 const version = process.env.VERSION;
 
-let message = $ref("");
-let messageColor = $ref("secondary");
+const message = ref("");
+const messageColor = ref("secondary");
 
-let errorKind = $ref("");
-let errorHtml = $ref("");
+const errorKind = ref("");
+const errorHtml = ref("");
 
 controller.onError = (s, m) => {
-  errorKind = s;
-  errorHtml = m;
+  errorKind.value = s;
+  errorHtml.value = m;
 };
 
 controller.showMessage = (s, color) => {
-  message = s;
-  messageColor = color || "success";
+  message.value = s;
+  messageColor.value = color || "success";
 };
 
-let isLoggedIn = $ref(IsDev);
+const isLoggedIn = ref(IsDev);
 
-const appBarDense = computed(() => useRoute().name != "home");
+const route = useRoute();
+const appBarDense = computed(() => route.name != "home");
 
 function onLoggin() {
-  isLoggedIn = true;
+  isLoggedIn.value = true;
 }
 
 function logout() {
-  isLoggedIn = false;
-  showSideBar = false;
+  isLoggedIn.value = false;
+  showSideBar.value = false;
   controller.logout();
 }
 </script>

@@ -60,7 +60,7 @@
             size="x-small"
             icon
             @click="emit('duplicate')"
-            title="Dupliquer cette session"
+            title="Dupliquer et importer"
           >
             <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
           </v-btn>
@@ -104,7 +104,6 @@
               >
               <v-list-item>
                 <OriginButton
-                  variant="text"
                   :origin="config.Origin"
                   @update-public="(b) => emit('update-public', b)"
                   @create-review="emit('create-review')"
@@ -124,11 +123,10 @@ import {
   type Trivial,
   type TrivialExt,
 } from "@/controller/api_gen";
-import { visiblityColors } from "@/controller/editor";
-import { colorsPerCategorie } from "@/controller/trivial";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
 import QuestionsRecap from "./QuestionsRecap.vue";
+import { colorForOrigin } from "@/controller/utils";
 
 interface Props {
   config: TrivialExt;
@@ -147,11 +145,7 @@ const emit = defineEmits<{
   (e: "show-selfaccess"): void;
 }>();
 
-const colorClass = computed(() =>
-  props.config.Origin.Visibility == Visibility.Admin
-    ? "bg-" + visiblityColors[Visibility.Admin]
-    : "bg-grey-lighten-4"
-);
+const colorClass = computed(() => "bg-" + colorForOrigin(props.config.Origin));
 
 function isPersonnal(config: TrivialExt) {
   return config.Origin.Visibility == Visibility.Personnal;

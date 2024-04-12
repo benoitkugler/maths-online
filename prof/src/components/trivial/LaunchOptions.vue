@@ -53,8 +53,7 @@ import {
   type GroupsStrategyAuto,
   type GroupsStrategyManual,
 } from "@/controller/api_gen";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 import GroupsAuto from "./GroupsAuto.vue";
 import GroupsManual from "./GroupsManual.vue";
 
@@ -66,17 +65,17 @@ const emit = defineEmits<{
   (e: "launch", groups: GroupsStrategy): void;
 }>();
 
-let launchOptions = $ref<GroupsStrategy>({
+const launchOptions = ref<GroupsStrategy>({
   Kind: GroupsStrategyKind.GroupsStrategyAuto,
   Data: { Groups: [] },
 });
 
 const isAuto = computed(
-  () => launchOptions.Kind == GroupsStrategyKind.GroupsStrategyAuto
+  () => launchOptions.value.Kind == GroupsStrategyKind.GroupsStrategyAuto
 );
 
 const hint = computed(() =>
-  isAuto
+  isAuto.value
     ? "Le nombre et la taille de chaque groupe est fixée au lancement, et chaque partie démarre automatiquement."
     : "La taille des groupes n'est pas spécifiée, et chaque partie doit être démarrée manuellement."
 );
@@ -89,13 +88,15 @@ const strategyItems = [
 ];
 
 const isValid = computed(() => {
-  switch (launchOptions.Kind) {
+  switch (launchOptions.value.Kind) {
     case GroupsStrategyKind.GroupsStrategyAuto: {
-      const groups = (launchOptions.Data as GroupsStrategyAuto).Groups;
+      const groups = (launchOptions.value.Data as GroupsStrategyAuto).Groups;
       return groups?.length && groups.every((v) => v > 0);
     }
     case GroupsStrategyKind.GroupsStrategyManual:
-      return (launchOptions.Data as GroupsStrategyManual).NbGroups > 0;
+      return (launchOptions.value.Data as GroupsStrategyManual).NbGroups > 0;
+    default:
+      throw "";
   }
 });
 </script>

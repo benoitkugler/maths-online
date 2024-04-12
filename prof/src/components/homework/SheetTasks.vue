@@ -78,6 +78,11 @@
       </v-col>
     </v-row>
     <v-card-text>
+      <MissingResourcesHint
+        :pattern="missingHint.Pattern || []"
+        :missing-exercices="missingHint.MissingExercices || []"
+        :missing-questions="missingHint.MissingQuestions || []"
+      ></MissingResourcesHint>
       <v-list
         class="overflow-y-auto"
         style="max-height: 50vh"
@@ -121,6 +126,9 @@
                   </template>
                   {{ taskTooltip(task) }}
                 </v-tooltip>
+              </v-col>
+              <v-col cols="3" align-self="center" class="text-center">
+                <TagIndex :tags="task.Tags || []"></TagIndex>
               </v-col>
               <v-col cols="auto" align-self="center" class="px-3">
                 <span v-if="!task.NbProgressions" class="text-grey"
@@ -177,19 +185,24 @@ import {
   type TagsDB,
   type TaskExt,
   type RandomMonoquestion,
+  MissingTasksHint,
+  LevelTag,
 } from "@/controller/api_gen";
 import {
   onDragListItemStart,
   sheetBareme,
   swapItems,
 } from "@/controller/utils";
-import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
 import DropZone from "../DropZone.vue";
-import { watch } from "vue";
+import { ref, watch } from "vue";
 import ResourceSelector from "../ResourceSelector.vue";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TaskDetailsChip from "./TaskDetailsChip.vue";
+import { controller } from "@/controller/controller";
+import TagIndex from "../TagIndex.vue";
+import MissingResourcesHint from "../MissingResourcesHint.vue";
+import { onMounted } from "vue";
 
 interface Props {
   sheet: SheetExt;
@@ -208,55 +221,62 @@ const emit = defineEmits<{
   (e: "reorder", tasks: TaskExt[]): void;
 }>();
 
-let taskToRemove = $ref<TaskExt | null>(null);
+const taskToRemove = ref<TaskExt | null>(null);
 
-let showMonoquestionSelector = $ref(false);
+const showMonoquestionSelector = ref(false);
 
-let showExerciceSelector = $ref(false);
-let exerciceQuery = $ref<Query>({
+const showExerciceSelector = ref(false);
+const exerciceQuery = ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
+  SubLevelTags: [],
   Origin: OriginKind.All,
+  Matiere: controller.settings.FavoriteMatiere,
 });
-let questionQuery = $ref<Query>({
+const questionQuery = ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
+  SubLevelTags: [],
   Origin: OriginKind.All,
+  Matiere: controller.settings.FavoriteMatiere,
 });
+
+onMounted(fetchMissingHint);
 
 watch(props.sheet, () => {
-  exerciceQuery.LevelTags = props.sheet.Sheet.Level
+  exerciceQuery.value.LevelTags = props.sheet.Sheet.Level
     ? [props.sheet.Sheet.Level]
     : [];
-  questionQuery.LevelTags = props.sheet.Sheet.Level
+  questionQuery.value.LevelTags = props.sheet.Sheet.Level
     ? [props.sheet.Sheet.Level]
     : [];
+  fetchMissingHint();
 });
 
 function removeExercice(index: number) {
   const task = props.sheet.Tasks![index];
   // ask confirmation if progression has started
   if (task.NbProgressions) {
-    taskToRemove = task;
+    taskToRemove.value = task;
   } else {
     emit("remove", task);
   }
 }
 
-let showDropZone = $ref(false);
+const showDropZone = ref(false);
 function onItemDragStart(payload: DragEvent, index: number) {
   onDragListItemStart(payload, index);
-  setTimeout(() => (showDropZone = true), 100); // workaround bug
+  setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
 function onDragend() {
-  showDropZone = false;
+  showDropZone.value = false;
 }
 
 function swap(origin: number, target: number) {
-  showDropZone = false;
+  showDropZone.value = false;
   const l = swapItems(origin, target, props.sheet.Tasks!);
   emit("reorder", l);
 }
@@ -270,5 +290,18 @@ function taskTooltip(task: TaskExt) {
     case WorkKind.WorkRandomMonoquestion:
       return `Groupe de questions (${task.Bareme?.length} variantes aléatoires)`;
   }
+}
+
+const missingHint = ref<MissingTasksHint>({
+  Pattern: [],
+  MissingExercices: [],
+  MissingQuestions: [],
+});
+async function fetchMissingHint() {
+  const res = await controller.HomeworkMissingTasksHint({
+    "id-sheet": props.sheet.Sheet.Id,
+  });
+  if (res === undefined) return;
+  missingHint.value = res;
 }
 </script>

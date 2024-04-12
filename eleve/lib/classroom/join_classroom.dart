@@ -4,6 +4,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/shared/date_field.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
+import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_teacher.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -24,8 +25,8 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
   void _onValidCode(String code) async {
     this.code = code;
     try {
-      final uri = Uri.parse(widget.buildMode
-          .serverURL("/api/classroom/attach", query: {"code": code}));
+      final uri = widget.buildMode
+          .serverURL("/api/classroom/attach", query: {"code": code});
       final resp = await http.get(uri);
       setState(() {
         studentProposals =
@@ -68,10 +69,15 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
   }
 
   void _validAttach(StudentHeader student, String date) async {
+    final device = await loadUserDeviceName();
     try {
-      final uri =
-          Uri.parse(widget.buildMode.serverURL("/api/classroom/attach"));
-      final args = AttachStudentToClassroom2In(code, student.id, date);
+      final uri = widget.buildMode.serverURL("/api/classroom/attach");
+      final args = AttachStudentToClassroom2In(
+        code,
+        student.id,
+        date,
+        device,
+      );
       final resp = await http.post(uri,
           body: jsonEncode(attachStudentToClassroom2InToJson(args)),
           headers: {
@@ -82,12 +88,10 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
       if (result.errInvalidBirthday) {
         _showError("Date de naissance invalide.");
         return;
-      } else if (result.errAlreadyAttached) {
-        _showError("Ce profil est déjà rattaché à la classe.");
-        return;
       }
 
       // pop the route with the result
+      if (!mounted) return;
       Navigator.of(context).pop(result.idCrypted);
     } catch (e) {
       _showError(e);
@@ -124,8 +128,8 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
 }
 
 Future<bool> _leaveClassroom(BuildMode bm, String idCrypted) async {
-  final uri = Uri.parse(
-      bm.serverURL("/api/classroom/attach", query: {"id-crypted": idCrypted}));
+  final uri =
+      bm.serverURL("/api/classroom/attach", query: {"id-crypted": idCrypted});
   final resp = await http.delete(uri);
   return resp.statusCode == 200;
 }

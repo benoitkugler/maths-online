@@ -60,13 +60,29 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-switch
+            <v-select
               density="compact"
-              v-model="settings.HasEditorSimplified"
-              label="Mode simplifié"
+              variant="outlined"
+              label="Matière principale"
+              hint="Les ressources sont filtrées par défaut en utilisant cette matière."
+              persistent-hint
+              :items="Object.keys(MatiereTagLabels)"
+              v-model="settings.FavoriteMatiere"
+            ></v-select>
+          </v-col>
+          <v-col>
+            <v-checkbox
+              density="compact"
+              :model-value="!settings.HasEditorSimplified"
+              @update:model-value="
+                (b) => {
+                  if (settings) settings.HasEditorSimplified = !b;
+                }
+              "
+              label="Mode scientifique"
               color="primary"
-              messages="Simplifie la présentation de l'éditeur en masquant les champs spécifiques aux mathématiques."
-            ></v-switch>
+              messages="Décocher pour masquer les champs spécifiques aux mathématiques dans l'éditeur."
+            ></v-checkbox>
           </v-col>
         </v-row>
         <v-row>
@@ -91,21 +107,19 @@
 </template>
 
 <script setup lang="ts">
-import type { TeacherSettings } from "@/controller/api_gen";
+import { MatiereTagLabels, type TeacherSettings } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "vue";
-import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted } from "vue";
 
-let settings = $ref<TeacherSettings | null>(null);
+const settings = ref<TeacherSettings | null>(null);
 
-let showPassword = $ref(false);
+const showPassword = ref(false);
 
 const isFormValid = computed(
   () =>
-    settings?.Mail.includes("@") &&
-    settings?.Mail.includes(".") &&
-    settings.Password.length >= 4
+    settings.value?.Mail.includes("@") &&
+    settings.value?.Mail.includes(".") &&
+    settings.value.Password.length >= 4
 );
 
 onMounted(() => fetchSettings());
@@ -115,14 +129,14 @@ async function fetchSettings() {
   if (res == undefined) {
     return;
   }
-  settings = res;
+  settings.value = res;
 }
 
 async function save() {
-  if (settings == null) return;
-  const ok = await controller.TeacherUpdateSettings(settings);
+  if (settings.value == null) return;
+  const ok = await controller.TeacherUpdateSettings(settings.value);
   if (ok) {
-    controller.settings = settings;
+    controller.settings = settings.value;
   }
 }
 </script>

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	evts "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils"
@@ -107,7 +108,7 @@ func (ct *Controller) createDemoGame(code demoCode) error {
 
 	if !ok {
 		// create a game on the fly
-		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
+		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id, true)
 		if err != nil {
 			return err
 		}
@@ -207,7 +208,7 @@ func (ct *gameStore) checkGameConnection(meta gameConnection) bool {
 		return false
 	}
 	// check that it is the correct game
-	if gID != gameID2 {
+	if gID != gameID2.game {
 		return false
 	}
 
@@ -264,7 +265,7 @@ func (gs *gameStore) setupStudent(studentID pass.EncryptedID, requestedGameID ga
 		return gameConnection{}, fmt.Errorf("La partie %s a déjà commencée.", requestedGameID.String())
 	}
 
-	playerID := gs.registerPlayer(requestedGameID)
+	playerID := gs.registerPlayer(requestedGameID, studentID)
 	out := gameConnection{
 		GameID:    game.ID,
 		PlayerID:  playerID,
@@ -352,6 +353,7 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 		if player.Pseudo == "" {
 			player.Pseudo = ct.store.generateName() // finally generate a random pseudo
 		}
+		// player.Rank = 0
 	} else { // fetch name from DB
 		studentID, err = ct.studentKey.DecryptID(student.StudentID)
 		if err != nil {
@@ -363,7 +365,19 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 			return utils.SQLError(err)
 		}
 
+		classroom, err := teacher.SelectClassroom(ct.db, student.IdClassroom)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
+		events, err := evts.SelectEventsByIdStudents(ct.db, teacher.IdStudent(studentID))
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
 		player.Pseudo = student.Surname
+		player.PseudoSuffix = student.Name
+		player.Rank = evts.NewAdvance(events).Stats(classroom.MaxRankThreshold).Rank
 	}
 
 	// then add the player
@@ -400,6 +414,7 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 
 	client.listen() // block until client leaves
 
+	ProgressLogger.Println("closing client connection", client.WS.RemoteAddr())
 	client.WS.Close()
 
 	return nil

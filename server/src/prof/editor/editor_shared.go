@@ -3,10 +3,13 @@ package editor
 import (
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -25,22 +28,23 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 }
 
 type TagsDB struct {
-	Levels          []string
-	ChaptersByLevel map[string][]string            // level -> chapters
-	TrivByChapters  map[string]map[string][]string // level -> chapter -> triv maths
+	Levels           []string
+	ChaptersByLevel  map[string][]string            // level -> chapters
+	TrivByChapters   map[string]map[string][]string // level -> chapter -> triv maths
+	SubLevelsByLevel map[string][]string            // level -> sublevels
 }
 
 // LoadTags returns all the tags visible by [userID], merging
 // questions and exercices.
-func LoadTags(db ed.DB, userID uID) (TagsDB, error) {
+func LoadTags(db ed.DB, userID uID) (out TagsDB, _ error) {
 	// only return tags used by visible groups
 	questionGroups, err := ed.SelectAllQuestiongroups(db)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	exerciceGroups, err := ed.SelectAllExercicegroups(db)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	questionGroups.RestrictVisible(userID)
@@ -48,11 +52,11 @@ func LoadTags(db ed.DB, userID uID) (TagsDB, error) {
 
 	questionTags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, questionGroups.IDs()...)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	exerciceTags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, exerciceGroups.IDs()...)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	// build the map between level to chapters
@@ -109,10 +113,12 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 }
 
 type Query struct {
-	TitleQuery  string   // empty means all
-	LevelTags   []string // union, empty means all; an empty tag means "with no level"
-	ChapterTags []string // union, empty means all; an empty tag means "with no chapter"
-	Origin      OriginKind
+	TitleQuery   string   // empty means all
+	LevelTags    []string // union, empty means all; an empty tag means "with no level"
+	ChapterTags  []string // union, empty means all; an empty tag means "with no chapter"
+	SubLevelTags []string // union, empty means all
+	Origin       OriginKind
+	Matiere      teacher.MatiereTag
 }
 
 func (query Query) normalize() {
@@ -122,6 +128,9 @@ func (query Query) normalize() {
 	}
 	for i, t := range query.ChapterTags {
 		query.ChapterTags[i] = ed.NormalizeTag(t)
+	}
+	for i, t := range query.SubLevelTags {
+		query.SubLevelTags[i] = ed.NormalizeTag(t)
 	}
 }
 
@@ -134,6 +143,10 @@ func (query Query) matchOrigin(vis tcAPI.Visibility) bool {
 	default:
 		return true
 	}
+}
+
+func (query Query) matchTags(tags ed.TagGroup) bool {
+	return query.matchLevel(tags.Level) && query.matchChapter(tags.Chapter) && query.matchSubLevel(tags.SubLevels) && query.Matiere == tags.Matiere
 }
 
 func (query Query) matchLevel(level ed.LevelTag) bool {
@@ -158,6 +171,73 @@ func (query Query) matchChapter(chapter string) bool {
 		}
 	}
 	return false
+}
+
+func (query Query) matchSubLevel(subLevels []string) bool {
+	if len(query.SubLevelTags) == 0 {
+		return true
+	}
+	for _, tag := range query.SubLevelTags {
+		for _, resourceTag := range subLevels {
+			if tag == resourceTag {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isQueryVariant(query string) (int64, bool) {
+	if strings.HasPrefix(query, "variante:") {
+		idS := strings.TrimPrefix(query, "variante:")
+		id, err := strconv.ParseInt(idS, 10, 64)
+		return id, err == nil
+	}
+	return 0, false
+}
+
+type itemGroupQuery interface {
+	match(id int64, title string) bool
+}
+
+func newQuery(title string) (itemGroupQuery, error) {
+	// special case for pattern id:id1, id2, ...
+	if strings.HasPrefix(title, "id:") {
+		idsString := strings.TrimSpace(title[len("id:"):])
+		if len(idsString) != 0 {
+			out := make(queryByIds)
+			ids := strings.Split(idsString, ",")
+
+			for _, id := range ids {
+				idV, err := strconv.Atoi(id)
+				if err != nil {
+					return nil, fmt.Errorf("Requête invalide: entier attendu (%s)", err)
+				}
+				out[int64(idV)] = true
+			}
+			return out, nil
+		}
+	}
+	return queryByTitle(normalizeTitle(title)), nil
+}
+
+type queryByTitle string
+
+func (qt queryByTitle) match(_ int64, title string) bool {
+	itemTitle := normalizeTitle(title)
+	return qt == "" || strings.Contains(itemTitle, string(qt))
+}
+
+type queryByIds map[int64]bool
+
+func (qt queryByIds) match(id int64, _ string) bool { return qt[id] }
+
+func normalizeTitle(title string) string {
+	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
+}
+
+func isQueryTODO(query string) bool {
+	return strings.TrimSpace(strings.ToLower(query)) == "todo"
 }
 
 type ExerciceUpdateVisiblityIn struct {
@@ -250,9 +330,12 @@ func exercicesToIndex(exercices ed.Exercicegroups, tags ed.ExercicegroupTags) []
 	return out
 }
 
-func buildIndex(tags []ed.TagIndex) Index {
+func buildIndexFor(tags []ed.TagIndex, topic teacher.MatiereTag) Index {
 	tmp := map[ed.LevelTag]map[string]int{}
 	for _, item := range tags {
+		if item.Matiere != topic {
+			continue
+		}
 		byLevel := tmp[item.Level]
 		if byLevel == nil {
 			byLevel = make(map[string]int)
@@ -269,7 +352,7 @@ func buildIndex(tags []ed.TagIndex) Index {
 		for chapter, count := range byLevel {
 			items.Chapters = append(items.Chapters, ChapterItems{Chapter: chapter, GroupCount: count})
 		}
-		sort.Slice(items.Chapters, func(i, j int) bool { return items.Chapters[i].Chapter > items.Chapters[j].Chapter })
+		sort.Slice(items.Chapters, func(i, j int) bool { return items.Chapters[i].Chapter < items.Chapters[j].Chapter })
 		out = append(out, items)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Level > out[j].Level })
@@ -298,6 +381,7 @@ func exercicesToTagGroups(exercices ed.Exercicegroups, tags ed.ExercicegroupTags
 
 func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 	tmp := make(map[ed.LevelTag]map[string]map[string]bool) // level -> chapter -> trivs (maybe empty)
+	tmp2 := make(map[ed.LevelTag]map[string]bool)           // level -> sublevels
 	for _, tag := range tags {
 		level, chapter := tag.Level, tag.Chapter
 		m1 := tmp[level]
@@ -313,6 +397,15 @@ func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 		}
 		m1[chapter] = m2
 		tmp[level] = m1
+
+		mSub := tmp2[level]
+		if mSub == nil {
+			mSub = make(map[string]bool)
+		}
+		for _, sub := range tag.SubLevels {
+			mSub[sub] = true
+		}
+		tmp2[level] = mSub
 	}
 	out.ChaptersByLevel = make(map[string][]string)
 	out.TrivByChapters = make(map[string]map[string][]string)
@@ -344,6 +437,16 @@ func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 		sort.Strings(out.ChaptersByLevel[level])
 	}
 	sort.Strings(out.Levels)
+
+	out.SubLevelsByLevel = make(map[string][]string)
+	for level, subs := range tmp2 {
+		l := make([]string, 0, len(subs))
+		for sub := range subs {
+			l = append(l, sub)
+		}
+		sort.Strings(l)
+		out.SubLevelsByLevel[string(level)] = l
+	}
 
 	return out
 }

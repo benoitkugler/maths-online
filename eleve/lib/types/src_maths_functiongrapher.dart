@@ -80,6 +80,32 @@ Map<String, dynamic> functionGraphToJson(FunctionGraph item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/maths/functiongrapher.SequenceGraph
+class SequenceGraph {
+  final FunctionDecoration decoration;
+  final List<Coord> points;
+
+  const SequenceGraph(this.decoration, this.points);
+
+  @override
+  String toString() {
+    return "SequenceGraph($decoration, $points)";
+  }
+}
+
+SequenceGraph sequenceGraphFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return SequenceGraph(functionDecorationFromJson(json['Decoration']),
+      listCoordFromJson(json['Points']));
+}
+
+Map<String, dynamic> sequenceGraphToJson(SequenceGraph item) {
+  return {
+    "Decoration": functionDecorationToJson(item.decoration),
+    "Points": listCoordToJson(item.points)
+  };
+}
+
 List<BezierCurve> listBezierCurveFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -89,4 +115,15 @@ List<BezierCurve> listBezierCurveFromJson(dynamic json) {
 
 List<dynamic> listBezierCurveToJson(List<BezierCurve> item) {
   return item.map(bezierCurveToJson).toList();
+}
+
+List<Coord> listCoordFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(coordFromJson).toList();
+}
+
+List<dynamic> listCoordToJson(List<Coord> item) {
+  return item.map(coordToJson).toList();
 }

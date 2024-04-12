@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/prof/preview"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
@@ -33,7 +34,7 @@ type ExercicegroupExt struct {
 
 func NewExercicegroupExt(group ed.Exercicegroup, variants []ed.Exercice, tags ed.Tags, inReview tcAPI.OptionalIdReview, userID, adminID uID,
 ) ExercicegroupExt {
-	origin, _ := exerciceOrigin(group, inReview, userID, adminID)
+	origin := exerciceOrigin(group, inReview, userID, adminID)
 	groupExt := ExercicegroupExt{
 		Group:  group,
 		Origin: origin,
@@ -77,6 +78,11 @@ func (ct *Controller) EditorGetExercicesIndex(c echo.Context) error {
 }
 
 func (ct *Controller) loadExercicesIndex(userID uID) (Index, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
 	groups, err := ed.SelectAllExercicegroups(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -89,7 +95,7 @@ func (ct *Controller) loadExercicesIndex(userID uID) (Index, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	return buildIndex(exercicesToIndex(groups, tags)), nil
+	return buildIndexFor(exercicesToIndex(groups, tags), user.FavoriteMatiere), nil
 }
 
 type ExerciceQuestionExt struct {
@@ -120,17 +126,12 @@ func (ct *Controller) EditorSearchExercices(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func exerciceOrigin(ex ed.Exercicegroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) (tcAPI.Origin, bool) {
-	vis := tcAPI.NewVisibility(ex.IdTeacher, userID, adminID, ex.Public)
-	if vis.Restricted() {
-		return tcAPI.Origin{}, false
-	}
+func exerciceOrigin(ex ed.Exercicegroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) tcAPI.Origin {
 	return tcAPI.Origin{
-		AllowPublish: userID == adminID,
-		IsPublic:     ex.Public,
-		Visibility:   vis,
+		Visibility:   tcAPI.NewVisibility(ex.IdTeacher, userID, adminID, ex.Public),
 		IsInReview:   inReview,
-	}, true
+		PublicStatus: tcAPI.NewPublicStatus(ex.IdTeacher, userID, adminID, ex.Public),
+	}
 }
 
 type ListExercicesOut struct {
@@ -139,27 +140,59 @@ type ListExercicesOut struct {
 }
 
 func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercicesOut, err error) {
-	groups, err := ed.SelectAllExercicegroups(ct.db)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	groups.RestrictVisible(userID)
-
 	query.normalize()
 
-	// restrict the groups to matching title and origin
-	matcher, err := newQuery(query.TitleQuery)
-	if err != nil {
-		return out, err
-	}
-	for _, group := range groups {
-		vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+	var groups ed.Exercicegroups
+	if isQueryTODO(query.TitleQuery) {
+		questions, err := ed.SelectAllQuestions(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		fromQuestions := ed.IdExerciceSet{}
+		for _, question := range questions {
+			if !question.NeedExercice.Valid {
+				continue // ignore standalone questions
+			}
+			if question.Parameters.HasTODO() {
+				fromQuestions.Add(question.NeedExercice.ID)
+			}
+		}
 
-		keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
-		if !keep {
-			delete(groups, group.Id)
+		exercices, err := ed.SelectAllExercices(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		idGroups := ed.IdExercicegroupSet{}
+		for _, exercice := range exercices {
+			if fromQuestions.Has(exercice.Id) || exercice.Parameters.HasTODO() {
+				idGroups.Add(exercice.IdGroup)
+			}
+		}
+		groups, err = ed.SelectExercicegroups(ct.db, idGroups.Keys()...)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+	} else {
+		groups, err = ed.SelectAllExercicegroups(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		// restrict the groups to matching title and origin
+		matcher, err := newQuery(query.TitleQuery)
+		if err != nil {
+			return out, err
+		}
+		for _, group := range groups {
+			vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+			keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+			if !keep {
+				delete(groups, group.Id)
+			}
 		}
 	}
+
+	groups.RestrictVisible(userID)
 
 	// load the tags ...
 	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, groups.IDs()...)
@@ -183,8 +216,9 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
-		tagIndex := tagsMap[group.Id].Tags().BySection()
-		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
+		tags := tagsMap[group.Id].Tags()
+		tagIndex := tags.BySection()
+		if !query.matchTags(tagIndex) {
 			continue
 		}
 
@@ -199,7 +233,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
 
-		groupExt := NewExercicegroupExt(group, variants, tagsMap[group.Id].Tags(), inReview, userID, ct.admin.Id)
+		groupExt := NewExercicegroupExt(group, variants, tags, inReview, userID, ct.admin.Id)
 
 		out.NbExercices += len(groupExt.Variants)
 
@@ -461,7 +495,7 @@ func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (Exercic
 func (ct *Controller) EditorCreateExercice(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.createExercice(userID)
+	out, err := ct.createExercicegroup(userID)
 	if err != nil {
 		return err
 	}
@@ -469,7 +503,12 @@ func (ct *Controller) EditorCreateExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
+func (ct *Controller) createExercicegroup(userID uID) (ExercicegroupExt, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return ExercicegroupExt{}, utils.SQLError(err)
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return ExercicegroupExt{}, utils.SQLError(err)
@@ -487,16 +526,28 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
+	// add the favorite matiere as tag
+	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
+	err = ed.InsertExercicegroupTag(tx, ed.ExercicegroupTag{
+		Tag:             ts.Tag,
+		Section:         ts.Section,
+		IdExercicegroup: group.Id,
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return ExercicegroupExt{}, utils.SQLError(err)
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
-	origin, _ := exerciceOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
+	origin := exerciceOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	out := ExercicegroupExt{
 		Group:    group,
 		Origin:   origin,
-		Tags:     nil,
+		Tags:     ed.Tags{ts},
 		Variants: []ExerciceHeader{newExerciceHeader(ex)},
 	}
 	return out, nil
@@ -566,6 +617,24 @@ func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// EditorDeleteExercice remove the whole exercice group.
+// It returns information if the exercice is used in tasks
+func (ct *Controller) EditorDeleteExercicegroup(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	idExercice, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.deleteExercicegroup(ed.IdExercicegroup(idExercice), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
 func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) error {
 	ex, err := ed.SelectExercice(ct.db, idExercice)
 	if err != nil {
@@ -585,18 +654,30 @@ func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) e
 }
 
 // getExerciceUses returns the item using the given exercice
-func getExerciceUses(db ed.DB, id ed.IdExercice) (out QuestionExerciceUses, err error) {
+func getExerciceUses(db ed.DB, id ed.IdExercice) (out TaskUses, err error) {
 	tas, err := ta.SelectTasksByIdExercices(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	return newQuestionExericeUses(db, tas.IDs())
+	return loadTaskDetails(db, tas.IDs())
+}
+
+func getExercicegroupUses(db ed.DB, id ed.IdExercicegroup) (out TaskUses, err error) {
+	variants, err := ed.SelectExercicesByIdGroups(db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	tas, err := ta.SelectTasksByIdExercices(db, variants.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	return loadTaskDetails(db, tas.IDs())
 }
 
 type DeleteExerciceOut struct {
 	Deleted   bool
-	BlockedBy QuestionExerciceUses // non empty iff Deleted == false
+	BlockedBy TaskUses // non empty iff Deleted == false
 }
 
 func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (DeleteExerciceOut, error) {
@@ -615,44 +696,12 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 		}, nil
 	}
 
-	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, idExercice)
-	if err != nil {
-		return DeleteExerciceOut{}, utils.SQLError(err)
-	}
-	qus, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
-	if err != nil {
-		return DeleteExerciceOut{}, utils.SQLError(err)
-	}
-
-	// delete not standalone questions linked to the exercice
-	var toDelete []ed.IdQuestion
-	for _, question := range qus {
-		if question.NeedExercice.Valid {
-			toDelete = append(toDelete, question.Id)
-		}
-	}
-
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
-	// remove the links
-	_, err = ed.DeleteExerciceQuestionsByIdExercices(tx, idExercice)
-	if err != nil {
-		_ = tx.Rollback()
-		return DeleteExerciceOut{}, utils.SQLError(err)
-	}
-
-	// remove the actual questions
-	_, err = ed.DeleteQuestionsByIDs(tx, toDelete...)
-	if err != nil {
-		_ = tx.Rollback()
-		return DeleteExerciceOut{}, utils.SQLError(err)
-	}
-
-	// finaly remove the exercice
-	_, err = ed.DeleteExerciceById(tx, idExercice)
+	err = deleteExercices(tx, []ed.IdExercice{idExercice})
 	if err != nil {
 		_ = tx.Rollback()
 		return DeleteExerciceOut{}, utils.SQLError(err)
@@ -666,9 +715,82 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 	return DeleteExerciceOut{Deleted: true}, nil
 }
 
+func (ct *Controller) deleteExercicegroup(idExercice ed.IdExercicegroup, userID uID) (DeleteExerciceOut, error) {
+	group, err := ed.SelectExercicegroup(ct.db, idExercice)
+	if err != nil {
+		return DeleteExerciceOut{}, utils.SQLError(err)
+	}
+
+	if group.IdTeacher != userID {
+		return DeleteExerciceOut{}, errAccessForbidden
+	}
+
+	uses, err := getExercicegroupUses(ct.db, idExercice)
+	if err != nil {
+		return DeleteExerciceOut{}, err
+	}
+	if len(uses) != 0 {
+		return DeleteExerciceOut{
+			Deleted:   false,
+			BlockedBy: uses,
+		}, nil
+	}
+
+	variants, err := ed.SelectExercicesByIdGroups(ct.db, idExercice)
+	if err != nil {
+		return DeleteExerciceOut{}, utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return DeleteExerciceOut{}, utils.SQLError(err)
+	}
+
+	err = deleteExercices(tx, variants.IDs())
+	if err != nil {
+		_ = tx.Rollback()
+		return DeleteExerciceOut{}, utils.SQLError(err)
+	}
+
+	// delete the group
+	ed.DeleteExercicegroupById(tx, idExercice)
+	if err != nil {
+		_ = tx.Rollback()
+		return DeleteExerciceOut{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return DeleteExerciceOut{}, utils.SQLError(err)
+	}
+
+	return DeleteExerciceOut{Deleted: true}, nil
+}
+
+func deleteExercices(db ed.DB, ids []ed.IdExercice) error {
+	// remove the links
+	links, err := ed.DeleteExerciceQuestionsByIdExercices(db, ids...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// remove the actual questions
+	_, err = ed.DeleteQuestionsByIDs(db, links.IdQuestions()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// finaly remove the exercice
+	_, err = ed.DeleteExercicesByIDs(db, ids...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
 type ExerciceWithPreview struct {
 	Ex      ExerciceExt
-	Preview LoopbackShowExercice
+	Preview preview.LoopbackShowExercice
 }
 
 type ExerciceCreateQuestionIn struct {
@@ -720,7 +842,11 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 		return ExerciceExt{}, utils.SQLError(err)
 	}
 
-	question, err := ed.Question{NeedExercice: args.IdExercice.AsOptional()}.Insert(tx)
+	question, err := ed.Question{
+		// as a convenience, start with an empty text block
+		Enonce:       questions.Enonce{questions.TextBlock{}},
+		NeedExercice: args.IdExercice.AsOptional(),
+	}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExerciceExt{}, utils.SQLError(err)
@@ -1088,7 +1214,7 @@ type SaveExerciceAndPreviewOut struct {
 	QuestionIndex int
 
 	IsValid bool
-	Preview LoopbackShowExercice
+	Preview preview.LoopbackShowExercice
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
@@ -1179,10 +1305,10 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 // newExercicePreview instantiates the exercice and return preview data
 // [nextQuestion] is the index of the question to show in the preview,
 // or -1 for the summary
-func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrection bool) (LoopbackShowExercice, error) {
+func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrection bool) (preview.LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
-		return LoopbackShowExercice{}, err
+		return preview.LoopbackShowExercice{}, err
 	}
 
 	qus := content.Questions()
@@ -1192,14 +1318,14 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrec
 	}
 
 	if nextQuestion >= len(instance.Questions) {
-		return LoopbackShowExercice{}, fmt.Errorf("internal error: invalid question index %d", nextQuestion)
+		return preview.LoopbackShowExercice{}, fmt.Errorf("internal error: invalid question index %d", nextQuestion)
 	}
 	progression := make([]ta.QuestionHistory, len(instance.Questions))
 	// mark previous question as validated for better consistency on the preview
 	for i := 0; i < nextQuestion; i++ {
 		progression[i] = ta.QuestionHistory{true}
 	}
-	return LoopbackShowExercice{
+	return preview.LoopbackShowExercice{
 		Exercice: instance,
 		Progression: taAPI.ProgressionExt{
 			NextQuestion: nextQuestion,

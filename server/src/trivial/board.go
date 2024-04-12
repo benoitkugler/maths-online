@@ -36,22 +36,22 @@ var (
 
 	categories = [nbSquares]Categorie{
 		Purple,
-		Blue,
-		Green,
-		Blue, // cross
-		Green,
-		Orange,
-		Purple,
 		Yellow,
-		Orange,
-		Yellow, // cross
+		Blue,
+		Purple, // cross
+		Green,
+		Blue,
 		Orange,
 		Yellow,
 		Purple,
+		Green, // cross
+		Blue,
+		Orange,
+		Yellow,
+		Blue,
+		Orange,
 		Orange,
 		Green,
-		Blue,
-		Yellow,
 	}
 )
 
@@ -97,7 +97,7 @@ func (tp tilePath) origin() int {
 
 // choices returns the square indices where the player located at `currentPos`
 // may advances with `nbMoves`.
-// In this game, you can go back when you have made one step.
+// In this game, you can't go back when you have made one step.
 func (b board) choices(currentPos, nbMoves int) tileSet {
 	// start with the current pos, with no constraint
 	var (

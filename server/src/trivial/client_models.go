@@ -7,6 +7,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 )
 
 // interaction with the client
@@ -35,6 +36,25 @@ type QuestionReview struct {
 	QuestionHistory []QR
 	// Ids of question the player wants to mark for further work
 	MarkedQuestions []editor.IdQuestion
+}
+
+// streak returns the (last) number of valid question in a row
+func (qr QuestionReview) streak() int {
+	if len(qr.QuestionHistory) == 0 {
+		return 0
+	}
+	i := len(qr.QuestionHistory) - 1
+	for ; i >= 0; i-- {
+		if !qr.QuestionHistory[i].Success {
+			break
+		}
+	}
+	return len(qr.QuestionHistory) - 1 - i
+}
+
+func (qr QuestionReview) hasStreak3() bool {
+	streak := qr.streak()
+	return streak > 0 && streak%3 == 0 // grand points only on every new streak
 }
 
 // Success are the categories completed by a player
@@ -111,8 +131,9 @@ type PlayerReconnected struct {
 type LobbyUpdate struct {
 	PlayerPseudos map[serial]string // the new players in the lobby
 	Pseudo        string
-	ID            serial // the player who joined or left
-	IsJoining     bool   // false for leaving
+	ID            serial         // the player who joined or left
+	IsJoining     bool           // false for leaving
+	PlayerRanks   map[serial]int // Added in v1.8
 }
 
 type GameStart struct{}
@@ -135,7 +156,7 @@ type DiceThrow struct {
 }
 
 func newDiceThrow() DiceThrow {
-	const maxFaceNumber = 3
+	const maxFaceNumber = 6
 	return DiceThrow{uint8(rand.Int31n(maxFaceNumber) + 1)}
 }
 
@@ -170,6 +191,7 @@ type ShowQuestion struct {
 type PlayerAnswerResults struct {
 	Categorie Categorie
 	Results   map[serial]playerAnswerResult
+	Advances  map[serial]events.EventNotification
 }
 
 type playerAnswerResult struct {
@@ -189,6 +211,7 @@ type GameEnd struct {
 	QuestionDecrassageIds map[serial][]editor.IdQuestion // player->questions
 	Winners               []serial
 	WinnerNames           []string
+	Advances              map[serial]events.EventNotification
 }
 
 // GameTerminated is emitted when the game

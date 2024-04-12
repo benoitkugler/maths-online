@@ -14,11 +14,22 @@ func (A matrix) dims() (rows, cols int) {
 	return len(A), len(A[0])
 }
 
-func newEmpty(n, m int) matrix {
+func newMatrixEmpty(n, m int) matrix {
 	out := make(matrix, n)
 	vals := make([]*Expr, n*m)
 	for i := range out {
 		out[i] = vals[i*m : (i+1)*m]
+	}
+	return out
+}
+
+func (A matrix) copy() matrix {
+	n, m := A.dims()
+	out := newMatrixEmpty(n, m)
+	for i, row := range A {
+		for j, cell := range row {
+			out[i][j] = cell.Copy()
+		}
 	}
 	return out
 }
@@ -30,14 +41,11 @@ func prod(a, b *Expr) *Expr { return &Expr{atom: mult, left: a, right: b} }
 // factor . A
 func (A matrix) scale(factor *Expr) matrix {
 	mA, nA := A.dims()
-	out := make(matrix, mA)
-	for i := range out {
-		row := make([]*Expr, nA)
+	out := newMatrixEmpty(mA, nA)
+	for i, row := range A {
 		for j := range row {
-			Aij := A[i][j]
-			row[j] = prod(factor, Aij)
+			out[i][j] = prod(factor, A[i][j])
 		}
-		out[i] = row
 	}
 	return out
 }
@@ -50,15 +58,11 @@ func (A matrix) plus(B matrix) (matrix, error) {
 		return nil, fmt.Errorf("matrices de dimensions incompatibles (%d, %d != %d, %d)", mA, nA, mB, nB)
 	}
 
-	out := make(matrix, mA)
-	for i := range out {
-		row := make([]*Expr, nA)
+	out := newMatrixEmpty(mA, nA)
+	for i, row := range A {
 		for j := range row {
-			Aij := A[i][j]
-			Bij := B[i][j]
-			row[j] = add(Aij, Bij)
+			out[i][j] = add(A[i][j], B[i][j])
 		}
-		out[i] = row
 	}
 
 	return out, nil
@@ -72,7 +76,7 @@ func (A matrix) minus(B matrix) (matrix, error) {
 
 // numberMatrix is an efficient version of a matrix
 // containing only scalars
-type numberMatrix [][]float64
+type numberMatrix [][]real
 
 func (A numberMatrix) dims() (rows, cols int) {
 	if len(A) == 0 {
@@ -83,9 +87,12 @@ func (A numberMatrix) dims() (rows, cols int) {
 
 func newZeros(n, m int) numberMatrix {
 	out := make(numberMatrix, n)
-	vals := make([]float64, n*m)
+	buffer := make([]real, n*m)
+	for j := range buffer {
+		buffer[j] = newRealInt(0)
+	}
 	for i := range out {
-		out[i] = vals[i*m : (i+1)*m]
+		out[i] = buffer[i*m : (i+1)*m]
 	}
 	return out
 }
@@ -95,9 +102,9 @@ func newNumberMatrixFrom(A matrix) (numberMatrix, bool) {
 	out := newZeros(n, m)
 	for i, row := range A {
 		for j, v := range row {
-			var ok bool
-			out[i][j], ok = v.isConstantTerm()
-			if !ok {
+			var err error
+			out[i][j], err = v.evalReal(nil)
+			if err != nil {
 				return nil, false
 			}
 		}
@@ -107,10 +114,10 @@ func newNumberMatrixFrom(A matrix) (numberMatrix, bool) {
 
 func (A numberMatrix) toExprMatrix() matrix {
 	n, m := A.dims()
-	out := newEmpty(n, m)
+	out := newMatrixEmpty(n, m)
 	for i, row := range A {
 		for j, v := range row {
-			out[i][j] = NewNb(v)
+			out[i][j] = v.toExpr()
 		}
 	}
 	return out
@@ -120,11 +127,11 @@ func (A numberMatrix) toExprMatrix() matrix {
 func (A numberMatrix) prodTo(B, out numberMatrix) {
 	for i, row := range out {
 		for j := range row {
-			s := 0.
+			s := newRealInt(0)
 			for k := range A[i] {
 				Aik := A[i][k]
 				Bkj := B[k][j]
-				s += Aik * Bkj
+				s.add(multReal(Aik, Bkj))
 			}
 			out[i][j] = s
 		}
@@ -162,7 +169,7 @@ func (A numberMatrix) pow(nf float64) (numberMatrix, error) {
 	for i := range out {
 		for j := range out {
 			if i == j {
-				out[i][j] = 1
+				out[i][j] = newRealInt(1)
 			}
 		}
 	}
@@ -186,34 +193,34 @@ func (A numberMatrix) pow(nf float64) (numberMatrix, error) {
 	return out, nil
 }
 
-func (A numberMatrix) determinant() (float64, error) {
+func (A numberMatrix) determinant() (real, error) {
 	m, n := A.dims()
 	if m != n {
-		return 0, fmt.Errorf("déterminant d'une matrice non carrée (%d, %d)", m, n)
+		return real{}, fmt.Errorf("déterminant d'une matrice non carrée (%d, %d)", m, n)
 	}
 
 	if m == 0 {
-		return 0, nil
+		return newRealInt(0), nil
 	} else if m == 1 {
 		return A[0][0], nil
 	} else if m == 2 {
-		return A[0][0]*A[1][1] - A[1][0]*A[0][1], nil
+		return minusReal(multReal(A[0][0], A[1][1]), multReal(A[1][0], A[0][1])), nil
 	} else { // last row dev
-		det := 0.
+		det := newRealInt(0)
 		for j := range A {
 			minor := A.minor(m-1, j)
 			coeff := A[m-1][j]
-			det += coeff * minor
+			det.add(multReal(coeff, minor))
 		}
 		return det, nil
 	}
 }
 
 // assume A is squared
-func (A numberMatrix) minor(i, j int) float64 {
+func (A numberMatrix) minor(i, j int) real {
 	minor, _ := A.submatrix(i, j).determinant() // determinant is safe here
 	if (i+j)%2 != 0 {                           // i and j is shifted by one, compensating
-		minor = -minor
+		minor.opposite()
 	}
 	return minor
 }
@@ -226,7 +233,7 @@ func (A numberMatrix) submatrix(i, j int) numberMatrix {
 		if i2 == i { // remove row i
 			continue
 		}
-		newRow := make([]float64, len(A)-1)
+		newRow := make([]real, len(A)-1)
 		copy(newRow, row[:j])
 		copy(newRow[j:], row[j+1:])
 		out = append(out, newRow)
@@ -241,13 +248,13 @@ func (A numberMatrix) invert() (numberMatrix, error) {
 	if err != nil {
 		return nil, err
 	}
-	if det == 0 {
+	if det.eval() == 0 {
 		return nil, errors.New("matrice non inversible (déterminant nul)")
 	}
 	inv := newZeros(len(A), len(A))
 	for i, row := range inv {
 		for j := range row {
-			row[j] = A.minor(j, i) / det // tranpose
+			row[j] = divReal(A.minor(j, i), det) // tranpose
 		}
 	}
 	return inv, nil
@@ -282,7 +289,7 @@ func (A matrix) trace() (*Expr, error) {
 	return s, nil
 }
 
-func (A matrix) instantiate(ctx *paramsInstantiater) (matrix, error) {
+func (A matrix) instantiate(ctx *resolver) (matrix, error) {
 	out := make(matrix, len(A))
 	var err error
 	for i, row := range A {
@@ -298,7 +305,7 @@ func (A matrix) instantiate(ctx *paramsInstantiater) (matrix, error) {
 	return out, nil
 }
 
-func matricesOperation(op operator, left, right *Expr, ctx *paramsInstantiater) (*Expr, error) {
+func matricesOperation(op operator, left, right *Expr, ctx *resolver) (*Expr, error) {
 	switch op {
 	case plus:
 		if leftA, ok := left.atom.(matrix); ok {
@@ -391,7 +398,7 @@ func matricesOperation(op operator, left, right *Expr, ctx *paramsInstantiater) 
 				return &Expr{atom: m.toExprMatrix()}, nil
 			}
 		}
-	case equals, greater, strictlyGreater, lesser, strictlyLesser, div, mod, rem, factorial:
+	case equals, greater, strictlyGreater, lesser, strictlyLesser, div, mod, rem, factorial, union, intersection, complement:
 		// pass
 	default:
 		panic(exhaustiveOperatorSwitch)

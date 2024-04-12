@@ -1,35 +1,33 @@
 <template>
-  <v-card color="secondary" class="my-1">
-    <v-row no-gutters>
-      <v-col align-self="center" md="9">
-        <v-card-subtitle> Avec une expression </v-card-subtitle>
-      </v-col>
-      <v-col md="3" style="text-align: right">
-        <v-btn
-          icon
-          @click="addFunctionExpr"
-          title="Ajouter une fonction"
-          size="x-small"
-          class="mr-2 my-2"
-        >
-          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
+  <!-- Fonctions -->
+  <v-card
+    color="secondary"
+    class="my-1"
+    subtitle="Fonctions (définies par une expression)"
+  >
+    <template v-slot:append>
+      <v-btn
+        icon
+        @click="addFunctionExpr"
+        title="Ajouter une fonction"
+        size="x-small"
+      >
+        <v-icon icon="mdi-plus" color="green"></v-icon>
+      </v-btn>
+    </template>
     <v-list>
       <div v-for="(fn, index) in props.modelValue.FunctionExprs" :key="index">
         <v-list-item>
-          <v-row class="mt-1">
-            <v-col cols="10">
+          <v-row>
+            <v-col>
               <v-row>
-                <v-col cols="3" align-self="center">
-                  <v-text-field
-                    variant="outlined"
-                    density="compact"
+                <v-col cols="3" class="mb-4">
+                  <interpolated-text
                     v-model="fn.Decoration.Label"
+                    force-latex
+                    center
                     label="Légende"
-                    hide-details
-                  ></v-text-field>
+                  ></interpolated-text>
                 </v-col>
                 <v-col md="2" align-self="center">
                   ( {{ variableToString(fn.Variable) }} ) =
@@ -64,7 +62,7 @@
               </v-row>
             </v-col>
 
-            <v-col cols="2" align-self="center">
+            <v-col cols="auto" align-self="center">
               <v-btn icon size="x-small" @click="deleteFunctionExpr(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
@@ -76,23 +74,22 @@
     </v-list>
   </v-card>
 
-  <v-card color="secondary" class="my-1">
-    <v-row no-gutters>
-      <v-col align-self="center" md="9">
-        <v-card-subtitle> Avec des variations </v-card-subtitle>
-      </v-col>
-      <v-col md="3" style="text-align: right">
-        <v-btn
-          icon
-          @click="addFunctionVar"
-          title="Ajouter une fonction"
-          size="x-small"
-          class="mr-2 my-2"
-        >
-          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
+  <!-- Function from variations -->
+  <v-card
+    color="secondary"
+    class="my-1"
+    subtitle="Fonctions (définies par des variations)"
+  >
+    <template v-slot:append>
+      <v-btn
+        icon
+        @click="addFunctionVar"
+        title="Ajouter une fonction"
+        size="x-small"
+      >
+        <v-icon icon="mdi-plus" color="green"></v-icon>
+      </v-btn>
+    </template>
     <v-list>
       <div
         v-for="(fn, index) in props.modelValue.FunctionVariations"
@@ -100,14 +97,14 @@
       >
         <v-list-item>
           <v-row>
-            <v-col cols="10">
+            <v-col>
               <BaseVariationTable
                 :model-value="fn"
                 @update:model-value="(v) => updateVar(index, v)"
-                description="Fonction définie par ses variations"
+                description=""
               ></BaseVariationTable>
             </v-col>
-            <v-col cols="2" align-self="center" class="pr-0 pl-1">
+            <v-col cols="auto" align-self="center">
               <v-btn icon size="x-small" @click="deleteFunctionVar(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
@@ -119,24 +116,90 @@
     </v-list>
   </v-card>
 
-  <v-card color="secondary" class="my-1">
-    <v-row no-gutters>
-      <v-col align-self="center" md="9">
-        <v-card-subtitle> Surfaces colorées </v-card-subtitle>
-      </v-col>
-      <v-col md="3" style="text-align: right">
-        <v-btn
-          icon
-          @click="addArea"
-          title="Ajouter une surface colorée entre deux courbes."
-          size="x-small"
-          class="mr-2 my-2"
-          :disabled="functionsNamesItems.length < 2"
-        >
-          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
+  <!-- Sequences -->
+  <v-card color="secondary" class="my-1" subtitle="Suites">
+    <template v-slot:append>
+      <v-btn
+        icon
+        @click="addSequenceExpr"
+        title="Ajouter une suite"
+        size="x-small"
+      >
+        <v-icon icon="mdi-plus" color="green"></v-icon>
+      </v-btn>
+    </template>
+    <v-list>
+      <div v-for="(fn, index) in props.modelValue.SequenceExprs" :key="index">
+        <v-list-item>
+          <v-row>
+            <v-col>
+              <v-row>
+                <v-col cols="3" class="mb-4">
+                  <interpolated-text
+                    v-model="fn.Decoration.Label"
+                    force-latex
+                    center
+                    label="Légende"
+                  ></interpolated-text>
+                </v-col>
+                <v-col md="3" align-self="center" class="text-center">
+                  Variable : {{ variableToString(fn.Variable) }}
+                </v-col>
+                <v-col cols="6" align-self="center">
+                  <v-text-field
+                    variant="outlined"
+                    density="compact"
+                    v-model="fn.Function"
+                    label="Expression de la suite"
+                    hide-details
+                    :color="expressionColor"
+                  ></v-text-field>
+                </v-col>
+                <v-col md="4" align-self="center">
+                  <ExpressionField
+                    v-model="fn.From"
+                    label="Xmin"
+                  ></ExpressionField>
+                </v-col>
+                <v-col md="4">
+                  <ExpressionField
+                    v-model="fn.To"
+                    label="Xmax"
+                  ></ExpressionField>
+                </v-col>
+                <v-col>
+                  <BtnColorPicker
+                    v-model="fn.Decoration.Color"
+                  ></BtnColorPicker>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <v-col cols="auto" align-self="center">
+              <v-btn icon size="x-small" @click="deleteSequenceExpr(index)">
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-list-item>
+        <v-divider></v-divider>
+      </div>
+    </v-list>
+  </v-card>
+
+  <!-- areas -->
+  <v-card color="secondary" class="my-1" subtitle="Surfaces colorées">
+    <template v-slot:append>
+      <v-btn
+        icon
+        @click="addArea"
+        title="Ajouter une surface colorée entre deux courbes."
+        size="x-small"
+        :disabled="functionsNamesItems.length < 2"
+      >
+        <v-icon icon="mdi-plus" color="green"></v-icon>
+      </v-btn>
+    </template>
     <v-list>
       <div v-for="(area, index) in props.modelValue.Areas" :key="index">
         <v-list-item>
@@ -205,23 +268,18 @@
     </v-list>
   </v-card>
 
-  <v-card color="secondary" class="my-1">
-    <v-row no-gutters>
-      <v-col align-self="center" md="9">
-        <v-card-subtitle> Points sur les courbes </v-card-subtitle>
-      </v-col>
-      <v-col md="3" style="text-align: right">
-        <v-btn
-          icon
-          @click="addPoint"
-          title="Ajouter un point appartenant à une des courbes"
-          size="x-small"
-          class="mr-2 my-2"
-        >
-          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
+  <!-- additional points -->
+  <v-card color="secondary" class="my-1" subtitle="Points sur les courbes">
+    <template v-slot:append>
+      <v-btn
+        icon
+        @click="addPoint"
+        title="Ajouter un point appartenant à une des courbes"
+        size="x-small"
+      >
+        <v-icon icon="mdi-plus" color="green"></v-icon>
+      </v-btn>
+    </template>
     <v-list>
       <div v-for="(point, index) in props.modelValue.Points" :key="index">
         <v-list-item>
@@ -274,14 +332,15 @@ import type {
 import {
   ExpressionColor,
   lastColorUsed,
+  nRune,
   variableToString,
   xRune,
 } from "@/controller/editor";
-import { $computed } from "vue/macros";
 import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionField from "../utils/ExpressionField.vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 import BaseVariationTable from "./BaseVariationTable.vue";
+import { computed } from "vue";
 
 interface Props {
   modelValue: FunctionsGraphBlock;
@@ -312,6 +371,25 @@ function deleteFunctionExpr(index: number) {
   emit("update:modelValue", props.modelValue);
 }
 
+function addSequenceExpr() {
+  props.modelValue.SequenceExprs?.push({
+    Function: "n + 2",
+    Decoration: {
+      Label: "u_n",
+      Color: lastColorUsed.color,
+    },
+    Variable: { Name: nRune, Indice: "" },
+    From: "-4",
+    To: "4",
+  });
+  emit("update:modelValue", props.modelValue);
+}
+
+function deleteSequenceExpr(index: number) {
+  props.modelValue.SequenceExprs?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
+}
+
 function addFunctionVar() {
   props.modelValue.FunctionVariations?.push({
     Label: "C_f",
@@ -332,7 +410,7 @@ function updateVar(index: number, v: VariationTableBlock) {
 }
 
 /** includes the special [abscisseAxis] value */
-const functionsNamesItems = $computed(() => {
+const functionsNamesItems = computed(() => {
   const set: { [key: string]: boolean } = {};
   props.modelValue.FunctionExprs?.forEach(
     (fn) => (set[fn.Decoration.Label] = true)
@@ -356,8 +434,8 @@ function nameToSelection(s: string) {
 function addArea() {
   props.modelValue.Areas?.push({
     Color: lastColorUsed.color,
-    Top: nameFromSelection(functionsNamesItems[1]),
-    Bottom: nameFromSelection(functionsNamesItems[0]),
+    Top: nameFromSelection(functionsNamesItems.value[1]),
+    Bottom: nameFromSelection(functionsNamesItems.value[0]),
     Left: "0",
     Right: "2",
   });
@@ -372,7 +450,7 @@ function deleteArea(index: number) {
 function addPoint() {
   props.modelValue.Points?.push({
     Color: lastColorUsed.color,
-    Function: nameFromSelection(functionsNamesItems[0]),
+    Function: nameFromSelection(functionsNamesItems.value[0]),
     X: "0",
     Legend: `P_${1 + (props.modelValue.Points.length || 0)}`,
   });

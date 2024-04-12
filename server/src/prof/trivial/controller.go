@@ -56,7 +56,7 @@ func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher
 	out := &Controller{
 		db:         db,
 		studentKey: key,
-		store:      newGameStore(demoPin),
+		store:      newGameStore(db, key, demoPin),
 		admin:      admin,
 	}
 
@@ -76,6 +76,19 @@ func (ct *Controller) checkOwner(configID tc.IdTrivial, userID uID) error {
 	return nil
 }
 
+// GetTrivialsMetrics shows the number of actually running IsyTriv.
+// This is a public endpoint.
+func (ct *Controller) GetTrivialsMetrics(c echo.Context) error {
+	ct.store.lock.Lock()
+	defer ct.store.lock.Unlock()
+
+	nbConnections := 0
+	for _, game := range ct.store.games {
+		nbConnections += game.NbActivePlayers()
+	}
+	return c.HTML(200, fmt.Sprintf("Parties d'IsyTriv en cours : %d ; Joueurs connectés : %d", len(ct.store.games), nbConnections))
+}
+
 type RunningSessionMetaOut struct {
 	NbGames int
 }
@@ -91,7 +104,7 @@ func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
+func (ct *Controller) getTrivialPoursuits(userID uID, matiere teacher.MatiereTag) ([]TrivialExt, error) {
 	configs, err := tc.SelectAllTrivials(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -110,6 +123,10 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 
 	var out []TrivialExt
 	for _, config := range configs {
+		if !config.Questions.MatchMatiere(matiere) {
+			continue
+		}
+
 		var inReview tcAPI.OptionalIdReview
 		link, isInReview := revsMap[config.Id]
 		if isInReview {
@@ -123,6 +140,7 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 		if item.Origin.Visibility.Restricted() {
 			continue // do not expose
 		}
+
 		out = append(out, item)
 	}
 
@@ -133,7 +151,8 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
-	out, err := ct.getTrivialPoursuits(userID)
+	mat_ := c.QueryParam("matiere")
+	out, err := ct.getTrivialPoursuits(userID, teacher.MatiereTag(mat_))
 	if err != nil {
 		return err
 	}
@@ -143,10 +162,17 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
+	matiere_ := c.QueryParam("matiere")
+
 	item, err := tc.Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
 		IdTeacher:       userID,
+		Questions: tc.CategoriesQuestions{
+			Tags: [5]tc.QuestionCriterion{
+				{{editor.TagSection{Section: editor.Matiere, Tag: matiere_}}},
+			},
+		},
 	}.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -349,7 +375,7 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 		}
 	}
 
-	pool, err := selectQuestions(ct.db, criteria, userID)
+	pool, err := selectQuestions(ct.db, criteria, userID, false)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, err
 	}
@@ -405,7 +431,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 	// populate the session with the required games :
 
 	// select the questions
-	questionPool, err := selectQuestions(ct.db, config.Questions, userID)
+	questionPool, err := selectQuestions(ct.db, config.Questions, userID, true)
 	if err != nil {
 		return LaunchSessionOut{}, err
 	}
@@ -414,6 +440,8 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 	if err != nil {
 		return LaunchSessionOut{}, err
 	}
+
+	ProgressLogger.Printf("Creating games for config %d", config.Id)
 
 	var out LaunchSessionOut
 	for _, groupStrategy := range groups {

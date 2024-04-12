@@ -36,11 +36,11 @@ import {
   type TargetContent,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { markRaw, onMounted, type Component } from "vue";
-import { $ref } from "vue/macros";
+import { ref, markRaw, onMounted, type Component } from "vue";
 import TargetExerciceVue from "./TargetExercice.vue";
 import TargetQuestionVue from "./TargetQuestion.vue";
 import TargetTrivialVue from "./TargetTrivial.vue";
+import TargetSheetVue from "./TargetSheet.vue";
 
 interface Props {
   review: ReviewHeader;
@@ -52,7 +52,7 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
-let content = $ref<targetContent | null>(null);
+const content = ref<targetContent | null>(null);
 
 onMounted(loadTarget);
 
@@ -61,7 +61,7 @@ async function loadTarget() {
     "id-review": props.review.Id,
   });
   if (res === undefined) return;
-  content = newContent(res.Content);
+  content.value = newContent(res.Content);
 }
 
 interface targetContent {
@@ -77,6 +77,8 @@ function newContent(data: TargetContent): targetContent {
       return { Props: data, Component: markRaw(TargetExerciceVue) };
     case TargetContentKind.TargetTrivial:
       return { Props: data, Component: markRaw(TargetTrivialVue) };
+    case TargetContentKind.TargetSheet:
+      return { Props: data, Component: markRaw(TargetSheetVue) };
   }
 }
 </script>

@@ -3,45 +3,118 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-class DateTag {
-  private _ = "D" as const;
-}
+export type Ar11_boolean = [
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+];
+export type Ar11_Int = [Int, Int, Int, Int, Int, Int, Int, Int, Int, Int, Int];
+export type Ar12_Ar11_boolean = [
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+];
+export type Ar12_Ar11_Int = [
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+];
+export type Ar12_Level = [
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+];
+export type Ar12_Rank = [
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+];
+export type Ar3_Int = [Int, Int, Int];
+export type Ar5_boolean = [boolean, boolean, boolean, boolean, boolean];
+export type Ar5_QuestionCriterion = [
+  QuestionCriterion,
+  QuestionCriterion,
+  QuestionCriterion,
+  QuestionCriterion,
+  QuestionCriterion,
+];
+export type Ar5_Int = [Int, Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
-export type Date_ = string & DateTag;
+export type Date_ = string & { __opaque__: "Date" };
 
-class TimeTag {
-  private _ = "T" as const;
-}
+export type Int = number & { __opaque__: "Int" };
 
 // ISO date-time string
-export type Time = string & TimeTag;
+export type Time = string & { __opaque__: "Time" };
 
+// database/sql.NullTime
+export interface NullTime {
+  Time: Time;
+  Valid: boolean;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/expression.Variable
 export interface Variable {
   Indice: string;
-  Name: number;
-}
-// github.com/benoitkugler/maths-online/server/src/maths/functiongrapher.FunctionDecoration
-export interface FunctionDecoration {
-  Label: string;
-  Color: string;
+  Name: Int;
 }
 
 export enum BlockKind {
   ExpressionFieldBlock = "ExpressionFieldBlock",
-  FigureAffineLineFieldBlock = "FigureAffineLineFieldBlock",
   FigureBlock = "FigureBlock",
-  FigurePointFieldBlock = "FigurePointFieldBlock",
-  FigureVectorFieldBlock = "FigureVectorFieldBlock",
-  FigureVectorPairFieldBlock = "FigureVectorPairFieldBlock",
   FormulaBlock = "FormulaBlock",
   FunctionPointsFieldBlock = "FunctionPointsFieldBlock",
   FunctionsGraphBlock = "FunctionsGraphBlock",
+  GeometricConstructionFieldBlock = "GeometricConstructionFieldBlock",
   NumberFieldBlock = "NumberFieldBlock",
   OrderedListFieldBlock = "OrderedListFieldBlock",
   ProofFieldBlock = "ProofFieldBlock",
   RadioFieldBlock = "RadioFieldBlock",
+  SetFieldBlock = "SetFieldBlock",
   SignTableBlock = "SignTableBlock",
   SignTableFieldBlock = "SignTableFieldBlock",
   TableBlock = "TableBlock",
@@ -59,18 +132,16 @@ export interface Block {
   Kind: BlockKind;
   Data:
     | ExpressionFieldBlock
-    | FigureAffineLineFieldBlock
     | FigureBlock
-    | FigurePointFieldBlock
-    | FigureVectorFieldBlock
-    | FigureVectorPairFieldBlock
     | FormulaBlock
     | FunctionPointsFieldBlock
     | FunctionsGraphBlock
+    | GeometricConstructionFieldBlock
     | NumberFieldBlock
     | OrderedListFieldBlock
     | ProofFieldBlock
     | RadioFieldBlock
+    | SetFieldBlock
     | SignTableBlock
     | SignTableFieldBlock
     | TableBlock
@@ -85,12 +156,14 @@ export interface Block {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Co
 export type Co = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
-export enum ComparisonLevel {
-  AsLinearEquation = 102,
-  ExpandedSubstitutions = 2,
-  SimpleSubstitutions = 1,
-  Strict = 0,
-}
+export const ComparisonLevel = {
+  AsLinearEquation: 102,
+  ExpandedSubstitutions: 2,
+  SimpleSubstitutions: 1,
+  Strict: 0,
+} as const;
+export type ComparisonLevel =
+  (typeof ComparisonLevel)[keyof typeof ComparisonLevel];
 
 export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
   [ComparisonLevel.AsLinearEquation]: "",
@@ -119,11 +192,12 @@ export interface ErrQuestionInvalid {
   Kind: ErrorKind;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ErrorKind
-export enum ErrorKind {
-  ErrParameters_ = 0,
-  ErrEnonce = 1,
-  ErrCorrection = 2,
-}
+export const ErrorKind = {
+  ErrParameters_: 0,
+  ErrEnonce: 1,
+  ErrCorrection: 2,
+} as const;
+export type ErrorKind = (typeof ErrorKind)[keyof typeof ErrorKind];
 
 export const ErrorKindLabels: { [key in ErrorKind]: string } = {
   [ErrorKind.ErrParameters_]: "",
@@ -138,13 +212,6 @@ export interface ExpressionFieldBlock {
   ComparisonLevel: ComparisonLevel;
   ShowFractionHelp: boolean;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureAffineLineFieldBlock
-export interface FigureAffineLineFieldBlock {
-  Label: string;
-  A: string;
-  B: string;
-  Figure: FigureBlock;
-}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FigureBlock
 export interface FigureBlock {
   Drawings: RandomDrawings;
@@ -152,22 +219,16 @@ export interface FigureBlock {
   ShowGrid: boolean;
   ShowOrigin: boolean;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigurePointFieldBlock
-export interface FigurePointFieldBlock {
-  Answer: CoordExpression;
-  Figure: FigureBlock;
+
+export enum FiguresOrGraphsKind {
+  FigureBlock = "FigureBlock",
+  FunctionsGraphBlock = "FunctionsGraphBlock",
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureVectorFieldBlock
-export interface FigureVectorFieldBlock {
-  Answer: CoordExpression;
-  AnswerOrigin: CoordExpression;
-  Figure: FigureBlock;
-  MustHaveOrigin: boolean;
-}
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureVectorPairFieldBlock
-export interface FigureVectorPairFieldBlock {
-  Figure: FigureBlock;
-  Criterion: VectorPairCriterion;
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FiguresOrGraphs
+export interface FiguresOrGraphs {
+  Kind: FiguresOrGraphsKind;
+  Data: FigureBlock | FunctionsGraphBlock;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FormulaBlock
 export interface FormulaBlock {
@@ -180,6 +241,11 @@ export interface FunctionArea {
   Left: string;
   Right: string;
   Color: ColorHex;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDecoration
+export interface FunctionDecoration {
+  Label: Interpolated;
+  Color: string;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
@@ -198,17 +264,63 @@ export interface FunctionPoint {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
+  IsDiscrete: boolean;
   Function: string;
   Label: string;
   Variable: Variable;
   XGrid: string[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionSign
+export interface FunctionSign {
+  Label: Interpolated;
+  FxSymbols: SignSymbol[] | null;
+  Signs: boolean[] | null;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionsGraphBlock
 export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
   FunctionVariations: VariationTableBlock[] | null;
+  SequenceExprs: FunctionDefinition[] | null;
   Areas: FunctionArea[] | null;
   Points: FunctionPoint[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFAffineLine
+export interface GFAffineLine {
+  Label: string;
+  A: string;
+  B: string;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFPoint
+export interface GFPoint {
+  Answer: CoordExpression;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFVector
+export interface GFVector {
+  Answer: CoordExpression;
+  AnswerOrigin: CoordExpression;
+  MustHaveOrigin: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFVectorPair
+export interface GFVectorPair {
+  Criterion: VectorPairCriterion;
+}
+
+export enum GeoFieldKind {
+  GFAffineLine = "GFAffineLine",
+  GFPoint = "GFPoint",
+  GFVector = "GFVector",
+  GFVectorPair = "GFVectorPair",
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GeoField
+export interface GeoField {
+  Kind: GeoFieldKind;
+  Data: GFAffineLine | GFPoint | GFVector | GFVectorPair;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GeometricConstructionFieldBlock
+export interface GeometricConstructionFieldBlock {
+  Field: GeoField;
+  Background: FiguresOrGraphs;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.In
 export type In = string;
@@ -300,6 +412,11 @@ export interface Rp {
   expression: string;
   variable: Variable;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.SetFieldBlock
+export interface SetFieldBlock {
+  Answer: string;
+  AdditionalSets: Interpolated[] | null;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableBlock
 export interface SignTableBlock {
   Xs: string[] | null;
@@ -329,11 +446,12 @@ export interface TextBlock {
   Smaller: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TextKind
-export enum TextKind {
-  Text = 0,
-  StaticMath = 1,
-  Expression = 2,
-}
+export const TextKind = {
+  Text: 0,
+  StaticMath: 1,
+  Expression: 2,
+} as const;
+export type TextKind = (typeof TextKind)[keyof typeof TextKind];
 
 export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Text]: "Text simple",
@@ -359,7 +477,7 @@ export interface TreeFieldBlock {
 export interface TreeNodeAnswer {
   Children: TreeNodeAnswer[] | null;
   Probabilities: string[] | null;
-  Value: number;
+  Value: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
@@ -378,11 +496,13 @@ export interface VectorFieldBlock {
   DisplayColumn: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.VectorPairCriterion
-export enum VectorPairCriterion {
-  VectorEquals = 0,
-  VectorColinear = 1,
-  VectorOrthogonal = 2,
-}
+export const VectorPairCriterion = {
+  VectorEquals: 0,
+  VectorColinear: 1,
+  VectorOrthogonal: 2,
+} as const;
+export type VectorPairCriterion =
+  (typeof VectorPairCriterion)[keyof typeof VectorPairCriterion];
 
 export const VectorPairCriterionLabels: {
   [key in VectorPairCriterion]: string;
@@ -395,15 +515,16 @@ export const VectorPairCriterionLabels: {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.errEnonce
 export interface errEnonce {
   Error: string;
-  Block: number;
-  Vars: { [key: string]: string } | null;
+  Block: Int;
+  Vars: { [key in string]: string } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Binary
-export enum Binary {
-  Invalid = 0,
-  And = 1,
-  Or = 2,
-}
+export const Binary = {
+  Invalid: 0,
+  And: 1,
+  Or: 2,
+} as const;
+export type Binary = (typeof Binary)[keyof typeof Binary];
 
 export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Invalid]: "Invalide",
@@ -411,18 +532,13 @@ export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Or]: "Ou",
 };
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionSign
-export interface FunctionSign {
-  Label: string;
-  FxSymbols: SignSymbol[] | null;
-  Signs: boolean[] | null;
-}
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
-export enum SignSymbol {
-  Nothing = 0,
-  Zero = 1,
-  ForbiddenValue = 2,
-}
+export const SignSymbol = {
+  Nothing: 0,
+  Zero: 1,
+  ForbiddenValue: 2,
+} as const;
+export type SignSymbol = (typeof SignSymbol)[keyof typeof SignSymbol];
 
 export const SignSymbolLabels: { [key in SignSymbol]: string } = {
   [SignSymbol.Nothing]: "",
@@ -438,17 +554,18 @@ export interface Coord {
   Y: number;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.LabelPos
-export enum LabelPos {
-  Top = 0,
-  Bottom = 1,
-  Left = 2,
-  Right = 3,
-  TopLeft = 4,
-  TopRight = 5,
-  BottomRight = 6,
-  BottomLeft = 7,
-  Hide = 8,
-}
+export const LabelPos = {
+  Top: 0,
+  Bottom: 1,
+  Left: 2,
+  Right: 3,
+  TopLeft: 4,
+  TopRight: 5,
+  BottomRight: 6,
+  BottomLeft: 7,
+  Hide: 8,
+} as const;
+export type LabelPos = (typeof LabelPos)[keyof typeof LabelPos];
 
 export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Top]: "Au dessus",
@@ -517,16 +634,17 @@ export interface RandomSegment {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RepereBounds
 export interface RepereBounds {
-  Width: number;
-  Height: number;
+  Width: Int;
+  Height: Int;
   Origin: Coord;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.SegmentKind
-export enum SegmentKind {
-  SKSegment = 0,
-  SKVector = 1,
-  SKLine = 2,
-}
+export const SegmentKind = {
+  SKSegment: 0,
+  SKVector: 1,
+  SKLine: 2,
+} as const;
+export type SegmentKind = (typeof SegmentKind)[keyof typeof SegmentKind];
 
 export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKSegment]: "Segment",
@@ -534,10 +652,48 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.GetSchemeOut
+export interface GetSchemeOut {
+  Scheme: Scheme;
+  NbQuestions: Ar12_Ar11_Int;
+  HasTODO: Ar12_Ar11_boolean;
+  IsAdmin: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
+export interface Prerequisite {
+  Need: Stage;
+  Pending: Stage;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.SaveBeltQuestionIn
+export interface SaveBeltQuestionIn {
+  Question: Beltquestion;
+  ShowCorrection: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.SaveBeltquestionAndPreviewOut
+export interface SaveBeltquestionAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
+  Preview: LoopbackShowCeinture;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
+export interface Scheme {
+  Ps: Prerequisite[] | null;
+  Levels: Ar12_Level;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Stage
+export interface Stage {
+  Domain: Domain;
+  Rank: Rank;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.UpdateBeltquestionIn
+export interface UpdateBeltquestionIn {
+  Id: IdBeltquestion;
+  Repeat: Int;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
   Chapter: string;
-  GroupCount: number;
+  GroupCount: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersIn
 export interface CheckExerciceParametersIn {
@@ -548,7 +704,7 @@ export interface CheckExerciceParametersIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersOut
 export interface CheckExerciceParametersOut {
   ErrDefinition: ErrParameters;
-  QuestionIndex: number;
+  QuestionIndex: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckQuestionParametersIn
 export interface CheckQuestionParametersIn {
@@ -562,12 +718,12 @@ export interface CheckQuestionParametersOut {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.DeleteExerciceOut
 export interface DeleteExerciceOut {
   Deleted: boolean;
-  BlockedBy: QuestionExerciceUses;
+  BlockedBy: TaskUses;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.DeleteQuestionOut
 export interface DeleteQuestionOut {
   Deleted: boolean;
-  BlockedBy: QuestionExerciceUses;
+  BlockedBy: TaskUses;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
@@ -575,7 +731,7 @@ export interface ExerciceCreateQuestionIn {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceDuplicateQuestionIn
 export interface ExerciceDuplicateQuestionIn {
-  QuestionIndex: number;
+  QuestionIndex: Int;
   IdExercice: IdExercice;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceExt
@@ -597,7 +753,7 @@ export interface ExerciceImportQuestionIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceQuestionExt
 export interface ExerciceQuestionExt {
   Question: Question;
-  Bareme: number;
+  Bareme: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceUpdateQuestionsIn
 export interface ExerciceUpdateQuestionsIn {
@@ -629,7 +785,7 @@ export interface ExportExerciceLatexIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExportExerciceLatexOut
 export interface ExportExerciceLatexOut {
   Error: ErrQuestionInvalid;
-  QuestionIndex: number;
+  QuestionIndex: Int;
   IsValid: boolean;
   Latex: string;
 }
@@ -655,33 +811,20 @@ export interface LevelItems {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListExercicesOut
 export interface ListExercicesOut {
   Groups: ExercicegroupExt[] | null;
-  NbExercices: number;
+  NbExercices: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
   Groups: QuestiongroupExt[] | null;
-  NbQuestions: number;
-}
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowExercice
-export interface LoopbackShowExercice {
-  Exercice: unknown;
-  Progression: unknown;
-  ShowCorrection: boolean;
-  Origin: QuestionPage[] | null;
-}
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestion
-export interface LoopbackShowQuestion {
-  Question: unknown;
-  Params: unknown;
-  ShowCorrection: boolean;
-  Origin: QuestionPage;
+  NbQuestions: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.OriginKind
-export enum OriginKind {
-  All = 0,
-  OnlyPersonnal = 1,
-  OnlyAdmin = 2,
-}
+export const OriginKind = {
+  All: 0,
+  OnlyPersonnal: 1,
+  OnlyAdmin: 2,
+} as const;
+export type OriginKind = (typeof OriginKind)[keyof typeof OriginKind];
 
 export const OriginKindLabels: { [key in OriginKind]: string } = {
   [OriginKind.All]: "",
@@ -694,10 +837,10 @@ export interface Query {
   TitleQuery: string;
   LevelTags: string[] | null;
   ChapterTags: string[] | null;
+  SubLevelTags: string[] | null;
   Origin: OriginKind;
+  Matiere: MatiereTag;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionExerciceUses
-export type QuestionExerciceUses = TaskDetails[] | null;
 // github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Id: IdQuestion;
@@ -723,13 +866,13 @@ export interface SaveExerciceAndPreviewIn {
   IdExercice: IdExercice;
   Parameters: Parameters;
   Questions: Question[] | null;
-  CurrentQuestion: number;
+  CurrentQuestion: Int;
   ShowCorrection: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewOut
 export interface SaveExerciceAndPreviewOut {
   Error: ErrQuestionInvalid;
-  QuestionIndex: number;
+  QuestionIndex: Int;
   IsValid: boolean;
   Preview: LoopbackShowExercice;
 }
@@ -743,7 +886,7 @@ export interface SaveQuestionAndPreviewIn {
 export interface SaveQuestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
-  Question: LoopbackShowQuestion;
+  Preview: LoopbackShowQuestion;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionMetaIn
 export interface SaveQuestionMetaIn {
@@ -752,16 +895,19 @@ export interface SaveQuestionMetaIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TagsDB
 export interface TagsDB {
   Levels: string[] | null;
-  ChaptersByLevel: { [key: string]: string[] | null } | null;
-  TrivByChapters: {
-    [key: string]: { [key: string]: string[] | null } | null;
-  } | null;
+  ChaptersByLevel: { [key in string]: string[] | null } | null;
+  TrivByChapters:
+    | { [key in string]: { [key in string]: string[] | null } | null }
+    | null;
+  SubLevelsByLevel: { [key in string]: string[] | null } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TaskDetails
 export interface TaskDetails {
   Id: IdTask;
   Sheet: Sheet;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/editor.TaskUses
+export type TaskUses = TaskDetails[] | null;
 // github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupTagsIn
 export interface UpdateExercicegroupTagsIn {
   Id: IdExercicegroup;
@@ -817,20 +963,39 @@ export interface CreateTravailWithIn {
   IdSheet: IdSheet;
   IdClassroom: IdClassroom;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/homework.Exceptions
+export interface Exceptions {
+  Exceptions: TravailExceptions;
+  Students: Students;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
-  Marks: { [key: IdTravail]: { [key: IdStudent]: number } | null } | null;
+  Marks: { [key in IdTravail]: TravailMarks } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.Homeworks
 export interface Homeworks {
-  Sheets: { [key: IdSheet]: SheetExt } | null;
+  Sheets: { [key in IdSheet]: SheetExt } | null;
   Travaux: ClassroomTravaux[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HowemorkMarksIn
 export interface HowemorkMarksIn {
   IdClassroom: IdClassroom;
   IdTravaux: IdTravail[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.MissingTasksHint
+export interface MissingTasksHint {
+  Pattern: Tags;
+  MissingExercices: Tags[] | null;
+  MissingQuestions: Tags[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.QuestionStat
+export interface QuestionStat {
+  Description: string;
+  Id: IdQuestion;
+  Difficulty: DifficultyTag;
+  NbSuccess: Int;
+  NbFailure: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.ReorderSheetTasksIn
 export interface ReorderSheetTasksIn {
@@ -841,15 +1006,58 @@ export interface ReorderSheetTasksIn {
 export interface SheetExt {
   Sheet: Sheet;
   Tasks: TaskExt[] | null;
-  NbTravaux: number;
+  NbTravaux: Int;
+  Origin: Origin;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.StudentTravailMark
+export interface StudentTravailMark {
+  Mark: number;
+  Dispensed: boolean;
+  NbTries: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
   IdWork: WorkID;
   Title: string;
+  Tags: Tags;
+  GroupID: Int;
   Bareme: TaskBareme;
-  NbProgressions: number;
+  NbProgressions: Int;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.TaskStat
+export interface TaskStat {
+  IdWork: WorkID;
+  Title: string;
+  QuestionStats: QuestionStat[] | null;
+  NbSuccess: Int;
+  NbFailure: Int;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
+export interface TravailMarks {
+  Marks: { [key in IdStudent]: StudentTravailMark } | null;
+  TaskStats: TaskStat[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
+export interface LoopbackShowCeinture {
+  Questions: unknown;
+  QuestionIndex: Int;
+  Origin: QuestionPage[] | null;
+  ShowCorrection: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowExercice
+export interface LoopbackShowExercice {
+  Exercice: unknown;
+  Progression: unknown;
+  ShowCorrection: boolean;
+  Origin: QuestionPage[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowQuestion
+export interface LoopbackShowQuestion {
+  Question: unknown;
+  Params: unknown;
+  ShowCorrection: boolean;
+  Origin: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
 export interface LoadTargetOut {
@@ -864,11 +1072,11 @@ export interface ReviewComment {
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewCreateIn
 export interface ReviewCreateIn {
   Kind: ReviewKind;
-  Id: number;
+  Id: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewExt
 export interface ReviewExt {
-  Approvals: number[];
+  Approvals: Ar3_Int;
   Comments: ReviewComment[] | null;
   UserApproval: Approval;
   IsDeletable: boolean;
@@ -880,7 +1088,7 @@ export interface ReviewHeader {
   Title: string;
   Kind: ReviewKind;
   OwnerMail: string;
-  NbComments: number;
+  NbComments: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewUpdateApprovalIn
 export interface ReviewUpdateApprovalIn {
@@ -896,13 +1104,14 @@ export interface ReviewUpdateCommentsIn {
 export enum TargetContentKind {
   TargetExercice = "TargetExercice",
   TargetQuestion = "TargetQuestion",
+  TargetSheet = "TargetSheet",
   TargetTrivial = "TargetTrivial",
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetContent
 export interface TargetContent {
   Kind: TargetContentKind;
-  Data: TargetExercice | TargetQuestion | TargetTrivial;
+  Data: TargetExercice | TargetQuestion | TargetSheet | TargetTrivial;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetExercice
 export interface TargetExercice {
@@ -915,16 +1124,20 @@ export interface TargetQuestion {
   Variants: Question[] | null;
   AllTags: TagsDB;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetSheet
+export interface TargetSheet {
+  Sheet: SheetExt;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetTrivial
 export interface TargetTrivial {
   Config: Trivial;
-  NbQuestionsByCategories: number[];
+  NbQuestionsByCategories: Ar5_Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
   Mail: string;
   Password: string;
-  HasEditorSimplified: boolean;
+  FavoriteMatiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionOut
 export interface AskInscriptionOut {
@@ -934,7 +1147,7 @@ export interface AskInscriptionOut {
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.ClassroomExt
 export interface ClassroomExt {
   Classroom: Classroom;
-  NbStudents: number;
+  NbStudents: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
@@ -958,15 +1171,34 @@ export interface OptionalIdReview {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Origin
 export interface Origin {
-  AllowPublish: boolean;
-  IsPublic: boolean;
-  IsInReview: OptionalIdReview;
   Visibility: Visibility;
+  PublicStatus: PublicStatus;
+  IsInReview: OptionalIdReview;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.PublicStatus
+export const PublicStatus = {
+  NotAdmin: 0,
+  AdminPublic: 1,
+  AdminNotPublic: 2,
+} as const;
+export type PublicStatus = (typeof PublicStatus)[keyof typeof PublicStatus];
+
+export const PublicStatusLabels: { [key in PublicStatus]: string } = {
+  [PublicStatus.NotAdmin]: "",
+  [PublicStatus.AdminPublic]: "",
+  [PublicStatus.AdminNotPublic]: "",
+};
+
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentExt
+export interface StudentExt {
+  Student: Student;
+  Success: StudentAdvance;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentHeader
 export interface StudentHeader {
   Id: IdStudent;
   Label: string;
+  HasAttachedClients: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.TeacherSettings
 export interface TeacherSettings {
@@ -974,13 +1206,15 @@ export interface TeacherSettings {
   Password: string;
   HasEditorSimplified: boolean;
   Contact: Contact;
+  FavoriteMatiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
-export enum Visibility {
-  Hidden = 0,
-  Personnal = 1,
-  Admin = 2,
-}
+export const Visibility = {
+  Hidden: 0,
+  Personnal: 1,
+  Admin: 2,
+} as const;
+export type Visibility = (typeof Visibility)[keyof typeof Visibility];
 
 export const VisibilityLabels: { [key in Visibility]: string } = {
   [Visibility.Hidden]: "not accessible by the user, except in reviews",
@@ -1020,11 +1254,11 @@ export interface GroupsStrategy {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyAuto
 export interface GroupsStrategyAuto {
-  Groups: number[] | null;
+  Groups: Int[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyManual
 export interface GroupsStrategyManual {
-  NbGroups: number;
+  NbGroups: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.LaunchSessionIn
 export interface LaunchSessionIn {
@@ -1048,13 +1282,13 @@ export interface QuestionContent {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.RunningSessionMetaOut
 export interface RunningSessionMetaOut {
-  NbGames: number;
+  NbGames: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialExt
 export interface TrivialExt {
   Config: Trivial;
   Origin: Origin;
-  NbQuestionsByCategories: number[];
+  NbQuestionsByCategories: Ar5_Int;
   Levels: string[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialSelfaccess
@@ -1077,15 +1311,108 @@ export interface stopGame {
   ID: string;
   Restart: boolean;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Advance
+export type Advance = Ar12_Rank;
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Beltquestion
+export interface Beltquestion {
+  Id: IdBeltquestion;
+  Domain: Domain;
+  Rank: Rank;
+  Parameters: Parameters;
+  Enonce: Enonce;
+  Correction: Enonce;
+  Repeat: Int;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
+export const Domain = {
+  CalculMentalI: 0,
+  CalculMentalII: 1,
+  Puissances: 2,
+  Fractions: 3,
+  Reduction: 4,
+  Factorisation: 5,
+  Developpement: 6,
+  IsolerVariable: 7,
+  Equations: 8,
+  Inequations: 9,
+  Derivation: 10,
+  Matrices: 11,
+} as const;
+export type Domain = (typeof Domain)[keyof typeof Domain];
+
+export const DomainLabels: { [key in Domain]: string } = {
+  [Domain.CalculMentalI]: "Calcul mental I",
+  [Domain.CalculMentalII]: "Calcul mental II",
+  [Domain.Puissances]: "Puissances et racines",
+  [Domain.Fractions]: "Fractions",
+  [Domain.Reduction]: "Réduction",
+  [Domain.Factorisation]: "Factorisation",
+  [Domain.Developpement]: "Développement",
+  [Domain.IsolerVariable]: "Isoler une variable",
+  [Domain.Equations]: "Équations",
+  [Domain.Inequations]: "Inéquations",
+  [Domain.Derivation]: "Dérivation",
+  [Domain.Matrices]: "Matrices et systèmes",
+};
+
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
+export type IdBeltquestion = Int;
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Level
+export const Level = {
+  Seconde: 0,
+  Premiere: 1,
+  Terminale: 2,
+  PostBac: 3,
+} as const;
+export type Level = (typeof Level)[keyof typeof Level];
+
+export const LevelLabels: { [key in Level]: string } = {
+  [Level.Seconde]: "Seconde",
+  [Level.Premiere]: "Première",
+  [Level.Terminale]: "Terminale",
+  [Level.PostBac]: "Post-bac",
+};
+
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Rank
+export const Rank = {
+  StartRank: 0,
+  Blanche: 1,
+  Jaune: 2,
+  Orange: 3,
+  VerteI: 4,
+  VerteII: 5,
+  Bleue: 6,
+  Violet: 7,
+  Rouge: 8,
+  Marron: 9,
+  Noire: 10,
+} as const;
+export type Rank = (typeof Rank)[keyof typeof Rank];
+
+export const RankLabels: { [key in Rank]: string } = {
+  [Rank.StartRank]: "Départ",
+  [Rank.Blanche]: "Blanche",
+  [Rank.Jaune]: "Jaune",
+  [Rank.Orange]: "Orange",
+  [Rank.VerteI]: "Verte clair",
+  [Rank.VerteII]: "Verte foncée",
+  [Rank.Bleue]: "Bleue",
+  [Rank.Violet]: "Violette",
+  [Rank.Rouge]: "Rouge",
+  [Rank.Marron]: "Marron",
+  [Rank.Noire]: "Noire",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyTag
-export enum DifficultyTag {
-  Diff1 = "★",
-  Diff2 = "★★",
-  Diff3 = "★★★",
-  DiffEmpty = "",
-}
+export const DifficultyTag = {
+  Diff1: "★",
+  Diff2: "★★",
+  Diff3: "★★★",
+  DiffEmpty: "",
+} as const;
+export type DifficultyTag = (typeof DifficultyTag)[keyof typeof DifficultyTag];
 
 export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
   [DifficultyTag.Diff1]: "1 étoile",
@@ -1106,7 +1433,7 @@ export interface Exercice {
 export interface ExerciceQuestion {
   id_exercice: IdExercice;
   id_question: IdQuestion;
-  bareme: number;
+  bareme: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.ExerciceQuestions
 export type ExerciceQuestions = ExerciceQuestion[] | null;
@@ -1118,20 +1445,21 @@ export interface Exercicegroup {
   IdTeacher: IdTeacher;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercice
-export type IdExercice = number;
+export type IdExercice = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercicegroup
-export type IdExercicegroup = number;
+export type IdExercicegroup = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestion
-export type IdQuestion = number;
+export type IdQuestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestiongroup
-export type IdQuestiongroup = number;
+export type IdQuestiongroup = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.LevelTag
-export enum LevelTag {
-  CPGE = "CPGE",
-  Premiere = "1ERE",
-  Seconde = "2NDE",
-  Terminale = "TERM",
-}
+export const LevelTag = {
+  CPGE: "CPGE",
+  Premiere: "1ERE",
+  Seconde: "2NDE",
+  Terminale: "TERM",
+} as const;
+export type LevelTag = (typeof LevelTag)[keyof typeof LevelTag];
 
 export const LevelTagLabels: { [key in LevelTag]: string } = {
   [LevelTag.CPGE]: "CPGE",
@@ -1169,15 +1497,20 @@ export interface Questiongroup {
   IdTeacher: IdTeacher;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Section
-export enum Section {
-  Chapter = 2,
-  Level = 1,
-  TrivMath = 3,
-}
+export const Section = {
+  Chapter: 2,
+  Level: 1,
+  Matiere: 5,
+  SubLevel: 4,
+  TrivMath: 3,
+} as const;
+export type Section = (typeof Section)[keyof typeof Section];
 
 export const SectionLabels: { [key in Section]: string } = {
   [Section.Chapter]: "Chapitre",
   [Section.Level]: "Niveau",
+  [Section.Matiere]: "Matière",
+  [Section.SubLevel]: "Filière",
   [Section.TrivMath]: "Triv'Math",
 };
 
@@ -1188,10 +1521,19 @@ export interface TagSection {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Tags
 export type Tags = TagSection[] | null;
+// github.com/benoitkugler/maths-online/server/src/sql/events.StudentAdvance
+export interface StudentAdvance {
+  Occurences: Ar11_Int;
+  TotalPoints: Int;
+  Flames: Int;
+  Rank: Int;
+  PointsCurrentRank: Int;
+  PointsNextRank: Int;
+}
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
-export type IdSheet = number;
+export type IdSheet = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
-export type IdTravail = number;
+export type IdTravail = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.OptionalIdTravail
 export interface OptionalIdTravail {
   Valid: boolean;
@@ -1204,6 +1546,8 @@ export interface Sheet {
   IdTeacher: IdTeacher;
   Level: string;
   Anonymous: OptionalIdTravail;
+  Public: boolean;
+  Matiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Travail
 export interface Travail {
@@ -1212,13 +1556,24 @@ export interface Travail {
   IdSheet: IdSheet;
   Noted: boolean;
   Deadline: Time;
+  ShowAfter: Time;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/homework.TravailException
+export interface TravailException {
+  IdStudent: IdStudent;
+  IdTravail: IdTravail;
+  Deadline: NullTime;
+  IgnoreForMark: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/homework.TravailExceptions
+export type TravailExceptions = TravailException[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Approval
-export enum Approval {
-  Neutral = 0,
-  InFavor = 1,
-  Opposed = 2,
-}
+export const Approval = {
+  Neutral: 0,
+  InFavor: 1,
+  Opposed: 2,
+} as const;
+export type Approval = (typeof Approval)[keyof typeof Approval];
 
 export const ApprovalLabels: { [key in Approval]: string } = {
   [Approval.Neutral]: "",
@@ -1234,44 +1589,47 @@ export interface Comment {
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Comments
 export type Comments = Comment[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.IdReview
-export type IdReview = number;
+export type IdReview = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Review
 export interface Review {
   Id: IdReview;
   Kind: ReviewKind;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.ReviewKind
-export enum ReviewKind {
-  KQuestion = 0,
-  KExercice = 1,
-  KTrivial = 2,
-}
+export const ReviewKind = {
+  KQuestion: 0,
+  KExercice: 1,
+  KTrivial: 2,
+  KSheet: 3,
+} as const;
+export type ReviewKind = (typeof ReviewKind)[keyof typeof ReviewKind];
 
 export const ReviewKindLabels: { [key in ReviewKind]: string } = {
   [ReviewKind.KQuestion]: "Question",
   [ReviewKind.KExercice]: "Exercice",
-  [ReviewKind.KTrivial]: "Trivial",
+  [ReviewKind.KTrivial]: "Isy'Triv",
+  [ReviewKind.KSheet]: "Feuille d'exercice",
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdMonoquestion
-export type IdMonoquestion = number;
+export type IdMonoquestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdRandomMonoquestion
-export type IdRandomMonoquestion = number;
+export type IdRandomMonoquestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdTask
-export type IdTask = number;
+export type IdTask = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.Monoquestion
 export interface Monoquestion {
   Id: IdMonoquestion;
   IdQuestion: IdQuestion;
-  NbRepeat: number;
-  Bareme: number;
+  NbRepeat: Int;
+  Bareme: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.RandomMonoquestion
 export interface RandomMonoquestion {
   Id: IdRandomMonoquestion;
   IdQuestiongroup: IdQuestiongroup;
-  NbRepeat: number;
-  Bareme: number;
+  NbRepeat: Int;
+  Bareme: Int;
   Difficulty: DifficultyQuery;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Classroom
@@ -1279,7 +1637,15 @@ export interface Classroom {
   id: IdClassroom;
   id_teacher: IdTeacher;
   name: string;
+  MaxRankThreshold: Int;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Client
+export interface Client {
+  Device: string;
+  Time: Time;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Clients
+export type Clients = Client[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Contact
 export interface Contact {
   Name: string;
@@ -1288,54 +1654,86 @@ export interface Contact {
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Date
 export type Date = Date_;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
-export type IdClassroom = number;
+export type IdClassroom = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
-export type IdStudent = number;
+export type IdStudent = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
-export type IdTeacher = number;
+export type IdTeacher = Int;
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.MatiereTag
+export const MatiereTag = {
+  Allemand: "ALLEMAND",
+  Anglais: "ANGLAIS",
+  Autre: "AUTRE",
+  Espagnol: "ESPAGNOL",
+  Francais: "FRANCAIS",
+  HistoireGeo: "HISTOIRE-GEO",
+  Italien: "ITALIEN",
+  Mathematiques: "MATHS",
+  PhysiqueChimie: "PHYSIQUE",
+  SES: "SES",
+  SVT: "SVT",
+} as const;
+export type MatiereTag = (typeof MatiereTag)[keyof typeof MatiereTag];
+
+export const MatiereTagLabels: { [key in MatiereTag]: string } = {
+  [MatiereTag.Allemand]: "",
+  [MatiereTag.Anglais]: "",
+  [MatiereTag.Autre]: "",
+  [MatiereTag.Espagnol]: "",
+  [MatiereTag.Francais]: "",
+  [MatiereTag.HistoireGeo]: "",
+  [MatiereTag.Italien]: "",
+  [MatiereTag.Mathematiques]: "",
+  [MatiereTag.PhysiqueChimie]: "",
+  [MatiereTag.SES]: "",
+  [MatiereTag.SVT]: "",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Student
 export interface Student {
   Id: IdStudent;
   Name: string;
   Surname: string;
   Birthday: Date;
-  TrivialSuccess: number;
-  IsClientAttached: boolean;
   id_classroom: IdClassroom;
+  Clients: Clients;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Students
+export type Students = { [key in IdStudent]: Student } | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.CategoriesQuestions
 export interface CategoriesQuestions {
-  Tags: QuestionCriterion[];
+  Tags: Ar5_QuestionCriterion;
   Difficulties: DifficultyQuery;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.IdTrivial
-export type IdTrivial = number;
+export type IdTrivial = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (TagSection[] | null)[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.Trivial
 export interface Trivial {
   Id: IdTrivial;
   Questions: CategoriesQuestions;
-  QuestionTimeout: number;
+  QuestionTimeout: Int;
   ShowDecrassage: boolean;
   Public: boolean;
   IdTeacher: IdTeacher;
   Name: string;
 }
 // github.com/benoitkugler/maths-online/server/src/tasks.TaskBareme
-export type TaskBareme = number[] | null;
+export type TaskBareme = Int[] | null;
 // github.com/benoitkugler/maths-online/server/src/tasks.WorkID
 export interface WorkID {
-  ID: number;
+  ID: Int;
   Kind: WorkKind;
   IsExercice: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/tasks.WorkKind
-export enum WorkKind {
-  WorkExercice = 1,
-  WorkMonoquestion = 2,
-  WorkRandomMonoquestion = 3,
-}
+export const WorkKind = {
+  WorkExercice: 1,
+  WorkMonoquestion: 2,
+  WorkRandomMonoquestion: 3,
+} as const;
+export type WorkKind = (typeof WorkKind)[keyof typeof WorkKind];
 
 export const WorkKindLabels: { [key in WorkKind]: string } = {
   [WorkKind.WorkExercice]: "",
@@ -1344,14 +1742,15 @@ export const WorkKindLabels: { [key in WorkKind]: string } = {
 };
 
 // github.com/benoitkugler/maths-online/server/src/trivial.Categorie
-export enum Categorie {
-  Purple = 0,
-  Green = 1,
-  Orange = 2,
-  Yellow = 3,
-  Blue = 4,
-  nbCategories = 5,
-}
+export const Categorie = {
+  Purple: 0,
+  Green: 1,
+  Orange: 2,
+  Yellow: 3,
+  Blue: 4,
+  nbCategories: 5,
+} as const;
+export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
 export const CategorieLabels: { [key in Categorie]: string } = {
   [Categorie.Purple]: "purple",
@@ -1366,11 +1765,11 @@ export const CategorieLabels: { [key in Categorie]: string } = {
 export type RoomID = string;
 // github.com/benoitkugler/maths-online/server/src/trivial.RoomSize
 export interface RoomSize {
-  Current: number;
-  Max: number;
+  Current: Int;
+  Max: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/trivial.Success
-export type Success = boolean[];
+export type Success = Ar5_boolean;
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -1416,8 +1815,8 @@ export abstract class AbstractAPI {
   protected async rawValidateInscription(params: { data: string }) {
     const fullUrl = this.baseUrl + "inscription";
     await Axios.get(fullUrl, {
-      params: { data: params["data"] },
       headers: this.getHeaders(),
+      params: { data: params["data"] },
     });
     return true;
   }
@@ -1461,8 +1860,8 @@ export abstract class AbstractAPI {
   protected async rawTeacherResetPassword(params: { mail: string }) {
     const fullUrl = this.baseUrl + "/api/prof/reset";
     await Axios.get(fullUrl, {
-      params: { mail: params["mail"] },
       headers: this.getHeaders(),
+      params: { mail: params["mail"] },
     });
     return true;
   }
@@ -1587,17 +1986,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessTeacherUpdateClassroom(data: Classroom): void {}
 
-  protected async rawTeacherDeleteClassroom(params: { id: number }) {
+  protected async rawTeacherDeleteClassroom(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** TeacherDeleteClassroom wraps rawTeacherDeleteClassroom and handles the error */
-  async TeacherDeleteClassroom(params: { id: number }) {
+  async TeacherDeleteClassroom(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherDeleteClassroom(params);
@@ -1611,18 +2010,18 @@ export abstract class AbstractAPI {
   protected onSuccessTeacherDeleteClassroom(): void {}
 
   protected async rawTeacherGetClassroomStudents(params: {
-    "id-classroom": number;
+    "id-classroom": Int;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    const rep: AxiosResponse<Student[] | null> = await Axios.get(fullUrl, {
-      params: { "id-classroom": String(params["id-classroom"]) },
+    const rep: AxiosResponse<StudentExt[] | null> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
+      params: { "id-classroom": String(params["id-classroom"]) },
     });
     return rep.data;
   }
 
   /** TeacherGetClassroomStudents wraps rawTeacherGetClassroomStudents and handles the error */
-  async TeacherGetClassroomStudents(params: { "id-classroom": number }) {
+  async TeacherGetClassroomStudents(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherGetClassroomStudents(params);
@@ -1634,20 +2033,20 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessTeacherGetClassroomStudents(
-    data: Student[] | null,
+    data: StudentExt[] | null,
   ): void {}
 
-  protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
+  protected async rawTeacherAddStudent(params: { "id-classroom": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    const rep: AxiosResponse<Student> = await Axios.put(fullUrl, null, {
-      params: { "id-classroom": String(params["id-classroom"]) },
+    const rep: AxiosResponse<StudentExt> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
+      params: { "id-classroom": String(params["id-classroom"]) },
     });
     return rep.data;
   }
 
   /** TeacherAddStudent wraps rawTeacherAddStudent and handles the error */
-  async TeacherAddStudent(params: { "id-classroom": number }) {
+  async TeacherAddStudent(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherAddStudent(params);
@@ -1658,7 +2057,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessTeacherAddStudent(data: Student): void {}
+  protected onSuccessTeacherAddStudent(data: StudentExt): void {}
 
   protected async rawTeacherUpdateStudent(params: Student) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
@@ -1680,17 +2079,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessTeacherUpdateStudent(): void {}
 
-  protected async rawTeacherDeleteStudent(params: { "id-student": number }) {
+  protected async rawTeacherDeleteStudent(params: { "id-student": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     await Axios.delete(fullUrl, {
-      params: { "id-student": String(params["id-student"]) },
       headers: this.getHeaders(),
+      params: { "id-student": String(params["id-student"]) },
     });
     return true;
   }
 
   /** TeacherDeleteStudent wraps rawTeacherDeleteStudent and handles the error */
-  async TeacherDeleteStudent(params: { "id-student": number }) {
+  async TeacherDeleteStudent(params: { "id-student": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherDeleteStudent(params);
@@ -1730,21 +2129,21 @@ export abstract class AbstractAPI {
   protected onSuccessTeacherImportStudents(): void {}
 
   protected async rawTeacherGenerateClassroomCode(params: {
-    "id-classroom": number;
+    "id-classroom": Int;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students/connect";
     const rep: AxiosResponse<GenerateClassroomCodeOut> = await Axios.get(
       fullUrl,
       {
-        params: { "id-classroom": String(params["id-classroom"]) },
         headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
       },
     );
     return rep.data;
   }
 
   /** TeacherGenerateClassroomCode wraps rawTeacherGenerateClassroomCode and handles the error */
-  async TeacherGenerateClassroomCode(params: { "id-classroom": number }) {
+  async TeacherGenerateClassroomCode(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherGenerateClassroomCode(params);
@@ -1759,19 +2158,20 @@ export abstract class AbstractAPI {
     data: GenerateClassroomCodeOut,
   ): void {}
 
-  protected async rawGetTrivialPoursuit() {
+  protected async rawGetTrivialPoursuit(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     const rep: AxiosResponse<TrivialExt[] | null> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
+      params: { matiere: params["matiere"] },
     });
     return rep.data;
   }
 
   /** GetTrivialPoursuit wraps rawGetTrivialPoursuit and handles the error */
-  async GetTrivialPoursuit() {
+  async GetTrivialPoursuit(params: { matiere: string }) {
     this.startRequest();
     try {
-      const out = await this.rawGetTrivialPoursuit();
+      const out = await this.rawGetTrivialPoursuit(params);
       this.onSuccessGetTrivialPoursuit(out);
       return out;
     } catch (error) {
@@ -1781,19 +2181,20 @@ export abstract class AbstractAPI {
 
   protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {}
 
-  protected async rawCreateTrivialPoursuit() {
+  protected async rawCreateTrivialPoursuit(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     const rep: AxiosResponse<TrivialExt> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
+      params: { matiere: params["matiere"] },
     });
     return rep.data;
   }
 
   /** CreateTrivialPoursuit wraps rawCreateTrivialPoursuit and handles the error */
-  async CreateTrivialPoursuit() {
+  async CreateTrivialPoursuit(params: { matiere: string }) {
     this.startRequest();
     try {
-      const out = await this.rawCreateTrivialPoursuit();
+      const out = await this.rawCreateTrivialPoursuit(params);
       this.onSuccessCreateTrivialPoursuit(out);
       return out;
     } catch (error) {
@@ -1825,17 +2226,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {}
 
-  protected async rawDeleteTrivialPoursuit(params: { id: number }) {
+  protected async rawDeleteTrivialPoursuit(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** DeleteTrivialPoursuit wraps rawDeleteTrivialPoursuit and handles the error */
-  async DeleteTrivialPoursuit(params: { id: number }) {
+  async DeleteTrivialPoursuit(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawDeleteTrivialPoursuit(params);
@@ -1868,17 +2269,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessUpdateTrivialVisiblity(): void {}
 
-  protected async rawDuplicateTrivialPoursuit(params: { id: number }) {
+  protected async rawDuplicateTrivialPoursuit(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config/duplicate";
     const rep: AxiosResponse<TrivialExt> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** DuplicateTrivialPoursuit wraps rawDuplicateTrivialPoursuit and handles the error */
-  async DuplicateTrivialPoursuit(params: { id: number }) {
+  async DuplicateTrivialPoursuit(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawDuplicateTrivialPoursuit(params);
@@ -1940,17 +2341,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {}
 
-  protected async rawTrivialGetSelfaccess(params: { "id-trivial": number }) {
+  protected async rawTrivialGetSelfaccess(params: { "id-trivial": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
     const rep: AxiosResponse<TrivialSelfaccess> = await Axios.get(fullUrl, {
-      params: { "id-trivial": String(params["id-trivial"]) },
       headers: this.getHeaders(),
+      params: { "id-trivial": String(params["id-trivial"]) },
     });
     return rep.data;
   }
 
   /** TrivialGetSelfaccess wraps rawTrivialGetSelfaccess and handles the error */
-  async TrivialGetSelfaccess(params: { "id-trivial": number }) {
+  async TrivialGetSelfaccess(params: { "id-trivial": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTrivialGetSelfaccess(params);
@@ -2036,8 +2437,8 @@ export abstract class AbstractAPI {
   protected async rawStartTrivialGame(params: { "game-id": string }) {
     const fullUrl = this.baseUrl + "/api/trivial/sessions/start";
     await Axios.post(fullUrl, null, {
-      params: { "game-id": params["game-id"] },
       headers: this.getHeaders(),
+      params: { "game-id": params["game-id"] },
     });
     return true;
   }
@@ -2166,17 +2567,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {}
 
-  protected async rawEditorDuplicateQuestion(params: { id: number }) {
+  protected async rawEditorDuplicateQuestion(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/duplicate";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** EditorDuplicateQuestion wraps rawEditorDuplicateQuestion and handles the error */
-  async EditorDuplicateQuestion(params: { id: number }) {
+  async EditorDuplicateQuestion(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateQuestion(params);
@@ -2189,17 +2590,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorDuplicateQuestion(data: Question): void {}
 
-  protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
+  protected async rawEditorDuplicateQuestiongroup(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
     await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
-  async EditorDuplicateQuestiongroup(params: { id: number }) {
+  async EditorDuplicateQuestiongroup(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateQuestiongroup(params);
@@ -2256,6 +2657,29 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateQuestiongroup(): void {}
 
+  protected async rawEditorDeleteQuestiongroup(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
+    const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
+    return rep.data;
+  }
+
+  /** EditorDeleteQuestiongroup wraps rawEditorDeleteQuestiongroup and handles the error */
+  async EditorDeleteQuestiongroup(params: { id: Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDeleteQuestiongroup(params);
+      this.onSuccessEditorDeleteQuestiongroup(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessEditorDeleteQuestiongroup(data: DeleteQuestionOut): void {}
+
   protected async rawEditorUpdateQuestionTags(
     params: UpdateQuestiongroupTagsIn,
   ) {
@@ -2300,17 +2724,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateQuestiongroupVis(): void {}
 
-  protected async rawEditorGetQuestions(params: { id: number }) {
+  protected async rawEditorGetQuestions(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
     const rep: AxiosResponse<Question[] | null> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** EditorGetQuestions wraps rawEditorGetQuestions and handles the error */
-  async EditorGetQuestions(params: { id: number }) {
+  async EditorGetQuestions(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorGetQuestions(params);
@@ -2323,17 +2747,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorGetQuestions(data: Question[] | null): void {}
 
-  protected async rawEditorDeleteQuestion(params: { id: number }) {
+  protected async rawEditorDeleteQuestion(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
     const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
-  async EditorDeleteQuestion(params: { id: number }) {
+  async EditorDeleteQuestion(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteQuestion(params);
@@ -2514,6 +2938,29 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateExercicegroup(): void {}
 
+  protected async rawEditorDeleteExercicegroup(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
+    const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
+    return rep.data;
+  }
+
+  /** EditorDeleteExercicegroup wraps rawEditorDeleteExercicegroup and handles the error */
+  async EditorDeleteExercicegroup(params: { id: Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDeleteExercicegroup(params);
+      this.onSuccessEditorDeleteExercicegroup(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessEditorDeleteExercicegroup(data: DeleteExerciceOut): void {}
+
   protected async rawEditorUpdateExerciceTags(
     params: UpdateExercicegroupTagsIn,
   ) {
@@ -2536,17 +2983,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateExerciceTags(): void {}
 
-  protected async rawEditorDuplicateExercicegroup(params: { id: number }) {
+  protected async rawEditorDuplicateExercicegroup(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
     await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** EditorDuplicateExercicegroup wraps rawEditorDuplicateExercicegroup and handles the error */
-  async EditorDuplicateExercicegroup(params: { id: number }) {
+  async EditorDuplicateExercicegroup(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateExercicegroup(params);
@@ -2559,17 +3006,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorDuplicateExercicegroup(): void {}
 
-  protected async rawEditorGetExerciceContent(params: { id: number }) {
+  protected async rawEditorGetExerciceContent(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** EditorGetExerciceContent wraps rawEditorGetExerciceContent and handles the error */
-  async EditorGetExerciceContent(params: { id: number }) {
+  async EditorGetExerciceContent(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorGetExerciceContent(params);
@@ -2606,17 +3053,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorCreateExercice(data: ExercicegroupExt): void {}
 
-  protected async rawEditorDeleteExercice(params: { id: number }) {
+  protected async rawEditorDeleteExercice(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** EditorDeleteExercice wraps rawEditorDeleteExercice and handles the error */
-  async EditorDeleteExercice(params: { id: number }) {
+  async EditorDeleteExercice(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteExercice(params);
@@ -2651,17 +3098,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorSaveExerciceMeta(data: Exercice): void {}
 
-  protected async rawEditorDuplicateExercice(params: { id: number }) {
+  protected async rawEditorDuplicateExercice(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";
     const rep: AxiosResponse<ExerciceHeader> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** EditorDuplicateExercice wraps rawEditorDuplicateExercice and handles the error */
-  async EditorDuplicateExercice(params: { id: number }) {
+  async EditorDuplicateExercice(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateExercice(params);
@@ -2891,19 +3338,20 @@ export abstract class AbstractAPI {
     data: ExportExerciceLatexOut,
   ): void {}
 
-  protected async rawHomeworkGetSheets() {
+  protected async rawHomeworkGetSheets(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     const rep: AxiosResponse<Homeworks> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
+      params: { matiere: params["matiere"] },
     });
     return rep.data;
   }
 
   /** HomeworkGetSheets wraps rawHomeworkGetSheets and handles the error */
-  async HomeworkGetSheets() {
+  async HomeworkGetSheets(params: { matiere: string }) {
     this.startRequest();
     try {
-      const out = await this.rawHomeworkGetSheets();
+      const out = await this.rawHomeworkGetSheets(params);
       this.onSuccessHomeworkGetSheets(out);
       return out;
     } catch (error) {
@@ -2955,17 +3403,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkUpdateSheet(): void {}
 
-  protected async rawHomeworkDeleteSheet(params: { id: number }) {
+  protected async rawHomeworkDeleteSheet(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** HomeworkDeleteSheet wraps rawHomeworkDeleteSheet and handles the error */
-  async HomeworkDeleteSheet(params: { id: number }) {
+  async HomeworkDeleteSheet(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkDeleteSheet(params);
@@ -3022,21 +3470,21 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkCreateTravailWith(data: Travail): void {}
 
-  protected async rawHomeworkCreateTravail(params: { "id-classroom": number }) {
+  protected async rawHomeworkCreateTravail(params: { "id-classroom": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail/anonymous";
     const rep: AxiosResponse<CreateTravailOut> = await Axios.put(
       fullUrl,
       null,
       {
-        params: { "id-classroom": String(params["id-classroom"]) },
         headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
       },
     );
     return rep.data;
   }
 
   /** HomeworkCreateTravail wraps rawHomeworkCreateTravail and handles the error */
-  async HomeworkCreateTravail(params: { "id-classroom": number }) {
+  async HomeworkCreateTravail(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkCreateTravail(params);
@@ -3069,17 +3517,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkUpdateTravail(): void {}
 
-  protected async rawHomeworkDeleteTravail(params: { id: number }) {
+  protected async rawHomeworkDeleteTravail(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** HomeworkDeleteTravail wraps rawHomeworkDeleteTravail and handles the error */
-  async HomeworkDeleteTravail(params: { id: number }) {
+  async HomeworkDeleteTravail(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkDeleteTravail(params);
@@ -3116,17 +3564,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void {}
 
-  protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
+  protected async rawHomeworkRemoveTask(params: { "id-task": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
     await Axios.delete(fullUrl, {
-      params: { "id-task": String(params["id-task"]) },
       headers: this.getHeaders(),
+      params: { "id-task": String(params["id-task"]) },
     });
     return true;
   }
 
   /** HomeworkRemoveTask wraps rawHomeworkRemoveTask and handles the error */
-  async HomeworkRemoveTask(params: { "id-task": number }) {
+  async HomeworkRemoveTask(params: { "id-task": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkRemoveTask(params);
@@ -3162,18 +3610,18 @@ export abstract class AbstractAPI {
   protected onSuccessHomeworkAddExercice(data: TaskExt): void {}
 
   protected async rawHomeworkGetMonoquestion(params: {
-    "id-monoquestion": number;
+    "id-monoquestion": Int;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
     const rep: AxiosResponse<Monoquestion> = await Axios.get(fullUrl, {
-      params: { "id-monoquestion": String(params["id-monoquestion"]) },
       headers: this.getHeaders(),
+      params: { "id-monoquestion": String(params["id-monoquestion"]) },
     });
     return rep.data;
   }
 
   /** HomeworkGetMonoquestion wraps rawHomeworkGetMonoquestion and handles the error */
-  async HomeworkGetMonoquestion(params: { "id-monoquestion": number }) {
+  async HomeworkGetMonoquestion(params: { "id-monoquestion": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkGetMonoquestion(params);
@@ -3209,22 +3657,22 @@ export abstract class AbstractAPI {
   protected onSuccessHomeworkAddMonoquestion(data: TaskExt): void {}
 
   protected async rawHomeworkGetRandomMonoquestion(params: {
-    "id-randommonoquestion": number;
+    "id-randommonoquestion": Int;
   }) {
     const fullUrl =
       this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
     const rep: AxiosResponse<RandomMonoquestion> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
       params: {
         "id-randommonoquestion": String(params["id-randommonoquestion"]),
       },
-      headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** HomeworkGetRandomMonoquestion wraps rawHomeworkGetRandomMonoquestion and handles the error */
   async HomeworkGetRandomMonoquestion(params: {
-    "id-randommonoquestion": number;
+    "id-randommonoquestion": Int;
   }) {
     this.startRequest();
     try {
@@ -3332,6 +3780,29 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkReorderSheetTasks(): void {}
 
+  protected async rawHomeworkMissingTasksHint(params: { "id-sheet": Int }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/missing-hint";
+    const rep: AxiosResponse<MissingTasksHint> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+      params: { "id-sheet": String(params["id-sheet"]) },
+    });
+    return rep.data;
+  }
+
+  /** HomeworkMissingTasksHint wraps rawHomeworkMissingTasksHint and handles the error */
+  async HomeworkMissingTasksHint(params: { "id-sheet": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkMissingTasksHint(params);
+      this.onSuccessHomeworkMissingTasksHint(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessHomeworkMissingTasksHint(data: MissingTasksHint): void {}
+
   protected async rawHomeworkGetMarks(params: HowemorkMarksIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/marks";
     const rep: AxiosResponse<HomeworkMarksOut> = await Axios.post(
@@ -3355,6 +3826,210 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {}
+
+  protected async rawHomeworkGetDispenses(params: { "id-travail": Int }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
+    const rep: AxiosResponse<Exceptions> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+      params: { "id-travail": String(params["id-travail"]) },
+    });
+    return rep.data;
+  }
+
+  /** HomeworkGetDispenses wraps rawHomeworkGetDispenses and handles the error */
+  async HomeworkGetDispenses(params: { "id-travail": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkGetDispenses(params);
+      this.onSuccessHomeworkGetDispenses(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessHomeworkGetDispenses(data: Exceptions): void {}
+
+  protected async rawHomeworkSetDispense(params: TravailException) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** HomeworkSetDispense wraps rawHomeworkSetDispense and handles the error */
+  async HomeworkSetDispense(params: TravailException) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkSetDispense(params);
+      this.onSuccessHomeworkSetDispense();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessHomeworkSetDispense(): void {}
+
+  protected async rawCeinturesGetScheme() {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/scheme";
+    const rep: AxiosResponse<GetSchemeOut> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** CeinturesGetScheme wraps rawCeinturesGetScheme and handles the error */
+  async CeinturesGetScheme() {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetScheme();
+      this.onSuccessCeinturesGetScheme(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetScheme(data: GetSchemeOut): void {}
+
+  protected async rawCeinturesGetPending(params: Advance) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/pending";
+    const rep: AxiosResponse<Stage[] | null> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesGetPending wraps rawCeinturesGetPending and handles the error */
+  async CeinturesGetPending(params: Advance) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetPending(params);
+      this.onSuccessCeinturesGetPending(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetPending(data: Stage[] | null): void {}
+
+  protected async rawCeinturesGetQuestions(params: Stage) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/questions";
+    const rep: AxiosResponse<Beltquestion[] | null> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesGetQuestions wraps rawCeinturesGetQuestions and handles the error */
+  async CeinturesGetQuestions(params: Stage) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetQuestions(params);
+      this.onSuccessCeinturesGetQuestions(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetQuestions(data: Beltquestion[] | null): void {}
+
+  protected async rawCeinturesUpdateQuestion(params: UpdateBeltquestionIn) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question-meta";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** CeinturesUpdateQuestion wraps rawCeinturesUpdateQuestion and handles the error */
+  async CeinturesUpdateQuestion(params: UpdateBeltquestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesUpdateQuestion(params);
+      this.onSuccessCeinturesUpdateQuestion();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesUpdateQuestion(): void {}
+
+  protected async rawCeinturesCreateQuestion(params: Stage) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
+    const rep: AxiosResponse<Beltquestion> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** CeinturesCreateQuestion wraps rawCeinturesCreateQuestion and handles the error */
+  async CeinturesCreateQuestion(params: Stage) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesCreateQuestion(params);
+      this.onSuccessCeinturesCreateQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesCreateQuestion(data: Beltquestion): void {}
+
+  protected async rawCeinturesSaveQuestion(params: SaveBeltQuestionIn) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
+    const rep: AxiosResponse<SaveBeltquestionAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesSaveQuestion wraps rawCeinturesSaveQuestion and handles the error */
+  async CeinturesSaveQuestion(params: SaveBeltQuestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesSaveQuestion(params);
+      this.onSuccessCeinturesSaveQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesSaveQuestion(
+    data: SaveBeltquestionAndPreviewOut,
+  ): void {}
+
+  protected async rawCeinturesDeleteQuestion(params: { id: Int }) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
+    await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
+    return true;
+  }
+
+  /** CeinturesDeleteQuestion wraps rawCeinturesDeleteQuestion and handles the error */
+  async CeinturesDeleteQuestion(params: { id: Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesDeleteQuestion(params);
+      this.onSuccessCeinturesDeleteQuestion();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesDeleteQuestion(): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";
@@ -3400,17 +4075,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewsList(data: ReviewHeader[] | null): void {}
 
-  protected async rawReviewLoad(params: { id: number }) {
+  protected async rawReviewLoad(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
 
   /** ReviewLoad wraps rawReviewLoad and handles the error */
-  async ReviewLoad(params: { id: number }) {
+  async ReviewLoad(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewLoad(params);
@@ -3423,17 +4098,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewLoad(data: ReviewExt): void {}
 
-  protected async rawReviewLoadTarget(params: { "id-review": number }) {
+  protected async rawReviewLoadTarget(params: { "id-review": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review/target";
     const rep: AxiosResponse<LoadTargetOut> = await Axios.get(fullUrl, {
-      params: { "id-review": String(params["id-review"]) },
       headers: this.getHeaders(),
+      params: { "id-review": String(params["id-review"]) },
     });
     return rep.data;
   }
 
   /** ReviewLoadTarget wraps rawReviewLoadTarget and handles the error */
-  async ReviewLoadTarget(params: { "id-review": number }) {
+  async ReviewLoadTarget(params: { "id-review": Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewLoadTarget(params);
@@ -3446,17 +4121,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {}
 
-  protected async rawReviewDelete(params: { id: number }) {
+  protected async rawReviewDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** ReviewDelete wraps rawReviewDelete and handles the error */
-  async ReviewDelete(params: { id: number }) {
+  async ReviewDelete(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewDelete(params);
@@ -3509,17 +4184,17 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewUpdateCommnents(): void {}
 
-  protected async rawReviewAccept(params: { id: number }) {
+  protected async rawReviewAccept(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review/accept";
     await Axios.post(fullUrl, null, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
 
   /** ReviewAccept wraps rawReviewAccept and handles the error */
-  async ReviewAccept(params: { id: number }) {
+  async ReviewAccept(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewAccept(params);

@@ -14,7 +14,7 @@
   <v-card>
     <v-row>
       <v-col>
-        <v-card-title>Suivre la session de Triv'Maths</v-card-title>
+        <v-card-title>Suivre les parties Isy'Triv</v-card-title>
       </v-col>
       <v-col style="text-align: right">
         <v-btn icon flat class="mx-2" @click="onClose">
@@ -47,8 +47,7 @@ import type {
   stopGame,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onMounted } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, onMounted } from "vue";
 import GameMonitor from "./GameMonitor.vue";
 import QuestionMonitor from "./QuestionMonitor.vue";
 
@@ -60,11 +59,11 @@ const emit = defineEmits<{
   (e: "closed"): void;
 }>();
 
-let summaries = $ref<GameSummary[]>([]);
+const summaries = ref<GameSummary[]>([]);
 
 const refreshDelay = 5000; // milliseconds
 
-let intervalHandle: number;
+let intervalHandle: ReturnType<typeof setInterval>;
 onMounted(() => {
   intervalHandle = setInterval(fetchMonitorData, refreshDelay);
   fetchMonitorData();
@@ -73,7 +72,7 @@ onMounted(() => {
 async function fetchMonitorData() {
   const res = await controller.TrivialTeacherMonitor();
   if (res == undefined) return;
-  summaries = res.Games || [];
+  summaries.value = res.Games || [];
 }
 
 async function startTrivGame(id: RoomID) {
@@ -86,7 +85,7 @@ async function stopTrivGame(params: stopGame) {
   await controller.StopTrivialGame(params);
   await fetchMonitorData();
   // automatically close an empty monitor dialog
-  if (!summaries.length) {
+  if (!summaries.value.length) {
     onClose();
   }
 }
@@ -96,10 +95,10 @@ function onClose() {
   emit("closed");
 }
 
-let questionToMonitor = $ref<QuestionContent | null>(null);
+const questionToMonitor = ref<QuestionContent | null>(null);
 
 function showQuestion(question: QuestionContent) {
-  questionToMonitor = question;
+  questionToMonitor.value = question;
 }
 </script>
 

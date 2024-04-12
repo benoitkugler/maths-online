@@ -143,17 +143,17 @@ class TableController extends FieldController {
   }
 }
 
-class TableField extends StatefulWidget {
+class TableFieldW extends StatefulWidget {
   final Color color;
   final TableController controller;
 
-  const TableField(this.color, this.controller, {Key? key}) : super(key: key);
+  const TableFieldW(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
-  _TableFieldState createState() => _TableFieldState();
+  _TableFieldWState createState() => _TableFieldWState();
 }
 
-class _TableFieldState extends State<TableField> {
+class _TableFieldWState extends State<TableFieldW> {
   @override
   Widget build(BuildContext context) {
     final ct = widget.controller;
@@ -166,7 +166,7 @@ class _TableFieldState extends State<TableField> {
                 .map((cell) => TableCell(
                         child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: NumberField(
+                      child: NumberFieldW(
                         color,
                         cell,
                         outlined: true,
@@ -208,10 +208,14 @@ class BaseFunctionTable extends StatelessWidget {
             ]),
             ...fxRows.map((e) => TableRow(children: [
                   MathTableCell(TableCellVerticalAlignment.middle, e.key,
-                      width: 70),
+                      width: BaseFunctionTable._labelWidth(e.key)),
                   ...e.value,
                 ]))
           ]),
     );
+  }
+
+  static double _labelWidth(String label) {
+    return 24 + label.length.toDouble() * 8;
   }
 }

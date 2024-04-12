@@ -28,8 +28,9 @@ class Song {
 }
 
 class Audio {
-  /// GrooveBow, Forgive, EntreCielEtTerre
-  static const PlaylistController DefaultPlaylist = [0, 1, 2];
+  /// all songs
+  static final defaultPlaylist =
+      PlaylistController([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], true);
 
   /// [availableSongs] is the list of soundtracks available
   /// in the app.
@@ -50,18 +51,24 @@ class Audio {
     Song("Tempos.mp3", SongCategorie.guitare),
   ];
 
+  PlaylistController playlist = PlaylistController([], false);
+
   final AudioPlayer _player = AudioPlayer();
-  PlaylistController playlist = [];
+  List<int> _songs = [];
+  int _currentSong = -1;
 
   Audio();
-
-  int _currentSong = -1;
 
   /// Set the songs to play in loop, as indexes in [availableSongs].
   /// Note that is does not start playing music.
   void setSongs(PlaylistController playlist) {
-    _currentSong = -1;
     this.playlist = playlist;
+
+    _currentSong = -1;
+    _songs = playlist.songs.toList();
+    if (playlist.random) {
+      _songs.shuffle();
+    }
   }
 
   /// launch the next song in the playlist
@@ -81,14 +88,13 @@ class Audio {
   }
 
   Future<void> _startNextSong() async {
-    if (playlist.isEmpty) {
+    if (_songs.isEmpty) {
       return;
     }
 
-    _currentSong++;
+    _currentSong++; // read the next
 
-    final songName =
-        availableSongs[playlist[_currentSong % playlist.length]].path;
+    final songName = availableSongs[_songs[_currentSong % _songs.length]].path;
     await _player
         .setSourceAsset("music/$songName"); // the audio cache prefix is assets/
     await _player.setReleaseMode(ReleaseMode.stop);
@@ -101,7 +107,36 @@ class Audio {
   }
 }
 
-typedef PlaylistController = List<int>;
+class PlaylistController {
+  List<int> songs;
+  bool random;
+
+  PlaylistController(this.songs, this.random);
+
+  Map<String, dynamic> toJson() {
+    return {
+      "songs": songs,
+      "random": random,
+    };
+  }
+
+  static PlaylistController? fromJson(dynamic json) {
+    final List<int> songs;
+    final bool random;
+    // handle deprecated files
+    if (json is List) {
+      songs = json.map((e) => e as int).toList();
+      random = false;
+      return PlaylistController(songs, random);
+    } else if (json is Map) {
+      songs = (json["songs"] as List<dynamic>).map((e) => e as int).toList();
+      random = json["random"] as bool;
+      return PlaylistController(songs, random);
+    } else {
+      return null;
+    }
+  }
+}
 
 /// [Playlist] let the user choose the music
 /// he wants to play (in loop)
@@ -123,20 +158,33 @@ class _PlaylistState extends State<Playlist> {
         appBar: AppBar(
           title: const Text("Playlist"),
         ),
-        body: ListView(
-          children: List<CheckboxListTile>.generate(
-              l.length,
-              (index) => CheckboxListTile(
-                    title: Text(l[index].title),
-                    subtitle: Text(l[index].categorie.label()),
-                    selected: widget.controller.contains(index),
-                    value: widget.controller.contains(index),
-                    onChanged: (_) => setState(() {
-                      widget.controller.contains(index)
-                          ? widget.controller.remove(index)
-                          : widget.controller.add(index);
-                    }),
-                  )),
+        body: Column(
+          children: [
+            SwitchListTile(
+              title: const Text("Lecture aléatoire"),
+              value: widget.controller.random,
+              onChanged: (b) => setState(() {
+                widget.controller.random = b;
+              }),
+            ),
+            Expanded(
+              child: ListView(
+                children: List<CheckboxListTile>.generate(
+                    l.length,
+                    (index) => CheckboxListTile(
+                          title: Text(l[index].title),
+                          subtitle: Text(l[index].categorie.label()),
+                          selected: widget.controller.songs.contains(index),
+                          value: widget.controller.songs.contains(index),
+                          onChanged: (_) => setState(() {
+                            widget.controller.songs.contains(index)
+                                ? widget.controller.songs.remove(index)
+                                : widget.controller.songs.add(index);
+                          }),
+                        )),
+              ),
+            ),
+          ],
         ));
   }
 }

@@ -15,11 +15,11 @@ class _VTController {
 
   final void Function() onChange;
 
-  _VTController(FieldAPI api, int arrowLength, this.onChange)
+  _VTController(int arrowLength, this.onChange)
       : xs = List<ExpressionController>.generate(
-            arrowLength + 1, (index) => ExpressionController(api, onChange)),
+            arrowLength + 1, (index) => ExpressionController(onChange)),
         fxs = List<ExpressionController>.generate(
-            arrowLength + 1, (index) => ExpressionController(api, onChange)),
+            arrowLength + 1, (index) => ExpressionController(onChange)),
         arrows = List<bool?>.filled(arrowLength, null);
 
   void toggleArrow(int index) {
@@ -85,7 +85,6 @@ class _VTController {
 }
 
 class VariationTableController extends FieldController {
-  final FieldAPI api;
   final VariationTableFieldBlock data;
 
   // setup when selecting a length
@@ -93,11 +92,11 @@ class VariationTableController extends FieldController {
 
   int? get selectedArrowLength => ct == null ? null : ct!.arrows.length;
 
-  VariationTableController(this.api, this.data, void Function() onChange)
+  VariationTableController(this.data, void Function() onChange)
       : super(onChange);
 
   void setArrowLength(int? length) {
-    ct = length == null ? null : _VTController(api, length, onChange);
+    ct = length == null ? null : _VTController(length, onChange);
   }
 
   @override
@@ -124,18 +123,18 @@ class VariationTableController extends FieldController {
   }
 }
 
-class VariationTableField extends StatefulWidget {
+class VariationTableFieldW extends StatefulWidget {
   final Color color;
   final VariationTableController controller;
 
-  const VariationTableField(this.color, this.controller, {Key? key})
+  const VariationTableFieldW(this.color, this.controller, {Key? key})
       : super(key: key);
 
   @override
-  _VariationTableFieldState createState() => _VariationTableFieldState();
+  _VariationTableFieldWState createState() => _VariationTableFieldWState();
 }
 
-class _VariationTableFieldState extends State<VariationTableField> {
+class _VariationTableFieldWState extends State<VariationTableFieldW> {
   void _resetArrowLength() {
     setState(() {
       widget.controller.ct = null;

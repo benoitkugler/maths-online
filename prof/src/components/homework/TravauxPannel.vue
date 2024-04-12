@@ -34,9 +34,9 @@
 
 <script setup lang="ts">
 import type { HomeworksT } from "@/controller/utils";
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 import ClassroomTravaux from "./ClassroomTravaux.vue";
-import type { Sheet, SheetExt, Travail } from "@/controller/api_gen";
+import type { Int, Sheet, SheetExt, Travail } from "@/controller/api_gen";
 
 interface Props {
   homeworks: HomeworksT;
@@ -45,16 +45,16 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "create", idClassroom: number): void;
-  (e: "createWith", idSheet: number, idClassroom: number): void;
+  (e: "create", idClassroom: Int): void;
+  (e: "createWith", idSheet: Int, idClassroom: Int): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "delete", travail: Travail): void;
-  (e: "copy", travail: Travail, target: number): void;
+  (e: "copy", travail: Travail, target: Int): void;
   (e: "update", travail: Travail): void;
   (e: "editSheet", sheet: SheetExt): void;
 }>();
 
-let tab = $ref(0);
+const tab = ref(0);
 
 defineExpose({ showClassroom });
 
@@ -62,6 +62,6 @@ function showClassroom(id: number) {
   const index = props.homeworks.Travaux.findIndex(
     (cl) => cl.Classroom.id == id
   );
-  if (index != -1) tab = index;
+  if (index != -1) tab.value = index;
 }
 </script>

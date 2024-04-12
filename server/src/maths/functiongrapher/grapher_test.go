@@ -167,7 +167,7 @@ func TestBoundsFromExpression(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		gotBounds, gotFxs, gotDfxs := BoundsFromExpression(expression.FunctionExpr{Function: expr, Variable: expression.NewVar('x')}, tt.grid)
+		gotBounds, gotFxs, gotDfxs := PointsFromExpression(expression.FunctionExpr{Function: expr, Variable: expression.NewVar('x')}, tt.grid)
 		if !reflect.DeepEqual(gotBounds, tt.wantBounds) {
 			t.Errorf("BoundsFromExpression() gotBounds = %v, want %v", gotBounds, tt.wantBounds)
 		}
@@ -176,6 +176,19 @@ func TestBoundsFromExpression(t *testing.T) {
 		}
 		assertSliceApprox(t, gotDfxs, tt.wantDfxs)
 	}
+}
+
+func TestBezierPoint_bbox(t *testing.T) {
+	be := BezierCurve{
+		P0: repere.Coord{X: 1, Y: 1},
+		P1: repere.Coord{X: 1, Y: 1},
+		P2: repere.Coord{X: 1, Y: 1},
+	}
+	minx, maxx, miny, maxy := be.boundingBox()
+	assertApprox(t, minx, 1)
+	assertApprox(t, maxx, 1)
+	assertApprox(t, miny, 1)
+	assertApprox(t, maxy, 1)
 }
 
 func TestBezierCurve_toPolynomial(t *testing.T) {

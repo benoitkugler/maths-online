@@ -27,6 +27,19 @@ extension _DifficultyTagExt on DifficultyTag {
   }
 }
 
+String difficultyTagLabel(DifficultyTag v) {
+  switch (v) {
+    case DifficultyTag.diff1:
+      return "1 étoile";
+    case DifficultyTag.diff2:
+      return "2 étoiles";
+    case DifficultyTag.diff3:
+      return "3 étoiles";
+    case DifficultyTag.diffEmpty:
+      return "";
+  }
+}
+
 DifficultyTag difficultyTagFromJson(dynamic json) =>
     _DifficultyTagExt.fromValue(json as String);
 
@@ -45,6 +58,15 @@ extension _FlowExt on Flow {
   }
 }
 
+String flowLabel(Flow v) {
+  switch (v) {
+    case Flow.parallel:
+      return "Questions indépendantes";
+    case Flow.sequencial:
+      return "Questions liées";
+  }
+}
+
 Flow flowFromJson(dynamic json) => _FlowExt.fromValue(json as int);
 
 dynamic flowToJson(Flow item) => item.toValue();
@@ -53,16 +75,31 @@ dynamic flowToJson(Flow item) => item.toValue();
 typedef IdQuestion = int;
 
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Section
-enum Section { chapter, level, trivMath }
+enum Section { chapter, level, matiere, subLevel, trivMath }
 
 extension _SectionExt on Section {
-  static const _values = [2, 1, 3];
+  static const _values = [2, 1, 5, 4, 3];
   static Section fromValue(int s) {
     return Section.values[_values.indexOf(s)];
   }
 
   int toValue() {
     return _values[index];
+  }
+}
+
+String sectionLabel(Section v) {
+  switch (v) {
+    case Section.chapter:
+      return "Chapitre";
+    case Section.level:
+      return "Niveau";
+    case Section.matiere:
+      return "Matière";
+    case Section.subLevel:
+      return "Filière";
+    case Section.trivMath:
+      return "Triv'Math";
   }
 }
 

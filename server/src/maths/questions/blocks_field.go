@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	ex "github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
@@ -15,17 +15,15 @@ var (
 	_ Block = ExpressionFieldBlock{}
 	_ Block = RadioFieldBlock{}
 	_ Block = OrderedListFieldBlock{}
-	_ Block = FigurePointFieldBlock{}
-	_ Block = FigureVectorFieldBlock{}
+	_ Block = GeometricConstructionFieldBlock{}
 	_ Block = VariationTableFieldBlock{}
 	_ Block = SignTableFieldBlock{}
 	_ Block = FunctionPointsFieldBlock{}
-	_ Block = FigureVectorPairFieldBlock{}
-	_ Block = FigureAffineLineFieldBlock{}
 	_ Block = TreeFieldBlock{}
 	_ Block = TableFieldBlock{}
 	_ Block = VectorFieldBlock{}
 	_ Block = ProofFieldBlock{}
+	_ Block = SetFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -34,13 +32,13 @@ type NumberFieldBlock struct {
 	Expression string
 }
 
-func (n NumberFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (n NumberFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	answer, err := evaluateExpr(n.Expression, params)
 	return NumberFieldInstance{ID: ID, Answer: answer}, err
 }
 
-func (n NumberFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	expr, err := expression.Parse(n.Expression)
+func (n NumberFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
+	expr, err := ex.Parse(n.Expression)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +54,7 @@ type ExpressionFieldBlock struct {
 }
 
 func (f ExpressionFieldBlock) SyntaxHint(params Parameters) (TextBlock, error) {
-	answer, err := expression.ParseCompound(f.Expression)
+	answer, err := ex.ParseCompound(f.Expression)
 	if err != nil {
 		return TextBlock{}, err
 	}
@@ -68,7 +66,7 @@ func (f ExpressionFieldBlock) SyntaxHint(params Parameters) (TextBlock, error) {
 	m := params.ToMap()
 
 	const nbRepeat = 100
-	allHints := make(expression.SyntaxHints)
+	allHints := make(ex.SyntaxHints)
 	for i := 0; i < nbRepeat; i++ {
 		params, err := m.Instantiate()
 		if err != nil {
@@ -88,15 +86,15 @@ func (f ExpressionFieldBlock) SyntaxHint(params Parameters) (TextBlock, error) {
 	return out, nil
 }
 
-func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	answer, err := expression.ParseCompound(f.Expression)
+func (f ExpressionFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
+	answer, err := ex.ParseCompound(f.Expression)
 	if err != nil {
 		return nil, err
 	}
 	answer.Substitute(params)
 
 	var showFractionHelp bool
-	answerExpr, ok := answer.(*expression.Expr)
+	answerExpr, ok := answer.(*ex.Expr)
 	if ok {
 		answerExpr.DefaultSimplify() // needed for better [IsFraction] result
 		showFractionHelp = f.ShowFractionHelp && answerExpr.IsFraction()
@@ -116,8 +114,8 @@ func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (insta
 	}, nil
 }
 
-func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	expr, err := expression.ParseCompound(f.Expression)
+func (f ExpressionFieldBlock) setupValidator(*ex.RandomParameters) (validator, error) {
+	expr, err := ex.ParseCompound(f.Expression)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +124,7 @@ func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (valid
 		return nil, err
 	}
 
-	asExpr, isExpr := expr.(*expression.Expr)
+	asExpr, isExpr := expr.(*ex.Expr)
 
 	if f.ShowFractionHelp && !isExpr {
 		return nil, errors.New("L'aide aux fractions n'est utilisable que pour une expression simple.")
@@ -149,7 +147,7 @@ type RadioFieldBlock struct {
 	AsDropDown bool
 }
 
-func (rf RadioFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (rf RadioFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	ans, err := evaluateExpr(rf.Answer, params)
 	if err != nil {
 		return nil, err
@@ -173,7 +171,7 @@ func (rf RadioFieldBlock) instantiate(params expression.Vars, ID int) (instance,
 	return out, nil
 }
 
-func (rf RadioFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (rf RadioFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	for _, p := range rf.Proposals {
 		_, err := p.parse()
 		if err != nil {
@@ -181,7 +179,7 @@ func (rf RadioFieldBlock) setupValidator(params expression.RandomParameters) (va
 		}
 	}
 
-	expr, err := expression.Parse(rf.Answer)
+	expr, err := ex.Parse(rf.Answer)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +193,7 @@ type OrderedListFieldBlock struct {
 	AdditionalProposals []Interpolated
 }
 
-func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (ol OrderedListFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	out := OrderedListFieldInstance{
 		Answer:              make([]client.TextLine, len(ol.Answer)),
 		AdditionalProposals: make([]client.TextLine, len(ol.AdditionalProposals)),
@@ -225,7 +223,7 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (ins
 	return out, nil
 }
 
-func (ol OrderedListFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
+func (ol OrderedListFieldBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	_, err := ol.Label.parse()
 	if err != nil {
 		return nil, err
@@ -251,7 +249,7 @@ type CoordExpression struct {
 	X, Y string
 }
 
-func (c CoordExpression) instantiateToFloat(params expression.Vars) (repere.Coord, error) {
+func (c CoordExpression) instantiateToFloat(params ex.Vars) (repere.Coord, error) {
 	x, err := evaluateExpr(c.X, params)
 	if err != nil {
 		return repere.Coord{}, err
@@ -266,81 +264,112 @@ func (c CoordExpression) instantiateToFloat(params expression.Vars) (repere.Coor
 	}, nil
 }
 
-func (c CoordExpression) instantiate(params expression.Vars) (repere.IntCoord, error) {
+func (c CoordExpression) instantiate(params ex.Vars) (repere.IntCoord, error) {
 	out, err := c.instantiateToFloat(params)
 	return out.Round(), err
 }
 
 func (c CoordExpression) parse() (out parsedCoord, err error) {
-	out.X, err = expression.Parse(c.X)
+	out.X, err = ex.Parse(c.X)
 	if err != nil {
 		return out, err
 	}
-	out.Y, err = expression.Parse(c.Y)
+	out.Y, err = ex.Parse(c.Y)
 	if err != nil {
 		return out, err
 	}
 	return out, nil
 }
 
-type FigurePointFieldBlock struct {
-	Answer CoordExpression
-	Figure FigureBlock
-}
-
-func (fp FigurePointFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fp.Figure.instantiateF(params)
+func (fv GeometricConstructionFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
+	background, err := fv.Background.setupValidator(params)
 	if err != nil {
 		return nil, err
 	}
+
+	field, err := fv.Field.setupValidator(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return geometricConstructionValidator{field: field, background: background}, nil
+}
+
+func (fv GeometricConstructionFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
+	var (
+		out GeometricConstructionFieldInstance
+		err error
+	)
+
+	out.ID = ID
+
+	out.Field, err = fv.Field.instantiate(params)
+	if err != nil {
+		return nil, err
+	}
+
+	out.Background, err = fv.Background.instantiateFG(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+type GFPoint struct {
+	Answer CoordExpression
+}
+
+type GFVector struct {
+	Answer         CoordExpression
+	AnswerOrigin   CoordExpression // optionnal, used when MustHaveOrigin is true
+	MustHaveOrigin bool
+}
+
+type GFVectorPair struct {
+	Criterion VectorPairCriterion
+}
+
+type GFAffineLine struct {
+	Label string
+	A     string // valid expression.Expression
+	B     string // valid expression.Expression
+}
+
+func (f FigureBlock) instantiateFG(params ex.Vars) (client.FigureOrGraph, error) {
+	fig, err := f.instantiateF(params)
+	return client.FigureBlock(fig), err
+}
+
+func (f FunctionsGraphBlock) instantiateFG(params ex.Vars) (client.FigureOrGraph, error) {
+	graphs, err := f.instantiateG(params)
+	return graphs.toClientG(), err
+}
+
+func (fp GFPoint) instantiate(params ex.Vars) (geoFieldInstance, error) {
 	ans, err := fp.Answer.instantiate(params)
 	if err != nil {
 		return nil, err
 	}
-	return FigurePointFieldInstance{
-		Figure: fig.Figure,
-		Answer: ans,
-		ID:     ID,
-	}, nil
+	return gfPoint(ans), nil
 }
 
-func (fp FigurePointFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	figure, err := fp.Figure.setupValidator(params)
-	if err != nil {
-		return nil, err
-	}
-
+func (fp GFPoint) setupValidator(params *ex.RandomParameters) (validator, error) {
 	answer, err := fp.Answer.parse()
 	if err != nil {
 		return nil, err
 	}
 
-	return figurePointValidator{figure: figure, answer: answer}, nil
+	return gfPointValidator(answer), nil
 }
 
-type FigureVectorFieldBlock struct {
-	Answer CoordExpression
-
-	AnswerOrigin CoordExpression // optionnal, used when MustHaveOrigin is true
-
-	Figure FigureBlock
-
-	MustHaveOrigin bool
-}
-
-func (fv FigureVectorFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fv.Figure.instantiateF(params)
-	if err != nil {
-		return nil, err
-	}
+func (fv GFVector) instantiate(params ex.Vars) (geoFieldInstance, error) {
 	ans, err := fv.Answer.instantiate(params)
 	if err != nil {
 		return nil, err
 	}
 
-	out := FigureVectorFieldInstance{
-		ID:             ID,
-		Figure:         fig.Figure,
+	out := gfVector{
 		Answer:         ans,
 		MustHaveOrigin: fv.MustHaveOrigin,
 	}
@@ -354,18 +383,13 @@ func (fv FigureVectorFieldBlock) instantiate(params expression.Vars, ID int) (in
 	return out, nil
 }
 
-func (fp FigureVectorFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	figure, err := fp.Figure.setupValidator(params)
-	if err != nil {
-		return nil, err
-	}
-
+func (fp GFVector) setupValidator(params *ex.RandomParameters) (validator, error) {
 	answer, err := fp.Answer.parse()
 	if err != nil {
 		return nil, err
 	}
 
-	out := figureVectorValidator{figure: figure, answer: answer}
+	out := gfVectorValidator{answer: answer}
 
 	if fp.MustHaveOrigin {
 		origin, err := fp.AnswerOrigin.parse()
@@ -378,11 +402,47 @@ func (fp FigureVectorFieldBlock) setupValidator(params expression.RandomParamete
 	return out, nil
 }
 
+func (fv GFVectorPair) instantiate(params ex.Vars) (geoFieldInstance, error) {
+	return gfVectorPair(fv.Criterion), nil
+}
+
+func (fp GFVectorPair) setupValidator(params *ex.RandomParameters) (validator, error) {
+	return noOpValidator{}, nil
+}
+
+func (fa GFAffineLine) instantiate(params ex.Vars) (geoFieldInstance, error) {
+	ansA, err := evaluateExpr(fa.A, params)
+	if err != nil {
+		return nil, err
+	}
+	ansB, err := evaluateExpr(fa.B, params)
+	if err != nil {
+		return nil, err
+	}
+	return gfAffineLine{
+		Label:   fa.Label,
+		AnswerA: ansA,
+		AnswerB: int(ansB),
+	}, nil
+}
+
+func (fa GFAffineLine) setupValidator(params *ex.RandomParameters) (validator, error) {
+	a, err := ex.Parse(fa.A)
+	if err != nil {
+		return nil, err
+	}
+	b, err := ex.Parse(fa.B)
+	if err != nil {
+		return nil, err
+	}
+	return gfAffineLineValidator{a: a, b: b}, nil
+}
+
 type VariationTableFieldBlock struct {
 	Answer VariationTableBlock
 }
 
-func (vt VariationTableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (vt VariationTableFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	ans, err := vt.Answer.instantiateVT(params)
 	return VariationTableFieldInstance{
 		ID:     ID,
@@ -390,7 +450,7 @@ func (vt VariationTableFieldBlock) instantiate(params expression.Vars, ID int) (
 	}, err
 }
 
-func (fp VariationTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (fp VariationTableFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	return fp.Answer.setupValidator(params)
 }
 
@@ -398,7 +458,7 @@ type SignTableFieldBlock struct {
 	Answer SignTableBlock
 }
 
-func (vt SignTableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (vt SignTableFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	ans, err := vt.Answer.instantiateST(params)
 	return SignTableFieldInstance{
 		ID:     ID,
@@ -406,19 +466,20 @@ func (vt SignTableFieldBlock) instantiate(params expression.Vars, ID int) (insta
 	}, err
 }
 
-func (fp SignTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (fp SignTableFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	return fp.Answer.setupValidator(params)
 }
 
 type FunctionPointsFieldBlock struct {
-	Function string // valid expression.Expression
-	Label    string
-	Variable expression.Variable
-	XGrid    []string // valid expression.Expression
+	IsDiscrete bool
+	Function   string // function or sequence, valid expression.Expression
+	Label      string
+	Variable   ex.Variable
+	XGrid      []string // valid expression.Expression
 }
 
-func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fn, err := expression.Parse(fp.Function)
+func (fp FunctionPointsFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
+	fn, err := ex.Parse(fp.Function)
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +496,8 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 	sort.Ints(xGrid)
 
 	return FunctionPointsFieldInstance{
-		Function: expression.FunctionExpr{
+		IsDiscrete: fp.IsDiscrete,
+		Function: ex.FunctionExpr{
 			Function: fn,
 			Variable: fp.Variable,
 		},
@@ -446,7 +508,7 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 	}, nil
 }
 
-func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (fp FunctionPointsFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	if len(fp.XGrid) < 2 {
 		return nil, errors.New("Au moins deux valeurs pour x doivent être précisées.")
 	}
@@ -456,9 +518,9 @@ func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParame
 		err error
 	)
 
-	out.xGrid = make([]*expression.Expr, len(fp.XGrid))
+	out.xGrid = make([]*ex.Expr, len(fp.XGrid))
 	for i, x := range fp.XGrid {
-		out.xGrid[i], err = expression.Parse(x)
+		out.xGrid[i], err = ex.Parse(x)
 		if err != nil {
 			return nil, err
 		}
@@ -470,7 +532,7 @@ func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParame
 		From:     fp.XGrid[0],
 		To:       fp.XGrid[len(fp.XGrid)-1],
 	}
-	out.function, err = newFunction(fn, params)
+	out.function, err = newFunctionValidator(fn, params)
 	if err != nil {
 		return nil, err
 	}
@@ -478,75 +540,11 @@ func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParame
 	return out, nil
 }
 
-type FigureVectorPairFieldBlock struct {
-	Figure    FigureBlock
-	Criterion VectorPairCriterion
-}
-
-func (fv FigureVectorPairFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fv.Figure.instantiateF(params)
-	return FigureVectorPairFieldInstance{
-		ID:        ID,
-		Figure:    fig.Figure,
-		Criterion: fv.Criterion,
-	}, err
-}
-
-func (fp FigureVectorPairFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	return fp.Figure.setupValidator(params)
-}
-
-type FigureAffineLineFieldBlock struct {
-	Label  string
-	A      string // valid expression.Expression
-	B      string // valid expression.Expression
-	Figure FigureBlock
-}
-
-func (fa FigureAffineLineFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fa.Figure.instantiateF(params)
-	if err != nil {
-		return nil, err
-	}
-	ansA, err := evaluateExpr(fa.A, params)
-	if err != nil {
-		return nil, err
-	}
-	ansB, err := evaluateExpr(fa.B, params)
-	if err != nil {
-		return nil, err
-	}
-	return FigureAffineLineFieldInstance{
-		ID:      ID,
-		Label:   fa.Label,
-		Figure:  fig.Figure,
-		AnswerA: ansA,
-		AnswerB: int(ansB),
-	}, nil
-}
-
-func (fa FigureAffineLineFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	figure, err := fa.Figure.setupValidator(params)
-	if err != nil {
-		return nil, err
-	}
-
-	a, err := expression.Parse(fa.A)
-	if err != nil {
-		return nil, err
-	}
-	b, err := expression.Parse(fa.B)
-	if err != nil {
-		return nil, err
-	}
-	return figureAffineLineValidator{figure: figure, a: a, b: b}, nil
-}
-
 type TreeFieldBlock struct {
 	Answer TreeBlock
 }
 
-func (tf TreeFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (tf TreeFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	answer, err := tf.Answer.instantiateT(params)
 	return TreeFieldInstance{
 		ID:     ID,
@@ -554,7 +552,7 @@ func (tf TreeFieldBlock) instantiate(params expression.Vars, ID int) (instance, 
 	}, err
 }
 
-func (tf TreeFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (tf TreeFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	return tf.Answer.setupValidator(params)
 }
 
@@ -564,7 +562,7 @@ type TableFieldBlock struct {
 	Answer            [][]string // valid expression.Expression
 }
 
-func (tf TableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (tf TableFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	out := TableFieldInstance{
 		ID:                ID,
 		HorizontalHeaders: make([]client.TextOrMath, len(tf.HorizontalHeaders)),
@@ -598,7 +596,7 @@ func (tf TableFieldBlock) instantiate(params expression.Vars, ID int) (instance,
 	return out, nil
 }
 
-func (tf TableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (tf TableFieldBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	for _, cell := range tf.HorizontalHeaders {
 		if err := cell.validate(); err != nil {
 			return nil, err
@@ -610,12 +608,12 @@ func (tf TableFieldBlock) setupValidator(params expression.RandomParameters) (va
 		}
 	}
 
-	out := tableValidator{answer: make([][]*expression.Expr, len(tf.Answer))}
+	out := tableValidator{answer: make([][]*ex.Expr, len(tf.Answer))}
 	var err error
 	for i, row := range tf.Answer {
-		rowExpr := make([]*expression.Expr, len(row))
+		rowExpr := make([]*ex.Expr, len(row))
 		for j, cell := range row {
-			rowExpr[j], err = expression.Parse(cell)
+			rowExpr[j], err = ex.Parse(cell)
 			if err != nil {
 				return nil, err
 			}
@@ -634,7 +632,7 @@ type VectorFieldBlock struct {
 	DisplayColumn  bool // if true, the field are displayed in column, instead of being on the same line
 }
 
-func (v VectorFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+func (v VectorFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	ans, err := v.Answer.instantiateToFloat(params)
 	if err != nil {
 		return nil, err
@@ -649,11 +647,61 @@ func (v VectorFieldBlock) instantiate(params expression.Vars, ID int) (instance,
 	return out, nil
 }
 
-func (v VectorFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
+func (v VectorFieldBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	answer, err := v.Answer.parse()
 	if err != nil {
 		return nil, err
 	}
 
 	return vectorValidator{answer: answer}, nil
+}
+
+type SetFieldBlock struct {
+	Answer         string // expression
+	AdditionalSets []Interpolated
+}
+
+func (v SetFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
+	answer, err := ex.Parse(v.Answer)
+	if err != nil {
+		return nil, err
+	}
+	answer.Substitute(params)
+
+	setExpr, err := answer.ToBinarySet()
+	if err != nil {
+		return nil, err
+	}
+	// add the sets to the answer
+	for _, s := range v.AdditionalSets {
+		setLatex, err := s.instantiateAndMerge(params)
+		if err != nil {
+			return nil, err
+		}
+		setExpr.Sets = append(setExpr.Sets, setLatex)
+	}
+
+	// the order of the sets presented is shuffled on the client
+
+	out := SetFieldInstance{
+		ID:     ID,
+		Answer: setExpr,
+	}
+	return out, nil
+}
+
+func (v SetFieldBlock) setupValidator(*ex.RandomParameters) (validator, error) {
+	answer, err := ex.Parse(v.Answer)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, set := range v.AdditionalSets {
+		_, err := set.parse()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return setValidator{answer: answer}, nil
 }

@@ -9,10 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -20,9 +22,10 @@ import (
 )
 
 type InstantiatedQuestion struct {
-	Id       ed.IdQuestion
-	Question client.Question
-	Params   Params
+	Id         ed.IdQuestion
+	Question   client.Question
+	Difficulty ed.DifficultyTag
+	Params     Params
 }
 
 type AnswerP struct {
@@ -42,8 +45,8 @@ type VarEntry struct {
 type Params []VarEntry
 
 // NewParams serialize the given map.
-func NewParams(vars expression.Vars) []VarEntry {
-	varList := make([]VarEntry, 0, len(vars))
+func NewParams(vars expression.Vars) Params {
+	varList := make(Params, 0, len(vars))
 	for k, v := range vars {
 		varList = append(varList, VarEntry{Variable: k, Resolved: v.Serialize()})
 	}
@@ -79,9 +82,10 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 			return nil, err
 		}
 		out[index] = InstantiatedQuestion{
-			Id:       id,
-			Question: instance.ToClient(),
-			Params:   NewParams(vars),
+			Id:         id,
+			Question:   instance.ToClient(),
+			Difficulty: qu.Difficulty,
+			Params:     NewParams(vars),
 		}
 	}
 
@@ -215,7 +219,7 @@ func InstantiateWork(db *sql.DB, work WorkID, student tc.IdStudent) (Instantiate
 		return InstantiatedWork{}, err
 	}
 
-	if random, ok := loader.(randomMonoquestionData); ok && len(random.selectedQuestions) == 0 {
+	if random, ok := loader.(RandomMonoquestionData); ok && len(random.selectedQuestions) == 0 {
 		loader, err = random.selectQuestions(db, student)
 		if err != nil {
 			return InstantiatedWork{}, err
@@ -245,9 +249,10 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 		}
 
 		out[index] = InstantiatedQuestion{
-			Id:       question.Id,
-			Question: instance.ToClient(),
-			Params:   NewParams(ownVars),
+			Id:         question.Id,
+			Question:   instance.ToClient(),
+			Difficulty: question.Difficulty,
+			Params:     NewParams(ownVars),
 		}
 	}
 
@@ -266,33 +271,33 @@ type ExerciceData struct {
 }
 
 // NewExerciceData loads the given exercice and the associated questions
-func NewExerciceData(db ed.DB, id ed.IdExercice) (ExerciceData, error) {
+func NewExerciceData(db ed.DB, id ed.IdExercice) (out ExerciceData, _ error) {
 	ex, err := ed.SelectExercice(db, id)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	group, err := ed.SelectExercicegroup(db, ex.IdGroup)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, group.Id)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	chapter := tags.Tags().BySection().Chapter
 
 	links, err := ed.SelectExerciceQuestionsByIdExercices(db, id)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	links.EnsureOrder()
 
 	// load the question contents
 	dict, err := ed.SelectQuestions(db, links.IdQuestions()...)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	return ExerciceData{
 		Group:        group,
@@ -311,6 +316,8 @@ func (ex ExerciceData) Questions() []ed.Question {
 	questions := make([]ed.Question, len(ex.links))
 	for i, link := range ex.links {
 		questions[i] = ex.QuestionsMap[link.IdQuestion]
+		// copy the exercice difficulty
+		questions[i].Difficulty = ex.Exercice.Difficulty
 	}
 	return questions
 }
@@ -351,15 +358,15 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 	return out, nil
 }
 
-type monoquestionData struct {
-	params        ta.Monoquestion
-	questiongroup ed.Questiongroup
-	chapter       string
-	question      ed.Question
+type MonoquestionData struct {
+	params   ta.Monoquestion
+	Group    ed.Questiongroup
+	chapter  string
+	question ed.Question
 }
 
 // newMonoquestionData loads the given Monoquestion and the associated question
-func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, err error) {
+func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out MonoquestionData, err error) {
 	out.params, err = ta.SelectMonoquestion(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -370,12 +377,12 @@ func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, 
 		return out, utils.SQLError(err)
 	}
 
-	out.questiongroup, err = ed.SelectQuestiongroup(db, out.question.IdGroup.ID)
+	out.Group, err = ed.SelectQuestiongroup(db, out.question.IdGroup.ID)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroup.Id)
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.Group.Id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -384,12 +391,12 @@ func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, 
 	return out, nil
 }
 
-func (data monoquestionData) Title() string   { return data.questiongroup.Title }
-func (monoquestionData) flow() ed.Flow        { return ed.Parallel }
-func (data monoquestionData) Chapter() string { return data.chapter }
+func (data MonoquestionData) Title() string   { return data.Group.Title }
+func (MonoquestionData) flow() ed.Flow        { return ed.Parallel }
+func (data MonoquestionData) Chapter() string { return data.chapter }
 
 // Questions returns the generated list of questions
-func (data monoquestionData) Questions() []ed.Question {
+func (data MonoquestionData) Questions() []ed.Question {
 	questions := make([]ed.Question, data.params.NbRepeat)
 	// repeat the question
 	for i := range questions {
@@ -398,7 +405,7 @@ func (data monoquestionData) Questions() []ed.Question {
 	return questions
 }
 
-func (data monoquestionData) Bareme() TaskBareme {
+func (data MonoquestionData) Bareme() TaskBareme {
 	baremes := make([]int, data.params.NbRepeat)
 	// repeat the question
 	for i := range baremes {
@@ -407,7 +414,7 @@ func (data monoquestionData) Bareme() TaskBareme {
 	return baremes
 }
 
-func (data monoquestionData) Instantiate() (InstantiatedWork, error) {
+func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
 	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromMono(data.params.Id),
@@ -424,10 +431,10 @@ func (data monoquestionData) Instantiate() (InstantiatedWork, error) {
 	return out, nil
 }
 
-type randomMonoquestionData struct {
-	params        ta.RandomMonoquestion
-	questiongroup ed.Questiongroup
-	chapter       string
+type RandomMonoquestionData struct {
+	params  ta.RandomMonoquestion
+	Group   ed.Questiongroup
+	chapter string
 
 	// with length params.NbRepeat, or empty before
 	// instanciation
@@ -436,18 +443,18 @@ type randomMonoquestionData struct {
 
 // `selectedQuestions` may be empty if the student has not instanciated this task yet
 // See also [selectQuestions]
-func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.IdStudent) (out randomMonoquestionData, err error) {
+func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.IdStudent) (out RandomMonoquestionData, err error) {
 	out.params, err = ta.SelectRandomMonoquestion(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	out.questiongroup, err = ed.SelectQuestiongroup(db, out.params.IdQuestiongroup)
+	out.Group, err = ed.SelectQuestiongroup(db, out.params.IdQuestiongroup)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroup.Id)
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.Group.Id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -475,7 +482,7 @@ func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.
 
 // selectQuestions chooses the variants (with respect to the teacher settings), update the DB,
 // and returns the updated struct
-func (data randomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdStudent) (randomMonoquestionData, error) {
+func (data RandomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdStudent) (RandomMonoquestionData, error) {
 	// load all the variants
 	questions, err := ed.SelectQuestionsByIdGroups(db, data.params.IdQuestiongroup)
 	if err != nil {
@@ -501,7 +508,7 @@ func (data randomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdSt
 		links[i] = ta.RandomMonoquestionVariant{
 			IdStudent:            idStudent,
 			IdRandomMonoquestion: data.params.Id,
-			Index:                i,
+			Index:                int16(i),
 			IdQuestion:           qu.Id,
 		}
 	}
@@ -537,17 +544,21 @@ func selectVariants(nbToSelect int, among []ed.Question) []ed.Question {
 	for _, index := range perm {
 		selected = append(selected, among[index])
 	}
+
+	// sort by difficulty
+	sort.Slice(selected, func(i, j int) bool { return selected[i].Difficulty < selected[j].Difficulty })
+
 	return selected
 }
 
-func (data randomMonoquestionData) Title() string   { return data.questiongroup.Title }
-func (randomMonoquestionData) flow() ed.Flow        { return ed.Parallel }
-func (data randomMonoquestionData) Chapter() string { return data.chapter }
+func (data RandomMonoquestionData) Title() string   { return data.Group.Title }
+func (RandomMonoquestionData) flow() ed.Flow        { return ed.Parallel }
+func (data RandomMonoquestionData) Chapter() string { return data.chapter }
 
 // Questions is only valid when the student specific variants have been loaded
-func (data randomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }
+func (data RandomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }
 
-func (data randomMonoquestionData) Bareme() TaskBareme {
+func (data RandomMonoquestionData) Bareme() TaskBareme {
 	baremes := make([]int, data.params.NbRepeat)
 	// repeat the bareme
 	for i := range baremes {
@@ -556,7 +567,7 @@ func (data randomMonoquestionData) Bareme() TaskBareme {
 	return baremes
 }
 
-func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
+func (data RandomMonoquestionData) Instantiate() (InstantiatedWork, error) {
 	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromRandomMono(data.params.Id),
@@ -580,17 +591,46 @@ func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
 type EvaluateWorkIn struct {
 	ID WorkID
 
-	Answers map[int]AnswerP // by question index (not ID)
-
 	// the current progression, as send by the server,
 	// to update with the given answers
 	Progression ProgressionExt
+
+	AnswerIndex int     // new in v1.7
+	Answer      AnswerP // new in v1.7
+
+	// Deprecated
+	Answers map[int]AnswerP `gomacro:"ignore"` // by question index (not ID)
+}
+
+func (ew *EvaluateWorkIn) fillFromMap() error {
+	// client is using new API
+	if len(ew.Answers) == 0 {
+		return nil
+	}
+
+	if len(ew.Answers) != 1 {
+		return errors.New("internal error: expected only one question")
+	}
+	for k, v := range ew.Answers {
+		ew.AnswerIndex = k
+		ew.Answer = v
+	}
+	return nil
 }
 
 type EvaluateWorkOut struct {
-	Results      map[int]client.QuestionAnswersOut
 	Progression  ProgressionExt         // the updated progression
 	NewQuestions []InstantiatedQuestion // only non empty if the answer is not correct
+
+	AnswerIndex int
+	Result      client.QuestionAnswersOut
+
+	// Deprecated
+	Results map[int]client.QuestionAnswersOut `gomacro:"ignore"`
+}
+
+func (ew *EvaluateWorkOut) fillMap() {
+	ew.Results = map[int]client.QuestionAnswersOut{ew.AnswerIndex: ew.Result}
 }
 
 // Evaluate checks the answer provided for the given exercice and
@@ -616,46 +656,32 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 		return EvaluateWorkOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
 	}
 
-	updatedProgression := args.Progression // shallow copy is enough
-	results := make(map[int]client.QuestionAnswersOut)
-
-	// depending on the flow, we either evaluate only one question,
-	// or all the ones given
-	switch data.flow() {
-	case ed.Parallel: // all questions
-		for questionIndex, question := range qus {
-			if answer, hasAnswer := args.Answers[questionIndex]; hasAnswer {
-				resp, err := EvaluateQuestion(question.Enonce, answer)
-				if err != nil {
-					return EvaluateWorkOut{}, err
-				}
-
-				results[questionIndex] = resp
-				l := &updatedProgression.Questions[questionIndex]
-				*l = append(*l, resp.IsCorrect())
-			}
-		}
-	case ed.Sequencial: // only the current question
-		questionIndex := args.Progression.NextQuestion
-		if questionIndex < 0 || questionIndex >= len(qus) {
-			return EvaluateWorkOut{}, fmt.Errorf("internal error: invalid question index %d", questionIndex)
-		}
-
-		answer, has := args.Answers[questionIndex]
-		if !has {
-			return EvaluateWorkOut{}, fmt.Errorf("internal error: missing answer for %d", questionIndex)
-		}
-
-		resp, err := EvaluateQuestion(qus[questionIndex].Enonce, answer)
-		if err != nil {
-			return EvaluateWorkOut{}, err
-		}
-
-		results[questionIndex] = resp
-		l := &updatedProgression.Questions[questionIndex]
-		*l = append(*l, resp.IsCorrect())
+	// compat mode
+	if err := args.fillFromMap(); err != nil {
+		return EvaluateWorkOut{}, err
 	}
 
+	if args.AnswerIndex < 0 || args.AnswerIndex >= len(qus) {
+		return EvaluateWorkOut{}, fmt.Errorf("internal error: invalid answer index %d", args.AnswerIndex)
+	}
+
+	// depending on the flow, check question index
+	switch data.flow() {
+	case ed.Parallel: // all questions are accessible
+	case ed.Sequencial: // only the current question is accessible
+		if exp := args.Progression.NextQuestion; args.AnswerIndex != exp {
+			return EvaluateWorkOut{}, fmt.Errorf("internal error: expected answer for %d, got %d", exp, args.AnswerIndex)
+		}
+	}
+
+	resp, err := EvaluateQuestion(qus[args.AnswerIndex].Enonce, args.Answer)
+	if err != nil {
+		return EvaluateWorkOut{}, err
+	}
+
+	updatedProgression := args.Progression.Copy()
+	l := &updatedProgression.Questions[args.AnswerIndex]
+	*l = append(*l, resp.IsCorrect())
 	updatedProgression.inferNextQuestion() // update in case of success
 
 	newVersion, err := data.Instantiate()
@@ -663,5 +689,62 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 		return EvaluateWorkOut{}, err
 	}
 
-	return EvaluateWorkOut{Results: results, Progression: updatedProgression, NewQuestions: newVersion.Questions}, nil
+	out := EvaluateWorkOut{
+		AnswerIndex:  args.AnswerIndex,
+		Result:       resp,
+		Progression:  updatedProgression,
+		NewQuestions: newVersion.Questions,
+	}
+
+	// compat
+	out.fillMap()
+
+	return out, nil
+}
+
+// Ceintures variant
+
+type InstantiatedBeltQuestion struct {
+	Id       ce.IdBeltquestion
+	Question client.Question
+	Params   Params // for the evaluation
+}
+
+type BeltResult []client.QuestionAnswersOut
+
+func EvaluateBelt(db ce.DB, questions []ce.IdBeltquestion, answers []AnswerP) (BeltResult, error) {
+	if len(questions) != len(answers) {
+		return nil, fmt.Errorf("internal error: length mistmatch")
+	}
+
+	questionsSource, err := ce.SelectBeltquestions(db, questions...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make([]client.QuestionAnswersOut, len(answers))
+	for index, idQuestion := range questions {
+		answer := answers[index]
+		qu := questionsSource[idQuestion]
+		out[index], err = EvaluateQuestion(qu.Enonce, answer)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
+func (br BeltResult) Stats() (hasPassed bool, stat ce.Stat) {
+	hasPassed = true
+	for _, res := range br {
+		correct := res.IsCorrect()
+		hasPassed = hasPassed && correct
+		if correct {
+			stat.Success += 1
+		} else {
+			stat.Failure += 1
+		}
+	}
+	return
 }

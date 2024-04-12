@@ -229,10 +229,21 @@ func Test_Expression_eval(t *testing.T) {
 				NewVar('c'): NewNb(5), // AB
 			}, 3,
 		},
+		{"3! n", Vars{NewVar('n'): newNb(4)}, 24},
 		{"round(2.235; 2)", nil, 2.24},
 		{"min(2.235; 2)", nil, 2},
 		{"max(-2; 1.4; 5)", nil, 5},
 		{"(1<2) + (3>3) + (2<=1) + (4.4>=4)", nil, 2},
+		{"binom(2; 4)", nil, 6},
+		{"sum(k; 1; n; k)", Vars{NewVar('n'): newNb(10)}, 10 * 11 / 2},        // n(n+1)/2
+		{"sum(k; n; 1; k)", Vars{NewVar('n'): newNb(10)}, 10 * 11 / 2},        // n(n+1)/2
+		{"sum(k; 2; n; k)", Vars{NewVar('n'): newNb(10)}, 10*11/2 - 1},        // n(n+1)/2
+		{"sum(k; 1; n; k^2)", Vars{NewVar('n'): newNb(10)}, 10 * 11 * 21 / 6}, // n(n+1)(2n+1)/6
+		// sum with 'external' parameter
+		{"sum(k; 1; 10; k^n)", Vars{NewVar('n'): newNb(1)}, 10 * 11 / 2},     // n(n+1)/2
+		{"prod(k; 1; n; k)", Vars{NewVar('n'): newNb(5)}, 1 * 2 * 3 * 4 * 5}, // 5!
+		// https://github.com/benoitkugler/maths-online/issues/307
+		{"coeff(A;1;1)", Vars{NewVar('A'): mustParse(t, "[[1]]")}, 1},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -271,6 +282,15 @@ func TestExpression_Evaluate_err(t *testing.T) {
 		},
 		{"coeff([[1; 2];[3;4]]; 2; 10)", nil},
 		{"coeff([[1; 2];[3;4]]; 10; 1)", nil},
+		{"a_{1}", nil},
+		{"binom(1.2; 3)", nil},
+		{"binom(1; 3.2)", nil},
+		{"sum(1; a; 3; k^2)", nil},
+		{"sum(1; 1; 3; k^2)", nil},
+		{"sum(k; 1; 10; a^2)", nil},
+		{"sum(k; a; 3; k^2)", nil},
+		{"sum(k; 3; a; k^2)", nil},
+		{"sum(k; 1; n; k^2)", Vars{NewVar('n'): NewNb(1.2)}},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -330,7 +350,7 @@ func Test_isPrime(t *testing.T) {
 func TestIsDecimal(t *testing.T) {
 	atom := specialFunction{kind: randDenominator}
 	for range [200]int{} {
-		n, err := atom.eval(real{}, real{}, nil)
+		n, err := atom.eval(nil, nil, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -345,22 +365,26 @@ func TestIsDecimal(t *testing.T) {
 
 func TestExpression_Extrema(t *testing.T) {
 	tests := []struct {
-		expr string
-		from float64
-		to   float64
-		want float64
+		expr       string
+		from       float64
+		to         float64
+		want       float64
+		isDiscrete bool
 	}{
 		{
-			"x", -2, 2, 2,
+			"x", -2, 2, 2, false,
 		},
 		{
-			"cos(x)", -2, 2, 1,
+			"cos(x)", -2, 2, 1, false,
 		},
 		{
-			"exp(x)", -2, 10, math.Exp(10),
+			"exp(x)", -2, 10, math.Exp(10), false,
 		},
 		{
-			"sqrt(x)", -2, 2, -1,
+			"sqrt(x)", -2, 2, -1, false,
+		},
+		{
+			"(-1)^x + (x/2)^2", -2, 2, 2, true,
 		},
 	}
 	for _, tt := range tests {
@@ -369,7 +393,7 @@ func TestExpression_Extrema(t *testing.T) {
 			FunctionExpr: FunctionExpr{Function: expr, Variable: NewVar('x')},
 			From:         tt.from, To: tt.to,
 		}
-		if got := fn.extrema(); got != tt.want {
+		if got := fn.extrema(tt.isDiscrete); got != tt.want {
 			t.Errorf("Expression.Extrema() = %v, want %v", got, tt.want)
 		}
 	}
@@ -501,11 +525,27 @@ func TestExpr_IsFraction(t *testing.T) {
 }
 
 func TestEvalCycle(t *testing.T) {
-	// cycles may still happened after instantiation
+	// cycles may still happen after instantiation
 	// this test checks that when evaluating, they are correctly rejected
 	expr := mustParse(t, "a+1")
 	vars := Vars{NewVar('a'): newVarExpr('a')}
 	_, err := expr.Evaluate(vars)
 	tu.Assert(t, err != nil)
 	_ = err.Error()
+}
+
+func TestExpr_reduce(t *testing.T) {
+	tests := []struct {
+		expr string
+		want string
+	}{
+		{"2", "2"},
+		{"A_{2*3}", "A_{6}"},
+		{"A_{2*3 + k}", "A_{6 + k}"},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		expr.reduce()
+		tu.Assert(t, expr.String() == tt.want)
+	}
 }

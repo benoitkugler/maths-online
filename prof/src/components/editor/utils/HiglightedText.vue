@@ -11,8 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted, watch } from "vue";
 import { splitNewLines, type Token } from "./interpolated_text";
 
 type Props = {
@@ -29,7 +28,7 @@ const emit = defineEmits<{
   (e: "update:modelValue", modelValue: string): void;
 }>();
 
-let editor = $ref<HTMLDivElement | null>(null);
+const editor = ref<HTMLDivElement | null>(null);
 
 // since vue may reuse the same component but change
 // the modelValue, we have to watch for it
@@ -47,26 +46,26 @@ function textToHTML(input: string) {
   const withNewLines = splitNewLines(tokens);
 
   const rows = withNewLines
-    .map(tokens => {
-      const fullText = tokens.map(tok => tok.Content).join("");
+    .map((tokens) => {
+      const fullText = tokens.map((tok) => tok.Content).join("");
       if (!fullText.length) {
         // avoid empty lines which are not show
         return "<br/>";
       }
       return tokens
-        .map(token => `<span style="${token.Kind}">${token.Content}</span>`)
+        .map((token) => `<span style="${token.Kind}">${token.Content}</span>`)
         .join("");
     })
-    .map(line => `<div>${line}</div>`);
+    .map((line) => `<div>${line}</div>`);
 
   return rows.join("");
 }
 
 function HTMLToText() {
-  if (editor == null) return "";
-  const rows = Array.from(editor.children);
+  if (editor.value == null) return "";
+  const rows = Array.from(editor.value.children);
   const text = rows
-    .map(row =>
+    .map((row) =>
       // empty div have innerText as "\n"
       (row as HTMLElement).innerText == "\n"
         ? ""
@@ -83,16 +82,16 @@ function updateText() {
 }
 
 function updateDisplay(source: string) {
-  if (editor == null) return;
-  editor.innerHTML = textToHTML(source);
+  if (editor.value == null) return;
+  editor.value.innerHTML = textToHTML(source);
 }
 
 function caret() {
-  if (editor == null) return 0;
+  if (editor.value == null) return 0;
   const range = window.getSelection()?.getRangeAt(0);
   if (range == undefined) return 0;
   const prefix = range.cloneRange();
-  prefix.selectNodeContents(editor);
+  prefix.selectNodeContents(editor.value);
   prefix.setEnd(range.endContainer, range.endOffset);
   return prefix.toString().length;
 }
@@ -124,7 +123,7 @@ function setCaret(pos: number, parent: HTMLElement) {
 
 const tab = "    ";
 function handleTab(e: KeyboardEvent) {
-  if (editor == null) return;
+  if (editor.value == null) return;
   if (e.key === "Tab") {
     const pos = caret() + tab.length;
     const range = window.getSelection()!.getRangeAt(0);
@@ -132,18 +131,18 @@ function handleTab(e: KeyboardEvent) {
     range.insertNode(document.createTextNode(tab));
     const text = updateText();
     updateDisplay(text);
-    setCaret(pos, editor);
+    setCaret(pos, editor.value);
     e.preventDefault();
   }
 }
 
 function onKeyUp(e: KeyboardEvent) {
-  if (editor == null) return;
+  if (editor.value == null) return;
   const text = updateText();
   if (e.keyCode >= 0x30 || e.keyCode == 0x20) {
     const pos = caret();
     updateDisplay(text);
-    setCaret(pos, editor);
+    setCaret(pos, editor.value);
   }
 }
 

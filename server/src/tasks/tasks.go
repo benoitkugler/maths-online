@@ -3,6 +3,7 @@ package tasks
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
@@ -17,13 +18,37 @@ type ProgressionExt struct {
 }
 
 func NewProgressionExt(progressions ta.Progressions, nbQuestions int) (out ProgressionExt) {
+	// nbQuestions is the current number of questions in the task,
+	// but, if it as been modified after a student started it, it may be lower than
+	// the questions registrer in progressions
 	out.Questions = make([]ta.QuestionHistory, nbQuestions)
 	for _, link := range progressions {
+		if link.Index >= int16(nbQuestions) {
+			continue // the progression item is no more usable
+		}
 		out.Questions[link.Index] = link.History
 	}
 	out.inferNextQuestion()
 	return out
 }
+
+func (qh ProgressionExt) Copy() ProgressionExt {
+	return ProgressionExt{
+		NextQuestion: qh.NextQuestion,
+		Questions:    append([]ta.QuestionHistory(nil), qh.Questions...),
+	}
+}
+
+// NbTries returns the total number of tries for this progression.
+func (qh ProgressionExt) NbTries() int {
+	s := 0
+	for _, qu := range qh.Questions {
+		s += len(qu)
+	}
+	return s
+}
+
+func (qh ProgressionExt) IsComplete() bool { return qh.NextQuestion == -1 }
 
 // inferNextQuestion stores into `NextQuestion` the first question not passed by the student,
 // according to `QuestionHistory.Success`.
@@ -51,6 +76,13 @@ type TasksContents struct {
 	questiongroups ed.Questiongroups // for questions in [monoquestions] and [randomMonoquestions]
 
 	questions ed.Questions // provide exercices and monoquestions contents
+
+	// ExerciceTags stores the tags for all the exercices found in [Tasks]
+	ExerciceTags map[ed.IdExercicegroup]ed.ExercicegroupTags
+	// QuestionTags stores the tags for all the monoquestions and randomMonoquestions found in [Tasks]
+	QuestionTags map[ed.IdQuestiongroup]ed.QuestiongroupTags // for [monoquestions] and [randomMonoquestions]
+
+	selectedVariants map[teacher.IdStudent]ta.RandomMonoquestionVariants // for [randomMonoquestions], only used in [ResolveQuestions]
 }
 
 func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) {
@@ -131,6 +163,24 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		out.questions[k] = v
 	}
 
+	// load tags
+	eTags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, out.exercicegroups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.ExerciceTags = eTags.ByIdExercicegroup()
+	qTags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.QuestionTags = qTags.ByIdQuestiongroup()
+
+	tmp, err := ta.SelectRandomMonoquestionVariantsByIdRandomMonoquestions(db, randomMonoquestionIDs.Keys()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.selectedVariants = tmp.ByIdStudent()
+
 	return out, nil
 }
 
@@ -140,26 +190,32 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 	case task.IdExercice.Valid:
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
+		tags := contents.ExerciceTags[ex.IdGroup]
 		return ExerciceData{
 			Group:        contents.exercicegroups[ex.IdGroup],
 			Exercice:     ex,
 			links:        questions,
 			QuestionsMap: contents.questions,
+			chapter:      tags.Tags().BySection().Chapter,
 		}
 	case task.IdMonoquestion.Valid:
 		monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
 		question := contents.questions[monoquestion.IdQuestion]
-		return monoquestionData{
-			params:        monoquestion,
-			question:      question,
-			questiongroup: contents.questiongroups[question.IdGroup.ID],
+		tags := contents.QuestionTags[question.IdGroup.ID]
+		return MonoquestionData{
+			params:   monoquestion,
+			question: question,
+			Group:    contents.questiongroups[question.IdGroup.ID],
+			chapter:  tags.Tags().BySection().Chapter,
 		}
 	case task.IdRandomMonoquestion.Valid:
 		mono := contents.randomMonoquestions[task.IdRandomMonoquestion.ID]
+		tags := contents.QuestionTags[mono.IdQuestiongroup]
 		// for this use case, leaving [selectedQuestions] is OK
-		return randomMonoquestionData{
-			params:        mono,
-			questiongroup: contents.questiongroups[mono.IdQuestiongroup],
+		return RandomMonoquestionData{
+			params:  mono,
+			Group:   contents.questiongroups[mono.IdQuestiongroup],
+			chapter: tags.Tags().BySection().Chapter,
 		}
 	default: // should not happen (enforced by SQL constraint)
 		return nil
@@ -194,6 +250,42 @@ func (contents TasksContents) LoadProgressions(db ta.DB) (map[ta.IdTask]map[teac
 	}
 
 	return out, nil
+}
+
+// ResolveQuestions returns the question variants actually done by the student.
+// For [RandomMonoquestion]s, the student is expected to have actually started it.
+func (contents TasksContents) ResolveQuestions(idStudent teacher.IdStudent, work WorkMeta) []ed.Question {
+	switch work := work.(type) {
+	case ExerciceData:
+		return work.Questions()
+	case MonoquestionData:
+		return work.Questions()
+	case RandomMonoquestionData:
+		l := contents.selectedVariants[idStudent].ByIdRandomMonoquestion()[work.params.Id]
+		l.EnsureOrder()
+		out := make([]ed.Question, len(l))
+		for i, item := range l {
+			out[i] = contents.questions[item.IdQuestion]
+		}
+		return out
+	default:
+		panic("exhaustive switch")
+	}
+}
+
+func (contents TasksContents) OrderQuestions(work WorkMeta) []ed.Question {
+	switch work := work.(type) {
+	case ExerciceData:
+		return work.Questions()
+	case MonoquestionData:
+		return []ed.Question{work.question}
+	case RandomMonoquestionData:
+		l := contents.questions.ByGroup()[work.Group.Id]
+		sort.Slice(l, func(i, j int) bool { return l[i].Difficulty < l[j].Difficulty })
+		return l
+	default:
+		panic("exhaustive switch")
+	}
 }
 
 // updateProgression write the question results for the given progression.
@@ -231,7 +323,7 @@ func updateProgression(db *sql.DB, idStudent teacher.IdStudent, idTask ta.IdTask
 		links[i] = ta.Progression{
 			IdStudent: idStudent,
 			IdTask:    idTask,
-			Index:     i,
+			Index:     int16(i),
 			History:   qu,
 		}
 	}
@@ -259,10 +351,20 @@ type TaskProgressionHeader struct {
 	// maybe empty
 	Chapter string
 
+	// HasProgression is false if [Progression] is invalid
 	HasProgression bool
 	// empty if HasProgression is false
 	Progression  ProgressionExt
 	Mark, Bareme int // student mark / exercice total
+}
+
+// LoadTaskProgression is a convenience wrapper around [LoadTasksProgression]
+func LoadTaskProgression(db ta.DB, idStudent teacher.IdStudent, idTask ta.IdTask) (TaskProgressionHeader, error) {
+	pr, err := LoadTasksProgression(db, idStudent, []ta.IdTask{idTask})
+	if err != nil {
+		return TaskProgressionHeader{}, err
+	}
+	return pr[idTask], nil
 }
 
 // LoadTasksProgression fetches the progression of one student against

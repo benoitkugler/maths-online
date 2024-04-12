@@ -3,23 +3,49 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// Face is the face of a dice.
-enum Face { one, two, three }
+enum Face { one, two, three, four, five, six }
 
 class _DiceDots extends StatelessWidget {
-  /// returns top left offset for positionned bullets
+  /// returns top left offset for the CENTER of positionned bullets
+  /// square size = faceSize
+  /// dot size = bulletSize
   List<List<Offset>> get faces => [
-        [Offset(faceSize / 2 - bulletSize / 2, faceSize / 2 - bulletSize / 2)],
+        // one
+        [Offset(faceSize / 2, faceSize / 2)],
+        // two
         [
-          Offset(faceSize / 4 - bulletSize / 2, faceSize / 4 - bulletSize / 2),
-          Offset(faceSize * 3 / 4 - bulletSize / 2,
-              faceSize * 3 / 4 - bulletSize / 2)
+          Offset(faceSize / 4, faceSize / 4),
+          Offset(faceSize * 3 / 4, faceSize * 3 / 4)
         ],
+        // three
         [
-          Offset(faceSize / 2 - bulletSize / 2,
-              faceSize / 2 - bulletSize / 2), // center
-          Offset(faceSize / 4 - bulletSize / 2, faceSize / 4 - bulletSize / 2),
-          Offset(faceSize * 3 / 4 - bulletSize / 2,
-              faceSize * 3 / 4 - bulletSize / 2)
+          Offset(faceSize / 2, faceSize / 2), // center
+          Offset(faceSize / 4, faceSize / 4),
+          Offset(faceSize * 3 / 4, faceSize * 3 / 4)
+        ],
+        // four
+        [
+          Offset(faceSize / 4, faceSize / 4),
+          Offset(faceSize / 4, 3 * faceSize / 4),
+          Offset(3 * faceSize / 4, faceSize / 4),
+          Offset(3 * faceSize / 4, 3 * faceSize / 4),
+        ],
+        // five
+        [
+          Offset(faceSize / 2, faceSize / 2), // center
+          Offset(faceSize / 4, faceSize / 4),
+          Offset(faceSize / 4, 3 * faceSize / 4),
+          Offset(faceSize * 3 / 4, faceSize / 4),
+          Offset(faceSize * 3 / 4, 3 * faceSize / 4),
+        ],
+        // six
+        [
+          Offset(faceSize / 3, faceSize / 4),
+          Offset(faceSize / 3, faceSize * 2 / 4),
+          Offset(faceSize / 3, faceSize * 3 / 4),
+          Offset(faceSize * 2 / 3, faceSize / 4),
+          Offset(faceSize * 2 / 3, faceSize * 2 / 4),
+          Offset(faceSize * 2 / 3, faceSize * 3 / 4),
         ]
       ];
 
@@ -32,16 +58,17 @@ class _DiceDots extends StatelessWidget {
   final double faceSize;
   final Face face;
 
-  double get bulletSize => faceSize * 0.15;
-
   @override
   Widget build(BuildContext context) {
+    final bulletSize = faceSize * 0.15;
+    final halfBulletSize = bulletSize / 2;
+    final dots = faces[face.index];
     return Stack(
-      children: faces[face.index]
+      children: dots
           .map((e) => Positioned(
-                left: e.dx,
+                left: e.dx - halfBulletSize,
+                top: e.dy - halfBulletSize,
                 width: bulletSize,
-                top: e.dy,
                 height: bulletSize,
                 child: Container(
                   decoration: const BoxDecoration(
@@ -128,10 +155,9 @@ class _DiceState extends State<Dice> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // final w = AnimatedContainer(duration: duration)
     return SizedBox(
       // wrap the actual button into a box large enough to contain the animated version
-      // so thaht the layout is not shaken
+      // so that the layout is not shaken
       height: 110,
       child: Center(
         child: RawMaterialButton(

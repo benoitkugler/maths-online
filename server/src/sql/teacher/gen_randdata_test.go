@@ -12,8 +12,30 @@ func randClassroom() Classroom {
 	s.Id = randIdClassroom()
 	s.IdTeacher = randIdTeacher()
 	s.Name = randstring()
+	s.MaxRankThreshold = randint()
 
 	return s
+}
+
+func randClassroomCode() ClassroomCode {
+	var s ClassroomCode
+	s.IdClassroom = randIdClassroom()
+	s.Code = randstring()
+	s.ExpiresAt = randTime()
+
+	return s
+}
+
+func randClient() Client {
+	var s Client
+	s.Device = randstring()
+	s.Time = randtTime()
+
+	return s
+}
+
+func randClients() Clients {
+	return Clients(randSliceClient())
 }
 
 func randContact() Contact {
@@ -40,6 +62,21 @@ func randIdTeacher() IdTeacher {
 	return IdTeacher(randint64())
 }
 
+func randMatiereTag() MatiereTag {
+	choix := [...]MatiereTag{Allemand, Anglais, Autre, Espagnol, Francais, HistoireGeo, Italien, Mathematiques, PhysiqueChimie, SES, SVT}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randSliceClient() []Client {
+	l := 3 + rand.Intn(5)
+	out := make([]Client, l)
+	for i := range out {
+		out[i] = randClient()
+	}
+	return out
+}
+
 func randSliceuint8() []byte {
 	l := 3 + rand.Intn(5)
 	out := make([]byte, l)
@@ -55,9 +92,8 @@ func randStudent() Student {
 	s.Name = randstring()
 	s.Surname = randstring()
 	s.Birthday = randDate()
-	s.TrivialSuccess = randint()
-	s.IsClientAttached = randbool()
 	s.IdClassroom = randIdClassroom()
+	s.Clients = randClients()
 
 	return s
 }
@@ -70,8 +106,13 @@ func randTeacher() Teacher {
 	s.IsAdmin = randbool()
 	s.HasSimplifiedEditor = randbool()
 	s.Contact = randContact()
+	s.FavoriteMatiere = randMatiereTag()
 
 	return s
+}
+
+func randTime() Time {
+	return Time(randtTime())
 }
 
 func randbool() bool {

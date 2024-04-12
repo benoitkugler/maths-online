@@ -7,13 +7,13 @@ import (
 )
 
 func Test_matricesOperations(t *testing.T) {
-	m := RandomParameters{
+	m := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('A'): mustParse(t, "[[1;2]; [3;4]]"),
 		NewVar('B'): mustParse(t, "[[1;2]; [4;5]]"),
 		NewVar('C'): mustParse(t, "[[1;0]; [1;1]; [-1;1]]"),
 		NewVar('D'): mustParse(t, "[[2;0]; [0;5]]"),
 		NewVar('E'): mustParse(t, "[[2;x]; [0;5]]"),
-	}
+	}}
 	ops := []struct {
 		expr string
 		want matrix
@@ -33,11 +33,11 @@ func Test_matricesOperations(t *testing.T) {
 		{"-A", matrix{{newNb(-1), newNb(-2)}, {newNb(-3), newNb(-4)}}},
 		{"trans(A)", matrix{{newNb(1), newNb(3)}, {newNb(2), newNb(4)}}},
 		{"transpose(A)", matrix{{newNb(1), newNb(3)}, {newNb(2), newNb(4)}}},
-		{"inv(D)", matrix{{newNb(0.5), newNb(0)}, {newNb(0), newNb(0.2)}}},
+		{"inv(D)", matrix{{rat{1, 2}.toExpr(), newNb(0)}, {newNb(0), rat{1, 5}.toExpr()}}},
 	}
 
 	for i, op := range ops {
-		m[NewVarI('o', strconv.Itoa(i))] = mustParse(t, op.expr)
+		m.defs[NewVarI('o', strconv.Itoa(i))] = mustParse(t, op.expr)
 	}
 	vars, err := m.Instantiate()
 	if err != nil {
@@ -79,11 +79,11 @@ func Test_matricesOperations_invalid(t *testing.T) {
 	}
 
 	for _, op := range ops {
-		m := RandomParameters{
+		m := RandomParameters{defs: map[Variable]*Expr{
 			NewVar('A'): mustParse(t, "[[1;2]; [3;4]]"),
 			NewVar('B'): mustParse(t, "[[1;2]; [4;5]; [6;7]]"),
 			NewVar('C'): mustParse(t, op),
-		}
+		}}
 		_, err := m.Instantiate()
 		if err == nil {
 			t.Fatal("expected error on invalid matrix operation")
@@ -147,7 +147,7 @@ func Test_matrix_determinant(t *testing.T) {
 			t.Errorf("matrix.determinant() error = %v, wantErr %v", err, tt.wantErr)
 			return
 		}
-		if got != tt.want {
+		if got.eval() != tt.want {
 			t.Errorf("matrix.determinant() = %v, want %v", got, tt.want)
 		}
 	}
@@ -181,7 +181,7 @@ func Test_matrix_invert(t *testing.T) {
 			return
 		}
 		want, _ := newNumberMatrixFrom(mustParse(t, tt.want).atom.(matrix))
-		if !tt.wantErr && !reflect.DeepEqual(got, want) {
+		if !tt.wantErr && !reflect.DeepEqual(got.toExprMatrix(), want.toExprMatrix()) {
 			t.Errorf("matrix.invert() = %v, want %v", got, want)
 		}
 	}

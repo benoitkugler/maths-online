@@ -84,6 +84,7 @@ func TestBoardMoves(t *testing.T) {
 		{0, 1, []int{1, nbSquares - 1}},
 		{3, 1, []int{2, 4, nbSquares - 3}},
 		{2, 3, []int{5, 13, nbSquares - 1}},
+		{0, 6, []int{6, 12}},
 	}
 	for _, tt := range tests {
 		if got := Board.choices(tt.pos, tt.nbMoves).list(); !reflect.DeepEqual(got, tt.want) {

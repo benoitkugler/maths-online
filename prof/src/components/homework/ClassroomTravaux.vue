@@ -11,6 +11,18 @@
     ></classroom-notes>
   </v-dialog>
 
+  <v-dialog
+    max-width="800px"
+    :model-value="showDispensesFor != null"
+    @update:model-value="showDispensesFor = null"
+  >
+    <travail-dispenses
+      v-if="showDispensesFor != null"
+      :travail="showDispensesFor"
+      :sheet="props.sheets.get(showDispensesFor.IdSheet)!.Sheet"
+    ></travail-dispenses>
+  </v-dialog>
+
   <div class="ma-2">
     <v-row no-gutters>
       <v-col>
@@ -60,10 +72,15 @@
           @copy="(idClassroom) => emit('copy', travail, idClassroom)"
           @set-favorite="(s) => emit('setFavorite', s)"
           @edit-sheet="(s) => emit('editSheet', s)"
+          @show-dispenses="showDispensesFor = travail"
         ></travail-card>
         <v-card
           v-else
-          :color="selectedTravaux.has(travail.Id) ? 'blue' : 'grey-lighten-3'"
+          :color="
+            selectedTravaux.has(travail.Id)
+              ? 'blue-lighten-2'
+              : 'grey-lighten-3'
+          "
           @click="onToggle(travail)"
         >
           <v-card-text style="text-align: center">
@@ -90,13 +107,15 @@
 import type {
   Classroom,
   ClassroomTravaux,
+  Int,
   Sheet,
   SheetExt,
   Travail,
 } from "@/controller/api_gen";
-import { $ref } from "vue/macros";
 import ClassroomNotes from "./ClassroomNotes.vue";
 import TravailCard from "./TravailCard.vue";
+import { ref } from "vue";
+import TravailDispenses from "./TravailDispenses.vue";
 
 interface Props {
   classroom: ClassroomTravaux;
@@ -110,31 +129,35 @@ const emit = defineEmits<{
   (e: "create"): void;
   (e: "update", travail: Travail): void;
   (e: "delete", travail: Travail): void;
-  (e: "copy", travail: Travail, idClassroom: number): void;
+  (e: "copy", travail: Travail, idClassroom: Int): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "editSheet", sheet: SheetExt): void;
 }>();
 
-let inSelect = $ref(false);
-let selectedTravaux = $ref<Set<number>>(new Set());
+const inSelect = ref(false);
+const selectedTravaux = ref<Set<number>>(new Set());
 
-let showNotes = $ref(false);
+const showNotes = ref(false);
 
 function onToggle(tr: Travail) {
-  if (selectedTravaux.has(tr.Id)) {
-    selectedTravaux.delete(tr.Id);
+  if (selectedTravaux.value.has(tr.Id)) {
+    selectedTravaux.value.delete(tr.Id);
   } else {
-    selectedTravaux.add(tr.Id);
+    selectedTravaux.value.add(tr.Id);
   }
 }
 function onShowNotes() {
-  if (!inSelect) {
-    // start with all selected
-    selectedTravaux = new Set(props.classroom.Travaux?.map((tr) => tr.Id));
-    inSelect = true;
+  if (!inSelect.value) {
+    // start with all noted selected
+    selectedTravaux.value = new Set(
+      props.classroom.Travaux?.filter((tr) => tr.Noted).map((tr) => tr.Id)
+    );
+    inSelect.value = true;
   } else {
-    inSelect = false;
-    showNotes = true;
+    inSelect.value = false;
+    showNotes.value = true;
   }
 }
+
+const showDispensesFor = ref<Travail | null>(null);
 </script>

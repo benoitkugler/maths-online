@@ -1,6 +1,7 @@
 package homework
 
 import (
+	"database/sql"
 	"sort"
 	"time"
 
@@ -37,6 +38,9 @@ type Travail struct {
 	// passed the Deadline, the sheet notations may not be modified anymore.
 	// Else, this field is ignored
 	Deadline Time
+
+	// Pospone the access for students to this work
+	ShowAfter Time
 }
 
 // Sheet is a list of exercices.
@@ -56,6 +60,10 @@ type Sheet struct {
 	// Anonymous [Sheet]s are deleted when the [Travail] is,
 	// and are not shown in the favorites sheets panel.
 	Anonymous OptionalIdTravail `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Travail"`
+
+	Public bool // only true for admin account
+
+	Matiere teacher.MatiereTag // tag to classify by expected topic, ignored on anonymous sheets
 }
 
 // gomacro:SQL ADD PRIMARY KEY (IdSheet, Index)
@@ -70,4 +78,22 @@ type SheetTask struct {
 // EnsureOrder enforce the slice order indicated by `Index`
 func (l SheetTasks) EnsureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+// TravailException is a link table storing per student
+// settings for a [Travail]
+//
+// gomacro:SQL ADD UNIQUE(IdStudent, IdTravail)
+// gomacro:SQL _SELECT KEY(IdStudent, IdTravail)
+type TravailException struct {
+	IdStudent teacher.IdStudent `gomacro-sql-on-delete:"CASCADE"`
+	IdTravail IdTravail         `gomacro-sql-on-delete:"CASCADE"`
+
+	// [Deadline] is an optionnal deadline overriding the one
+	// setup in the related [Travail].
+	Deadline sql.NullTime
+
+	// [IgnoreForMark] may be set to true to ignore this mark
+	// when displaying the average.
+	IgnoreForMark bool
 }

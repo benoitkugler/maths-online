@@ -11,224 +11,252 @@ class QuoteData {
   bool get isEmpty => content.isEmpty && comment.isEmpty && author.isEmpty;
 }
 
-const _quotes = [
-  QuoteData(
+final _quotes = [
+  const QuoteData(
     "Je ne perds jamais : soit je gagne, soit j'apprends.",
     "",
     "Nelson Mandela",
   ),
-  QuoteData(
+  const QuoteData(
     "Le bonheur n'est pas d'avoir tout ce que l'on désire mais d'apprécier ce que l'on a.",
     "",
     "Paulo Coelho",
   ),
-  QuoteData(
+  const QuoteData(
     "La vie mettra des pierres sur ta route. A toi de décider d'en faire des murs ou des ponts.",
     "",
     "Coluche",
   ),
-  QuoteData(
+  const QuoteData(
     "Un cœur prompt à la colère est en grand danger",
     "Ne t'énerve pas si vite !",
     "Ménandre",
   ),
-  QuoteData(
+  const QuoteData(
       "On ne peut faire saigner un cœur sans en être éclaboussé.",
       "Ne crois pas que les crasses faites à l'autre ne t'atteignent pas aussi !",
       "Paul Masson"),
-  QuoteData("Apprendre par cœur est bien, apprendre par le cœur est mieux.",
-      "Apprendre par cœur c'est bien, comprendre c'est mieux !", "Paul Masson"),
-  QuoteData(
+  const QuoteData(
+      "Apprendre par cœur est bien, apprendre par le cœur est mieux.",
+      "Apprendre par cœur c'est bien, comprendre c'est mieux !",
+      "Paul Masson"),
+  const QuoteData(
       "Que de sottises du cœur viennent de sa fatigue !",
       "Il vaut donc mieux se taire que de penser ou dire dans ces conditions !",
       "Anne Barratin"),
-  QuoteData(
+  const QuoteData(
     "Le coeur fait tout, le reste est inutile.",
     "",
     "Jean de la Fontaine",
   ),
-  QuoteData(
+  const QuoteData(
     "Qu'est-ce qui rempli tout le coeur ? L'amour.",
     "",
     "Victor Hugo",
   ),
-  QuoteData(
+  const QuoteData(
     "La chute n'est pas un échec. L'échec, c'est de rester là où l'on est tombé.",
     "",
     "Socrate",
   ),
-  QuoteData(
+  const QuoteData(
     "Les mots peuvent être mortels... fais-en bon usage !",
     "",
     "Jean Chalon",
   ),
-  QuoteData(
+  const QuoteData(
       "Les mots peuvent blesser un cœur, tuer un rêve, briser une relation : veille sur ta bouche !",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "On dit souvent de prendre son mal en patience. Et si on prenait son bien en urgence ?",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "Ne laisse pas le monde changer ton sourire mais laisse ton sourire changer le monde !",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "Si tu vis par les compliments des gens tu mourras par leurs critiques.",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "Sois la raison pour laquelle quelqu'un sourit aujourd'hui :)", "", ""),
-  QuoteData(
+  const QuoteData(
       "Le processus de ton coeur compte plus que la finalité de tes projets.",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "Je ne cherche pas à être qui j’étais avant, je cherche à exprimer qui je suis maintenant !",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "L’erreur c’est de croire que l’on a besoin de rien et de se satisfaire d’une vie sans lendemain.",
       "",
       ""),
-  QuoteData("Qu’importe, l’aube poindra.", "", ""),
-  QuoteData("Choisir c'est renoncer.", "", ""),
-  QuoteData(
+  const QuoteData("Qu’importe, l’aube poindra.", "", ""),
+  const QuoteData("Choisir c'est renoncer.", "", ""),
+  const QuoteData(
       "Autrui fait de moi ce que je suis... parfois ce que je ne suis pas…",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "Le problème n'est pas d'être têtu mais de l'être pour les bonnes choses.",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "N’oublie jamais : ta vie a de la valeur, elle est précieuse…", "", ""),
-  QuoteData("Ta vie est trop précieuse pour être jetée en l’air.", "", ""),
-  QuoteData("Quelle que soit la situation, ne perds pas espoir !", "", ""),
-  QuoteData(
+  const QuoteData(
+      "Ta vie est trop précieuse pour être jetée en l’air.", "", ""),
+  const QuoteData(
+      "Quelle que soit la situation, ne perds pas espoir !", "", ""),
+  const QuoteData(
       "Ne dis jamais que tu n'as pas de valeur... tu as simplement besoin de la découvrir",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "Tout est possible, laisse toi surprendre... et si on essayait", "", ""),
-  QuoteData("Etre en apprentissage, ce n'est pas être incompétent.", "", ""),
-  QuoteData("Sois ressourcé et fortifié !", "", ""),
-  QuoteData("Garde le cap, persévère !", "", ""),
-  QuoteData(
+  const QuoteData(
+      "Etre en apprentissage, ce n'est pas être incompétent.", "", ""),
+  const QuoteData("Sois ressourcé et fortifié !", "", ""),
+  const QuoteData("Garde le cap, persévère !", "", ""),
+  const QuoteData(
       "Ta valeur n'est pas définie par ce que tu réussis ou non !", "", ""),
-  QuoteData("Ne te fies pas à tout ce que tu penses ou ressens.", "", ""),
-  QuoteData(
+  const QuoteData("Ne te fies pas à tout ce que tu penses ou ressens.", "", ""),
+  const QuoteData(
       "Ne compte pas les choses que tu fais mais fais les choses qui comptent.",
       "",
       ""),
-  QuoteData(
+  const QuoteData(
       "On ne voit bien qu'avec le coeur. L'essentiel est invisible pour les yeux.",
       "",
       "Le petit prince"),
-  QuoteData("Il faut toute la vie pour apprendre à vivre.", "", " Sénèque"),
-  QuoteData(
+  const QuoteData(
+      "Il faut toute la vie pour apprendre à vivre.", "", " Sénèque"),
+  const QuoteData(
       "La vie n'est pas d'attendre que les orages passent, c'est d'apprendre à danser sous la pluie.",
       "",
       "Sénèque"),
-  QuoteData(
+  const QuoteData(
       "Je refuse que la peur de l'échec m'empêche de faire ce qui importe vraiment.",
       "",
       ""),
-  QuoteData("Ne comptez pas les jours, faites que chaque jour compte.", "",
-      "Muhammed Ali"),
-  QuoteData(
+  const QuoteData("Ne comptez pas les jours, faites que chaque jour compte.",
+      "", "Muhammed Ali"),
+  const QuoteData(
       "Les décisions les plus difficiles à prendre sont celles qui vous présentent des chemins au bout desquels vous ne serez plus la même personne.",
       "",
       " Nelson Mandela"),
-  QuoteData("Vis comme si tu n'avais besoin de rien de plus", "", ""),
-  QuoteData("Le manque de temps n'est rien d'autre que le manque de priorité.",
-      "", "Timothy Ferriss"),
-  QuoteData(
+  const QuoteData("Vis comme si tu n'avais besoin de rien de plus", "", ""),
+  const QuoteData(
+      "Le manque de temps n'est rien d'autre que le manque de priorité.",
+      "",
+      "Timothy Ferriss"),
+  const QuoteData(
       "La seule limite à notre épanouissement de demain sera nos doutes d'aujourd'hui.",
       "",
       "Franklin D.Roosevelt"),
-  QuoteData("Le changement est une porte qui ne s'ouvre que de l'intérieur.",
-      "", "Tom Peters"),
-  QuoteData("Le bonheur le plus doux est celui que l'on partage.", "",
+  const QuoteData(
+      "Le changement est une porte qui ne s'ouvre que de l'intérieur.",
+      "",
+      "Tom Peters"),
+  const QuoteData("Le bonheur le plus doux est celui que l'on partage.", "",
       "Jacques Delille"),
-  QuoteData("Un enseignant, un livre, un stylo, peuvent changer le monde.", "",
+  const QuoteData(
+      "Un enseignant, un livre, un stylo, peuvent changer le monde.",
+      "",
       "Malala Yousafzai"),
-  QuoteData(
+  const QuoteData(
       "Le monde déteste le changement. C'est pourtant la première chose qui lui a permis de progresser.",
       "",
       "Charles F.Kettering"),
-  QuoteData(
+  const QuoteData(
       "L'art de vivre consiste en un subtil mélange entre lâcher prise et tenir bon.",
       "",
       "Henri Lewis"),
-  QuoteData("Il est grand temps de rallumer les étoiles.", "",
+  const QuoteData("Il est grand temps de rallumer les étoiles.", "",
       "Guillaume Apollinaire"),
-  QuoteData("Changer, c'est d'abord changer de point de vue.", "",
+  const QuoteData("Changer, c'est d'abord changer de point de vue.", "",
       "Jean Bertrand Pontalis"),
-  QuoteData(
+  const QuoteData(
       "Celui qui déplace une montagne commence par déplacer de petites pierres.",
       "",
       "Confucius"),
-  QuoteData(
+  const QuoteData(
       "Attendre d'en savoir assez pour agir en toute lumière, c'est se condamner à l'inaction.",
       "",
       "Jean Rostand"),
-  QuoteData(
+  const QuoteData(
       "L'expérience ce n'est pas ce qui nous arrive, c'est ce que nous faisons avec ce qui nous arrive.",
       "",
       "Aldous Huxley"),
-  QuoteData(
+  const QuoteData(
       "Le bonheur n'est pas une destination à atteindre, c'est une manière de voyager.",
       "",
       "Margaret Lee Runbeck"),
-  QuoteData("Les mots sont plus forts que les armes.", "", "Laurent Jacqua"),
-  QuoteData(
+  const QuoteData(
+      "Les mots sont plus forts que les armes.", "", "Laurent Jacqua"),
+  const QuoteData(
       "Prendre conscience de son ignorance est un grand pas vers la connaissance.",
       "",
       "Benjamin Disraeli"),
-  QuoteData(
+  const QuoteData(
       "On aide plus un être en lui donnant de lui-même une image favorable qu'en le mettant sans cesse en face de ses défauts.",
       "",
       "Albert Camus"),
-  QuoteData(
+  const QuoteData(
       "La valeur d'un homme tient dans sa capacité à donner et non dans sa capacité à recevoir.",
       "",
       "Albert Einstein"),
-  QuoteData(
+  const QuoteData(
       "Il n'est jamais trop tard pour devenir ce que vous auriez toujours dû être.",
       "",
       "George Eliot"),
-  QuoteData("Les grands changements viennent des petites choses.", "",
+  const QuoteData("Les grands changements viennent des petites choses.", "",
       "Paulo Coelho"),
-  QuoteData(
+  const QuoteData(
       "Ne dites pas tout ce que vous pensez, mais pensez à tout ce que vous dites.",
       "",
       "Carlos Martinez Vazquez"),
-  QuoteData(
+  const QuoteData(
       "Quand un homme dit 'Je suis heureux', il veut tout bonnement dire 'J'ai des ennuis qui ne m'atteignent pas'.",
       "",
       "Jules Renard"),
-  QuoteData(
+  const QuoteData(
       "Tu ne peux pas empêcher un oiseau de voler au-dessus de ta tête. Par contre, tu peux l'empêcher d'y établir son nid.",
       "",
       "Auteur inconnu"),
-  QuoteData(
+  const QuoteData(
       "Le succès, c'est d'aller d'échec en échec sans perdre son enthousiasme.",
       "",
       "Winston Churchill"),
-  QuoteData(
+  const QuoteData(
       "Saviez-vous que le lion, lorsqu'il sort pour chasser, échoue 7 à 10 fois avant de réussir à capturer une proie ? 85% de sa vie est un échec. Alors qu'est-ce qui fait de lui un roi ? Sa persévérance.",
       "",
       ""),
-  QuoteData("Aucun de nous, en agissant seul, ne peut atteindre le succès.", "",
+  const QuoteData(
+      "Aucun de nous, en agissant seul, ne peut atteindre le succès.",
+      "",
       "Nelson Mandela"),
-  QuoteData("On est pas ici-bas pour se faire du tracas", "", ""),
+  const QuoteData("On est pas ici-bas pour se faire du tracas", "", ""),
+  const QuoteData(
+      "Ne regarde pas en arrière, ce n'est pas là que tu vas.", "", "")
 ];
 
+var _quoteIndex = 0;
+
+void initQuotes() {
+  /// to make sure we don't repeat the same quote,
+  /// we shuffle the slice at startup, and then simply
+  /// pick quotes sequencially
+  _quotes.shuffle(Random(DateTime.now().millisecondsSinceEpoch));
+  _quoteIndex = 0;
+}
+
 QuoteData pickQuote() {
-  final index = Random().nextInt(_quotes.length);
-  return _quotes[index];
+  final out = _quotes[_quoteIndex % _quotes.length];
+  _quoteIndex++;
+  return out;
 }
 
 class Quote extends StatelessWidget {

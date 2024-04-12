@@ -29,21 +29,21 @@ class StaticRepere extends StatelessWidget {
   }
 }
 
-class Tick {
+class _Tick {
   final int logical;
   final double visual;
-  const Tick(this.logical, this.visual);
+  const _Tick(this.logical, this.visual);
 }
 
-class Ticks extends Iterable<Tick> {
-  final List<Tick> ticks;
-  const Ticks(this.ticks);
+class _Ticks extends Iterable<_Tick> {
+  final List<_Tick> ticks;
+  const _Ticks(this.ticks);
 
   Iterable<double> get visual => ticks.map((e) => e.visual);
   Iterable<int> get logical => ticks.map((e) => e.logical);
 
   @override
-  Iterator<Tick> get iterator => ticks.iterator;
+  Iterator<_Tick> get iterator => ticks.iterator;
 }
 
 class RepereMetrics {
@@ -85,33 +85,33 @@ class RepereMetrics {
         (x - figure.origin.x).round(), (y - figure.origin.y).round());
   }
 
-  Ticks buildXTicks({int logicalStep = 1}) {
+  _Ticks _buildXTicks({int logicalStep = 1}) {
     final xOrigin = figure.origin.x.ceil();
     final firstLogical = -xOrigin ~/ logicalStep * logicalStep;
-    final ticks = <Tick>[];
+    final ticks = <_Tick>[];
     for (var i = 0;
         firstLogical + i + xOrigin <= figure.width;
         i += logicalStep) {
       final logical = IntCoord(firstLogical + i, 0);
       final offset = logicalIntToVisual(logical);
-      ticks.add(Tick(firstLogical + i, offset.dx));
+      ticks.add(_Tick(firstLogical + i, offset.dx));
     }
-    return Ticks(ticks);
+    return _Ticks(ticks);
   }
 
-  Ticks buildYTicks({int logicalStep = 1}) {
+  _Ticks _buildYTicks({int logicalStep = 1}) {
     final yOrigin = figure.origin.y.ceil();
     final firstLogical = -yOrigin ~/ logicalStep * logicalStep;
-    final ticks = <Tick>[];
+    final ticks = <_Tick>[];
 
     for (var i = 0;
         firstLogical + i + yOrigin <= figure.height;
         i += logicalStep) {
       final logical = IntCoord(0, firstLogical + i);
       final offset = logicalIntToVisual(logical);
-      ticks.add(Tick(firstLogical + i, offset.dy));
+      ticks.add(_Tick(firstLogical + i, offset.dy));
     }
-    return Ticks(ticks);
+    return _Ticks(ticks);
   }
 }
 
@@ -216,9 +216,14 @@ class _PositionnedTextW extends StatelessWidget {
       child: CustomSingleChildLayout(
         delegate: _PosSingleChildLayoutDelegate(metrics, text.pos.pos),
         child: Container(
-          color: Colors.white.withOpacity(0.85),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+            border: Border.all(width: 1.0, color: Colors.white),
+            color: Colors.white.withOpacity(0.8),
+          ),
           padding: const EdgeInsets.all(1),
-          child: textMath(text.text, TextStyle(color: text.color)),
+          child:
+              textMath(text.text, TextStyle(color: text.color, fontSize: 16)),
         ),
       ),
     );
@@ -319,7 +324,7 @@ class _AxisPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black
+      ..color = Colors.black87
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -355,10 +360,10 @@ class _GridPainter extends CustomPainter {
     final minorPaint = Paint()
       ..color =
           isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
-    for (var x in metrics.buildXTicks().visual) {
+    for (var x in metrics._buildXTicks().visual) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), minorPaint);
     }
-    for (var y in metrics.buildYTicks().visual) {
+    for (var y in metrics._buildYTicks().visual) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), minorPaint);
     }
 
@@ -369,7 +374,7 @@ class _GridPainter extends CustomPainter {
           isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
     final shortTickPaint = Paint()..strokeWidth = 1;
     final visualOrigin = metrics.logicalIntToVisual(const IntCoord(0, 0));
-    for (var xTick in metrics.buildXTicks(logicalStep: 5)) {
+    for (var xTick in metrics._buildXTicks(logicalStep: 5)) {
       final x = xTick.visual;
       canvas.drawLine(
           Offset(x, 0), Offset(x, size.height), majorGridPaint); // major grid
@@ -387,7 +392,7 @@ class _GridPainter extends CustomPainter {
           "${xTick.logical}",
           color: Colors.black);
     }
-    for (var yTick in metrics.buildYTicks(logicalStep: 5)) {
+    for (var yTick in metrics._buildYTicks(logicalStep: 5)) {
       final y = yTick.visual;
       canvas.drawLine(
           Offset(0, y), Offset(size.width, y), majorGridPaint); // major grid
@@ -495,7 +500,11 @@ Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   return c == null ? onEmpty : Color(c);
 }
 
-class DrawingsPainter extends CustomPainter {
+abstract class CustomPainterText extends CustomPainter {
+  List<PositionnedText> extractTexts();
+}
+
+class DrawingsPainter extends CustomPainterText {
   final RepereMetrics metrics;
   final Drawings drawings;
 
@@ -505,6 +514,7 @@ class DrawingsPainter extends CustomPainter {
   /// various items of [drawings], so that they can be rendered
   /// as LaTeX
   /// The painter itself then ignore text information.
+  @override
   List<PositionnedText> extractTexts() {
     final List<PositionnedText> out = [];
 

@@ -1,20 +1,24 @@
 <template>
-  <v-sheet
-    :class="
-      (isActive ? 'bg-blue-lighten-2' : 'bg-blue-lighten-4') +
-      '  rounded pt-0 mx-1'
-    "
-    :style="{ height: isActive ? '20px' : '20px' }"
+  <div
     @dragover="onDragOver"
     @dragleave="isActive = false"
     @drop="onDrop"
-  ></v-sheet>
+    class="py-3"
+  >
+    <v-sheet
+      :class="
+        (isActive ? 'bg-blue-lighten-2' : 'bg-blue-lighten-5') +
+        '  rounded mx-1'
+      "
+      style="height: 8px"
+    ></v-sheet>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
-let isActive = $ref(false);
+const isActive = ref(false);
 
 const emit = defineEmits<{
   (e: "drop", origin: number): void;
@@ -29,6 +33,6 @@ function onDrop(ev: DragEvent) {
 
 function onDragOver(ev: DragEvent) {
   ev.preventDefault();
-  isActive = true;
+  isActive.value = true;
 }
 </script>

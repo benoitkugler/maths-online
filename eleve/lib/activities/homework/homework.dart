@@ -1,15 +1,14 @@
 import 'dart:convert';
 
-import 'package:eleve/activities/homework/progression_bar.dart';
 import 'package:eleve/activities/homework/sheet.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/shared/activity_start.dart';
+import 'package:eleve/shared/animated_logo.dart';
 import 'package:eleve/shared/errors.dart';
+import 'package:eleve/shared/progression_bar.dart';
 import 'package:eleve/shared/settings_shared.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
@@ -23,7 +22,7 @@ extension on SheetProgression {
   Set<String> chapters() => tasks.map((e) => e.chapter).toSet();
 }
 
-abstract class HomeworkAPI extends FieldAPI {
+abstract class HomeworkAPI {
   Future<Sheets> loadSheets(bool loadNonNoted);
   Future<InstantiatedWork> loadWork(IdTask id);
   Future<StudentEvaluateTaskOut> evaluateExercice(
@@ -37,17 +36,12 @@ class ServerHomeworkAPI implements HomeworkAPI {
   const ServerHomeworkAPI(this.buildMode, this.studentID);
 
   @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) {
-    return ServerFieldAPI(buildMode).checkExpressionSyntax(expression);
-  }
-
-  @override
   Future<Sheets> loadSheets(loadNonNoted) async {
     final serverEndpoint = loadNonNoted
         ? "/api/student/homework/sheets/free"
         : "/api/student/homework/sheets";
-    final uri = Uri.parse(
-        buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID}));
+    final uri =
+        buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID});
     final resp = await http.get(uri);
     return listSheetProgressionFromJson(checkServerError(resp.body));
   }
@@ -55,8 +49,8 @@ class ServerHomeworkAPI implements HomeworkAPI {
   @override
   Future<InstantiatedWork> loadWork(IdTask idTask) async {
     const serverEndpoint = "/api/student/homework/task/instantiate";
-    final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
-        query: {studentIDKey: studentID, "id": idTask.toString()}));
+    final uri = buildMode.serverURL(serverEndpoint,
+        query: {studentIDKey: studentID, "id": idTask.toString()});
     final resp = await http.get(uri);
     return instantiatedWorkFromJson(checkServerError(resp.body));
   }
@@ -65,7 +59,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
   Future<StudentEvaluateTaskOut> evaluateExercice(
       IdTask idTask, IdTravail idTravail, EvaluateWorkIn ex) async {
     const serverEndpoint = "/api/student/homework/task/evaluate";
-    final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
+    final uri = buildMode.serverURL(serverEndpoint);
     final resp = await http.post(uri,
         body: jsonEncode(studentEvaluateTaskInToJson(
             StudentEvaluateTaskIn(studentID, idTask, ex, idTravail))),
@@ -78,7 +72,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
   @override
   Future<void> resetTask(IdTravail idTravail, IdTask idTask) async {
     const serverEndpoint = "/api/student/homework/task/reset";
-    final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
+    final uri = buildMode.serverURL(serverEndpoint);
     final resp = await http.post(uri,
         body: jsonEncode(studentResetTaskInToJson(
             StudentResetTaskIn(studentID, idTravail, idTask))),
@@ -104,7 +98,7 @@ class HomeworkDisabled extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(8.0),
             child: Text(
-              "Cette activité n'est pas disponible, car tu n'es pas inscris sur une classe.",
+              "Cette activité n'est pas disponible car tu n'es pas inscrit dans une classe.",
               style: TextStyle(fontSize: 16),
             ),
           ),
@@ -149,10 +143,10 @@ class HomeworkStart extends StatelessWidget {
 /// activity.
 class _HomeworkW extends StatefulWidget {
   final HomeworkAPI api;
-  final bool isNonNoted;
+  final bool isNotNoted;
 
   /// Creates a new [_HomeworkW] widget
-  const _HomeworkW(this.api, this.isNonNoted, {Key? key}) : super(key: key);
+  const _HomeworkW(this.api, this.isNotNoted, {Key? key}) : super(key: key);
 
   @override
   State<_HomeworkW> createState() => _HomeworkWState();
@@ -163,42 +157,40 @@ class _HomeworkWState extends State<_HomeworkW> {
 
   @override
   void initState() {
-    sheets = widget.api.loadSheets(widget.isNonNoted);
+    sheets = widget.api.loadSheets(widget.isNotNoted);
     super.initState();
   }
 
   @override
   void didUpdateWidget(covariant _HomeworkW oldWidget) {
-    sheets = widget.api.loadSheets(widget.isNonNoted);
+    sheets = widget.api.loadSheets(widget.isNotNoted);
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isNonNoted
-            ? "Travaux d'entrainement"
-            : "Devoirs à la maison"),
-      ),
-      body: FutureBuilder<Sheets>(
+    return FutureBuilder<Sheets>(
         future: sheets,
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-                child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ErrorBar(
-                  "Impossible de charger le travail à faire.", snapshot.error!),
-            ));
-          } else if (snapshot.hasData) {
-            return _SheetList(widget.api, widget.isNonNoted, snapshot.data!);
-          } else {
-            return const _Loading();
+          if (!snapshot.hasError && snapshot.hasData) {
+            return _SheetListView(
+                widget.api, widget.isNotNoted, snapshot.data!);
           }
-        },
-      ),
-    );
+          return Scaffold(
+            appBar: AppBar(
+                title: Text(widget.isNotNoted
+                    ? "Travaux d'entrainement"
+                    : "Devoirs à la maison")),
+            body: snapshot.hasError
+                ? Center(
+                    child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ErrorBar("Impossible de charger le travail à faire.",
+                        snapshot.error!),
+                  ))
+                : const _Loading(),
+          );
+        });
   }
 }
 
@@ -217,25 +209,61 @@ class _Loading extends StatelessWidget {
   }
 }
 
-class _SheetList extends StatefulWidget {
+class _SheetListView extends StatefulWidget {
   final HomeworkAPI api;
   final bool isNotNoted;
   final Sheets initialSheets;
 
-  const _SheetList(this.api, this.isNotNoted, this.initialSheets, {Key? key})
+  const _SheetListView(this.api, this.isNotNoted, this.initialSheets,
+      {Key? key})
       : super(key: key);
 
   @override
-  State<_SheetList> createState() => _SheetListState();
+  State<_SheetListView> createState() => _SheetListViewState();
 }
 
-class _SheetListState extends State<_SheetList> {
+class _SheetListViewState extends State<_SheetListView> {
   late final Sheets sheets;
 
   @override
   void initState() {
     sheets = widget.initialSheets;
     super.initState();
+  }
+
+  double get averageMark {
+    double total = 0;
+    int nbSheets = 0;
+    for (var sheet in sheets) {
+      if (sheet.sheet.ignoreForMark) continue; // the student has a dispense
+      final ma = sheetMark(sheet.tasks);
+      nbSheets += 1;
+      total += 20.0 * ma.mark.toDouble() / ma.bareme; // convert to 20
+    }
+    if (nbSheets == 0) return 0;
+    return total / nbSheets;
+  }
+
+  void _showNotedSheetAverage() {
+    showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 8,
+            shadowColor: Colors.white,
+            title: const Text("Moyenne"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: AnimatedLogo(averageMark / 20)),
+                const SizedBox(height: 20),
+                Text("${averageMark.toStringAsFixed(1)} / 20",
+                    style: Theme.of(context).textTheme.headlineSmall)
+              ],
+            )));
   }
 
   bool updateMark(SheetMarkNotification notif) {
@@ -259,18 +287,31 @@ class _SheetListState extends State<_SheetList> {
 
   @override
   Widget build(BuildContext context) {
-    if (sheets.isEmpty) {
-      return Center(
-          child: Text(widget.isNotNoted
-              ? "Aucun exercice n'est disponible en accès libre."
-              : "Aucun travail à la maison n'est planifié."));
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4),
-      child: widget.isNotNoted
-          ? _FreeSheetList(sheets, onSelectSheet)
-          : _NotedSheetList(sheets, onSelectSheet),
-    );
+    return Scaffold(
+        appBar: AppBar(
+            title: Text(widget.isNotNoted
+                ? "Travaux d'entrainement"
+                : "Devoirs à la maison"),
+            actions: widget.isNotNoted
+                ? []
+                : [
+                    IconButton(
+                      onPressed: _showNotedSheetAverage,
+                      icon: const Icon(Icons.pie_chart),
+                    )
+                  ]),
+        body: sheets.isEmpty
+            ? Center(
+                child: Text(widget.isNotNoted
+                    ? "Aucun exercice n'est disponible en accès libre."
+                    : "Aucun travail à la maison n'est planifié."))
+            : Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4),
+                child: widget.isNotNoted
+                    ? _FreeSheetList(sheets, onSelectSheet)
+                    : _NotedSheetList(sheets, onSelectSheet),
+              ));
   }
 }
 
@@ -336,6 +377,17 @@ class _FreeSheetList extends StatefulWidget {
     return out;
   }
 
+  static double progressionRatio(List<SheetProgression> group) {
+    int totalMark = 0;
+    int totalBareme = 0;
+    for (var sheet in group) {
+      final ma = sheetMark(sheet.tasks);
+      totalMark += ma.mark;
+      totalBareme += ma.bareme;
+    }
+    return totalMark.toDouble() / totalBareme;
+  }
+
   @override
   State<_FreeSheetList> createState() => __FreeSheetListState();
 }
@@ -379,7 +431,7 @@ class __FreeSheetListState extends State<_FreeSheetList> {
           dividerColor: Colors.lightBlue.withOpacity(0.8),
           expandedHeaderPadding: const EdgeInsets.all(6),
           children: List.generate(widget._groups.length, (index) {
-            final e = widget._groups[index];
+            final group = widget._groups[index];
             return ExpansionPanel(
                 backgroundColor: Colors.transparent,
                 canTapOnHeader: true,
@@ -389,21 +441,32 @@ class __FreeSheetListState extends State<_FreeSheetList> {
                     child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
-                              child: Text(e.key.isEmpty ? "Non classé" : e.key,
+                              child: Text(
+                                  group.key.isEmpty ? "Non classé" : group.key,
                                   style:
                                       Theme.of(context).textTheme.titleMedium),
                             ),
-                            Chip(
-                              label: Text("${e.value.length}"),
-                              visualDensity: const VisualDensity(vertical: -2),
-                            ),
+                            const SizedBox(width: 4),
+                            isExpanded
+                                ? SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: AnimatedLogo(
+                                        _FreeSheetList.progressionRatio(
+                                            group.value)))
+                                : Chip(
+                                    label: Text("${group.value.length}"),
+                                    visualDensity:
+                                        const VisualDensity(vertical: -2),
+                                  ),
                           ],
                         ))),
                 body: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: e.value
+                  children: group.value
                       .map((e) => InkWell(
                             onTap: () => widget.onTap(e),
                             child: _SheetSummary(
@@ -432,7 +495,9 @@ class _SheetSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ma = sheetMark(sheet.tasks);
+
     final hasNotation = sheet.sheet.noted;
+    final total = sheet.tasks.length;
     final started = sheet.tasks.where((ex) => ex.hasProgression).length;
     final completed = sheet.tasks
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
@@ -473,16 +538,20 @@ class _SheetSummary extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ProgressionBar(
-                        total: sheet.tasks.length,
-                        completed: completed,
-                        started: started),
+                    child: ProgressionBar(background: Colors.grey, layers: [
+                      ProgressionLayer(started.toDouble() / total,
+                          Colors.yellow.shade200, true),
+                      ProgressionLayer(completed.toDouble() / total,
+                          Colors.lightGreenAccent, false),
+                    ]),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
-                  child: Text(
-                      "${hasNotation ? 'Note' : 'Score'} : ${ma.mark} / ${ma.bareme}"),
+                  child: sheet.sheet.ignoreForMark
+                      ? const Text("Note ignorée")
+                      : Text(
+                          "${hasNotation ? 'Note' : 'Score'} : ${(20 * ma.mark / ma.bareme).toStringAsFixed(1)} / 20"),
                 ),
               ])
           ],

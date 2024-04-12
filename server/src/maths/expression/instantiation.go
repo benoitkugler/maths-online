@@ -38,6 +38,53 @@ func (irv ErrInvalidRandomParameters) Error() string {
 	return fmt.Sprintf("%s -> %s", irv.Cause, irv.Detail)
 }
 
+// instantiate intrinsics and merge them to the regular definitions
+func (rv RandomParameters) consumeIntrinsics(dst Vars) error {
+	for _, spe := range rv.specials {
+		err := spe.instantiateTo(dst)
+		if err != nil {
+			return err
+		}
+	}
+	for k, v := range rv.defs {
+		dst[k] = v
+	}
+	return nil
+}
+
+type Instantiater struct {
+	origin RandomParameters
+
+	ctx resolver
+}
+
+func NewInstantiater(rv RandomParameters) *Instantiater {
+	return &Instantiater{
+		origin: rv,
+		ctx:    *newParamsInstantiater(),
+	}
+}
+
+func (inst *Instantiater) Reset() {
+	for k := range inst.ctx.defs {
+		delete(inst.ctx.defs, k)
+	}
+	for k := range inst.ctx.seen {
+		delete(inst.ctx.seen, k)
+	}
+	for k := range inst.ctx.results {
+		delete(inst.ctx.results, k)
+	}
+}
+
+func (inst *Instantiater) Instantiate() (Vars, error) {
+	err := inst.origin.consumeIntrinsics(inst.ctx.defs)
+	if err != nil {
+		return nil, err
+	}
+	return inst.ctx.instantiateAll()
+}
+
 // Instantiate generates a random version of the variables, resolving possible dependencies.
 //
 // The general idea is to replace known variables by their expression (recursively)
@@ -51,40 +98,53 @@ func (irv ErrInvalidRandomParameters) Error() string {
 //
 // See `Validate` to statistically check for invalid parameters.
 func (rv RandomParameters) Instantiate() (Vars, error) {
-	resolver := &paramsInstantiater{
-		defs:    rv,
-		seen:    make(map[Variable]bool),
-		results: make(map[Variable]*Expr),
-	}
-
-	out := make(Vars, len(rv))
-	for v := range rv {
-		resolver.currentVariable = v
-		value, err := resolver.instantiate(v) // this triggers the evaluation of the expression
-		if err != nil {
-			return nil, err
-		}
-		out[v] = value
-	}
-
-	return out, nil
+	inst := NewInstantiater(rv)
+	return inst.Instantiate()
 }
 
-type paramsInstantiater struct {
-	defs RandomParameters
+type resolver struct {
+	defs Vars
 
-	seen    map[Variable]bool  // variable that we are currently resolving
-	results map[Variable]*Expr // resulting values being built
+	// in sum or prod, this will temporary override any definition in defs
+	tmpVariable Variable
+	tmpValue    Expr
+
+	seen    map[Variable]bool // variable that we are currently resolving
+	results Vars              // resulting values being built
 
 	// the top level variable being resolved,
 	// or zero if are recursing in the tree
 	currentVariable Variable
 }
 
+func newParamsInstantiater() *resolver {
+	return &resolver{
+		defs:    make(Vars),
+		seen:    make(map[Variable]bool),
+		results: make(Vars),
+	}
+}
+
+func (ctx *resolver) instantiateAll() (Vars, error) {
+	for v := range ctx.defs {
+		ctx.currentVariable = v
+		_, err := ctx.instantiate(v) // this triggers the evaluation of the expression
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ctx.results, nil
+}
+
 // instantiate instantiate the given variable [v], and its dependencies
 // if [v] is not defined, it returns an error
-func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
-	// first, check if it has already been resolved by side effect
+func (rvv *resolver) instantiate(v Variable) (*Expr, error) {
+	// check the special temporary variable
+	if v == rvv.tmpVariable {
+		return &rvv.tmpValue, nil
+	}
+
+	// first, check if it has already been resolved by side effect or special functions
 	if expr, has := rvv.results[v]; has {
 		return expr, nil
 	}
@@ -95,6 +155,11 @@ func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
 			Cause:  v,
 			Detail: fmt.Sprintf("%s n'est pas définie", v),
 		}
+	}
+
+	// accept zero cycle by returning a free variable
+	if expr.isZeroCycle(v) {
+		return NewVarExpr(v), nil
 	}
 
 	// avoid invalid cycles
@@ -125,37 +190,6 @@ func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
 	return value, nil
 }
 
-func (rvv *paramsInstantiater) resolve(v Variable) (real, error) {
-	expr, err := rvv.instantiate(v)
-	if err != nil {
-		return real{}, err
-	}
-	return expr.evalReal(rvv)
-}
-
-func (expr *Expr) tryEval(ctx *paramsInstantiater) *Expr {
-	if mat, ok := expr.atom.(matrix); ok {
-		out := make(matrix, len(mat))
-		for i, row := range mat {
-			out[i] = make([]*Expr, len(row))
-			for j := range row {
-				v, err := mat[i][j].evalReal(ctx)
-				if err == nil {
-					out[i][j] = v.toExpr()
-				} else {
-					out[i][j] = mat[i][j]
-				}
-			}
-		}
-		return &Expr{atom: out}
-	}
-	v, err := expr.evalReal(ctx)
-	if err == nil {
-		return v.toExpr()
-	}
-	return expr
-}
-
 // we allow zero length cycles so that f = randSymbol(f ; g ; h) is valid
 // note that such cycle will be invalid if used in evaluation
 // (see Evaluate)
@@ -169,7 +203,7 @@ func (expr *Expr) isZeroCycle(currentVariable Variable) bool {
 // instantiate recurse through [expr], resolving defined variables
 // and trying to evaluate all expressions. When used in random selectors,
 // an error is returned on failure, but not in general
-func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
+func (expr *Expr) instantiate(ctx *resolver) (*Expr, error) {
 	if expr == nil {
 		return nil, nil
 	}
@@ -218,7 +252,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 			if err != nil {
 				return nil, err
 			}
-			return newNb(d), nil
+			return d.toExpr(), nil
 		case transposeFn:
 			mat, ok := right.atom.(matrix)
 			if !ok {
@@ -264,6 +298,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		if _, isDefined := ctx.defs[atom]; !isDefined {
 			return NewVarExpr(atom), nil
 		}
+		ctx.currentVariable = atom
 		return ctx.instantiate(atom)
 	case matrix:
 		mt, err := atom.instantiate(ctx)
@@ -277,6 +312,39 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		case randInt, randPrime, randDenominator:
 			v, err := atom.evalRat(ctx)
 			return v.toExpr(), err
+		case randMatrixInt:
+			ne, pe, min, max := atom.args[0], atom.args[1], atom.args[2], atom.args[3]
+			// evaluate the size
+			n, err := evalInt(ne, ctx)
+			if err != nil {
+				return nil, err
+			}
+			p, err := evalInt(pe, ctx)
+			if err != nil {
+				return nil, err
+			}
+			const maxMatrixSize = 100
+			if n <= 0 || n > maxMatrixSize {
+				return nil, fmt.Errorf("La taille d'une matrice doit être entre 1 et %d (%d reçu)", maxMatrixSize, n)
+			}
+			if p <= 0 || p > maxMatrixSize {
+				return nil, fmt.Errorf("La taille d'une matrice doit être entre 1 et %d (%d reçu)", maxMatrixSize, p)
+			}
+			start, end, err := startEnd(min, max, ctx)
+			if err != nil {
+				return nil, err
+			}
+			err = atom.kind.validateStartEnd(start, end, 0)
+			if err != nil {
+				return nil, err
+			}
+			out := newMatrixEmpty(n, p)
+			for i := range out {
+				for j := range out[i] {
+					out[i][j] = newRealInt(randomInt(int(start), int(end))).toExpr()
+				}
+			}
+			return &Expr{atom: out}, nil
 		case randChoice:
 			index := rand.Intn(len(atom.args))
 			choice := atom.args[index]
@@ -296,7 +364,35 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 				return choice, nil
 			}
 			return choice.instantiate(ctx)
-		case minFn, maxFn, matCoeff: // no-op, simply recurse
+		case matSet: // perform matrix op
+			mat, i, j, value := atom.args[0], atom.args[1], atom.args[2], atom.args[3]
+			mat, err := mat.instantiate(ctx) // recurse
+			if err != nil {
+				return nil, err
+			}
+			matV, ok := mat.atom.(matrix)
+			if !ok {
+				return nil, errors.New("La fonction set attend une matrice en premier argument.")
+			}
+			m, n := matV.dims()
+			// evaluate indices
+			in, err := evalIntInRange(i, ctx, 1, m)
+			if err != nil {
+				return nil, err
+			}
+			jn, err := evalIntInRange(j, ctx, 1, n)
+			if err != nil {
+				return nil, err
+			}
+			// just recurse on the value
+			value, err = value.instantiate(ctx)
+			if err != nil {
+				return nil, err
+			}
+			out := matV.copy()
+			out[in-1][jn-1] = value // adjust to computer convention
+			return &Expr{atom: out}, nil
+		case minFn, maxFn, matCoeff, binomial, sumFn, prodFn, unionFn, interFn: // no-op, simply recurse
 			inst := specialFunction{
 				kind: atom.kind,
 				args: make([]*Expr, len(atom.args)),

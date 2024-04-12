@@ -7,8 +7,17 @@ ALTER TABLE classrooms
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
+ALTER TABLE classroom_codes
+    ADD UNIQUE (Code);
+
+ALTER TABLE classroom_codes
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
+ALTER TABLE students
+    ADD CONSTRAINT Clients_gomacro CHECK (gomacro_validate_json_array_teac_Client (Clients));
 
 ALTER TABLE teachers
     ADD CONSTRAINT Contact_gomacro CHECK (gomacro_validate_json_teac_Contact (Contact));
@@ -47,6 +56,12 @@ WHERE
     /* Section.Chapter */
 ;
 
+CREATE UNIQUE INDEX QuestiongroupTag_matiere ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
+;
+
 ALTER TABLE questiongroup_tags
     ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
 
@@ -69,6 +84,12 @@ CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegr
 WHERE
     Section = 2
     /* Section.Chapter */
+;
+
+CREATE UNIQUE INDEX ExercicegroupTag_matiere ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
 ;
 
 ALTER TABLE exercicegroup_tags
@@ -153,10 +174,10 @@ ALTER TABLE random_monoquestion_variants
     ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
@@ -202,6 +223,15 @@ ALTER TABLE sheet_tasks
 
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
+
+ALTER TABLE travail_exceptions
+    ADD UNIQUE (IdStudent, IdTravail);
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdTravail) REFERENCES travails ON DELETE CASCADE;
 
 ALTER TABLE reviews
     ADD UNIQUE (Id, Kind);
@@ -263,6 +293,25 @@ ALTER TABLE review_trivials
 ALTER TABLE review_trivials
     ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
 
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD CHECK (Kind = 3
+    /* ReviewKind.KSheet */);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdSheet);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets;
+
 ALTER TABLE review_participations
     ADD UNIQUE (IdReview, IdTeacher);
 
@@ -274,4 +323,28 @@ ALTER TABLE review_participations
 
 ALTER TABLE review_participations
     ADD CONSTRAINT Comments_gomacro CHECK (gomacro_validate_json_array_revi_Comment (Comments));
+
+ALTER TABLE beltevolutions
+    ADD UNIQUE (IdStudent);
+
+ALTER TABLE beltevolutions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE beltquestions
+    ADD CHECK (Repeat > 0);
+
+ALTER TABLE beltevolutions
+    ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_12_array_11_cein_Stat (Stats));
+
+ALTER TABLE beltevolutions
+    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_12_cein_Rank (Advance));
+
+ALTER TABLE beltquestions
+    ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));
+
+ALTER TABLE beltquestions
+    ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
+
+ALTER TABLE beltquestions
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 

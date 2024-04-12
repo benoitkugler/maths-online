@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 var expressions = [...]struct {
@@ -146,6 +148,32 @@ var expressions = [...]struct {
 	{
 		" x ^ 3 ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(3)}, false,
 	},
+	{
+		" x ^ (-3) ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(-3)}, false,
+	},
+	// extended support for negative power
+	{
+		" x ^- ", nil, true,
+	},
+	{
+		" x ^-)", nil, true,
+	},
+	{
+		" x ^-(a+)", nil, true,
+	},
+	{
+		" x ^-3 ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(-3)}, false,
+	},
+	{
+		" x ^-3 + 1",
+		&Expr{atom: plus, left: &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(-3)}, right: newNb(1)}, false,
+	},
+	{
+		" x ^-(x+y) ", &Expr{atom: pow, left: newVarExpr('x'), right: &Expr{atom: minus, right: &Expr{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')}}}, false,
+	},
+	// { // = (a^n) / c
+	// 	" a ^ -2n ", &Expr{atom: div, left: &Expr{atom: pow, left: newVarExpr('a'), right: newVarExpr('n')}, right: newVarExpr('c')}, false,
+	// },
 	// operator precedence
 	{ // = (a^n) / c
 		" a ^ n / c ", &Expr{atom: div, left: &Expr{atom: pow, left: newVarExpr('a'), right: newVarExpr('n')}, right: newVarExpr('c')}, false,
@@ -211,6 +239,27 @@ var expressions = [...]struct {
 		}, false,
 	},
 	// implicit multiplication
+	{
+		"n!(n)", &Expr{
+			atom:  mult,
+			left:  &Expr{atom: factorial, left: newVarExpr('n')},
+			right: newVarExpr('n'),
+		}, false,
+	},
+	{
+		"n!n", &Expr{
+			atom:  mult,
+			left:  &Expr{atom: factorial, left: newVarExpr('n')},
+			right: newVarExpr('n'),
+		}, false,
+	},
+	{
+		"k! k!", &Expr{
+			atom:  mult,
+			left:  &Expr{atom: factorial, left: newVarExpr('k')},
+			right: &Expr{atom: factorial, left: newVarExpr('k')},
+		}, false,
+	},
 	{
 		"xln(x)", &Expr{
 			atom:  mult,
@@ -443,6 +492,13 @@ var expressions = [...]struct {
 	{"choiceFrom( x;", nil, true},
 	{"choiceFrom( x,y )", nil, true},
 	{"choiceFrom(x;y); )", nil, true},
+	// random matrix
+	{"randMatrix(1;2)", nil, true},
+	{"randMatrix()", nil, true},
+	{"randMatrix(2;3;5; 1)", &Expr{atom: specialFunction{
+		kind: randMatrixInt,
+		args: []*Expr{newNb(2), newNb(3), newNb(5), newNb(1)},
+	}}, false},
 	{
 		"2 + 3 * randInt(2; 12)", &Expr{
 			atom:  plus,
@@ -495,6 +551,30 @@ var expressions = [...]struct {
 	},
 	{"max()", nil, true},
 	{"min()", nil, true},
+	{"sum()", nil, true},
+	{"sum(1;2;3)", nil, true},
+	{"sum(1;2;3;4;5;6)", nil, true},
+	{"sum(k; 1; n; k^2)", &Expr{atom: specialFunction{kind: sumFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: pow, left: newVarExpr('k'), right: newNb(2)},
+	}}}, false},
+	{"prod()", nil, true},
+	{"prod(1;2;3)", nil, true},
+	{"prod(1;2;3;4;5;6)", nil, true},
+	{"prod(k; 1; n; k^2)", &Expr{atom: specialFunction{kind: prodFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: pow, left: newVarExpr('k'), right: newNb(2)},
+	}}}, false},
+	{"inter()", nil, true},
+	{"inter(1;2;3)", nil, true},
+	{"inter(1;2;3;4;5;6)", nil, true},
+	{"inter(k; 1; n; A_k)", &Expr{atom: specialFunction{kind: interFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: NewVarI('A', "k")},
+	}}}, false},
+	{"union()", nil, true},
+	{"union(1;2;3)", nil, true},
+	{"union(1;2;3;4;5;6)", nil, true},
+	{"union(k; 1; n; A_k)", &Expr{atom: specialFunction{kind: unionFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: NewVarI('A', "k")},
+	}}}, false},
 	// comparison
 	{"1 <", nil, true},
 	{">= 4", nil, true},
@@ -624,6 +704,31 @@ var expressions = [...]struct {
 	{
 		"coeff(A; i)", nil, true,
 	},
+	{
+		"set(A; i)", nil, true,
+	},
+	{
+		"binom(1)", nil, true,
+	},
+	{
+		"binom(1; 2 ; 3)", nil, true,
+	},
+	// real world examples
+	{ // x is a variable, not a multiplication
+		"104 + 31x11 ", nil, true,
+	},
+	// sets
+	{"\u00AC A_{i+j}", &Expr{atom: complement, right: &Expr{left: newVarExpr('A'), atom: indice{}, right: &Expr{left: newVarExpr('i'), atom: plus, right: newVarExpr('j')}}}, false},
+	{
+		"\u00AC A \u222A (B \u2229 C)", &Expr{
+			left: &Expr{
+				atom:  complement,
+				right: newVarExpr('A'),
+			},
+			atom:  union,
+			right: &Expr{left: newVarExpr('B'), atom: intersection, right: newVarExpr('C')},
+		}, false,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {
@@ -690,9 +795,9 @@ func TestVarMap_Positions(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rv := make(RandomParameters)
+		rv := make(map[Variable]bool)
 		for _, v := range tt.args {
-			rv[v] = nil
+			rv[v] = true
 		}
 
 		_, vm, err := parseBytes([]byte(tt.expr))
@@ -715,4 +820,13 @@ func TestIsInt(t *testing.T) {
 	if _, ok := IsInt(math.NaN()); ok {
 		t.Fatal()
 	}
+}
+
+func TestExtendedPower(t *testing.T) {
+	_, err := Parse("a^-2")
+	tu.AssertNoErr(t, err)
+	_, err = Parse("a^-(2+3)")
+	tu.AssertNoErr(t, err)
+	_, err = Parse("a^2.5")
+	tu.AssertNoErr(t, err)
 }

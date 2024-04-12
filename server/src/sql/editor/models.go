@@ -56,8 +56,11 @@ type Questiongroup struct {
 
 // gomacro:SQL ADD UNIQUE(IdQuestiongroup, Tag)
 // gomacro:SQL ADD CHECK(Tag = upper(Tag))
+//
+// add unique constraints :
 // gomacro:SQL CREATE UNIQUE INDEX QuestiongroupTag_level ON QuestiongroupTag (IdQuestiongroup) WHERE Section = #[Section.Level]
 // gomacro:SQL CREATE UNIQUE INDEX QuestiongroupTag_chapter ON QuestiongroupTag (IdQuestiongroup) WHERE Section = #[Section.Chapter]
+// gomacro:SQL CREATE UNIQUE INDEX QuestiongroupTag_matiere ON QuestiongroupTag (IdQuestiongroup) WHERE Section = #[Section.Matiere]
 type QuestiongroupTag struct {
 	Tag             string
 	IdQuestiongroup IdQuestiongroup `gomacro-sql-on-delete:"CASCADE"`
@@ -74,8 +77,11 @@ type Exercicegroup struct {
 
 // gomacro:SQL ADD UNIQUE(IdExercicegroup, Tag)
 // gomacro:SQL ADD CHECK(Tag = upper(Tag))
+//
+// add unique constraints :
 // gomacro:SQL CREATE UNIQUE INDEX ExercicegroupTag_level ON ExercicegroupTag (IdExercicegroup) WHERE Section = #[Section.Level]
 // gomacro:SQL CREATE UNIQUE INDEX ExercicegroupTag_chapter ON ExercicegroupTag (IdExercicegroup) WHERE Section = #[Section.Chapter]
+// gomacro:SQL CREATE UNIQUE INDEX ExercicegroupTag_matiere ON ExercicegroupTag (IdExercicegroup) WHERE Section = #[Section.Matiere]
 type ExercicegroupTag struct {
 	Tag             string
 	IdExercicegroup IdExercicegroup `gomacro-sql-on-delete:"CASCADE"`
@@ -118,7 +124,27 @@ const (
 	Level            // Niveau
 	Chapter          // Chapitre
 	TrivMath         // Triv'Math
+	SubLevel         // Filière
+	Matiere          // Matière
 )
+
+// Order return the order of 'importance' between sections.
+func (s Section) Order() uint8 {
+	switch s {
+	case Level:
+		return 1
+	case Chapter:
+		return 3
+	case TrivMath:
+		return 4
+	case SubLevel:
+		return 2
+	case Matiere:
+		return 0
+	default:
+		return 5
+	}
+}
 
 // DifficultyTag are special question tags used to indicate the
 // difficulty of one question.

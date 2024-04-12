@@ -33,20 +33,20 @@ class FunctionPointsController extends FieldController {
   }
 }
 
-class FunctionPoints extends StatefulWidget {
+class FunctionPointsW extends StatefulWidget {
   final FunctionPointsController controller;
   final TransformationController zoom;
 
-  const FunctionPoints(this.controller, this.zoom, {Key? key})
+  const FunctionPointsW(this.controller, this.zoom, {Key? key})
       : super(key: key);
 
   @override
-  State<FunctionPoints> createState() => _FunctionPointsState();
+  State<FunctionPointsW> createState() => _FunctionPointsWState();
 }
 
 typedef _PointID = int;
 
-class _FunctionPointsState extends State<FunctionPoints> {
+class _FunctionPointsWState extends State<FunctionPointsW> {
   @override
   void initState() {
     widget.zoom.addListener(onZoomUpdate);
@@ -73,7 +73,20 @@ class _FunctionPointsState extends State<FunctionPoints> {
     return Coord(xIntersec, yIntersec);
   }
 
-  List<BezierCurve> get segments {
+  List<Coord> points() {
+    final ct = widget.controller;
+    final out = <Coord>[];
+    for (var index = 0; index < ct.fxs.length; index++) {
+      final y = ct.fxs[index];
+      if (y == null) {
+        continue;
+      }
+      out.add(Coord(ct.data.xs[index].toDouble(), y.toDouble()));
+    }
+    return out;
+  }
+
+  List<BezierCurve> segments() {
     final ct = widget.controller;
     final derivatives = ct.data.dfxs;
     final List<BezierCurve> out = [];
@@ -96,10 +109,16 @@ class _FunctionPointsState extends State<FunctionPoints> {
   Widget build(BuildContext context) {
     final ct = widget.controller;
     final metrics = RepereMetrics(ct.data.bounds, context);
-    final painter = BezierCurvesPainter(metrics,
-        [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)]);
+    final decoration = FunctionDecoration(ct.data.label, "");
+    final painter = BezierCurvesPainter(
+      metrics,
+      functions:
+          ct.data.isDiscrete ? [] : [FunctionGraph(decoration, segments())],
+      sequences:
+          ct.data.isDiscrete ? [SequenceGraph(decoration, points())] : [],
+    );
     final texts = painter.extractTexts();
-    final color = widget.controller.hasError ? Colors.red : null;
+    final color = widget.controller.hasError ? Colors.red : Colors.purple;
     return NotificationListener<PointMovedNotification<_PointID>>(
       onNotification: (notification) {
         setState(() {

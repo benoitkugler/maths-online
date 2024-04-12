@@ -10,6 +10,28 @@ import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 
+extension on TaskProgressionHeader {
+  TaskProgressionHeader copyWith({
+    IdTask? id,
+    String? title,
+    String? chapter,
+    bool? hasProgression,
+    ProgressionExt? progression,
+    int? mark,
+    int? bareme,
+  }) {
+    return TaskProgressionHeader(
+      id ?? this.id,
+      title ?? this.title,
+      chapter ?? this.chapter,
+      hasProgression ?? this.hasProgression,
+      progression ?? this.progression,
+      mark ?? this.mark,
+      bareme ?? this.bareme,
+    );
+  }
+}
+
 MarkBareme sheetMark(List<TaskProgressionHeader> tasks) {
   int mark = 0;
   int bareme = 0;
@@ -25,20 +47,18 @@ class _ExerciceAPI implements ExerciceAPI {
   final IdTask idTask;
   final IdTravail idTravail;
 
-  StudentEvaluateTaskOut? lastState;
+  // last state registred on the server
+  StudentEvaluateTaskOut? lastRegistredState;
 
   _ExerciceAPI(this.api, this.idTask, this.idTravail);
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final res = await api.evaluateExercice(idTask, idTravail, params);
-    lastState = res;
+    if (res.wasProgressionRegistred) {
+      lastRegistredState = res;
+    }
     return res.ex;
-  }
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) {
-    return api.checkExpressionSyntax(expression);
   }
 }
 
@@ -55,14 +75,11 @@ class SheetMarkNotification extends Notification {
   void applyTo(List<TaskProgressionHeader> tasks) {
     final index = tasks.indexWhere((element) => element.id == idTask);
     final current = tasks[index];
-    tasks[index] = TaskProgressionHeader(
-        current.id,
-        current.title,
-        current.chapter,
-        newProgression != null,
-        newProgression ?? const ProgressionExt([], 0),
-        newMark,
-        current.bareme);
+    tasks[index] = current.copyWith(
+      hasProgression: newProgression != null,
+      progression: newProgression ?? const ProgressionExt([], 0),
+      mark: newMark,
+    );
   }
 }
 
@@ -85,7 +102,9 @@ class _SheetWState extends State<SheetW> {
     super.initState();
   }
 
-  void _startExercice(TaskProgressionHeader task) async {
+  /// if [sandbox] is true, the progression is not updated on the client
+  void _startExercice(
+      TaskProgressionHeader task, bool sandbox, DateTime? deadline) async {
     showDialog<void>(
         barrierDismissible: false,
         context: context,
@@ -105,11 +124,13 @@ class _SheetWState extends State<SheetW> {
               ),
             ));
     final instantiatedExercice = await widget.api.loadWork(task.id);
+    if (!mounted) return;
     Navigator.of(context).pop(); // remove the dialog
 
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
-    final exController = ExerciceController(studentEx, null, exeAPI);
+    final exController = ExerciceController(studentEx, null);
+
     // actually launch the exercice
 
     // TODO: for now we always show a correction (when available)
@@ -119,10 +140,13 @@ class _SheetWState extends State<SheetW> {
               exeAPI,
               exController,
               showCorrectionButtonOnFail: true,
+              noticeSandbox: sandbox,
+              deadline: deadline,
             )));
+    if (!mounted) return;
 
-    if (exeAPI.lastState != null) {
-      final state = exeAPI.lastState!;
+    if (exeAPI.lastRegistredState != null && !sandbox) {
+      final state = exeAPI.lastRegistredState!;
       final notif = SheetMarkNotification(
           widget.sheet.sheet.id, task.id, state.ex.progression, state.mark);
 
@@ -140,7 +164,7 @@ class _SheetWState extends State<SheetW> {
     try {
       await widget.api.resetTask(widget.sheet.idTravail, task.id);
     } catch (e) {
-      showError("Impossible de recommencer la taĉhe.", e, context);
+      showError("Impossible de recommencer la tâche.", e, context);
       return;
     }
     final notif =
@@ -153,13 +177,22 @@ class _SheetWState extends State<SheetW> {
     notif.dispatch(context);
   }
 
+  void _sandboxTask(TaskProgressionHeader task) async {
+    // reset the progression
+    task = task.copyWith(
+        hasProgression: false,
+        progression: const ProgressionExt([], 0),
+        mark: 0);
+    _startExercice(task, true, null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasNotation = widget.sheet.sheet.noted;
-    final isExpired =
-        hasNotation && widget.sheet.sheet.deadline.isBefore(DateTime.now());
+    final deadline = hasNotation ? widget.sheet.sheet.deadline : null;
+    final isExpired = deadline?.isBefore(DateTime.now()) ?? false;
     return Scaffold(
-      appBar: AppBar(title: const Text("Feuille de travail")),
+      appBar: AppBar(title: const Text("Contenu de la feuille")),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -178,9 +211,7 @@ class _SheetWState extends State<SheetW> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
-                    DeadlineCard(
-                        isExpired: isExpired,
-                        deadline: widget.sheet.sheet.deadline),
+                    DeadlineCard(isExpired: isExpired, deadline: deadline!),
                   ],
                 ),
               ),
@@ -198,8 +229,8 @@ class _SheetWState extends State<SheetW> {
                 child: _TaskList(
               widget.sheet.tasks,
               hasNotation,
-              (ex) => _startExercice(ex),
-              _resetTask,
+              (ex) => _startExercice(ex, isExpired, deadline),
+              hasNotation ? _sandboxTask : _resetTask,
             )),
           ],
         ),
@@ -239,17 +270,24 @@ class _TaskList extends StatelessWidget {
                     subtitle: task.chapter.isEmpty ? null : Text(task.chapter),
                     trailing: Text("${task.mark} / ${task.bareme}"),
                   ),
-                  if (!hasNotation &&
-                      getCompletion(task) == ExerciceCompletion.completed)
+                  // when the exercice is completed,
+                  // allow the student to do it again :
+                  //  - by restarting its progression for free sheets
+                  //  - in sand box mode for noted ones
+                  if (getCompletion(task) == ExerciceCompletion.completed)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: const EdgeInsets.only(right: 8.0, bottom: 4),
                           child: ElevatedButton.icon(
                               onPressed: () => onReset(task),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text("Recommencer")),
+                              icon: hasNotation
+                                  ? const Icon(Icons.assignment_add)
+                                  : const Icon(Icons.refresh),
+                              label: hasNotation
+                                  ? const Text("S'entrainer encore")
+                                  : const Text("Recommencer")),
                         )
                       ],
                     )

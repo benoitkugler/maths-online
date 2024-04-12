@@ -4,7 +4,9 @@ CREATE TABLE sheets (
     Title text NOT NULL,
     IdTeacher integer NOT NULL,
     Level text NOT NULL,
-    Anonymous integer
+    Anonymous integer,
+    Public boolean NOT NULL,
+    Matiere text CHECK (Matiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 CREATE TABLE sheet_tasks (
@@ -18,7 +20,15 @@ CREATE TABLE travails (
     IdClassroom integer NOT NULL,
     IdSheet integer NOT NULL,
     Noted boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    Deadline timestamp(0) with time zone NOT NULL,
+    ShowAfter timestamp(0) with time zone NOT NULL
+);
+
+CREATE TABLE travail_exceptions (
+    IdStudent integer NOT NULL,
+    IdTravail integer NOT NULL,
+    Deadline timestamp(0) with time zone,
+    IgnoreForMark boolean NOT NULL
 );
 
 -- constraints
@@ -51,4 +61,13 @@ ALTER TABLE sheet_tasks
 
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
+
+ALTER TABLE travail_exceptions
+    ADD UNIQUE (IdStudent, IdTravail);
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdTravail) REFERENCES travails ON DELETE CASCADE;
 

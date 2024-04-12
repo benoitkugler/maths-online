@@ -2,7 +2,6 @@ package examples
 
 import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
-	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	que "github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
@@ -14,11 +13,13 @@ var BlockList = [...]que.Block{
 		Label:           "&(x+1)^2& =",
 		ComparisonLevel: que.SimpleSubstitutions,
 	},
-	que.FigureAffineLineFieldBlock{
-		Label: "f",
-		A:     "1",
-		B:     "3",
-		Figure: que.FigureBlock{
+	que.GeometricConstructionFieldBlock{
+		Field: que.GFAffineLine{
+			Label: "f",
+			A:     "1",
+			B:     "3",
+		},
+		Background: que.FigureBlock{
 			Drawings: repere.RandomDrawings{},
 			Bounds: repere.RepereBounds{
 				Width:  10,
@@ -30,6 +31,53 @@ var BlockList = [...]que.Block{
 			},
 			ShowGrid:   true,
 			ShowOrigin: true,
+		},
+	},
+	que.GeometricConstructionFieldBlock{
+		Field: que.GFPoint{
+			Answer: que.CoordExpression{X: "2", Y: "-1"},
+		},
+		Background: que.FigureBlock{
+			Bounds: repere.RepereBounds{
+				Width:  10,
+				Height: 10,
+				Origin: repere.Coord{
+					X: 3,
+					Y: 3,
+				},
+			},
+		},
+	},
+	que.GeometricConstructionFieldBlock{
+		Field: que.GFVector{
+			Answer:         que.CoordExpression{X: "2", Y: "-1"},
+			AnswerOrigin:   que.CoordExpression{X: "2", Y: "-1"},
+			MustHaveOrigin: true,
+		},
+		Background: que.FigureBlock{
+			Bounds: repere.RepereBounds{
+				Width:  10,
+				Height: 10,
+				Origin: repere.Coord{
+					X: 3,
+					Y: 3,
+				},
+			},
+		},
+	},
+	que.GeometricConstructionFieldBlock{
+		Field: que.GFVectorPair{
+			Criterion: que.VectorColinear,
+		},
+		Background: que.FigureBlock{
+			Bounds: repere.RepereBounds{
+				Width:  10,
+				Height: 10,
+				Origin: repere.Coord{
+					X: 3,
+					Y: 3,
+				},
+			},
 		},
 	},
 	que.FigureBlock{
@@ -68,47 +116,6 @@ var BlockList = [...]que.Block{
 		ShowGrid:   true,
 		ShowOrigin: true,
 	},
-	que.FigurePointFieldBlock{
-		Figure: que.FigureBlock{
-			Bounds: repere.RepereBounds{
-				Width:  10,
-				Height: 10,
-				Origin: repere.Coord{
-					X: 3,
-					Y: 3,
-				},
-			},
-		},
-		Answer: que.CoordExpression{X: "2", Y: "-1"},
-	},
-	que.FigureVectorFieldBlock{
-		Figure: que.FigureBlock{
-			Bounds: repere.RepereBounds{
-				Width:  10,
-				Height: 10,
-				Origin: repere.Coord{
-					X: 3,
-					Y: 3,
-				},
-			},
-		},
-		Answer:         que.CoordExpression{X: "2", Y: "-1"},
-		AnswerOrigin:   que.CoordExpression{X: "2", Y: "-1"},
-		MustHaveOrigin: true,
-	},
-	que.FigureVectorPairFieldBlock{
-		Figure: que.FigureBlock{
-			Bounds: repere.RepereBounds{
-				Width:  10,
-				Height: 10,
-				Origin: repere.Coord{
-					X: 3,
-					Y: 3,
-				},
-			},
-		},
-		Criterion: que.VectorColinear,
-	},
 	que.FormulaBlock{
 		Parts: "f(x) = &2x + 1&",
 	},
@@ -116,7 +123,7 @@ var BlockList = [...]que.Block{
 		FunctionExprs: []que.FunctionDefinition{
 			{
 				Function: "x^2 - 5",
-				Decoration: functiongrapher.FunctionDecoration{
+				Decoration: que.FunctionDecoration{
 					Label: "C_g",
 					Color: "#FF0000",
 				},
@@ -125,7 +132,7 @@ var BlockList = [...]que.Block{
 			},
 			{
 				Function: "1/x",
-				Decoration: functiongrapher.FunctionDecoration{
+				Decoration: que.FunctionDecoration{
 					Label: "y = 1/x",
 					Color: "#FF00BB",
 				},
@@ -134,7 +141,7 @@ var BlockList = [...]que.Block{
 			},
 			{
 				Function: "1/x",
-				Decoration: functiongrapher.FunctionDecoration{
+				Decoration: que.FunctionDecoration{
 					Label: "y = 1/x",
 					Color: "#FF00BB",
 				},
@@ -183,7 +190,7 @@ var BlockList = [...]que.Block{
 			"1/2",
 			"3",
 		},
-		Functions: []client.FunctionSign{
+		Functions: []que.FunctionSign{
 			{
 				Label: "g",
 				FxSymbols: []client.SignSymbol{

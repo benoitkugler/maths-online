@@ -3,11 +3,11 @@
     <small v-if="props.label" class="ml-2 text-grey">{{ props.label }} </small>
     <HiglightedText
       :model-value="props.modelValue"
-      @update:model-value="(s) => emit('update:modelValue', s)"
+      @update:model-value="s => emit('update:modelValue', s)"
       :tokenizer="props.customTokenize ? props.customTokenize : defautTokenize"
       :focus-color="activeColor"
       :center="!!props.center"
-      class="mb-2"
+      :class="props.hint ? 'mb-3' : ''"
     ></HiglightedText>
     <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
   </div>
@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { colorByKind } from "@/controller/editor";
-import { TextKind } from "@/controller/loopback_gen";
+import { TextKind } from "@/controller/api_gen";
 import { computed } from "vue";
 import { defautTokenize, type Token } from "./interpolated_text";
 import HiglightedText from "./HiglightedText.vue";

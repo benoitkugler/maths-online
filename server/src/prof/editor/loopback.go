@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"github.com/benoitkugler/maths-online/server/src/prof/preview"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
 	"github.com/labstack/echo/v4"
 )
@@ -8,7 +9,7 @@ import (
 // LoopackEvaluateQuestion expects a question definition, a set of
 // random variables, an answer, and performs the evaluation.
 func (ct *Controller) LoopackEvaluateQuestion(c echo.Context) error {
-	var args LoopackEvaluateQuestionIn
+	var args preview.LoopackEvaluateQuestionIn
 
 	if err := c.Bind(&args); err != nil {
 		return err
@@ -19,7 +20,7 @@ func (ct *Controller) LoopackEvaluateQuestion(c echo.Context) error {
 		return err
 	}
 
-	out := LoopbackEvaluateQuestionOut{ans}
+	out := preview.LoopbackEvaluateQuestionOut{Answers: ans}
 
 	return c.JSON(200, out)
 }
@@ -28,7 +29,7 @@ func (ct *Controller) LoopackEvaluateQuestion(c echo.Context) error {
 // and returns the correct answer for these parameters.
 // It is shared between question and exercice loopback preview.
 func (ct *Controller) LoopbackShowQuestionAnswer(c echo.Context) error {
-	var args LoopbackShowQuestionAnswerIn
+	var args preview.LoopbackShowQuestionAnswerIn
 
 	if err := c.Bind(&args); err != nil {
 		return err
@@ -44,6 +45,6 @@ func (ct *Controller) LoopbackShowQuestionAnswer(c echo.Context) error {
 	}
 	ans := instance.CorrectAnswer()
 
-	out := LoopbackShowQuestionAnswerOut{ans}
+	out := preview.LoopbackShowQuestionAnswerOut{Answers: ans}
 	return c.JSON(200, out)
 }

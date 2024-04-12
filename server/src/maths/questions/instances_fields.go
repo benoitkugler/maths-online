@@ -3,9 +3,12 @@ package questions
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression/sets"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
@@ -28,12 +31,6 @@ type fieldInstance interface {
 
 	fieldID() int
 
-	// validateAnswerSyntax is called during editing for complex fields,
-	// to catch syntax mistake before validating the answer
-	// an error may also be returned against malicious query
-	// if non nil, the error is of type InvalidFieldAnswer
-	validateAnswerSyntax(answer client.Answer) error
-
 	// evaluateAnswer evaluate the given answer against the reference
 	// validateAnswerSyntax is assumed to have already been called on `answer`
 	// so that is has a valid format.
@@ -43,6 +40,12 @@ type fieldInstance interface {
 	// it may not always be unique, in such case the returned value
 	// is one of the possible solutions
 	correctAnswer() client.Answer
+
+	// validateAnswerSyntax is called during editing for complex fields,
+	// to catch syntax mistake before validating the answer
+	// an error may also be returned against malicious query
+	// if non nil, the error is of type InvalidFieldAnswer
+	validateAnswerSyntax(answer client.Answer) error
 }
 
 var (
@@ -51,13 +54,10 @@ var (
 	_ fieldInstance = RadioFieldInstance{}
 	_ fieldInstance = DropDownFieldInstance{}
 	_ fieldInstance = OrderedListFieldInstance{}
-	_ fieldInstance = FigurePointFieldInstance{}
-	_ fieldInstance = FigureVectorFieldInstance{}
+	_ fieldInstance = GeometricConstructionFieldInstance{}
 	_ fieldInstance = VariationTableFieldInstance{}
 	_ fieldInstance = SignTableFieldInstance{}
 	_ fieldInstance = FunctionPointsFieldInstance{}
-	_ fieldInstance = FigureVectorPairFieldInstance{}
-	_ fieldInstance = FigureAffineLineFieldInstance{}
 	_ fieldInstance = TreeFieldInstance{}
 	_ fieldInstance = ProofFieldInstance{}
 	_ fieldInstance = TableFieldInstance{}
@@ -119,7 +119,9 @@ type ExpressionFieldInstance struct {
 
 func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
-func (f ExpressionFieldInstance) sizeHint() int { return len([]rune(f.Answer.String())) }
+// add some random padding to avoid leaking to much info about
+// the correct answer
+func (f ExpressionFieldInstance) sizeHint() int { return len([]rune(f.Answer.String())) + rand.Intn(3) }
 
 func (f ExpressionFieldInstance) toClient() client.Block {
 	out := client.ExpressionFieldBlock{
@@ -354,64 +356,97 @@ func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
 	return client.OrderedListAnswer{Indices: answer}
 }
 
-type FigurePointFieldInstance struct {
-	Figure repere.Figure
-	Answer repere.IntCoord
-	ID     int
+type GeometricConstructionFieldInstance struct {
+	ID         int
+	Field      geoFieldInstance
+	Background client.FigureOrGraph
 }
 
-func (f FigurePointFieldInstance) fieldID() int { return f.ID }
+func (f GeometricConstructionFieldInstance) fieldID() int { return f.ID }
 
-func (f FigurePointFieldInstance) toClient() client.Block {
-	return client.FigurePointFieldBlock{Figure: f.Figure, ID: f.ID}
+func (f GeometricConstructionFieldInstance) toClient() client.Block {
+	return client.GeometricConstructionFieldBlock{
+		ID:         f.ID,
+		Field:      f.Field.toClient(),
+		Background: f.Background,
+	}
 }
 
-func (f FigurePointFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.PointAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected PointAnswer, got %T", answer),
+func (f GeometricConstructionFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	switch f.Field.(type) {
+	case gfPoint:
+		_, ok := answer.(client.PointAnswer)
+		if !ok {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("expected PointAnswer, got %T", answer),
+			}
+		}
+	case gfVector, gfAffineLine:
+		_, ok := answer.(client.DoublePointAnswer)
+		if !ok {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
+			}
+		}
+	case gfVectorPair:
+		_, ok := answer.(client.DoublePointPairAnswer)
+		if !ok {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
+			}
 		}
 	}
 	return nil
 }
 
-func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	return f.Answer == answer.(client.PointAnswer).Point
+func (f GeometricConstructionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return f.Field.evaluateAnswer(answer)
 }
 
-func (f FigurePointFieldInstance) correctAnswer() client.Answer {
-	return client.PointAnswer{Point: f.Answer}
+func (f GeometricConstructionFieldInstance) correctAnswer() client.Answer {
+	bounds := f.Background.FigBounds()
+	return f.Field.correctAnswer(bounds)
 }
 
-type FigureVectorFieldInstance struct {
-	Figure repere.Figure
+type geoFieldInstance interface {
+	// evaluateAnswer evaluate the given answer against the reference
+	// validateAnswerSyntax is assumed to have already been called on `answer`
+	// so that is has a valid format.
+	evaluateAnswer(answer client.Answer) (isCorrect bool)
+
+	// correctAnswer returns the expected answer for this field
+	// it may not always be unique, in such case the returned value
+	// is one of the possible solutions
+	correctAnswer(repere.RepereBounds) client.Answer
+
+	toClient() client.GeoField
+}
+
+type gfPoint repere.IntCoord
+
+func (f gfPoint) toClient() client.GeoField { return client.GFPoint{} }
+
+func (f gfPoint) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return repere.IntCoord(f) == answer.(client.PointAnswer).Point
+}
+
+func (f gfPoint) correctAnswer(repere.RepereBounds) client.Answer {
+	return client.PointAnswer{Point: repere.IntCoord(f)}
+}
+
+type gfVector struct {
 	Answer repere.IntCoord
 	// It true, the vector must be anchored at `AnswerOrigin`
 	MustHaveOrigin bool
 	AnswerOrigin   repere.IntCoord
-	ID             int
 }
 
-func (f FigureVectorFieldInstance) fieldID() int { return f.ID }
+func (f gfVector) toClient() client.GeoField { return client.GFVector{} }
 
-func (f FigureVectorFieldInstance) toClient() client.Block {
-	return client.FigureVectorFieldBlock{Figure: f.Figure, ID: f.ID}
-}
-
-func (f FigureVectorFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.DoublePointAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
-		}
-	}
-	return nil
-}
-
-func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+func (f gfVector) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointAnswer)
 	vector := repere.IntCoord{
 		X: ans.To.X - ans.From.X,
@@ -424,7 +459,7 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 	return f.Answer == vector
 }
 
-func (f FigureVectorFieldInstance) correctAnswer() client.Answer {
+func (f gfVector) correctAnswer(repere.RepereBounds) client.Answer {
 	to := repere.IntCoord{
 		X: f.AnswerOrigin.X + f.Answer.X,
 		Y: f.AnswerOrigin.Y + f.Answer.Y,
@@ -432,34 +467,19 @@ func (f FigureVectorFieldInstance) correctAnswer() client.Answer {
 	return client.DoublePointAnswer{From: f.AnswerOrigin, To: to}
 }
 
-type FigureAffineLineFieldInstance struct {
-	Label   string        // of the expected affine function
-	Figure  repere.Figure // usually empty, but set width and height
-	ID      int
+type gfAffineLine struct {
+	Label   string // of the expected affine function
 	AnswerA float64
 	AnswerB int
 }
 
-func (f FigureAffineLineFieldInstance) fieldID() int { return f.ID }
-
-func (f FigureAffineLineFieldInstance) toClient() client.Block {
-	return client.FigureVectorFieldBlock{Figure: f.Figure, ID: f.ID, AsLine: true, LineLabel: f.Label}
+func (f gfAffineLine) toClient() client.GeoField {
+	return client.GFVector{AsLine: true, LineLabel: f.Label}
 }
 
-func (f FigureAffineLineFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.DoublePointAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
-		}
-	}
-	return nil
-}
+func (f gfAffineLine) isAnswerVertical() bool { return math.IsInf(f.AnswerA, 0) }
 
-func (f FigureAffineLineFieldInstance) isAnswerVertical() bool { return math.IsInf(f.AnswerA, 0) }
-
-func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+func (f gfAffineLine) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointAnswer)
 
 	if f.isAnswerVertical() {
@@ -471,8 +491,8 @@ func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isC
 	return f.AnswerA == a && f.AnswerB == b
 }
 
-func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
-	origin := f.Figure.Bounds.Origin.Round()
+func (f gfAffineLine) correctAnswer(bounds repere.RepereBounds) client.Answer {
+	origin := bounds.Origin.Round()
 
 	if f.isAnswerVertical() { // vertical line
 		return client.DoublePointAnswer{
@@ -483,7 +503,7 @@ func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
 
 	// try to get an integer point
 	x := -origin.X
-	for ; x < f.Figure.Bounds.Width-origin.X; x++ {
+	for ; x < bounds.Width-origin.X; x++ {
 		y := f.AnswerA * float64(x)
 		if math.Trunc(y) == y {
 			break
@@ -495,30 +515,11 @@ func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
 	}
 }
 
-type FigureVectorPairFieldInstance struct {
-	Figure    repere.Figure
-	ID        int
-	Criterion VectorPairCriterion
-}
+type gfVectorPair VectorPairCriterion
 
-func (f FigureVectorPairFieldInstance) fieldID() int { return f.ID }
+func (f gfVectorPair) toClient() client.GeoField { return client.GFVectorPair{} }
 
-func (f FigureVectorPairFieldInstance) toClient() client.Block {
-	return client.FigureVectorPairFieldBlock{Figure: f.Figure, ID: f.ID}
-}
-
-func (f FigureVectorPairFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.DoublePointPairAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
-		}
-	}
-	return nil
-}
-
-func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+func (f gfVectorPair) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointPairAnswer)
 	vector1 := repere.IntCoord{
 		X: ans.To1.X - ans.From1.X,
@@ -528,7 +529,7 @@ func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isC
 		X: ans.To2.X - ans.From2.X,
 		Y: ans.To2.Y - ans.From2.Y,
 	}
-	switch f.Criterion {
+	switch VectorPairCriterion(f) {
 	case VectorEquals:
 		return vector1 == vector2
 	case VectorColinear: // check if det(v1, v2) = 0
@@ -540,8 +541,8 @@ func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isC
 	}
 }
 
-func (f FigureVectorPairFieldInstance) correctAnswer() client.Answer {
-	switch f.Criterion {
+func (f gfVectorPair) correctAnswer(repere.RepereBounds) client.Answer {
+	switch VectorPairCriterion(f) {
 	case VectorEquals:
 		return client.DoublePointPairAnswer{
 			From1: repere.IntCoord{X: 0, Y: 0},
@@ -576,12 +577,18 @@ type VariationTableFieldInstance struct {
 func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 
 // lengthProposals returns randomized proposals around the correct value `L`
+// the returned value is truely random, but contains L
 func lengthProposals(L int) []int {
 	var tmp []int
 
-	rd := utils.NewDeterministicRand([]byte{byte(L)})
+	seed := time.Now().Unix()
+	rd := rand.New(rand.NewSource(seed))
 	if L <= 1 {
-		tmp = []int{L, L + 1}
+		if rd.Intn(2) == 1 {
+			tmp = []int{L, L + 1}
+		} else {
+			tmp = []int{L, L + 1, L + 2}
+		}
 	} else {
 		tmp = []int{L - 1, L, L + 1}
 		// add some random noise to prevent the
@@ -593,7 +600,7 @@ func lengthProposals(L int) []int {
 		}
 	}
 
-	suffler := utils.NewDeterministicShuffler([]byte{byte(L)}, len(tmp))
+	suffler := utils.NewDeterministicShuffler([]byte{byte(seed & 0xff)}, len(tmp))
 	out := make([]int, len(tmp))
 	suffler.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
 	return tmp
@@ -824,6 +831,7 @@ func (f SignTableFieldInstance) correctAnswer() client.Answer {
 }
 
 type FunctionPointsFieldInstance struct {
+	IsDiscrete   bool
 	Function     expression.FunctionExpr
 	Label        string
 	XGrid        []int
@@ -834,11 +842,12 @@ type FunctionPointsFieldInstance struct {
 func (f FunctionPointsFieldInstance) fieldID() int { return f.ID }
 
 func (f FunctionPointsFieldInstance) toClient() client.Block {
-	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	bounds, _, dfxs := functiongrapher.PointsFromExpression(f.Function, f.XGrid)
 	bounds.Height += f.offsetHeight
 	return client.FunctionPointsFieldBlock{
-		Label: f.Label,
-		Xs:    f.XGrid, ID: f.ID,
+		IsDiscrete: f.IsDiscrete,
+		Label:      f.Label,
+		Xs:         f.XGrid, ID: f.ID,
 		Bounds: bounds,
 		Dfxs:   dfxs,
 	}
@@ -865,7 +874,7 @@ func (f FunctionPointsFieldInstance) validateAnswerSyntax(answer client.Answer) 
 
 func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.FunctionPointsAnswer).Fxs
-	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	_, ys, _ := functiongrapher.PointsFromExpression(f.Function, f.XGrid)
 	for i := range ys {
 		if ans[i] != ys[i] {
 			return false
@@ -875,7 +884,7 @@ func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 }
 
 func (f FunctionPointsFieldInstance) correctAnswer() client.Answer {
-	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	_, ys, _ := functiongrapher.PointsFromExpression(f.Function, f.XGrid)
 	return client.FunctionPointsAnswer{Fxs: ys}
 }
 
@@ -1150,4 +1159,38 @@ func (v VectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect boo
 
 func (v VectorFieldInstance) correctAnswer() client.Answer {
 	return client.VectorNumberAnswer{X: expression.RoundFloat(v.Answer.X), Y: expression.RoundFloat(v.Answer.Y)}
+}
+
+type SetFieldInstance struct {
+	ID     int
+	Answer sets.BinarySet
+}
+
+func (v SetFieldInstance) fieldID() int { return v.ID }
+
+func (v SetFieldInstance) toClient() client.Block {
+	return client.SetFieldBlock{
+		ID:   v.ID,
+		Sets: v.Answer.Sets,
+	}
+}
+
+func (v SetFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.SetAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     v.ID,
+			Reason: fmt.Sprintf("expected SetAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (v SetFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.SetAnswer).Root
+	return v.Answer.IsEquivalent(ans.ToBin())
+}
+
+func (v SetFieldInstance) correctAnswer() client.Answer {
+	return client.SetAnswer{Root: v.Answer.ToList().Expr}
 }

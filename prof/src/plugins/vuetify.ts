@@ -1,9 +1,18 @@
+/**
+ * plugins/vuetify.ts
+ *
+ * Framework documentation: https://vuetifyjs.com`
+ */
+
 // Styles
 import "@mdi/font/css/materialdesignicons.css";
-// Vuetify
-import { createVuetify } from "vuetify";
-import { aliases, mdi } from "vuetify/lib/iconsets/mdi";
 import "vuetify/styles";
+
+// Composables
+import { createVuetify } from "vuetify";
+
+// Translations provided by Vuetify
+import { fr } from "vuetify/locale";
 
 const myCustomLightTheme = {
   dark: false,
@@ -12,22 +21,20 @@ const myCustomLightTheme = {
     "primary-darken-1": "#52a38e",
     secondary: "#e8f241",
     "secondary-darken-1": "#b3bd0d",
-    "secondary-lighten-1": "#f4fa91"
-  }
+    "secondary-lighten-1": "#f4fa91",
+  },
 };
 
+// https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   theme: {
     defaultTheme: "myCustomLightTheme",
     themes: {
-      myCustomLightTheme
-    }
+      myCustomLightTheme,
+    },
   },
-  icons: {
-    defaultSet: "mdi",
-    aliases,
-    sets: {
-      mdi
-    }
-  }
+  locale: {
+    locale: "fr",
+    messages: { fr },
+  },
 });

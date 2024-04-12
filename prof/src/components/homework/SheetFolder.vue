@@ -1,20 +1,20 @@
 <template>
-  <v-card>
-    <v-row class="pa-2">
-      <v-col>
-        <v-card-title>Feuilles d'exercices</v-card-title>
-        <v-card-subtitle>
-          Les feuilles ci-dessous peuvent être partagées entre plusieurs classes
-          et sont conservées si une classe est supprimée.
-        </v-card-subtitle>
-      </v-col>
-      <v-col cols="auto" align-self="center">
-        <v-btn class="mx-2" @click="emit('create')">
-          <v-icon color="green">mdi-plus</v-icon>
-          Créer une feuille</v-btn
-        >
-      </v-col>
-    </v-row>
+  <v-card
+    title="Feuilles d'exercices"
+    subtitle="Les feuilles ci-dessous peuvent être partagées entre plusieurs classes
+          et sont conservées si une classe est supprimée."
+  >
+    <template v-slot:append>
+      <v-btn class="mx-2" @click="emit('create')">
+        <v-icon color="green">mdi-plus</v-icon>
+        Créer une feuille
+      </v-btn>
+      <MatiereSelect
+        :matiere="props.matiere"
+        @update:matiere="(v) => emit('update:matiere', v)"
+      ></MatiereSelect>
+    </template>
+
     <v-card-text>
       <v-expansion-panels>
         <v-expansion-panel v-for="level in byLevels" :key="level[0]">
@@ -23,97 +23,18 @@
           </v-expansion-panel-title>
           <v-expansion-panel-text>
             <v-list density="comfortable" class="py-0" style="column-count: 2">
-              <v-list-item
-                class="bg-grey-lighten-3 py-2 mb-1"
+              <SheetCard
                 v-for="sheet in level[1]"
                 :key="sheet.Sheet.Id"
-                style="break-inside: avoid-column"
-                color="grey"
-                rounded
-              >
-                <v-list-item-title>{{ sheet.Sheet.Title }}</v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ subtitle(sheet) }}
-                </v-list-item-subtitle>
-                <template v-slot:append="{}">
-                  <v-list-item-action>
-                    <v-menu offset-y close-on-content-click>
-                      <template v-slot:activator="{ isActive, props: props2 }">
-                        <v-btn
-                          v-on="{ isActive }"
-                          v-bind="props2"
-                          variant="outlined"
-                          color="primary-darken-1"
-                          title="Ajouter à une classe"
-                        >
-                          Assigner
-                        </v-btn>
-                      </template>
-                      <v-list>
-                        <v-list-subheader
-                          >Assigner cette feuille à...</v-list-subheader
-                        >
-                        <v-list-item
-                          v-for="(classroom, index) in props.classrooms"
-                          :key="index"
-                          link
-                          @click="emit('assign', sheet.Sheet.Id, classroom.id)"
-                        >
-                          {{ classroom.name }}
-                        </v-list-item>
-                      </v-list>
-                    </v-menu>
-                    <!--  -->
-                    <v-menu offset-y close-on-content-click>
-                      <template v-slot:activator="{ isActive, props }">
-                        <v-btn
-                          v-on="{ isActive }"
-                          v-bind="props"
-                          size="small"
-                          icon
-                          class="ml-2"
-                        >
-                          <v-icon>mdi-dots-vertical</v-icon>
-                        </v-btn>
-                      </template>
-                      <v-list density="compact">
-                        <v-list-item>
-                          <v-btn
-                            variant="flat"
-                            class="mx-1"
-                            @click="emit('edit', sheet)"
-                          >
-                            <v-icon icon="mdi-pencil" class="mr-4"></v-icon>
-                            Editer
-                          </v-btn>
-                        </v-list-item>
-                        <v-list-item>
-                          <v-btn
-                            variant="flat"
-                            class="mx-1"
-                            @click="emit('duplicate', sheet)"
-                          >
-                            <v-icon color="secondary" class="mr-4">
-                              mdi-content-copy
-                            </v-icon>
-                            Dupliquer
-                          </v-btn>
-                        </v-list-item>
-                        <v-list-item>
-                          <v-btn
-                            variant="flat"
-                            class="mx-1"
-                            @click="emit('delete', sheet)"
-                          >
-                            <v-icon color="red" class="mr-4">mdi-delete</v-icon>
-                            Supprimer
-                          </v-btn>
-                        </v-list-item>
-                      </v-list>
-                    </v-menu>
-                  </v-list-item-action>
-                </template>
-              </v-list-item>
+                :sheet="sheet"
+                :classrooms="props.classrooms"
+                @assign="(target) => emit('assign', sheet.Sheet.Id, target)"
+                @edit="emit('edit', sheet)"
+                @duplicate="emit('duplicate', sheet)"
+                @delete="emit('delete', sheet)"
+                @updatePublic="(b) => emit('updatePublic', sheet.Sheet, b)"
+                @createReview="emit('createReview', sheet.Sheet)"
+              ></SheetCard>
             </v-list>
           </v-expansion-panel-text>
         </v-expansion-panel>
@@ -123,22 +44,34 @@
 </template>
 
 <script setup lang="ts">
-import type { Classroom, SheetExt } from "@/controller/api_gen";
+import type {
+  Classroom,
+  SheetExt,
+  Sheet,
+  MatiereTag,
+  Int,
+} from "@/controller/api_gen";
 import { computed } from "vue";
+import SheetCard from "./SheetCard.vue";
+import MatiereSelect from "../MatiereSelect.vue";
 
 interface Props {
   sheets: Map<number, SheetExt>;
   classrooms: Classroom[];
+  matiere: MatiereTag;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "create"): void;
-  (e: "assign", idSheet: number, idClassroom: number): void;
+  (e: "assign", idSheet: Int, idClassroom: Int): void;
   (e: "edit", sheet: SheetExt): void;
   (e: "duplicate", sheet: SheetExt): void;
   (e: "delete", sheet: SheetExt): void;
+  (e: "updatePublic", sheet: Sheet, pub: boolean): void;
+  (e: "createReview", sheet: Sheet): void;
+  (e: "update:matiere", matiere: MatiereTag): void;
 }>();
 
 const byLevels = computed(() => {
@@ -155,14 +88,4 @@ const byLevels = computed(() => {
   );
   return out;
 });
-
-function subtitle(sheet: SheetExt) {
-  if (sheet.NbTravaux == 0) {
-    return "Inactive";
-  } else if (sheet.NbTravaux == 1) {
-    return "Active dans 1 travail";
-  } else {
-    return `Active dans ${sheet.NbTravaux} travaux`;
-  }
-}
 </script>

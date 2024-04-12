@@ -9,6 +9,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
@@ -143,7 +144,14 @@ func newGame(options Options) game {
 // hasStarted returns true if the the game is not in the lobby anymore
 func (g *game) hasStarted() bool { return g.phase != pGameLobby }
 
-// nbActivePlayers returns the number of players currently connected
+// NbActivePlayers locks and returns the number of players currently connected.
+func (r *Room) NbActivePlayers() int {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	return r.nbActivePlayers()
+}
+
+// nbActivePlayers returns the number of players currently connected.
 func (r *Room) nbActivePlayers() int {
 	var out int
 	for _, pl := range r.players {
@@ -154,11 +162,37 @@ func (r *Room) nbActivePlayers() int {
 	return out
 }
 
-func (r *Room) playerPseudos() map[serial]string {
-	out := make(map[serial]string, len(r.players))
+func (r *Room) playerRanks() map[serial]int {
+	out := make(map[serial]int)
 	for _, player := range r.players {
-		out[player.pl.ID] = player.pl.Pseudo
+		out[player.pl.ID] = player.pl.Rank
 	}
+	return out
+}
+
+func (r *Room) playerPseudos() map[serial]string {
+	// check for duplicates, and use suffix to differentiate them
+	byPseudo := make(map[string][]Player)
+	for _, player := range r.players {
+		byPseudo[player.pl.Pseudo] = append(byPseudo[player.pl.Pseudo], player.pl)
+	}
+
+	out := make(map[serial]string, len(r.players))
+	for _, players := range byPseudo {
+		if len(players) == 1 { // no duplicate
+			player := players[0]
+			out[player.ID] = player.Pseudo
+		} else { // use the suffix
+			for _, player := range players {
+				suffix := player.PseudoSuffix
+				if suffix == "" {
+					suffix = string(player.ID)
+				}
+				out[player.ID] = fmt.Sprintf("%s %.1s.", player.Pseudo, suffix)
+			}
+		}
+	}
+
 	return out
 }
 
@@ -172,7 +206,7 @@ func (r *Room) serialsToPseudos(players []serial) []string {
 	return out
 }
 
-func (r *Room) serialToPseudo(se serial) string { return r.players[se].pl.Pseudo }
+func (r *Room) serialToPseudo(se serial) string { return r.playerPseudos()[se] }
 
 func (r *Room) startGame() Events {
 	ProgressLogger.Printf("Game %s : starting...", r.ID)
@@ -213,7 +247,7 @@ func (r *Room) tryStartGame() Events {
 // If a question is being answered and the `player` was the
 // last answering, the question is concluded.
 func (r *Room) removePlayer(player Player) Events {
-	playerName := player.Pseudo
+	playerName := r.serialToPseudo(player.ID)
 
 	if r.game.hasStarted() {
 		r.players[player.ID].conn = nil
@@ -226,6 +260,7 @@ func (r *Room) removePlayer(player Player) Events {
 		Pseudo:        playerName,
 		IsJoining:     false,
 		PlayerPseudos: r.playerPseudos(),
+		PlayerRanks:   r.playerRanks(),
 	}}
 
 	switch r.game.phase {
@@ -279,24 +314,31 @@ func (r *Room) tryEndQuestion(force bool) Events {
 	out := PlayerAnswerResults{
 		Categorie: r.game.question.Categorie,
 		Results:   make(map[serial]playerAnswerResult),
+		Advances:  make(map[serial]events.EventNotification),
 	}
 
 	// return the answers event, defaulting to
 	// false for no answer
 	for _, player := range r.players {
 		// we still mark invalid answsers for inactive player,
-		// to avoid cheating by leaving before right before the question
+		// to avoid cheating by leaving right before the question
 
-		isValid := r.game.currentAnswers[player.pl.ID]
+		isAnswerCorrect := r.game.currentAnswers[player.pl.ID]
 		// update the success
-		player.advance.success[r.game.question.Categorie] = isValid // false if not answered
+		player.advance.success[r.game.question.Categorie] = isAnswerCorrect // false if not answered
+		// update the history
 		player.advance.review.QuestionHistory = append(player.advance.review.QuestionHistory, QR{
 			IdQuestion: r.game.question.ID,
-			Success:    isValid,
+			Success:    isAnswerCorrect,
 		})
-		askForMark := !isValid && len(player.advance.review.MarkedQuestions) < 3
 
-		out.Results[player.pl.ID] = playerAnswerResult{Success: isValid, AskForMask: askForMark}
+		hasStreak := player.advance.review.hasStreak3()
+		notif := r.successHandler.OnQuestion(player.pl.ID, isAnswerCorrect, hasStreak)
+
+		askForMark := !isAnswerCorrect && len(player.advance.review.MarkedQuestions) < 3
+
+		out.Results[player.pl.ID] = playerAnswerResult{Success: isAnswerCorrect, AskForMask: askForMark}
+		out.Advances[player.pl.ID] = notif
 	}
 
 	// cleanup
@@ -345,11 +387,18 @@ func (r *Room) tryEndTurn() Events {
 	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
 		r.game.phase = pGameOver
+
+		advances := make(map[PlayerID]events.EventNotification)
+		for _, player := range winners {
+			advances[player] = r.successHandler.OnWin(player)
+		}
+
 		return Events{
 			GameEnd{
 				Winners:               winners,
 				WinnerNames:           r.serialsToPseudos(winners),
 				QuestionDecrassageIds: r.decrassage(),
+				Advances:              advances,
 			},
 		}
 	}
@@ -366,10 +415,12 @@ func (r *Room) reconnectPlayer(player Player, connection Connection) {
 	pc := r.players[player.ID]
 	pc.conn = connection // use the new client connection
 	pc.pl.Pseudo = player.Pseudo
+	pc.pl.PseudoSuffix = player.PseudoSuffix
+	pc.pl.Rank = player.Rank
 
 	events := Events{PlayerReconnected{
 		ID:     pc.pl.ID,
-		Pseudo: player.Pseudo,
+		Pseudo: r.serialToPseudo(player.ID),
 	}}
 	if triggerNewTurn {
 		ProgressLogger.Printf("Game %s : reviving by starting a new turn...", r.ID)
@@ -647,7 +698,7 @@ func (r *Room) state() GameState {
 	}
 	for _, pl := range r.players {
 		out.Players[pl.pl.ID] = PlayerStatus{
-			Name:       pl.pl.Pseudo,
+			Name:       r.serialToPseudo(pl.pl.ID),
 			Review:     pl.advance.review,
 			Success:    pl.advance.success,
 			IsInactive: pl.conn == nil,

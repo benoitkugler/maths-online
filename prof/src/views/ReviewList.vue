@@ -4,13 +4,16 @@
       <v-row class="mx-0">
         <v-col cols="9">
           <v-card-title>Publications</v-card-title>
-          <v-card-subtitle>
-            Discuter des demandes de publications dans la base officielle
-          </v-card-subtitle>
         </v-col>
       </v-row>
 
-      <v-alert color="info" class="my-2 mx-6" density="compact" closable>
+      <v-alert
+        variant="tonal"
+        color="info"
+        class="my-2 mx-6"
+        density="compact"
+        closable
+      >
         La base officielle contient des ressources dont le contenu est vérifié,
         afin de garantir une qualité optimale. Vous pouvez participer à
         l'évalution des contenus suivants.
@@ -39,14 +42,13 @@
 <script setup lang="ts">
 import type { ReviewHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onActivated, onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { onActivated, onMounted, ref } from "vue";
 import ReviewRow from "../components/review/ReviewRow.vue";
 import ReviewPannel from "../components/review/ReviewPannel.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 
-let reviews = $ref<ReviewHeader[]>([]);
-let currentReview = $ref<ReviewHeader | null>(null);
+const reviews = ref<ReviewHeader[]>([]);
+const currentReview = ref<ReviewHeader | null>(null);
 
 onMounted(init);
 onActivated(init);
@@ -60,24 +62,24 @@ async function init() {
 
 async function fetchReviews() {
   const res = await controller.ReviewsList();
-  reviews = res || [];
+  reviews.value = res || [];
 }
 
 function goToReview(review: ReviewHeader) {
-  currentReview = review;
+  currentReview.value = review;
 }
 
 function parseQuery() {
   const id = Number(route.query["id"]);
   if (isNaN(id)) return;
-  const review = reviews.find((re) => re.Id == id);
+  const review = reviews.value.find((re) => re.Id == id);
   if (review == undefined) return;
   goToReview(review);
 }
 
 // update the list which may have changed due to accept or delete actions
 async function backToList() {
-  currentReview = null;
+  currentReview.value = null;
   fetchReviews();
 }
 </script>

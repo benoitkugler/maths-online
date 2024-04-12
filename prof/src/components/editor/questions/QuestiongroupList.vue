@@ -1,5 +1,49 @@
 <template>
   <v-card class="pt-2 pb-0">
+    <v-dialog
+      :model-value="groupToDelete != null"
+      @update:model-value="groupToDelete = null"
+      max-width="700"
+    >
+      <v-card title="Confirmer" v-if="groupToDelete != null">
+        <v-card-text
+          >Etes-vous certain de vouloir supprimer la question
+          <i>{{ groupToDelete.Group.Title }}</i>
+          ?
+          <br />
+          <br />
+          Cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="groupToDelete = null">Retour</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="red" @click="deleteGroup" variant="outlined">
+            Supprimer
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="deletedBlocked != null"
+      @update:model-value="deletedBlocked = null"
+      max-width="600"
+    >
+      <uses-card
+        :uses="deletedBlocked || []"
+        @back="deletedBlocked = null"
+        @go-to="goToSheet"
+      ></uses-card>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="reviewToCreate != null"
+      @update:model-value="reviewToCreate = null"
+      max-width="700"
+    >
+      <confirm-publish @create-review="createReview"></confirm-publish>
+    </v-dialog>
+
     <v-row>
       <v-col cols="auto" align-self="center">
         <v-btn
@@ -36,7 +80,7 @@
 
       <v-row no-gutters>
         <v-col>
-          <v-list style="height: 60vh" class="overflow-y-auto">
+          <v-list style="height: 64vh" class="overflow-y-auto">
             <div
               v-if="groups.length == 0"
               style="width: 100%; text-align: center"
@@ -53,14 +97,16 @@
             </div>
 
             <div v-for="(questionGroup, index) in displayedGroups" :key="index">
-              <questiongroup-row
-                :group="questionGroup"
+              <resource-group-row
+                :group="questionToResource(questionGroup)"
                 :all-tags="props.tags"
+                :is-question="true"
                 @clicked="startEdit(questionGroup)"
                 @duplicate="duplicate(questionGroup)"
-                @update-public="updatePublic"
-                @create-review="createReview(questionGroup.Group)"
-              ></questiongroup-row>
+                @delete="groupToDelete = questionGroup"
+                @create-review="reviewToCreate = questionGroup.Group"
+                @update-public="(b) => updatePublic(questionGroup.Group.Id, b)"
+              ></resource-group-row>
             </div>
           </v-list>
           <v-row no-gutters>
@@ -92,13 +138,19 @@ import {
   type Questiongroup,
   type QuestiongroupExt,
   type TagsDB,
+  PublicStatus,
+  type TaskUses,
+  type Sheet,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
-import { $ref } from "vue/macros";
-import QuestiongroupRow from "./QuestiongroupRow.vue";
 import ResourceQueryRow from "../ResourceQueryRow.vue";
+import ResourceGroupRow from "../ResourceGroupRow.vue";
+import { questionToResource } from "@/controller/editor";
+import { ref, computed, onActivated, onMounted } from "vue";
+import UsesCard from "../UsesCard.vue";
+import ConfirmPublish from "@/components/ConfirmPublish.vue";
 
 interface Props {
   tags: TagsDB; // queried once for all
@@ -118,23 +170,28 @@ const router = useRouter();
 // groups are cut in slice of `pagination` length,
 // and currentPage is the index of the page
 const pagination = 6;
-let currentPage = $ref(1);
-const pageLength = computed(() => Math.ceil(groups.length / pagination));
+const currentPage = ref(1);
+const pageLength = computed(() => Math.ceil(groups.value.length / pagination));
 const displayedGroups = computed(() =>
-  groups.slice((currentPage - 1) * pagination, currentPage * pagination)
+  groups.value.slice(
+    (currentPage.value - 1) * pagination,
+    currentPage.value * pagination
+  )
 );
 
-let groups = $ref<QuestiongroupExt[]>([]);
-let serverNbQuestions = $ref(0);
+const groups = ref<QuestiongroupExt[]>([]);
+const serverNbQuestions = ref(0);
 
-let query = $ref<Query>(
+const query = ref<Query>(
   props.initialQuery
     ? props.initialQuery
     : {
         TitleQuery: "",
         LevelTags: [],
         ChapterTags: [],
+        SubLevelTags: [],
         Origin: OriginKind.All,
+        Matiere: controller.settings.FavoriteMatiere,
       }
 );
 
@@ -142,17 +199,17 @@ onMounted(fetchQuestions);
 onActivated(fetchQuestions);
 
 async function updateQuery(qu: Query) {
-  query = qu;
+  query.value = qu;
   await fetchQuestions();
 }
 
 async function fetchQuestions() {
-  const result = await controller.EditorSearchQuestions(query);
+  const result = await controller.EditorSearchQuestions(query.value);
   if (result == undefined) {
     return;
   }
-  groups = result.Groups || [];
-  serverNbQuestions = result.NbQuestions;
+  groups.value = result.Groups || [];
+  serverNbQuestions.value = result.NbQuestions;
 }
 
 async function createQuestiongroup() {
@@ -180,7 +237,30 @@ async function duplicate(group: QuestiongroupExt) {
   await fetchQuestions();
 }
 
-async function updatePublic(id: number, isPublic: boolean) {
+const groupToDelete = ref<QuestiongroupExt | null>(null);
+async function deleteGroup() {
+  if (groupToDelete.value == null) return;
+  const res = await controller.EditorDeleteQuestiongroup({
+    id: groupToDelete.value.Group.Id,
+  });
+  groupToDelete.value = null;
+  if (res === undefined) return;
+
+  if (!res.Deleted) {
+    deletedBlocked.value = res.BlockedBy;
+    return;
+  }
+  await fetchQuestions();
+}
+
+const deletedBlocked = ref<TaskUses>(null);
+function goToSheet(sh: Sheet) {
+  deletedBlocked.value = null;
+
+  router.push({ name: "homework", query: { idSheet: sh.Id } });
+}
+
+async function updatePublic(id: Int, isPublic: boolean) {
   const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
     Public: isPublic,
@@ -189,15 +269,20 @@ async function updatePublic(id: number, isPublic: boolean) {
     return;
   }
 
-  const index = groups.findIndex((gr) => gr.Group.Id == id);
-  groups[index].Origin.IsPublic = isPublic;
+  const index = groups.value.findIndex((gr) => gr.Group.Id == id);
+  groups.value[index].Origin.PublicStatus = isPublic
+    ? PublicStatus.AdminPublic
+    : PublicStatus.AdminNotPublic;
 }
 
-async function createReview(ex: Questiongroup) {
+const reviewToCreate = ref<Questiongroup | null>(null);
+async function createReview() {
+  if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KQuestion,
-    Id: ex.Id,
+    Id: reviewToCreate.value.Id,
   });
+  reviewToCreate.value = null;
   if (res == undefined) return;
   router.push({ name: "reviews", query: { id: res.Id } });
 }

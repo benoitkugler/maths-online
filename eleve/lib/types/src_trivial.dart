@@ -3,6 +3,7 @@
 import 'predefined.dart';
 import 'src_maths_questions_client.dart';
 import 'src_sql_editor.dart';
+import 'src_sql_events.dart';
 
 // github.com/benoitkugler/maths-online/server/src/trivial.Answer
 class Answer implements ClientEventITF {
@@ -35,6 +36,21 @@ extension _CategorieExt on Categorie {
 
   int toValue() {
     return index;
+  }
+}
+
+String categorieLabel(Categorie v) {
+  switch (v) {
+    case Categorie.purple:
+      return "purple";
+    case Categorie.green:
+      return "green";
+    case Categorie.orange:
+      return "orange";
+    case Categorie.yellow:
+      return "yellow";
+    case Categorie.blue:
+      return "blue";
   }
 }
 
@@ -160,12 +176,14 @@ class GameEnd implements ServerEvent {
   final Map<PlayerID, List<IdQuestion>> questionDecrassageIds;
   final List<PlayerID> winners;
   final List<String> winnerNames;
+  final Map<PlayerID, EventNotification> advances;
 
-  const GameEnd(this.questionDecrassageIds, this.winners, this.winnerNames);
+  const GameEnd(this.questionDecrassageIds, this.winners, this.winnerNames,
+      this.advances);
 
   @override
   String toString() {
-    return "GameEnd($questionDecrassageIds, $winners, $winnerNames)";
+    return "GameEnd($questionDecrassageIds, $winners, $winnerNames, $advances)";
   }
 }
 
@@ -174,7 +192,8 @@ GameEnd gameEndFromJson(dynamic json_) {
   return GameEnd(
       dictStringToListIntFromJson(json['QuestionDecrassageIds']),
       listStringFromJson(json['Winners']),
-      listStringFromJson(json['WinnerNames']));
+      listStringFromJson(json['WinnerNames']),
+      dictStringToEventNotificationFromJson(json['Advances']));
 }
 
 Map<String, dynamic> gameEndToJson(GameEnd item) {
@@ -182,7 +201,8 @@ Map<String, dynamic> gameEndToJson(GameEnd item) {
     "QuestionDecrassageIds":
         dictStringToListIntToJson(item.questionDecrassageIds),
     "Winners": listStringToJson(item.winners),
-    "WinnerNames": listStringToJson(item.winnerNames)
+    "WinnerNames": listStringToJson(item.winnerNames),
+    "Advances": dictStringToEventNotificationToJson(item.advances)
   };
 }
 
@@ -258,12 +278,14 @@ class LobbyUpdate implements ServerEvent {
   final String pseudo;
   final PlayerID iD;
   final bool isJoining;
+  final Map<PlayerID, int> playerRanks;
 
-  const LobbyUpdate(this.playerPseudos, this.pseudo, this.iD, this.isJoining);
+  const LobbyUpdate(this.playerPseudos, this.pseudo, this.iD, this.isJoining,
+      this.playerRanks);
 
   @override
   String toString() {
-    return "LobbyUpdate($playerPseudos, $pseudo, $iD, $isJoining)";
+    return "LobbyUpdate($playerPseudos, $pseudo, $iD, $isJoining, $playerRanks)";
   }
 }
 
@@ -273,7 +295,8 @@ LobbyUpdate lobbyUpdateFromJson(dynamic json_) {
       dictStringToStringFromJson(json['PlayerPseudos']),
       stringFromJson(json['Pseudo']),
       stringFromJson(json['ID']),
-      boolFromJson(json['IsJoining']));
+      boolFromJson(json['IsJoining']),
+      dictStringToIntFromJson(json['PlayerRanks']));
 }
 
 Map<String, dynamic> lobbyUpdateToJson(LobbyUpdate item) {
@@ -281,7 +304,8 @@ Map<String, dynamic> lobbyUpdateToJson(LobbyUpdate item) {
     "PlayerPseudos": dictStringToStringToJson(item.playerPseudos),
     "Pseudo": stringToJson(item.pseudo),
     "ID": stringToJson(item.iD),
-    "IsJoining": boolToJson(item.isJoining)
+    "IsJoining": boolToJson(item.isJoining),
+    "PlayerRanks": dictStringToIntToJson(item.playerRanks)
   };
 }
 
@@ -358,25 +382,29 @@ Map<String, dynamic> playerAnswerResultToJson(PlayerAnswerResult item) {
 class PlayerAnswerResults implements ServerEvent {
   final Categorie categorie;
   final Map<PlayerID, PlayerAnswerResult> results;
+  final Map<PlayerID, EventNotification> advances;
 
-  const PlayerAnswerResults(this.categorie, this.results);
+  const PlayerAnswerResults(this.categorie, this.results, this.advances);
 
   @override
   String toString() {
-    return "PlayerAnswerResults($categorie, $results)";
+    return "PlayerAnswerResults($categorie, $results, $advances)";
   }
 }
 
 PlayerAnswerResults playerAnswerResultsFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return PlayerAnswerResults(categorieFromJson(json['Categorie']),
-      dictStringToPlayerAnswerResultFromJson(json['Results']));
+  return PlayerAnswerResults(
+      categorieFromJson(json['Categorie']),
+      dictStringToPlayerAnswerResultFromJson(json['Results']),
+      dictStringToEventNotificationFromJson(json['Advances']));
 }
 
 Map<String, dynamic> playerAnswerResultsToJson(PlayerAnswerResults item) {
   return {
     "Categorie": categorieToJson(item.categorie),
-    "Results": dictStringToPlayerAnswerResultToJson(item.results)
+    "Results": dictStringToPlayerAnswerResultToJson(item.results),
+    "Advances": dictStringToEventNotificationToJson(item.advances)
   };
 }
 
@@ -788,6 +816,33 @@ WantNextTurn wantNextTurnFromJson(dynamic json_) {
 
 Map<String, dynamic> wantNextTurnToJson(WantNextTurn item) {
   return {"MarkQuestion": boolToJson(item.markQuestion)};
+}
+
+Map<PlayerID, EventNotification> dictStringToEventNotificationFromJson(
+    dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as Map<String, dynamic>)
+      .map((k, v) => MapEntry(k as PlayerID, eventNotificationFromJson(v)));
+}
+
+Map<String, dynamic> dictStringToEventNotificationToJson(
+    Map<PlayerID, EventNotification> item) {
+  return item.map((k, v) =>
+      MapEntry(stringToJson(k).toString(), eventNotificationToJson(v)));
+}
+
+Map<PlayerID, int> dictStringToIntFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as Map<String, dynamic>)
+      .map((k, v) => MapEntry(k as PlayerID, intFromJson(v)));
+}
+
+Map<String, dynamic> dictStringToIntToJson(Map<PlayerID, int> item) {
+  return item.map((k, v) => MapEntry(stringToJson(k).toString(), intToJson(v)));
 }
 
 Map<PlayerID, List<IdQuestion>> dictStringToListIntFromJson(dynamic json) {

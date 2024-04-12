@@ -30,8 +30,6 @@ type Controller struct {
 	demoClassroom tc.Classroom // loaded at creation
 
 	demoCode string
-
-	classCodes *classroomsCode
 }
 
 // NewController return a new controller.
@@ -44,7 +42,6 @@ func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encry
 		smtp:       smtp,
 		host:       host,
 		demoCode:   demoCode,
-		classCodes: &classroomsCode{codes: make(map[string]tc.IdClassroom)},
 	}
 }
 
@@ -84,6 +81,8 @@ func (ct *Controller) LoadDemoClassroom() (tc.Classroom, error) {
 
 	return cl, nil
 }
+
+func (ct *Controller) CleanupClassroomCodes() error { return tc.CleanupClassroomCodes(ct.db) }
 
 const ValidateInscriptionEndPoint = "inscription"
 
@@ -162,6 +161,15 @@ func (ct *Controller) askInscription(args AskInscriptionIn) (AskInscriptionOut, 
 	return AskInscriptionOut{}, nil
 }
 
+func hasEditorSimplified(topic tc.MatiereTag) bool {
+	switch topic {
+	case tc.Mathematiques, tc.PhysiqueChimie, tc.SVT, tc.SES:
+		return false
+	default:
+		return true
+	}
+}
+
 func (ct *Controller) ValidateInscription(c echo.Context) error {
 	payload := c.QueryParam("data")
 
@@ -174,7 +182,8 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 	t := tc.Teacher{
 		Mail:                args.Mail,
 		PasswordCrypted:     ct.teacherKey.EncryptPassword(args.Password),
-		HasSimplifiedEditor: args.HasEditorSimplified,
+		FavoriteMatiere:     args.FavoriteMatiere,
+		HasSimplifiedEditor: hasEditorSimplified(args.FavoriteMatiere),
 	}
 	t, err = t.Insert(ct.db)
 	if err != nil {
@@ -201,7 +210,7 @@ func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
 		return LogginOut{Error: "Le mot de passe est incorrect.", IsPasswordError: true}, nil
 	}
 
-	token, err := ct.newToken(teacher)
+	token, err := ct.newToken(teacher.Id)
 	if err != nil {
 		return LogginOut{}, err
 	}
@@ -281,6 +290,7 @@ type TeacherSettings struct {
 	Password            string
 	HasEditorSimplified bool
 	Contact             tc.Contact
+	FavoriteMatiere     teacher.MatiereTag
 }
 
 // TeacherGetSettings returns the teacher global settings.
@@ -308,6 +318,7 @@ func (ct *Controller) getSettings(userID teacher.IdTeacher) (TeacherSettings, er
 		Password:            password,
 		HasEditorSimplified: teach.HasSimplifiedEditor,
 		Contact:             teach.Contact,
+		FavoriteMatiere:     teach.FavoriteMatiere,
 	}, nil
 }
 
@@ -341,6 +352,7 @@ func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeac
 	teach.PasswordCrypted = ct.teacherKey.EncryptPassword(args.Password)
 	teach.HasSimplifiedEditor = args.HasEditorSimplified
 	teach.Contact = args.Contact
+	teach.FavoriteMatiere = args.FavoriteMatiere
 
 	_, err = teach.Update(ct.db)
 	if err != nil {
@@ -353,10 +365,9 @@ func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeac
 // shared types
 
 type Origin struct {
-	AllowPublish bool             // is the ressource allowed to be made public ?
-	IsPublic     bool             // used, for Personnal visibility
-	IsInReview   OptionalIdReview // true if the owner has already stared a review for the resource
 	Visibility   Visibility
+	PublicStatus PublicStatus
+	IsInReview   OptionalIdReview // true if the owner has already started a review for the resource
 }
 
 type OptionalIdReview struct {

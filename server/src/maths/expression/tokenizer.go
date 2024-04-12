@@ -33,11 +33,18 @@ const (
 	randInt specialFunctionKind = iota
 	randPrime
 	randChoice
-	choiceFrom // the last argument is used as selector
+	randMatrixInt // random matrix with integer coeff
+	choiceFrom    // the last argument is used as selector
 	randDenominator
 	minFn
 	maxFn
+	sumFn   // sum of an expression over a variable
+	prodFn  // product of an expression over a variable
+	unionFn // big union of an expression over a variable
+	interFn // big intersection of an expression over a variable
 	matCoeff
+	matSet   // update a matrix
+	binomial // coefficient binomial (n, k)
 
 	invalidSpecialFunction
 )
@@ -50,6 +57,8 @@ func (sf specialFunctionKind) String() string {
 		return "randPrime"
 	case randChoice:
 		return "randChoice"
+	case randMatrixInt:
+		return "randMatrix"
 	case choiceFrom:
 		return "choiceFrom"
 	case randDenominator:
@@ -58,8 +67,20 @@ func (sf specialFunctionKind) String() string {
 		return "min"
 	case maxFn:
 		return "max"
+	case sumFn:
+		return "sum"
+	case prodFn:
+		return "prod"
+	case unionFn:
+		return "union"
+	case interFn:
+		return "inter"
 	case matCoeff:
 		return "coeff"
+	case matSet:
+		return "set"
+	case binomial:
+		return "binom"
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
@@ -227,6 +248,12 @@ func isOperator(src []rune) (op operator, n int) {
 		return pow, 1
 	case '!':
 		return factorial, 1
+	case '\u222A':
+		return union, 1
+	case '\u2229':
+		return intersection, 1
+	case '\u00AC':
+		return complement, 1
 	}
 	_ = exhaustiveOperatorSwitch
 	return op, 0
@@ -376,6 +403,8 @@ func isImplicitMultLeft(t token) bool {
 	switch t := t.data.(type) {
 	case nT, constant: // 4x
 		return true
+	case operator:
+		return t == factorial // n! n
 	case symbol:
 		return t == closePar // (...)(...)
 	case Variable: // y(...)
@@ -415,6 +444,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = randInt
 	case "randprime":
 		fn = randPrime
+	case "randmatrix":
+		fn = randMatrixInt
 	case "randchoice":
 		fn = randChoice
 	case "choicefrom":
@@ -425,8 +456,20 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = minFn
 	case "max":
 		fn = maxFn
+	case "sum":
+		fn = sumFn
+	case "prod":
+		fn = prodFn
+	case "union":
+		fn = unionFn
+	case "inter":
+		fn = interFn
 	case "coeff":
 		fn = matCoeff
+	case "set":
+		fn = matSet
+	case "binom":
+		fn = binomial
 	default:
 		_ = exhaustiveSpecialFunctionSwitch
 		return 0, false

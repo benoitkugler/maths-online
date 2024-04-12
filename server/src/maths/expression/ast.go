@@ -82,7 +82,7 @@ type atom interface {
 
 	// return a value if possible as rational, so that
 	// it may be simplified by subsequent operations
-	eval(left, right real, context varEvaluer) (real, error)
+	eval(left, right *Expr, ctx *resolver) (real, error)
 
 	asLaTeX(left, right *Expr) string
 }
@@ -146,6 +146,11 @@ const (
 	pow       // x^2
 	factorial // n!
 
+	// set operators
+	union
+	intersection
+	complement
+
 	invalidOperator
 )
 
@@ -177,6 +182,12 @@ func (op operator) String() string {
 		return "%"
 	case rem:
 		return "//"
+	case union:
+		return "\u222A"
+	case intersection:
+		return "\u2229"
+	case complement:
+		return "\u00AC"
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}

@@ -140,3 +140,51 @@ func TestSuccess_isDone(t *testing.T) {
 		}
 	}
 }
+
+func TestQuestionReview_streak(t *testing.T) {
+	tests := []struct {
+		QuestionHistory []QR
+		want            int
+		want2           bool
+	}{
+		{
+			[]QR{},
+			0, false,
+		},
+		{
+			[]QR{{Success: false}},
+			0, false,
+		},
+		{
+			[]QR{{Success: false}, {Success: true}},
+			1, false,
+		},
+		{
+			[]QR{{Success: false}, {Success: true}, {Success: false}, {Success: true}, {Success: true}},
+			2, false,
+		},
+		{
+			[]QR{{Success: true}, {Success: true}, {Success: true}},
+			3, true,
+		},
+		{
+			[]QR{{Success: true}, {Success: true}, {Success: true}, {Success: true}},
+			4, false,
+		},
+		{
+			[]QR{{Success: true}, {Success: true}, {Success: true}, {Success: true}, {Success: true}, {Success: true}},
+			6, true,
+		},
+	}
+	for _, tt := range tests {
+		qr := QuestionReview{
+			QuestionHistory: tt.QuestionHistory,
+		}
+		if got := qr.streak(); got != tt.want {
+			t.Errorf("QuestionReview.streak() = %v, want %v", got, tt.want)
+		}
+		if got := qr.hasStreak3(); got != tt.want2 {
+			t.Errorf("QuestionReview.hasStreak3() = %v, want %v", got, tt.want)
+		}
+	}
+}

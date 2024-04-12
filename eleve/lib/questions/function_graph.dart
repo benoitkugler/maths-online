@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:eleve/questions/repere.dart';
 import 'package:eleve/types/src_maths_functiongrapher.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
@@ -5,15 +7,18 @@ import 'package:eleve/types/src_maths_repere.dart';
 import 'package:flutter/material.dart';
 
 class FunctionsGraphW extends StatelessWidget {
-  final FunctionsGraphBlock function;
+  final FunctionsGraphBlock graphs;
 
-  const FunctionsGraphW(this.function, {Key? key}) : super(key: key);
+  const FunctionsGraphW(this.graphs, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final metrics = RepereMetrics(function.bounds, context);
-    final painter = BezierCurvesPainter(metrics, function.functions,
-        areas: function.areas, points: function.points);
+    final metrics = RepereMetrics(graphs.bounds, context);
+    final painter = BezierCurvesPainter(metrics,
+        functions: graphs.functions,
+        sequences: graphs.sequences,
+        areas: graphs.areas,
+        points: graphs.points);
     final texts = painter.extractTexts();
     return BaseRepere(
       metrics,
@@ -30,22 +35,33 @@ class FunctionsGraphW extends StatelessWidget {
   }
 }
 
-class BezierCurvesPainter extends CustomPainter {
+class BezierCurvesPainter extends CustomPainterText {
   final RepereMetrics metrics;
   final List<FunctionGraph> functions;
+  final List<SequenceGraph> sequences;
   final List<FunctionArea> areas;
   final List<FunctionPoint> points;
   BezierCurvesPainter(
-    this.metrics,
-    this.functions, {
+    this.metrics, {
+    this.functions = const [],
+    this.sequences = const [],
     this.areas = const [],
     this.points = const [],
   });
 
+  /// [extractTexts] returns the positionned text that
+  /// must be diplayed, to be handled in a separate widget.
+  @override
   List<PositionnedText> extractTexts() {
     final out = <PositionnedText>[];
-    for (var fn in functions) {
-      final text = _functionText(fn);
+    for (var i = 0; i < functions.length; i++) {
+      final text = _functionText(functions[i], i, functions.length);
+      if (text != null) {
+        out.add(text);
+      }
+    }
+    for (var fn in sequences) {
+      final text = _sequenceText(fn);
       if (text != null) {
         out.add(text);
       }
@@ -61,12 +77,13 @@ class BezierCurvesPainter extends CustomPainter {
 
   // returns null if the function has an empty label
   // or has no segments
-  PositionnedText? _functionText(FunctionGraph fn) {
+  PositionnedText? _functionText(FunctionGraph fn, int index, int count) {
     if (fn.segments.isEmpty || fn.decoration.label.isEmpty) {
       return null;
     }
 
-    final labelIndex = fn.segments.length * 3 ~/ 4;
+    final ratio = 0.25 + (index / count) * 0.5;
+    final labelIndex = (fn.segments.length * ratio).round();
     final labelPos = fn.segments[labelIndex].p0;
     // adjust the position based on space available
     final visualLabelPos = metrics.logicalToVisual(labelPos);
@@ -82,6 +99,16 @@ class BezierCurvesPainter extends CustomPainter {
     return PositionnedText(
         fn.decoration.label, PosPoint(Coord(labelPos.x, labelPos.y + 1), pos),
         color: fromHex(fn.decoration.color));
+  }
+
+  PositionnedText? _sequenceText(SequenceGraph seq) {
+    final color = fromHex(seq.decoration.color);
+    if (seq.points.isEmpty) return null;
+    // display the label at the right of the last point
+    final last = seq.points.last;
+    return PositionnedText(seq.decoration.label,
+        PosPoint(Coord(last.x + 0.3, last.y), LabelPos.right),
+        color: color);
   }
 
   // returns null if the legend is empty
@@ -132,6 +159,25 @@ class BezierCurvesPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
+  void _paintSequence(Canvas canvas, SequenceGraph fn) {
+    final color = fromHex(fn.decoration.color);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = color;
+
+    for (var point in fn.points) {
+      final center = metrics.logicalToVisual(point);
+      // draw a rotated cross
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(pi / 4);
+      canvas.drawLine(const Offset(-5, 0), const Offset(5, 0), paint);
+      canvas.drawLine(const Offset(0, -5), const Offset(0, 5), paint);
+      canvas.restore();
+    }
+  }
+
   void _paintArea(Canvas canvas, FunctionArea area) {
     if (area.path.isEmpty) {
       return;
@@ -165,6 +211,9 @@ class BezierCurvesPainter extends CustomPainter {
     for (var element in functions) {
       _paintFunction(canvas, element);
     }
+    for (var element in sequences) {
+      _paintSequence(canvas, element);
+    }
     // paint the point on top of the rest
     for (var point in points) {
       _paintPoint(canvas, point);
@@ -173,6 +222,8 @@ class BezierCurvesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant BezierCurvesPainter oldDelegate) {
-    return metrics != oldDelegate.metrics || functions != oldDelegate.functions;
+    return metrics != oldDelegate.metrics ||
+        functions != oldDelegate.functions ||
+        sequences != oldDelegate.sequences;
   }
 }

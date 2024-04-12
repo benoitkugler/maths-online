@@ -1,34 +1,24 @@
 <template>
-  <v-row no-gutters>
-    <v-col cols="8" align-self="center">
-      <v-autocomplete
-        variant="outlined"
-        density="compact"
-        multiple
-        :label="label"
-        chips
-        :model-value="props.modelValue.map((v, i) => ({ value: i, title: v }))"
-        @update:model-value="(val) => onDelete(val)"
-        hide-no-data
-        closable-chips
-        readonly
-        clearable
-        append-inner-icon=""
-        :hint="props.hint"
-        :persistent-hint="!!props.hint"
-      >
-      </v-autocomplete>
-    </v-col>
-    <v-col cols="4">
+  <v-text-field
+    :hide-details="!props.hint"
+    :hint="props.hint"
+    :label="props.label"
+    readonly
+    variant="outlined"
+    density="compact"
+    model-value=" "
+  >
+    <template v-slot:append>
       <v-text-field
         class="fix-input-width"
         variant="outlined"
-        density="compact"
+        density="comfortable"
         label="Ajouter"
         :color="color"
         v-model="entry"
         @click:append-inner="add"
         hint="Ajouter une expression"
+        persistent-hint
         @keyup="onEnter"
       >
         <template v-slot:append-inner>
@@ -37,14 +27,24 @@
           </v-btn>
         </template>
       </v-text-field>
-    </v-col>
-  </v-row>
+    </template>
+
+    <v-chip
+      v-for="(v, i) in props.modelValue"
+      :key="v"
+      closable
+      size="small"
+      @click:close="onDelete(i)"
+    >
+      {{ v }}
+    </v-chip>
+  </v-text-field>
 </template>
 
 <script setup lang="ts">
 import { ExpressionColor } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { computed } from "vue";
+import { ref } from "vue";
 
 interface Props {
   modelValue: string[];
@@ -60,20 +60,16 @@ const emit = defineEmits<{
 
 const color = ExpressionColor;
 
-function onDelete(indices: number[]) {
-  emit(
-    "update:model-value",
-    indices.map((index) => props.modelValue[index])
-  );
+function onDelete(indice: number) {
+  emit("update:model-value", props.modelValue.toSpliced(indice, 1));
 }
 
-let entry = $ref("");
-const isEntryValid = computed(() => !!entry.length);
+const entry = ref("");
+const isEntryValid = computed(() => !!entry.value.length);
 
 function add() {
-  props.modelValue.push(entry);
-  entry = "";
-  emit("update:model-value", props.modelValue);
+  emit("update:model-value", props.modelValue.concat(entry.value));
+  entry.value = "";
 }
 
 function onEnter(key: KeyboardEvent) {

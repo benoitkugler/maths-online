@@ -7,16 +7,11 @@ import {
   Section,
   SignSymbol,
   TextKind,
-  VectorPairCriterion,
   Visibility,
   type Block,
   type CoordExpression,
   type ExpressionFieldBlock,
-  type FigureAffineLineFieldBlock,
   type FigureBlock,
-  type FigurePointFieldBlock,
-  type FigureVectorFieldBlock,
-  type FigureVectorPairFieldBlock,
   type FormulaBlock,
   type FunctionPointsFieldBlock,
   type FunctionsGraphBlock,
@@ -39,8 +34,20 @@ import {
   type VariationTableFieldBlock,
   type VectorFieldBlock,
   type TreeNodeAnswer,
-  type TreeBlock
+  type TreeBlock,
+  type GeometricConstructionFieldBlock,
+  GeoFieldKind,
+  FiguresOrGraphsKind,
+  PublicStatus,
+  type QuestiongroupExt,
+  type ExercicegroupExt,
+  Int,
+  Parameters,
+  Enonce,
+  ErrQuestionInvalid,
+  SetFieldBlock,
 } from "./api_gen";
+import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
 
 export const ExpressionColor = "orange";
@@ -48,118 +55,100 @@ export const ExpressionColor = "orange";
 export const colorByKind: { [key in TextKind]: string } = {
   [TextKind.Text]: "",
   [TextKind.StaticMath]: "green",
-  [TextKind.Expression]: ExpressionColor
+  [TextKind.Expression]: ExpressionColor,
 };
 
 export const sortedBlockKindLabels = [
   [BlockKind.TextBlock, { label: "Texte", isAnswerField: false }],
   [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
-  [BlockKind.FigureBlock, { label: "Figure", isAnswerField: false }],
+  [
+    BlockKind.FigureBlock,
+    { label: "Figure (droites, cercles)", isAnswerField: false },
+  ],
   [
     BlockKind.FunctionsGraphBlock,
     {
-      label: "Graphes de fonctions",
-      isAnswerField: false
-    }
+      label: "Graphes (fonctions, suites)",
+      isAnswerField: false,
+    },
   ],
   [BlockKind.TableBlock, { label: "Tableau", isAnswerField: false }],
   [
     BlockKind.SignTableBlock,
     {
       label: "Tableau de signes",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [
     BlockKind.VariationTableBlock,
     {
       label: "Tableau de variations",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [
     BlockKind.TreeBlock,
     {
       label: "Arbre (de probas)",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [BlockKind.NumberFieldBlock, { label: "Nombre", isAnswerField: true }],
   [
     BlockKind.ExpressionFieldBlock,
     {
       label: "Expression",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.OrderedListFieldBlock,
     {
       label: "Liste ordonnée",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [BlockKind.RadioFieldBlock, { label: "QCM", isAnswerField: true }],
   [
-    BlockKind.FigurePointFieldBlock,
+    BlockKind.GeometricConstructionFieldBlock,
     {
-      label: "Point (sur une figure)",
-      isAnswerField: true
-    }
-  ],
-  [
-    BlockKind.FigureVectorFieldBlock,
-    {
-      label: "Vecteur (sur une figure)",
-      isAnswerField: true
-    }
+      label: "Constructions (point, vecteur, droite)",
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.VectorFieldBlock,
-    { label: "Vecteur (numérique)", isAnswerField: true }
+    { label: "Vecteur (numérique)", isAnswerField: true },
   ],
   [
     BlockKind.FunctionPointsFieldBlock,
     {
-      label: "Construction de fonction",
-      isAnswerField: true
-    }
+      label: "Graphe de fonction (ou suite)",
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.VariationTableFieldBlock,
     {
       label: "Tableau de variations",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.SignTableFieldBlock,
     {
       label: "Tableau de signes",
-      isAnswerField: true
-    }
-  ],
-  [
-    BlockKind.FigureAffineLineFieldBlock,
-    {
-      label: "Droite (affine)",
-      isAnswerField: true
-    }
-  ],
-
-  [
-    BlockKind.FigureVectorPairFieldBlock,
-    {
-      label: "Construction de vecteurs",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.ProofFieldBlock,
-    { label: "Preuve (à compléter)", isAnswerField: true }
+    { label: "Preuve (à compléter)", isAnswerField: true },
   ],
   [BlockKind.TableFieldBlock, { label: "Tableau", isAnswerField: true }],
-  [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }]
+  [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }],
+  [BlockKind.SetFieldBlock, { label: "Ensembles", isAnswerField: true }],
 ] as const;
 
 export const BlockKindLabels: {
@@ -178,18 +167,16 @@ interface BlockKindTypes {
   [BlockKind.TextBlock]: TextBlock;
   [BlockKind.VariationTableBlock]: VariationTableBlock;
   [BlockKind.OrderedListFieldBlock]: OrderedListFieldBlock;
-  [BlockKind.FigurePointFieldBlock]: FigurePointFieldBlock;
-  [BlockKind.FigureVectorFieldBlock]: FigureVectorFieldBlock;
+  [BlockKind.GeometricConstructionFieldBlock]: GeometricConstructionFieldBlock;
   [BlockKind.VariationTableFieldBlock]: VariationTableFieldBlock;
   [BlockKind.SignTableFieldBlock]: SignTableFieldBlock;
   [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
-  [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
-  [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
   [BlockKind.TreeBlock]: TreeBlock;
   [BlockKind.TreeFieldBlock]: TreeFieldBlock;
   [BlockKind.TableFieldBlock]: TableFieldBlock;
   [BlockKind.VectorFieldBlock]: VectorFieldBlock;
   [BlockKind.ProofFieldBlock]: ProofFieldBlock;
+  [BlockKind.SetFieldBlock]: SetFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -197,13 +184,14 @@ export interface TypedBlock<K extends BlockKind> {
   Data: BlockKindTypes[K];
 }
 
-export const xRune = "x".codePointAt(0)!;
-export const yRune = "y".codePointAt(0)!;
+export const xRune = "x".codePointAt(0)! as Int;
+export const yRune = "y".codePointAt(0)! as Int;
+export const nRune = "n".codePointAt(0)! as Int;
 
 /** extractPoints returns the names of indices A for which 'x_A' and 'y_A' are defined */
 export function extractPoints(vars: Variable[]) {
   const points: { [key: string]: { x: boolean; y: boolean } } = {};
-  vars.forEach(v => {
+  vars.forEach((v) => {
     if (v.Indice != "") {
       const point = points[v.Indice] || {};
       if (v.Name == xRune) {
@@ -215,7 +203,7 @@ export function extractPoints(vars: Variable[]) {
     }
   });
 
-  return Object.keys(points).filter(name => {
+  return Object.keys(points).filter((name) => {
     const point = points[name];
     return point.x && point.y;
   });
@@ -243,9 +231,9 @@ const signTableExample: SignTableBlock = {
         SignSymbol.Nothing,
         SignSymbol.Zero,
         SignSymbol.ForbiddenValue,
-        SignSymbol.Nothing
+        SignSymbol.Nothing,
       ],
-      Signs: [true, false, true]
+      Signs: [true, false, true],
     },
     {
       Label: "g(x)",
@@ -253,18 +241,18 @@ const signTableExample: SignTableBlock = {
         SignSymbol.ForbiddenValue,
         SignSymbol.Nothing,
         SignSymbol.Zero,
-        SignSymbol.Nothing
+        SignSymbol.Nothing,
       ],
-      Signs: [false, false, true]
-    }
-  ]
+      Signs: [false, false, true],
+    },
+  ],
 };
 
 function newTreeNode(value: number): TreeNodeAnswer {
   return {
-    Value: value,
+    Value: value as Int,
     Children: [],
-    Probabilities: []
+    Probabilities: [],
   };
 }
 
@@ -276,17 +264,17 @@ function newTree() {
         {
           Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
           Probabilities: ["0.7", "0.2", "0.1"],
-          Value: 0
+          Value: 0 as Int,
         },
         {
           Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
           Probabilities: ["0.7", "0.2", "0.1"],
-          Value: 1
-        }
+          Value: 1 as Int,
+        },
       ],
       Probabilities: ["0.7", "0.3"],
-      Value: 0
-    }
+      Value: 0 as Int,
+    },
   };
 }
 
@@ -299,8 +287,8 @@ export function newBlock(kind: BlockKind): Block {
           Parts: "",
           Bold: false,
           Italic: false,
-          Smaller: false
-        }
+          Smaller: false,
+        },
       };
       return out;
     }
@@ -308,8 +296,8 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Parts: ""
-        }
+          Parts: "",
+        },
       };
       return out;
     }
@@ -320,18 +308,18 @@ export function newBlock(kind: BlockKind): Block {
           ShowGrid: true,
           ShowOrigin: true,
           Bounds: {
-            Width: 10,
-            Height: 10,
-            Origin: { X: 3, Y: 3 }
+            Width: 10 as Int,
+            Height: 10 as Int,
+            Origin: { X: 3, Y: 3 },
           },
           Drawings: {
             Lines: [],
             Points: [],
             Segments: [],
             Circles: [],
-            Areas: []
-          }
-        }
+            Areas: [],
+          },
+        },
       };
       return out;
     }
@@ -344,17 +332,29 @@ export function newBlock(kind: BlockKind): Block {
               Function: "abs(x) + sin(x)",
               Decoration: {
                 Label: "f",
-                Color: ""
+                Color: "",
               },
               Variable: { Name: xRune, Indice: "" },
               From: "-5",
-              To: "5"
-            }
+              To: "5",
+            },
+          ],
+          SequenceExprs: [
+            {
+              Function: "(-1)^n * (n/2)^2",
+              Decoration: {
+                Label: "u_n",
+                Color: "#00FF00",
+              },
+              Variable: { Name: nRune, Indice: "" },
+              From: "-6",
+              To: "6",
+            },
           ],
           FunctionVariations: [],
           Areas: [],
-          Points: []
-        }
+          Points: [],
+        },
       };
       return out;
     }
@@ -364,15 +364,15 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Label: "f(x)",
           Xs: ["-5", "0", "5"],
-          Fxs: ["-3", "2", "-1"]
-        }
+          Fxs: ["-3", "2", "-1"],
+        },
       };
       return out;
     }
     case BlockKind.SignTableBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: copy(signTableExample)
+        Data: copy(signTableExample),
       };
       return out;
     }
@@ -382,23 +382,23 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           VerticalHeaders: [
             { Kind: TextKind.Text, Content: "Ligne 1" },
-            { Kind: TextKind.Text, Content: "Ligne 2" }
+            { Kind: TextKind.Text, Content: "Ligne 2" },
           ],
           HorizontalHeaders: [
             { Kind: TextKind.Text, Content: "Colonne 1" },
-            { Kind: TextKind.Text, Content: "Colonne 2" }
+            { Kind: TextKind.Text, Content: "Colonne 2" },
           ],
           Values: [
             [
               { Kind: TextKind.Text, Content: "Case" },
-              { Kind: TextKind.StaticMath, Content: "\\frac{1}{2}" }
+              { Kind: TextKind.StaticMath, Content: "\\frac{1}{2}" },
             ],
             [
               { Kind: TextKind.Expression, Content: "2x + 3" },
-              { Kind: TextKind.StaticMath, Content: "18" }
-            ]
-          ]
-        }
+              { Kind: TextKind.StaticMath, Content: "18" },
+            ],
+          ],
+        },
       };
       return out;
     }
@@ -406,8 +406,8 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Expression: "1"
-        }
+          Expression: "1",
+        },
       };
       return out;
     }
@@ -418,8 +418,8 @@ export function newBlock(kind: BlockKind): Block {
           Label: "",
           Expression: "x^2 + 2x + 1",
           ComparisonLevel: ComparisonLevel.SimpleSubstitutions,
-          ShowFractionHelp: false
-        }
+          ShowFractionHelp: false,
+        },
       };
       return out;
     }
@@ -429,8 +429,8 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Answer: "1",
           Proposals: ["Oui", "Non"],
-          AsDropDown: false
-        }
+          AsDropDown: false,
+        },
       };
       return out;
     }
@@ -440,66 +440,44 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Answer: ["$\\{$", "-12", ";", "30", "$\\}$"],
           AdditionalProposals: [],
-          Label: "x \\in "
-        }
+          Label: "x \\in ",
+        },
       };
       return out;
     }
-    case BlockKind.FigurePointFieldBlock: {
+    case BlockKind.GeometricConstructionFieldBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
+          Field: {
+            Kind: GeoFieldKind.GFPoint,
+            Data: {
+              Answer: {
+                X: "3",
+                Y: "4",
+              },
             },
-            Drawings: {
-              Lines: [],
-              Points: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
           },
-          Answer: {
-            X: "3",
-            Y: "4"
-          }
-        }
-      };
-      return out;
-    }
-    case BlockKind.FigureVectorFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
+          Background: {
+            Kind: FiguresOrGraphsKind.FigureBlock,
+            Data: {
+              ShowGrid: true,
+              ShowOrigin: true,
+              Bounds: {
+                Width: 10 as Int,
+                Height: 10 as Int,
+                Origin: { X: 3, Y: 3 },
+              },
+              Drawings: {
+                Lines: [],
+                Points: [],
+                Segments: [],
+                Circles: [],
+                Areas: [],
+              },
             },
-            Drawings: {
-              Lines: [],
-              Points: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
           },
-          Answer: {
-            X: "3",
-            Y: "4"
-          },
-          MustHaveOrigin: false,
-          AnswerOrigin: { X: "", Y: "" }
-        }
+        },
       };
       return out;
     }
@@ -510,9 +488,9 @@ export function newBlock(kind: BlockKind): Block {
           Answer: {
             Label: "f(x)",
             Xs: ["-5", "0", "5"],
-            Fxs: ["-3", "2", "-1"]
-          }
-        }
+            Fxs: ["-3", "2", "-1"],
+          },
+        },
       };
       return out;
     }
@@ -520,8 +498,8 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Answer: copy(signTableExample)
-        }
+          Answer: copy(signTableExample),
+        },
       };
       return out;
     }
@@ -529,77 +507,26 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
+          IsDiscrete: false,
           Function: "(x/2)^2",
           Label: "C_f",
           Variable: { Name: xRune, Indice: "" },
-          XGrid: ["-4", "-2", "0", "2", "4"]
-        }
-      };
-      return out;
-    }
-    case BlockKind.FigureVectorPairFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Points: [],
-              Lines: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
-          },
-          Criterion: VectorPairCriterion.VectorColinear
-        }
-      };
-      return out;
-    }
-    case BlockKind.FigureAffineLineFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Points: [],
-              Lines: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
-          },
-          Label: "f",
-          A: "1",
-          B: "3"
-        }
+          XGrid: ["-4", "-2", "0", "2", "4"],
+        },
       };
       return out;
     }
     case BlockKind.TreeFieldBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: { Answer: newTree() }
+        Data: { Answer: newTree() },
       };
       return out;
     }
     case BlockKind.TreeBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: newTree()
+        Data: newTree(),
       };
       return out;
     }
@@ -609,17 +536,17 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           VerticalHeaders: [
             { Kind: TextKind.Text, Content: "Ligne 1" },
-            { Kind: TextKind.Text, Content: "Ligne 2" }
+            { Kind: TextKind.Text, Content: "Ligne 2" },
           ],
           HorizontalHeaders: [
             { Kind: TextKind.Text, Content: "Colonne 1" },
-            { Kind: TextKind.Text, Content: "Colonne 2" }
+            { Kind: TextKind.Text, Content: "Colonne 2" },
           ],
           Answer: [
             ["0", "1"],
-            ["2", "3"]
-          ]
-        }
+            ["2", "3"],
+          ],
+        },
       };
       return out;
     }
@@ -629,11 +556,11 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Answer: {
             X: "3.5",
-            Y: "-4"
+            Y: "-4",
           },
           AcceptColinear: false,
-          DisplayColumn: true
-        }
+          DisplayColumn: true,
+        },
       };
       return out;
     }
@@ -649,21 +576,31 @@ export function newBlock(kind: BlockKind): Block {
                   Op: Binary.And,
                   Left: {
                     Kind: ProofAssertionKind.ProofStatement,
-                    Data: { Content: "$n$ est pair" }
+                    Data: { Content: "$n$ est pair" },
                   },
                   Right: {
                     Kind: ProofAssertionKind.ProofStatement,
-                    Data: { Content: "$m$ est impair" }
-                  }
-                }
+                    Data: { Content: "$m$ est impair" },
+                  },
+                },
               },
               {
                 Kind: ProofAssertionKind.ProofStatement,
-                Data: { Content: "$n+m$ est impair" }
-              }
-            ]
-          }
-        }
+                Data: { Content: "$n+m$ est impair" },
+              },
+            ],
+          },
+        },
+      };
+      return out;
+    }
+    case BlockKind.SetFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: "¬A ∩ B ",
+          AdditionalSets: ["C"],
+        },
       };
       return out;
     }
@@ -702,9 +639,11 @@ export function tagString(tag: string) {
     .toUpperCase();
 }
 
+export const MatiereColor = "orange-lighten-2";
 export const LevelColor = "pink";
+export const SubLevelColor = "purple";
 export const ChapterColor = "primary-darken-1";
-export const TrivMathColor = "brown";
+export const IsyTrivColor = "brown";
 export const DifficultyColor = "secondary-darken-1";
 
 export function tagColor(tag: Section | undefined) {
@@ -714,7 +653,11 @@ export function tagColor(tag: Section | undefined) {
     case Section.Chapter:
       return ChapterColor;
     case Section.TrivMath:
-      return TrivMathColor;
+      return IsyTrivColor;
+    case Section.SubLevel:
+      return SubLevelColor;
+    case Section.Matiere:
+      return MatiereColor;
   }
   // difficulty
   return DifficultyColor;
@@ -734,17 +677,10 @@ export function questionDifficulty(tags: string[]): number {
   return 0;
 }
 
-/** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
-export const visiblityColors: { [key in Visibility]: string } = {
-  [Visibility.Hidden]: "",
-  [Visibility.Admin]: "yellow-lighten-3",
-  [Visibility.Personnal]: "white"
-};
-
 export function removeDuplicates(tags: string[][]) {
   const unique: string[][] = [];
-  tags.forEach(l => {
-    if (unique.map(l => JSON.stringify(l)).includes(JSON.stringify(l))) {
+  tags.forEach((l) => {
+    if (unique.map((l) => JSON.stringify(l)).includes(JSON.stringify(l))) {
       return;
     }
     unique.push(l);
@@ -754,10 +690,9 @@ export function removeDuplicates(tags: string[][]) {
 
 export function personnalOrigin(): Origin {
   return {
-    IsPublic: false,
-    AllowPublish: false,
+    PublicStatus: PublicStatus.NotAdmin,
     Visibility: Visibility.Personnal,
-    IsInReview: { InReview: false, Id: -1 }
+    IsInReview: { InReview: false, Id: -1 as Int },
   };
 }
 
@@ -767,12 +702,12 @@ export const lastColorUsed = { color: "#FF0000" };
 export function emptyAssertion(): ProofAssertion {
   return {
     Kind: ProofAssertionKind.ProofInvalid,
-    Data: {}
+    Data: {},
   };
 }
 
 export interface VariantG {
-  Id: number;
+  Id: Int;
   Subtitle: string;
   Difficulty: DifficultyTag;
   HasCorrection?: boolean;
@@ -810,23 +745,59 @@ export function emptyTagsDB(): TagsDB {
   return {
     Levels: [],
     ChaptersByLevel: {},
-    TrivByChapters: {}
+    TrivByChapters: {},
+    SubLevelsByLevel: {},
   };
 }
 
 /** areTagsEquals compares the tags without taking order in account */
 export function areTagsEquals(tags1: Tags, tags2: Tags) {
-  const l1 = (tags1 || []).map(ts => `${ts.Section}--${ts.Tag}`);
+  const l1 = (tags1 || []).map((ts) => `${ts.Section}--${ts.Tag}`);
   l1.sort();
-  const l2 = (tags2 || []).map(ts => `${ts.Section}--${ts.Tag}`);
+  const l2 = (tags2 || []).map((ts) => `${ts.Section}--${ts.Tag}`);
   l2.sort();
   return l1.join(";") == l2.join(";");
 }
 
 /** either a questiongroup or an exercicegroup */
 export interface ResourceGroup {
-  Id: number;
+  Id: Int;
   Title: string;
   Variants: VariantG[];
   Tags: Tags;
+  Origin: Origin;
+}
+
+export function questionToResource(group: QuestiongroupExt): ResourceGroup {
+  return {
+    Id: group.Group.Id,
+    Title: group.Group.Title,
+    Tags: group.Tags,
+    Variants: group.Variants || [],
+    Origin: group.Origin,
+  };
+}
+
+export function exerciceToResource(group: ExercicegroupExt): ResourceGroup {
+  return {
+    Id: group.Group.Id,
+    Title: group.Group.Title,
+    Tags: group.Tags,
+    Variants: group.Variants || [],
+    Origin: group.Origin,
+  };
+}
+
+export interface QuestionPage {
+  id: number;
+  parameters: Parameters;
+  sharedParameters: Parameters;
+  enonce: Enonce;
+  correction: Enonce;
+}
+
+export interface SaveQuestionOut {
+  IsValid: boolean;
+  Error: ErrQuestionInvalid;
+  Preview: LoopbackServerEvent;
 }

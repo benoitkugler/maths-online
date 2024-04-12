@@ -11,7 +11,7 @@
         clearable
       ></v-text-field>
     </v-col>
-    <v-col cols="3">
+    <v-col cols="2">
       <v-select
         multiple
         :items="levelTags"
@@ -31,7 +31,28 @@
         hide-details
       ></v-select>
     </v-col>
-    <v-col cols="4">
+    <v-col cols="2">
+      <v-select
+        label="Filière"
+        variant="outlined"
+        density="compact"
+        multiple
+        :items="subLevelTags"
+        :model-value="props.modelValue.SubLevelTags || []"
+        @update:model-value="
+          (v) => {
+            props.modelValue.SubLevelTags = v;
+            emit('update:model-value', props.modelValue);
+          }
+        "
+        :color="SubLevelColor"
+        chips
+        closable-chips
+        hide-details
+        no-data-text="Aucune filière pour le niveau choisi."
+      ></v-select>
+    </v-col>
+    <v-col cols="3">
       <v-select
         hide-details
         multiple
@@ -62,15 +83,25 @@
           }
         "
       ></OriginSelect>
+      <MatiereSelect
+        :matiere="props.modelValue.Matiere"
+        @update:matiere="
+          (o) => {
+            props.modelValue.Matiere = o;
+            emit('update:model-value', props.modelValue);
+          }
+        "
+      ></MatiereSelect>
     </v-col>
   </v-row>
 </template>
 
 <script setup lang="ts">
 import type { Query, TagsDB } from "@/controller/api_gen";
-import { ChapterColor, LevelColor } from "@/controller/editor";
+import { ChapterColor, LevelColor, SubLevelColor } from "@/controller/editor";
 import { computed } from "vue";
 import OriginSelect from "../OriginSelect.vue";
+import MatiereSelect from "../MatiereSelect.vue";
 
 interface Props {
   modelValue: Query;
@@ -108,6 +139,21 @@ const chapterTags = computed(() => {
     .concat({ title: "Non classé", value: "" });
 });
 
+const subLevelTags = computed(() => {
+  const all = new Set<string>();
+  props.modelValue.LevelTags?.forEach((levelTag) => {
+    const l = (props.allTags.SubLevelsByLevel || {})[levelTag];
+    l?.forEach((v) => all.add(v));
+  });
+  const out = Array.from(all.values());
+  out.sort();
+  return out.map((tag) => ({
+    title: tag,
+    value: tag,
+  }));
+  // .concat({ title: "Non classé", value: "" });
+});
+
 const noChaptersText = computed(() => {
   return props.modelValue.LevelTags?.length
     ? "Aucun chapitre n'est disponible"
@@ -115,7 +161,7 @@ const noChaptersText = computed(() => {
 });
 
 // debounce feature for text field
-let timerId = 0;
+let timerId: ReturnType<typeof setTimeout>;
 function updateQuerySearch() {
   const debounceDelay = 300;
   // cancel pending call

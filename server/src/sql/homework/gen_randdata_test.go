@@ -1,6 +1,7 @@
 package homework
 
 import (
+	"database/sql"
 	"math/rand"
 	"time"
 
@@ -33,6 +34,8 @@ func randSheet() Sheet {
 	s.IdTeacher = randtea_IdTeacher()
 	s.Level = randstring()
 	s.Anonymous = randOptionalIdTravail()
+	s.Public = randbool()
+	s.Matiere = randtea_MatiereTag()
 
 	return s
 }
@@ -57,6 +60,17 @@ func randTravail() Travail {
 	s.IdSheet = randIdSheet()
 	s.Noted = randbool()
 	s.Deadline = randTime()
+	s.ShowAfter = randTime()
+
+	return s
+}
+
+func randTravailException() TravailException {
+	var s TravailException
+	s.IdStudent = randtea_IdStudent()
+	s.IdTravail = randIdTravail()
+	s.Deadline = randsql_NullTime()
+	s.IgnoreForMark = randbool()
 
 	return s
 }
@@ -72,6 +86,14 @@ func randint() int {
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
+}
+
+func randsql_NullTime() sql.NullTime {
+	var s sql.NullTime
+	s.Time = randtTime()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
@@ -97,6 +119,16 @@ func randtea_IdClassroom() teacher.IdClassroom {
 	return teacher.IdClassroom(randint64())
 }
 
+func randtea_IdStudent() teacher.IdStudent {
+	return teacher.IdStudent(randint64())
+}
+
 func randtea_IdTeacher() teacher.IdTeacher {
 	return teacher.IdTeacher(randint64())
+}
+
+func randtea_MatiereTag() teacher.MatiereTag {
+	choix := [...]teacher.MatiereTag{teacher.Allemand, teacher.Anglais, teacher.Autre, teacher.Espagnol, teacher.Francais, teacher.HistoireGeo, teacher.Italien, teacher.Mathematiques, teacher.PhysiqueChimie, teacher.SES, teacher.SVT}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }

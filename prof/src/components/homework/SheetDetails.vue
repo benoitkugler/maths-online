@@ -14,40 +14,47 @@
 
     <v-card-text>
       <v-row>
-        <!-- fields -->
-        <v-col cols="4" align-self="center">
-          <v-row>
-            <v-col>
-              <v-text-field
-                autofocus
-                @focus="$event.target.select()"
-                variant="outlined"
-                density="compact"
-                label="Titre de la feuille"
-                v-model="title"
-                @blur="updateTitle"
-                hide-details
-              >
-              </v-text-field> </v-col
-          ></v-row>
-
-          <v-row>
-            <v-col>
-              <v-combobox
-                variant="outlined"
-                density="compact"
-                label="Niveau (classe)"
-                v-model="props.sheet.Sheet.Level"
-                :items="allTags.Levels || []"
-                :color="LevelColor"
-                @blur="update"
-              ></v-combobox>
-            </v-col>
-          </v-row>
+        <v-col>
+          <v-text-field
+            autofocus
+            @focus="$event.target.select()"
+            variant="outlined"
+            density="compact"
+            label="Titre de la feuille"
+            v-model="title"
+            @blur="updateTitle"
+            hide-details
+          >
+          </v-text-field>
         </v-col>
+        <v-col>
+          <v-select
+            density="compact"
+            variant="outlined"
+            v-model="props.sheet.Sheet.Matiere"
+            :color="MatiereColor"
+            label="Matière"
+            :items="Object.keys(MatiereTagLabels)"
+            @blur="update"
+            hide-details
+          ></v-select>
+        </v-col>
+        <v-col>
+          <v-combobox
+            variant="outlined"
+            density="compact"
+            label="Niveau (classe)"
+            v-model="props.sheet.Sheet.Level"
+            :items="allTags.Levels || []"
+            :color="LevelColor"
+            @blur="update"
+          ></v-combobox>
+        </v-col>
+      </v-row>
 
-        <!-- exercice list -->
-        <v-col cols="8">
+      <!-- exercice list -->
+      <v-row no-gutters>
+        <v-col>
           <SheetTasks
             :sheet="props.sheet"
             :all-tags="allTags"
@@ -75,13 +82,14 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Monoquestion,
-  RandomMonoquestion,
-  Sheet,
-  SheetExt,
-  TagsDB,
-  TaskExt,
+import {
+  MatiereTagLabels,
+  type Monoquestion,
+  type RandomMonoquestion,
+  type Sheet,
+  type SheetExt,
+  type TagsDB,
+  type TaskExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import {
@@ -89,9 +97,9 @@ import {
   emptyTagsDB,
   type VariantG,
   type ResourceGroup,
+  MatiereColor,
 } from "@/controller/editor";
-import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { ref, onMounted } from "vue";
 import SheetTasks from "./SheetTasks.vue";
 import { watch } from "vue";
 
@@ -113,13 +121,13 @@ const emit = defineEmits<{
   (e: "reorderTasks", sheet: Sheet, tasks: TaskExt[]): void;
 }>();
 
-let title = $ref(props.sheet.Sheet.Title);
+const title = ref(props.sheet.Sheet.Title);
 
-watch(props, () => (title = props.sheet.Sheet.Title));
+watch(props, () => (title.value = props.sheet.Sheet.Title));
 
 function updateTitle() {
-  if (title == props.sheet.Sheet.Title) return;
-  props.sheet.Sheet.Title = title;
+  if (title.value == props.sheet.Sheet.Title) return;
+  props.sheet.Sheet.Title = title.value;
   update();
 }
 
@@ -128,9 +136,9 @@ function update() {
 }
 
 onMounted(fetchTags);
-let allTags = $ref<TagsDB>(emptyTagsDB());
+const allTags = ref<TagsDB>(emptyTagsDB());
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
-  if (tags) allTags = tags;
+  if (tags) allTags.value = tags;
 }
 </script>

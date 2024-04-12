@@ -65,6 +65,7 @@
         style="text-align: right"
       >
         <v-btn
+          size="small"
           icon
           class="mr-2"
           title="Visualiser"
@@ -73,6 +74,7 @@
           <v-icon>mdi-eye</v-icon>
         </v-btn>
         <v-btn
+          size="small"
           v-if="reviewExt.IsAcceptable"
           variant="outlined"
           color="success"
@@ -82,6 +84,7 @@
           Accepter la publication
         </v-btn>
         <v-btn
+          size="small"
           icon
           v-if="reviewExt.IsDeletable"
           @click="showConfirmDelete = true"
@@ -129,8 +132,7 @@ import {
   type Time,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onActivated, onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { ref, onActivated, onMounted } from "vue";
 import CommentRow from "./CommentRow.vue";
 import NewComment from "./NewComment.vue";
 import ApprovalArea from "./ApprovalArea.vue";
@@ -148,7 +150,7 @@ const emit = defineEmits<{
 
 const labels = ReviewKindLabels;
 
-let reviewExt = $ref<ReviewExt | null>(null);
+const reviewExt = ref<ReviewExt | null>(null);
 
 onMounted(fetchData);
 onActivated(fetchData);
@@ -156,25 +158,27 @@ onActivated(fetchData);
 async function fetchData() {
   const res = await controller.ReviewLoad({ id: props.review.Id });
   if (res == undefined) return;
-  reviewExt = res;
+  reviewExt.value = res;
 }
 
 function ownComments() {
-  if (reviewExt == null) return [];
+  if (reviewExt.value == null) return [];
   return (
-    reviewExt.Comments?.filter((cm) => cm.IsOwned).map((cm) => cm.Comment) || []
+    reviewExt.value.Comments?.filter((cm) => cm.IsOwned).map(
+      (cm) => cm.Comment
+    ) || []
   );
 }
 
-let isSending = $ref(false);
+const isSending = ref(false);
 
 async function _updateComments(comments: Comments) {
-  isSending = true;
+  isSending.value = true;
   const res = await controller.ReviewUpdateCommnents({
     IdReview: props.review.Id,
     Comments: comments,
   });
-  isSending = false;
+  isSending.value = false;
   if (res == undefined) return;
 
   fetchData();
@@ -190,15 +194,15 @@ function sendComment(comment: string) {
 }
 
 async function updateComment(message: string, index: number) {
-  if (!reviewExt?.Comments) return;
-  const comment = reviewExt.Comments[index];
+  if (!reviewExt.value?.Comments) return;
+  const comment = reviewExt.value.Comments[index];
   comment.Comment.Message = message;
   _updateComments(ownComments());
 }
 
 async function deleteComment(index: number) {
-  if (reviewExt == null) return;
-  reviewExt.Comments?.splice(index, 1);
+  if (reviewExt.value == null) return;
+  reviewExt.value.Comments?.splice(index, 1);
   _updateComments(ownComments());
 }
 
@@ -211,22 +215,22 @@ async function updateApproval(appro: Approval) {
   fetchData();
 }
 
-let showConfirmDelete = $ref(false);
+const showConfirmDelete = ref(false);
 
 async function deleteReview() {
-  showConfirmDelete = false;
+  showConfirmDelete.value = false;
   const res = await controller.ReviewDelete({ id: props.review.Id });
   if (res == undefined) return;
   emit("back");
 }
 
-let showConfirmAccept = $ref(false);
+const showConfirmAccept = ref(false);
 async function acceptReview() {
-  showConfirmAccept = false;
+  showConfirmAccept.value = false;
   const res = await controller.ReviewAccept({ id: props.review.Id });
   if (res == undefined) return;
   emit("back");
 }
 
-let showPreviewTarget = $ref(false);
+const showPreviewTarget = ref(false);
 </script>

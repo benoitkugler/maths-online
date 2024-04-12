@@ -6,7 +6,7 @@ class RadioController extends FieldController {
   List<TextLine> proposals;
   int? index;
 
-  RadioController(void Function() onChange, this.proposals) : super(onChange);
+  RadioController(super.onChange, this.proposals);
 
   @override
   bool hasValidData() {
@@ -29,17 +29,18 @@ class RadioController extends FieldController {
   }
 }
 
-class RadioField extends StatefulWidget {
+class RadioFieldW extends StatefulWidget {
   final Color _color;
   final RadioController _controller;
 
-  const RadioField(this._color, this._controller, {Key? key}) : super(key: key);
+  const RadioFieldW(this._color, this._controller, {Key? key})
+      : super(key: key);
 
   @override
-  State<RadioField> createState() => _RadioFieldState();
+  State<RadioFieldW> createState() => _RadioFieldWState();
 }
 
-class _RadioFieldState extends State<RadioField> {
+class _RadioFieldWState extends State<RadioFieldW> {
   @override
   Widget build(BuildContext context) {
     final color = widget._controller.hasError ? Colors.red : widget._color;

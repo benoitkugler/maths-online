@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
@@ -21,9 +22,10 @@ func (a Tags) Len() int      { return len(a) }
 func (a Tags) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a Tags) Less(i, j int) bool {
 	ai, aj := a[i], a[j]
-	if ai.Section < aj.Section {
+	si, sj := ai.Section.Order(), aj.Section.Order()
+	if si < sj {
 		return true
-	} else if ai.Section > aj.Section {
+	} else if si > sj {
 		return false
 	}
 	return ai.Tag < aj.Tag
@@ -98,8 +100,17 @@ func (ts Tags) normalize() (Tags, error) {
 
 // TagIndex summarize the classification induced by tags
 type TagIndex struct {
+	Matiere teacher.MatiereTag
 	Level   LevelTag
 	Chapter string
+}
+
+func (ti TagIndex) List() Tags {
+	return Tags{
+		{Section: Matiere, Tag: string(ti.Matiere)},
+		{Section: Level, Tag: string(ti.Level)},
+		{Section: Chapter, Tag: ti.Chapter},
+	}
 }
 
 // TagGroup groups the tags for one question/exercice,
@@ -107,18 +118,23 @@ type TagIndex struct {
 type TagGroup struct {
 	TagIndex
 	TrivMaths []string
+	SubLevels []string
 }
 
 // BySection classify the tag list according to section
 func (ts Tags) BySection() (out TagGroup) {
 	for _, tag := range ts {
 		switch tag.Section {
+		case Matiere:
+			out.Matiere = teacher.MatiereTag(tag.Tag)
 		case Level:
 			out.Level = LevelTag(tag.Tag)
 		case Chapter:
 			out.Chapter = tag.Tag
 		case TrivMath:
 			out.TrivMaths = append(out.TrivMaths, tag.Tag)
+		case SubLevel:
+			out.SubLevels = append(out.SubLevels, tag.Tag)
 		}
 	}
 	return out
@@ -217,7 +233,9 @@ func (tls TagListSet) Has(tags Tags) bool {
 func (tls TagListSet) List() []Tags {
 	out := make([]Tags, 0, len(tls.m))
 	for _, v := range tls.m {
-		out = append(out, v)
+		sorted := append(Tags{}, v...)
+		sort.Sort(sorted)
+		out = append(out, sorted)
 	}
 	return out
 }

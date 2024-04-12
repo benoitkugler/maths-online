@@ -27,7 +27,7 @@ func (err ErrParameters) Error() string {
 // It the error is not nil, it will be of type `ErrParameters`.
 // Once called without error, `ToMap` may be safely used.
 func (pr Parameters) Validate() error {
-	params := make(expression.RandomParameters)
+	params := expression.NewRandomParameters()
 	for _, item := range pr {
 		err := item.mergeTo(params)
 		if err != nil {
@@ -38,12 +38,10 @@ func (pr Parameters) Validate() error {
 		}
 	}
 
-	for v := range params {
-		if v.Name == 'e' {
-			return ErrParameters{
-				Origin:  v.String(),
-				Details: "La variable e n'est pas autorisée (car utilisée pour exp).",
-			}
+	if params.IsDefined(expression.Variable{Name: 'e'}) {
+		return ErrParameters{
+			Origin:  "e = ",
+			Details: "La variable e n'est pas autorisée (car utilisée pour exp).",
 		}
 	}
 
@@ -94,7 +92,9 @@ func (e ErrQuestionInvalid) Error() string {
 	}
 }
 
-func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) {
+func (en Enonce) validate(params *expression.RandomParameters) (bool, errEnonce) {
+	en = en.expandText()
+
 	// setup the validators
 	var err error
 	validators := make([]validator, len(en))
@@ -105,10 +105,13 @@ func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) 
 		}
 	}
 
+	// reuse memory
+	inst := expression.NewInstantiater(*params)
 	const nbTries = 1_000
 	for try := 0; try < nbTries; try++ {
 		// instantiate the parameters for this try
-		vars, _ := params.Instantiate()
+		inst.Reset()
+		vars, _ := inst.Instantiate()
 
 		// run through the blocks
 		for i, v := range validators {
@@ -186,6 +189,11 @@ type variationTableValidator struct {
 }
 
 func (v variationTableValidator) validate(vars expression.Vars) error {
+	_, err := v.label.instantiateAndMerge(vars)
+	if err != nil {
+		return err
+	}
+
 	for _, c := range v.fxs {
 		err := c.IsValidNumber(vars, false, true)
 		if err != nil {
@@ -194,6 +202,20 @@ func (v variationTableValidator) validate(vars expression.Vars) error {
 	}
 
 	return expression.AreSortedNumbers(v.xs, vars)
+}
+
+type signTableValidator struct {
+	labels []TextParts
+}
+
+func (v signTableValidator) validate(vars expression.Vars) error {
+	for _, label := range v.labels {
+		_, err := label.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type figureValidator struct {
@@ -261,24 +283,29 @@ func (v figureValidator) validate(vars expression.Vars) error {
 	return nil
 }
 
-type function struct {
-	label  string
+type functionValidator struct {
+	label  Interpolated
 	domain expression.Domain
 	expression.FunctionExpr
 }
 
-func newFunction(fn FunctionDefinition, params expression.RandomParameters) (function, error) {
+func newFunctionValidator(fn FunctionDefinition, params *expression.RandomParameters) (functionValidator, error) {
 	fnExpr, from, to, err := fn.parse()
 	if err != nil {
-		return function{}, err
+		return functionValidator{}, err
 	}
 
 	// check that the function variable is not used
-	if params[fn.Variable] != nil {
-		return function{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
+	if params.IsDefined(fn.Variable) {
+		return functionValidator{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 
-	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
+	_, err = fn.Decoration.Label.parse()
+	if err != nil {
+		return functionValidator{}, err
+	}
+
+	return functionValidator{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
 }
 
 type areaVData struct {
@@ -291,15 +318,16 @@ type functionPointVData struct {
 	x       *expression.Expr
 }
 type functionsGraphValidator struct {
-	functions          []function
+	functions          []functionValidator
 	variationValidator []variationTableValidator
+	sequences          []functionValidator
 	areas              []areaVData
 	points             []functionPointVData
 }
 
 func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	for _, f := range v.functions {
-		if err := f.FunctionExpr.IsValid(f.domain, vars, maxFunctionBound); err != nil {
+		if err := f.FunctionExpr.IsValidAsFunction(f.domain, vars, maxFunctionBound); err != nil {
 			return err
 		}
 	}
@@ -308,12 +336,21 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 			return err
 		}
 	}
+	for _, f := range v.sequences {
+		if err := f.FunctionExpr.IsValidAsSequence(f.domain, vars, maxFunctionBound); err != nil {
+			return err
+		}
+	}
 
 	// checks that function with same label are defined on non overlapping intervals,
 	// so that area references can't be ambiguous
 	byNames := make(map[string][]expression.Domain)
 	for _, fn := range v.functions {
-		byNames[fn.label] = append(byNames[fn.label], fn.domain)
+		label, err := fn.label.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		byNames[label] = append(byNames[label], fn.domain)
 	}
 	for _, vt := range v.variationValidator {
 		label, err := vt.label.instantiateAndMerge(vars)
@@ -409,31 +446,30 @@ func (v radioValidator) validate(vars expression.Vars) error {
 	return v.expr.IsValidIndex(vars, v.proposalsLength)
 }
 
-type figurePointValidator struct {
-	figure validator
-	answer parsedCoord
+type geometricConstructionValidator struct {
+	field      validator
+	background validator
 }
 
-func (v figurePointValidator) validate(vars expression.Vars) error {
-	if err := v.figure.validate(vars); err != nil {
+func (v geometricConstructionValidator) validate(vars expression.Vars) error {
+	if err := v.field.validate(vars); err != nil {
 		return err
 	}
-	if err := v.answer.validate(vars, false); err != nil {
-		return err
-	}
-	return nil
+	return v.background.validate(vars)
 }
 
-type figureVectorValidator struct {
-	figure       validator
+type gfPointValidator parsedCoord
+
+func (v gfPointValidator) validate(vars expression.Vars) error {
+	return parsedCoord(v).validate(vars, false)
+}
+
+type gfVectorValidator struct {
 	answer       parsedCoord
 	answerOrigin *parsedCoord // optional
 }
 
-func (v figureVectorValidator) validate(vars expression.Vars) error {
-	if err := v.figure.validate(vars); err != nil {
-		return err
-	}
+func (v gfVectorValidator) validate(vars expression.Vars) error {
 	if err := v.answer.validate(vars, false); err != nil {
 		return err
 	}
@@ -443,9 +479,33 @@ func (v figureVectorValidator) validate(vars expression.Vars) error {
 	return nil
 }
 
+type gfAffineLineValidator struct {
+	a, b *expression.Expr
+}
+
+func (v gfAffineLineValidator) validate(vars expression.Vars) error {
+	if err := v.a.IsValidNumber(vars, false, false); err != nil {
+		return err
+	}
+	if err := v.b.IsValidNumber(vars, false, true); err != nil {
+		return err
+	}
+
+	b, err := v.b.Evaluate(vars)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := expression.IsInt(b); !ok {
+		return fmt.Errorf("L'expression %s de B n'est pas un nombre entier (%f).", v.b, b)
+	}
+
+	return nil
+}
+
 type functionPointsValidator struct {
 	xGrid    []*expression.Expr
-	function function
+	function functionValidator
 }
 
 // checks the x grid only contains integers values with no duplicates,
@@ -479,37 +539,8 @@ func (v functionPointsValidator) validate(vars expression.Vars) error {
 
 		y := f(xValue)
 		if _, ok = expression.IsInt(y); !ok {
-			return fmt.Errorf("La fonction %s ne définit pas des images <b>entières</b> (%g)", fnExpr.Function, expression.RoundFloat(y))
+			return fmt.Errorf("L'expression %s ne définit pas des images <b>entières</b> (%g)", fnExpr.Function, expression.RoundFloat(y))
 		}
-	}
-
-	return nil
-}
-
-type figureAffineLineValidator struct {
-	figure validator
-	a, b   *expression.Expr
-}
-
-func (v figureAffineLineValidator) validate(vars expression.Vars) error {
-	if err := v.figure.validate(vars); err != nil {
-		return err
-	}
-
-	if err := v.a.IsValidNumber(vars, false, false); err != nil {
-		return err
-	}
-	if err := v.b.IsValidNumber(vars, false, true); err != nil {
-		return err
-	}
-
-	b, err := v.b.Evaluate(vars)
-	if err != nil {
-		return err
-	}
-
-	if _, ok := expression.IsInt(b); !ok {
-		return fmt.Errorf("L'expression %s de B n'est pas un nombre entier (%f).", v.b, b)
 	}
 
 	return nil
@@ -565,4 +596,15 @@ type vectorValidator struct {
 
 func (v vectorValidator) validate(vars expression.Vars) error {
 	return v.answer.validate(vars, true)
+}
+
+type setValidator struct {
+	answer *expression.Expr
+}
+
+func (sv setValidator) validate(vars expression.Vars) error {
+	e := sv.answer.Copy()
+	e.Substitute(vars)
+	_, err := e.ToBinarySet()
+	return err
 }

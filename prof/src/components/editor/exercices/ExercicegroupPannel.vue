@@ -26,11 +26,11 @@
   >
     <ExerciceVariantPannel
       :exercice-header="ownVariants[variantIndex]"
-      :is-readonly="isReadonly"
+      :readonly="isReadonly"
       :all-tags="props.allTags"
       :show-variant-meta="true"
       @update="(ex) => (ownVariants[variantIndex] = ex)"
-      @preview="(ex) => emit('preview', ex)"
+      ref="editor"
     ></ExerciceVariantPannel>
   </ResourceScafold>
 </template>
@@ -38,23 +38,21 @@
 <script setup lang="ts">
 import type {
   ExercicegroupExt,
-  ExerciceHeader,
-  LoopbackShowExercice,
-  QuestionExerciceUses,
   Sheet,
   Tags,
   TagsDB,
+  TaskUses,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
-import { computed } from "vue";
 import { useRouter } from "vue-router";
-import { $computed, $ref } from "vue/macros";
 import UsesCard from "../UsesCard.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
 import ResourceScafold from "../ResourceScafold.vue";
+import { ref } from "vue";
+import { computed } from "vue";
 
 interface Props {
   group: ExercicegroupExt;
@@ -65,52 +63,45 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
-  (e: "preview", ex: LoopbackShowExercice): void;
 }>();
 
 const router = useRouter();
 
-let group = $ref(copy(props.group));
-let ownVariants = $ref(copy(props.group.Variants || []));
+const group = ref(copy(props.group));
+const ownVariants = ref(copy(props.group.Variants || []));
 
-let variantIndex = $ref(0);
+const variantIndex = ref(0);
 
-let isReadonly = $computed(
+const isReadonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
 const resource = computed<ResourceGroup>(() => ({
-  Id: group.Group.Id,
-  Title: group.Group.Title,
-  Tags: group.Tags,
-  Variants: ownVariants,
+  Id: group.value.Group.Id,
+  Title: group.value.Group.Title,
+  Tags: group.value.Tags,
+  Variants: ownVariants.value,
+  Origin: group.value.Origin,
 }));
 
 function updateTitle(t: string) {
-  group.Group.Title = t;
+  group.value.Group.Title = t;
   updateExercicegroup();
 }
 
+const editor = ref<InstanceType<typeof ExerciceVariantPannel> | null>(null);
+
 async function updateExercicegroup() {
-  if (isReadonly) return;
-  await controller.EditorUpdateExercicegroup(group.Group);
+  if (isReadonly.value) return;
+  await controller.EditorUpdateExercicegroup(group.value.Group);
 
   // refresh the preview
-  const res = await controller.EditorSaveExerciceAndPreview({
-    OnlyPreview: true,
-    IdExercice: ownVariants[variantIndex].Id,
-    Parameters: [], // ignored
-    Questions: [], // ignored
-    CurrentQuestion: -1,
-    ShowCorrection: false,
-  });
-  if (res == undefined) return;
-  emit("preview", res.Preview);
+  editor.value?.refreshExercicePreview();
 }
 
-let deletedBlocked = $ref<QuestionExerciceUses>(null);
+const deletedBlocked = ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
-  deletedBlocked = null;
+  deletedBlocked.value = null;
 
   router.push({ name: "homework", query: { idSheet: sh.Id } });
 }
@@ -122,22 +113,25 @@ async function deleteVariante(variant: VariantG) {
   if (res == undefined) return;
   // check if the variant is used
   if (!res.Deleted) {
-    deletedBlocked = res.BlockedBy;
+    deletedBlocked.value = res.BlockedBy;
     return;
   }
 
-  ownVariants = ownVariants.filter((qu) => qu.Id != variant.Id);
-  if (ownVariants.length && variantIndex >= ownVariants.length) {
-    variantIndex = 0;
+  ownVariants.value = ownVariants.value.filter((qu) => qu.Id != variant.Id);
+  if (
+    ownVariants.value.length &&
+    variantIndex.value >= ownVariants.value.length
+  ) {
+    variantIndex.value = 0;
   }
   // if there is no more variant, that means the exercicegroup is deleted:
   // go back
-  if (!ownVariants.length) {
+  if (!ownVariants.value.length) {
     emit("back");
   }
 }
 
-let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
+const scafold = ref<InstanceType<typeof ResourceScafold> | null>(null);
 
 async function duplicateVariante(exercice: VariantG) {
   const newExercice = await controller.EditorDuplicateExercice({
@@ -146,21 +140,21 @@ async function duplicateVariante(exercice: VariantG) {
   if (newExercice == undefined) {
     return;
   }
-  ownVariants.push(newExercice);
-  variantIndex = ownVariants.length - 1; // go to the new exercice
+  ownVariants.value.push(newExercice);
+  variantIndex.value = ownVariants.value.length - 1; // go to the new exercice
 
-  if (scafold) scafold.showEditVariant(newExercice);
+  if (scafold.value) scafold.value.showEditVariant(newExercice);
 }
 
 async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateExerciceTags({
-    Id: group.Group.Id,
+    Id: group.value.Group.Id,
     Tags: newTags,
   });
   if (rep === undefined) {
     return;
   }
-  group.Tags = newTags;
+  group.value.Tags = newTags;
 }
 
 function backToList() {
@@ -168,12 +162,14 @@ function backToList() {
 }
 
 async function updateVariant(variant: VariantG) {
-  if (isReadonly) {
+  if (isReadonly.value) {
     return;
   }
-  ownVariants[variantIndex].Subtitle = variant.Subtitle;
-  ownVariants[variantIndex].Difficulty = variant.Difficulty;
-  await controller.EditorSaveExerciceMeta(ownVariants[variantIndex]);
+  ownVariants.value[variantIndex.value].Subtitle = variant.Subtitle;
+  ownVariants.value[variantIndex.value].Difficulty = variant.Difficulty;
+  await controller.EditorSaveExerciceMeta(
+    ownVariants.value[variantIndex.value]
+  );
 }
 </script>
 

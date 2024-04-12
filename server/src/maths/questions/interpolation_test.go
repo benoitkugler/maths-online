@@ -111,3 +111,90 @@ func TestLatexOutput(t *testing.T) {
 		t.Fatal(len(sample))
 	}
 }
+
+func text(s string) textChunck { return textChunck{s, iText} }
+func form(s string) textChunck { return textChunck{s, iFormula} }
+func nb(s string) textChunck   { return textChunck{s, iNumberField} }
+
+func TestInterpolated_parseFormula(t *testing.T) {
+	tests := []struct {
+		s       Interpolated
+		wantOut []textChunck
+	}{
+		{
+			"", []textChunck{text("")},
+		},
+		{
+			"regular\ntwo lines", []textChunck{text("regular\ntwo lines")},
+		},
+		{
+			"false$\n$$", []textChunck{text("false$\n$$")},
+		},
+		{
+			"with formula\n $$ test $$", []textChunck{
+				text("with formula"),
+				form(" test "),
+			},
+		},
+		{
+			"with formula\n\n $$ test $$", []textChunck{
+				text("with formula\n"),
+				form(" test "),
+			},
+		},
+		{
+			"with formula and line\n $$ test $$\nother line", []textChunck{
+				text("with formula and line"),
+				form(" test "),
+				text("other line"),
+			},
+		},
+		{
+			"with formula and line\n $$ test $$\nother line\n", []textChunck{
+				text("with formula and line"),
+				form(" test "),
+				text("other line\n"),
+			},
+		},
+		{
+			"two formula\n $$ test $$ \n $$ test $$", []textChunck{
+				text("two formula"),
+				form(" test "),
+				form(" test "),
+			},
+		},
+		{
+			"$$ # expr # $$\n#f#\na", []textChunck{
+				form(" # expr # "),
+				nb("f"),
+				text("\na"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		if gotOut := tt.s.parseFormula(); !reflect.DeepEqual(gotOut, tt.wantOut) {
+			t.Errorf("Interpolated.parseFormula() = %v, want %v", gotOut, tt.wantOut)
+		}
+	}
+}
+
+func Test_splitNumberField(t *testing.T) {
+	tests := []struct {
+		args    string
+		wantOut []textChunck
+	}{
+		{"", nil},
+		{"regular", []textChunck{text("regular")}},
+		{"#expr#", []textChunck{nb("expr")}},
+		{"#expr# ", []textChunck{nb("expr"), text(" ")}},
+		{" #expr# aa #expr2#", []textChunck{text(" "), nb("expr"), text(" aa "), nb("expr2")}},
+		{"invalid #", []textChunck{text("invalid #")}},
+		{"#expr# invalid #", []textChunck{nb("expr"), text(" invalid #")}},
+	}
+	for _, tt := range tests {
+		if gotOut := splitNumberField(tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
+			t.Errorf("splitNumberField() = %v, want %v", gotOut, tt.wantOut)
+		}
+
+	}
+}

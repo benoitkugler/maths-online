@@ -25,19 +25,15 @@
     </v-card-text>
     <v-card-actions>
       <v-btn @click="emit('back')" color="warning">Retour</v-btn>
-      <!-- <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteVariante" variant="outlined">
-          OK
-        </v-btn> -->
     </v-card-actions>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type { QuestionExerciceUses, Sheet } from "@/controller/api_gen";
+import type { TaskUses, Sheet } from "@/controller/api_gen";
 
 interface Props {
-  uses: QuestionExerciceUses;
+  uses: TaskUses;
 }
 
 const props = defineProps<Props>();

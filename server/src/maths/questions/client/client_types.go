@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/benoitkugler/maths-online/server/src/maths/expression/sets"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
@@ -25,21 +26,20 @@ func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
 func (TreeBlock) isBlock()           {}
 
-func (NumberFieldBlock) isBlock()           {}
-func (ExpressionFieldBlock) isBlock()       {}
-func (RadioFieldBlock) isBlock()            {}
-func (DropDownFieldBlock) isBlock()         {}
-func (OrderedListFieldBlock) isBlock()      {}
-func (FigurePointFieldBlock) isBlock()      {}
-func (FigureVectorFieldBlock) isBlock()     {}
-func (FigureVectorPairFieldBlock) isBlock() {}
-func (VariationTableFieldBlock) isBlock()   {}
-func (SignTableFieldBlock) isBlock()        {}
-func (FunctionPointsFieldBlock) isBlock()   {}
-func (TreeFieldBlock) isBlock()             {}
-func (TableFieldBlock) isBlock()            {}
-func (VectorFieldBlock) isBlock()           {}
-func (ProofFieldBlock) isBlock()            {}
+func (NumberFieldBlock) isBlock()                {}
+func (ExpressionFieldBlock) isBlock()            {}
+func (RadioFieldBlock) isBlock()                 {}
+func (DropDownFieldBlock) isBlock()              {}
+func (OrderedListFieldBlock) isBlock()           {}
+func (GeometricConstructionFieldBlock) isBlock() {}
+func (VariationTableFieldBlock) isBlock()        {}
+func (SignTableFieldBlock) isBlock()             {}
+func (FunctionPointsFieldBlock) isBlock()        {}
+func (TreeFieldBlock) isBlock()                  {}
+func (TableFieldBlock) isBlock()                 {}
+func (VectorFieldBlock) isBlock()                {}
+func (ProofFieldBlock) isBlock()                 {}
+func (SetFieldBlock) isBlock()                   {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -76,7 +76,7 @@ type VariationTableBlock struct {
 }
 
 type FunctionSign struct {
-	Label     string
+	Label     string       // printed in math mode
 	FxSymbols []SignSymbol // one for each X, alternate with [Signs]
 	Signs     []bool       // is positive, with length len(Xs) - 1
 }
@@ -102,6 +102,7 @@ type FunctionPoint struct {
 }
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
+	Sequences []functiongrapher.SequenceGraph
 	Areas     []FunctionArea
 	Points    []FunctionPoint
 	Bounds    repere.RepereBounds
@@ -162,20 +163,39 @@ type OrderedListFieldBlock struct {
 	ID           int
 }
 
-// FigurePointFieldBlock asks for one 2D point
-type FigurePointFieldBlock struct {
-	Figure repere.Figure
-	ID     int
+type GeometricConstructionFieldBlock struct {
+	ID         int
+	Field      GeoField
+	Background FigureOrGraph
 }
+
+type FigureOrGraph interface {
+	isFigureOrGraph()
+	FigBounds() repere.RepereBounds
+}
+
+func (FigureBlock) isFigureOrGraph()         {}
+func (FunctionsGraphBlock) isFigureOrGraph() {}
+
+func (fg FigureBlock) FigBounds() repere.RepereBounds         { return fg.Figure.Bounds }
+func (fg FunctionsGraphBlock) FigBounds() repere.RepereBounds { return fg.Bounds }
+
+type GeoField interface {
+	isGF()
+}
+
+func (GFPoint) isGF()      {}
+func (GFVector) isGF()     {}
+func (GFVectorPair) isGF() {}
+
+// FigurePointFieldBlock asks for one 2D point
+type GFPoint struct{}
 
 // FigureVectorFieldBlock asks for a vector,
 // represented by start and end.
 // It may be used for vectors and affine functions
-
-type FigureVectorFieldBlock struct {
+type GFVector struct {
 	LineLabel string // ignored if AsLine is false
-	Figure    repere.Figure
-	ID        int
 	AsLine    bool
 }
 
@@ -184,11 +204,7 @@ type FigureVectorFieldBlock struct {
 // as vector.
 // The trivial case where the two pair of points are equals
 // is not allowed
-
-type FigureVectorPairFieldBlock struct {
-	Figure repere.Figure
-	ID     int
-}
+type GFVectorPair struct{}
 
 // VariationTableFieldBlock asks to complete a
 // variation table (with fixed length)
@@ -209,9 +225,12 @@ type SignTableFieldBlock struct {
 // FunctionPointsFieldBlock asks to place points
 // to draw the graph of a function
 type FunctionPointsFieldBlock struct {
-	Label  string    // name of the function
-	Xs     []int     // the grid
-	Dfxs   []float64 // the derivatives of the function, to plot a nice curve
+	IsDiscrete bool   // true for sequences, removing the curve between points
+	Label      string // name of the function
+	Xs         []int  // the grid
+	// the derivatives of the function, to plot a nice curve
+	// empty if [IsDiscrete] is true
+	Dfxs   []float64
 	Bounds repere.RepereBounds
 	ID     int
 }
@@ -278,6 +297,13 @@ type ProofFieldBlock struct {
 	ID            int
 }
 
+// SetFieldBlock asks the student to build a set expression,
+// using the given [Sets] and math set operators
+type SetFieldBlock struct {
+	Sets []string
+	ID   int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -298,6 +324,7 @@ func (TreeAnswer) isAnswer()            {}
 func (TableAnswer) isAnswer()           {}
 func (VectorNumberAnswer) isAnswer()    {}
 func (ProofAnswer) isAnswer()           {}
+func (SetAnswer) isAnswer()             {}
 
 // NumberAnswer is compared with float equality, with a fixed
 // precision of 8 digits
@@ -372,6 +399,11 @@ type VectorNumberAnswer struct {
 
 type ProofAnswer struct {
 	Proof Proof
+}
+
+type SetAnswer struct {
+	// Sets are relative to the question [Sets] list.
+	Root sets.ListNode
 }
 
 // QuestionAnswersIn map the field ids to their answer

@@ -1,4 +1,3 @@
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
@@ -10,8 +9,8 @@ import 'categories.dart';
 class InGameQuestionController extends BaseQuestionController {
   final void Function(QuestionAnswersIn) onValid;
 
-  InGameQuestionController(ShowQuestion question, FieldAPI api, this.onValid)
-      : super(question.question, api) {
+  InGameQuestionController(ShowQuestion question, this.onValid)
+      : super(question.question) {
     state.timeout =
         Duration(seconds: question.timeoutSeconds); // show the timeout bar
     state.footerQuote = null;
@@ -31,8 +30,8 @@ class InGameQuestionController extends BaseQuestionController {
 class LastQuestionController extends BaseQuestionController {
   final void Function() onClose;
   LastQuestionController(
-      Question question, FieldAPI api, Map<int, Answer> answers, this.onClose)
-      : super(question, api) {
+      Question question, Map<int, Answer> answers, this.onClose)
+      : super(question) {
     setAnswers(answers);
     disableAllFields();
     state.buttonEnabled = true;
@@ -47,11 +46,10 @@ class LastQuestionController extends BaseQuestionController {
 }
 
 class InGameQuestionRoute extends StatelessWidget {
-  final FieldAPI api;
   final ShowQuestion question;
   final void Function(QuestionAnswersIn) onValid;
 
-  const InGameQuestionRoute(this.api, this.question, this.onValid, {Key? key})
+  const InGameQuestionRoute(this.question, this.onValid, {Key? key})
       : super(key: key);
 
   Future<bool> _confirmCancel(BuildContext context) async {
@@ -75,7 +73,7 @@ class InGameQuestionRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ct = InGameQuestionController(question, api, onValid);
+    final ct = InGameQuestionController(question, onValid);
 
     // make the route block until validated
     return WillPopScope(
@@ -102,19 +100,17 @@ class InGameQuestionRoute extends StatelessWidget {
 }
 
 class LastQuestionRoute extends StatelessWidget {
-  final FieldAPI api;
   final ShowQuestion question;
   final void Function() onDone;
 
   final Answers answers;
 
-  const LastQuestionRoute(this.api, this.question, this.onDone, this.answers,
-      {Key? key})
+  const LastQuestionRoute(this.question, this.onDone, this.answers, {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final ct = LastQuestionController(question.question, api, answers, onDone);
+    final ct = LastQuestionController(question.question, answers, onDone);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,

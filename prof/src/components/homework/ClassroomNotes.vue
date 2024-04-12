@@ -1,39 +1,40 @@
 <template>
-  <v-card :title="'Notes de la classe ' + props.classroom.name">
+  <v-card
+    :title="'Résultats de la classe : ' + props.classroom.name"
+    :subtitle="
+      viewKind == 'marks'
+        ? 'Les notes affichées sont /20.'
+        : 'Nombre de tentatives réussies et échouées, pour la classe.'
+    "
+  >
+    <template v-slot:append>
+      <div style="min-width: 300px">
+        <v-select
+          v-model="viewKind"
+          label="Statistique"
+          :items="viewItems"
+          density="compact"
+          variant="outlined"
+          hide-details
+        ></v-select>
+      </div>
+    </template>
     <v-card-text>
-      <v-table>
-        <tr>
-          <th class="py-2">Elève</th>
-          <th v-for="tr in props.travaux" :key="tr.Id">
-            <div class="bg-blue-lighten-4 rounded mx-2 py-1">
-              {{ props.sheets.get(tr.IdSheet)!.Sheet.Title }} ( /20)
-            </div>
-          </th>
-          <th>
-            <div class="bg-blue-lighten-1 rounded py-1">Moyenne ( /20)</div>
-          </th>
-        </tr>
+      <v-fade-transition :hide-on-leave="true">
         <template v-if="isLoading"> Chargement des notes... </template>
-        <template v-else>
-          <tr
-            v-for="(student, index) in data?.Students"
-            :key="index"
-            :class="{ 'bg-grey-lighten-2': index % 2 == 0 }"
-          >
-            <th style="text-align: left" class="px-2">{{ student.Label }}</th>
-            <td
-              style="text-align: center"
-              v-for="tr in props.travaux"
-              :key="tr.Id"
-            >
-              {{ getMark(tr, student) }}
-            </td>
-            <td style="text-align: right" class="pa-1">
-              {{ getMoyenne(student) }}
-            </td>
-          </tr>
-        </template>
-      </v-table>
+        <MarksTable
+          :data="data!"
+          :travaux="props.travaux"
+          :sheets="props.sheets"
+          v-else-if="viewKind == 'marks'"
+        ></MarksTable>
+        <MarksStats
+          :data="data!"
+          :travaux="props.travaux"
+          :sheets="props.sheets"
+          v-else-if="viewKind == 'tasks'"
+        ></MarksStats>
+      </v-fade-transition>
     </v-card-text>
   </v-card>
 </template>
@@ -42,15 +43,14 @@
 import type {
   Classroom,
   HomeworkMarksOut,
-  Sheet,
   SheetExt,
-  StudentHeader,
   Travail,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "@vue/reactivity";
+import { ref, computed } from "vue";
 import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import MarksStats from "./MarksStats.vue";
+import MarksTable from "./MarksTable.vue";
 
 interface Props {
   classroom: Classroom;
@@ -62,33 +62,25 @@ const props = defineProps<Props>();
 
 // const emit = defineEmits<{}>();
 
+const viewKind = ref<"marks" | "tasks">("marks");
+
+const viewItems = [
+  { title: "Notes par élève", value: "marks" },
+  { title: "Réussite par exercice", value: "tasks" },
+];
+
 onMounted(fetchNotes);
 
-let isLoading = computed(() => data == null);
-let data = $ref<HomeworkMarksOut | null>(null);
+const isLoading = computed(() => data.value == null);
+const data = ref<HomeworkMarksOut | null>(null);
 
 async function fetchNotes() {
-  data = null;
+  data.value = null;
   const res = await controller.HomeworkGetMarks({
     IdClassroom: props.classroom.id,
     IdTravaux: props.travaux.map((tr) => tr.Id),
   });
   if (res == undefined) return;
-  data = res;
-}
-
-function _getMark(tr: Travail, student: StudentHeader) {
-  const sheetMarks = (data?.Marks || {})[tr.Id] || {};
-  return sheetMarks[student.Id] || 0;
-}
-
-function getMark(tr: Travail, student: StudentHeader) {
-  return _getMark(tr, student).toFixed(1);
-}
-
-function getMoyenne(student: StudentHeader) {
-  let total = 0;
-  props.travaux.forEach((tr) => (total += _getMark(tr, student)));
-  return (total / props.travaux.length).toFixed(2);
+  data.value = res;
 }
 </script>

@@ -1,3 +1,5 @@
+import 'package:eleve/activities/ceintures/api.dart';
+import 'package:eleve/activities/ceintures/ceintures.dart';
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/activities/trivialpoursuit/login.dart';
@@ -6,8 +8,11 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/activity_start.dart';
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
+import 'package:eleve/types/src_sql_events.dart';
 import 'package:flutter/material.dart' hide Flow;
+import 'package:http/http.dart' as http;
 import 'package:upgrader/upgrader.dart';
 
 Future<Audio> loadAudioFromSettings(SettingsStorage handler) async {
@@ -81,7 +86,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _showAudioSettings() {
-    final ct = widget.audioPlayer.playlist.toList();
+    final ct = widget.audioPlayer.playlist;
     final onPop = Navigator.of(context)
         .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
     onPop.then((_) async {
@@ -89,14 +94,29 @@ class __AppScaffoldState extends State<_AppScaffold> {
       settings.songs = ct;
       await widget.handler.save(settings); // commit on disk
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         content: const Text("Playlist mise à jour."),
       ));
+
+      // notify the server and show event
+      final studentID = settings.studentID;
+      if (studentID.isNotEmpty) {
+        final resp = await http.get(widget.buildMode.serverURL(
+            "/api/student/set-playlist",
+            query: {studentIDKey: studentID}));
+        try {
+          final notif = eventNotificationFromJson(checkServerError(resp.body));
+          print("${notif.events}  ${notif.points}");
+        } catch (e) {
+          // silently fail
+        }
+      }
     });
   }
 
-  void _showAppSettings() async {
+  void _showProfile() async {
     final newSettings = await Navigator.of(context).push(
         MaterialPageRoute<UserSettings>(
             builder: (_) => Settings(widget.buildMode, widget.handler)));
@@ -119,7 +139,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
     settings.hasBeenLaunched = true;
     widget.handler.save(settings);
 
-    if (goTo != null && goTo) _showAppSettings();
+    if (goTo != null && goTo) _showProfile();
   }
 
   void _saveTrivialMeta(String gameCode, String gameMeta) async {
@@ -127,38 +147,49 @@ class __AppScaffoldState extends State<_AppScaffold> {
     await widget.handler.save(settings);
   }
 
+  void _saveCeinturesAnonymousID(String id) async {
+    settings.ceinturesAnonymousID = id;
+    await widget.handler.save(settings);
+  }
+
   void _launchTrivialPoursuit() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
         builder: (context) =>
             ActivityStart(() => Navigator.of(context).pop(true))));
-    if (onDone == null) {
-      return;
-    }
+    if (onDone == null) return;
+    if (!mounted) return;
 
     widget.audioPlayer.run();
-    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
             body: TrivialGameSelect(TrivialSettings(widget.buildMode, settings),
                 _saveTrivialMeta))));
-    onPop.then((value) => widget.audioPlayer.pause());
+    widget.audioPlayer.pause();
   }
 
   void _launchHomework() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
         builder: (context) =>
             ActivityStart(() => Navigator.of(context).pop(true))));
-    if (onDone == null) {
-      return;
-    }
+    if (onDone == null) return;
+    if (!mounted) return;
 
     widget.audioPlayer.run();
     final isIdentified = settings.studentID.isNotEmpty;
-    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => isIdentified
             ? HomeworkStart(
                 ServerHomeworkAPI(widget.buildMode, settings.studentID))
             : const HomeworkDisabled()));
-    onPop.then((value) => widget.audioPlayer.pause());
+    widget.audioPlayer.pause();
+  }
+
+  void _launchCeintures() async {
+    widget.audioPlayer.run();
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => CeinturesStart(ServerCeinturesAPI(widget.buildMode),
+            settings, _saveCeinturesAnonymousID)));
+    widget.audioPlayer.pause();
   }
 
   @override
@@ -193,6 +224,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
                     children: [
                       TrivialActivityIcon(_launchTrivialPoursuit),
                       HomeworkActivityIcon(_launchHomework),
+                      CeinturesActivityIcon(_launchCeintures),
                     ],
                   ),
                 )
@@ -208,13 +240,13 @@ class __AppScaffoldState extends State<_AppScaffold> {
         actions: [
           IconButton(
             onPressed: () => _showAudioSettings(),
-            icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
+            icon: const Icon(Icons.library_music),
             tooltip: "Choisir la musique",
           ),
           IconButton(
-            onPressed: () => _showAppSettings(),
-            icon: const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
-            tooltip: "Paramètres",
+            onPressed: () => _showProfile(),
+            icon: const Icon(Icons.account_circle),
+            tooltip: "Afficher ton profil",
           ),
         ],
       ),

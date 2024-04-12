@@ -28,7 +28,7 @@ type varMap map[int]Variable
 
 // Positions returns the indices in the original expression rune slice
 // of every occurence of the given variables
-func (vm varMap) Positions(subset RandomParameters) []int {
+func (vm varMap) Positions(subset map[Variable]bool) []int {
 	var out []int
 	for index, v := range vm {
 		if _, has := subset[v]; has {
@@ -235,7 +235,7 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 
 	var leftIsOptional bool
 	switch op {
-	case plus, minus: // an expression before the sign is optional
+	case plus, minus, complement: // an expression before the sign is optional
 		leftIsOptional = true
 	}
 
@@ -263,9 +263,29 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 		stopOp = pow - 1
 	}
 
-	right, err := pr.parseUntil(stopOp, acceptSemiColon)
-	if err != nil {
-		return nil, err
+	var (
+		right *Expr
+		err   error
+	)
+	// special case ..^-<exponent>, quite natural in practice
+	if op == pow && pr.tk.Peek().data == minus {
+		_ = pr.tk.Next() // consume minus
+		if next := pr.tk.Peek(); next.data == nil || next.data == closePar {
+			return nil, ErrInvalidExpr{
+				Reason: fmt.Sprintf("expression manquante après une puissance négative"),
+				Pos:    pos,
+			}
+		}
+		expr, err := pr.parseOneNode(acceptSemiColon)
+		if err != nil {
+			return nil, err
+		}
+		right = &Expr{atom: minus, right: expr}
+	} else {
+		right, err = pr.parseUntil(stopOp, acceptSemiColon)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if right == nil {
@@ -562,14 +582,21 @@ func (rd specialFunction) validate(pos int) error {
 
 		// eagerly try to eval start and end in case their are constant,
 		// so that the error is detected during parameter setup
-		start, end, err := rd.startEnd(nil)
+		start, end, err := startEnd(rd.args[0], rd.args[1], nil)
 		if err == nil {
-			return rd.validateStartEnd(start, end, pos)
+			return rd.kind.validateStartEnd(start, end, pos)
 		}
 	case randChoice:
 		if len(rd.args) == 0 {
 			return ErrInvalidExpr{
 				Reason: "randChoice doit préciser au moins un argument",
+				Pos:    pos,
+			}
+		}
+	case randMatrixInt:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "randMatrix attend exactement 4 arguments",
 				Pos:    pos,
 			}
 		}
@@ -589,10 +616,38 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
+	case sumFn, prodFn, unionFn, interFn:
+		if len(rd.args) != 4 && len(rd.args) != 5 {
+			return ErrInvalidExpr{
+				Reason: fmt.Sprintf("%s() requiert exactement 4 ou 5 arguments", rd.kind.String()),
+				Pos:    pos,
+			}
+		}
+
+		// eagerly try to eval start and end in case their are constant,
+		// so that a potential error is detected during parameter setup
+		start, end, err := startEnd(rd.args[1], rd.args[2], nil)
+		if err == nil {
+			return rd.kind.validateStartEnd(start, end, pos)
+		}
 	case matCoeff:
 		if len(rd.args) != 3 {
 			return ErrInvalidExpr{
 				Reason: "coeff requiert exactement 3 arguments",
+				Pos:    pos,
+			}
+		}
+	case matSet:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "set requiert exactement 4 arguments",
+				Pos:    pos,
+			}
+		}
+	case binomial:
+		if len(rd.args) != 2 {
+			return ErrInvalidExpr{
+				Reason: "binom requiert exactement 2 arguments",
 				Pos:    pos,
 			}
 		}

@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 )
@@ -12,5 +13,6 @@ type GetSelfaccessOut struct {
 }
 
 type LaunchSelfaccessOut struct {
-	GameID tv.RoomID
+	GameID       tv.RoomID
+	Notification events.EventNotification // new in version 1.7
 }

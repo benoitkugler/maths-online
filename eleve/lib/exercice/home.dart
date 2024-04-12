@@ -47,8 +47,11 @@ class ExerciceHome extends StatelessWidget {
   final StudentWork data;
   final List<QuestionStatus> states;
   final void Function(int index) onSelectQuestion;
+  final bool noticeSandbox;
 
-  const ExerciceHome(this.data, this.states, this.onSelectQuestion, {Key? key})
+  const ExerciceHome(
+      this.data, this.states, this.onSelectQuestion, this.noticeSandbox,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -59,6 +62,14 @@ class ExerciceHome extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 10),
           child: ColoredTitle(data.exercice.title, Colors.purple),
         ),
+        if (noticeSandbox)
+          const Card(
+            margin: EdgeInsets.only(bottom: 10),
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("Ta progression n'est pas enregistrée."),
+            ),
+          ),
         Expanded(
           child: _QuestionList(data, states, onSelectQuestion),
         )
@@ -165,6 +176,7 @@ class _QuestionList extends StatelessWidget {
           (index) => _QuestionRow(
             states[index],
             "Question ${index + 1}",
+            data.exercice.questions[index].difficulty,
             data.exercice.baremes[index],
             showDetails: () => _showProgressionDetails(context, index),
             onClick:
@@ -207,29 +219,39 @@ extension _Icon on QuestionStatus {
   }
 }
 
+const _difficulties = {
+  DifficultyTag.diff1: "★",
+  DifficultyTag.diff2: "★★",
+  DifficultyTag.diff3: "★★★",
+  DifficultyTag.diffEmpty: ""
+};
+
 class _QuestionRow extends StatelessWidget {
   final QuestionStatus state;
   final String title;
+  final DifficultyTag difficultyTag;
   final int bareme;
   final void Function() showDetails;
   final void Function()? onClick;
 
-  const _QuestionRow(this.state, this.title, this.bareme,
+  const _QuestionRow(this.state, this.title, this.difficultyTag, this.bareme,
       {required this.showDetails, required this.onClick, Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final diff = _difficulties[difficultyTag] ?? "";
     return Padding(
-      padding: const EdgeInsets.all(4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: ListTile(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(4))),
         tileColor: state == QuestionStatus.toDo
-            ? Colors.purple.withOpacity(0.5)
+            ? Colors.purple.shade400.withOpacity(0.5)
             : null,
         leading: OutlinedButton(onPressed: showDetails, child: state.icon),
         title: Text(title),
+        subtitle: diff.isEmpty ? null : Text(diff),
         trailing: Text("/ $bareme"),
         onTap: onClick,
       ),

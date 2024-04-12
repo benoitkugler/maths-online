@@ -11,7 +11,7 @@ import (
 // LoadQuestionNumbers returns the number of questions available for
 // each categories, as defined by [config.Questions]
 func LoadQuestionNumbers(db tr.DB, config tr.Trivial, userID uID) (out [trivial.NbCategories]int, err error) {
-	qus, err := selectQuestions(db, config.Questions, userID)
+	qus, err := selectQuestions(db, config.Questions, userID, false)
 	if err != nil {
 		return out, err
 	}
@@ -32,12 +32,10 @@ type TrivialExt struct {
 }
 
 func newTrivialExt(sel questionSelector, config tr.Trivial, inReview tcAPI.OptionalIdReview, userID, adminID uID) (TrivialExt, error) {
-	vis := tcAPI.NewVisibility(config.IdTeacher, userID, adminID, config.Public)
 	origin := tcAPI.Origin{
-		AllowPublish: userID == adminID,
-		Visibility:   vis,
-		IsPublic:     config.Public,
+		Visibility:   tcAPI.NewVisibility(config.IdTeacher, userID, adminID, config.Public),
 		IsInReview:   inReview,
+		PublicStatus: tcAPI.NewPublicStatus(config.IdTeacher, userID, adminID, config.Public),
 	}
 
 	out := TrivialExt{Config: config, Origin: origin, Levels: config.Questions.Levels()}

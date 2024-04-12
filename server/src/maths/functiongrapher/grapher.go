@@ -75,6 +75,22 @@ func newSegment(fn expression.FunctionExpr, from, to float64) segment {
 	}
 }
 
+// SequenceGraph is a discrete version of [FunctionGraph]
+type SequenceGraph struct {
+	Decoration FunctionDecoration
+	Points     []repere.Coord
+}
+
+func NewSequenceGraph(fn expression.FunctionDefinition) []repere.Coord {
+	f := fn.Closure()
+	var out []repere.Coord
+	for x := math.Ceil(fn.From); x <= math.Floor(fn.To); x++ {
+		y := f(x)
+		out = append(out, repere.Coord{X: x, Y: y})
+	}
+	return out
+}
+
 type FunctionGraph struct {
 	Decoration FunctionDecoration
 	Segments   []BezierCurve
@@ -147,8 +163,8 @@ func NewFunctionGraphFromVariations(xs []float64, ys []float64) []BezierCurve {
 	return curves
 }
 
-// BoundsFromExpression returns the f(x) and f'(x) values for x in the grid
-func BoundsFromExpression(fn expression.FunctionExpr, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
+// PointsFromExpression returns the f(x) and f'(x) values for x in the grid
+func PointsFromExpression(fn expression.FunctionExpr, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
 	f := fn.Closure()
 
 	fxs = make([]int, len(grid))

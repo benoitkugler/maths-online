@@ -16,7 +16,7 @@ import (
 func TestCreateConfig(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
 
-	tc, err := teacher.Teacher{}.Insert(db)
+	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	out, err := tr.Trivial{
@@ -36,19 +36,24 @@ func TestGetConfig(t *testing.T) {
 		"../../sql/trivial/gen_create.sql", "../../sql/reviews/gen_create.sql")
 	defer db.Remove()
 
-	user1, err := teacher.Teacher{Mail: "1"}.Insert(db)
+	user1, err := teacher.Teacher{Mail: "1", FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
-	user2, err := teacher.Teacher{Mail: "2"}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	c1, err := tr.Trivial{IdTeacher: user1.Id}.Insert(db)
+	user2, err := teacher.Teacher{Mail: "2", FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	_, err = tr.Trivial{IdTeacher: user2.Id}.Insert(db)
+	mathTags := tr.CategoriesQuestions{
+		Tags: [5]tr.QuestionCriterion{
+			{{{Tag: string(teacher.Mathematiques), Section: editor.Matiere}}},
+		},
+	}
+	c1, err := tr.Trivial{IdTeacher: user1.Id, Questions: mathTags}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, err = tr.Trivial{IdTeacher: user2.Id, Questions: mathTags}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, pass.Encrypter{}, "", user1)
-	l, err := ct.getTrivialPoursuits(user1.Id)
+	l, err := ct.getTrivialPoursuits(user1.Id, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	if len(l) != 1 {
 		t.Fatal(l)
@@ -59,7 +64,7 @@ func TestGetConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l, err = ct.getTrivialPoursuits(user2.Id)
+	l, err = ct.getTrivialPoursuits(user2.Id, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	if len(l) != 2 {
 		t.Fatal(l)
@@ -69,7 +74,7 @@ func TestGetConfig(t *testing.T) {
 func TestGameTermination(t *testing.T) {
 	tv.ProgressLogger.SetOutput(os.Stdout)
 
-	ct := newGameStore("test")
+	ct := newGameStore(nil, pass.Encrypter{}, "test")
 
 	ct.createGame(createGame{ID: selfaccessCode("Game1")})
 
@@ -200,7 +205,7 @@ func TestGetTrivials(t *testing.T) {
 
 	for range [10]int{} {
 		t.Run("", func(t *testing.T) {
-			_, err := ct.getTrivialPoursuits(0)
+			_, err := ct.getTrivialPoursuits(0, teacher.Mathematiques)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -212,7 +217,7 @@ func TestCRUDSelfaccess(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{}.Insert(db)
+	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	tr1, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
@@ -258,7 +263,7 @@ func TestStudentSelfaccess(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{}.Insert(db)
+	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	tr1, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)

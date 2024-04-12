@@ -77,6 +77,13 @@ type Player struct {
 	// Pseudo is the display name of each player,
 	// which may change during a game (upon deconnection/reconnection)
 	Pseudo string
+
+	// PseudoSuffix is added to [Pseudo] when two players
+	// have the same pseudo
+	PseudoSuffix string
+
+	// Isyro global rank for registrer players, or 0
+	Rank int
 }
 
 // playerConn stores a player profile and the underlying connection,
@@ -123,16 +130,19 @@ type Room struct {
 	//
 	// In auto mode, we always have len(players) <= game.options.Launch.Max
 	players map[PlayerID]*playerConn
+
+	successHandler SuccessHandler
 }
 
-func NewRoom(ID RoomID, options Options) *Room {
+func NewRoom(ID RoomID, options Options, successHandler SuccessHandler) *Room {
 	return &Room{
-		ID:        ID,
-		Terminate: make(chan bool),
-		Leave:     make(chan PlayerID),
-		Event:     make(chan ClientEvent),
-		game:      newGame(options),
-		players:   make(map[PlayerID]*playerConn),
+		ID:             ID,
+		Terminate:      make(chan bool),
+		Leave:          make(chan PlayerID),
+		Event:          make(chan ClientEvent),
+		game:           newGame(options),
+		players:        make(map[PlayerID]*playerConn),
+		successHandler: successHandler,
 	}
 }
 
@@ -175,7 +185,7 @@ type RoomSize struct {
 type Summary struct {
 	PlayerTurn *Player // nil before game start
 	// Successes does not contains disconnected players
-	Successes      map[Player]Success
+	Successes      map[string]Success
 	ID             RoomID
 	RoomSize       RoomSize        // Number of players
 	LatestQuestion QuestionContent // zero ID before the first question
@@ -192,9 +202,9 @@ func (r *Room) Summary() Summary {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	successes := make(map[Player]Success)
+	successes := make(map[string]Success)
 	for _, v := range r.players {
-		successes[v.pl] = v.advance.success
+		successes[r.serialToPseudo(v.pl.ID)] = v.advance.success
 	}
 	out := Summary{
 		ID:             r.ID,

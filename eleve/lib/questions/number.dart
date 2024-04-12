@@ -41,7 +41,7 @@ class NumberController extends FieldController {
   }
 }
 
-class NumberField extends StatefulWidget {
+class NumberFieldW extends StatefulWidget {
   final Color _color;
   final NumberController _controller;
   final bool outlined;
@@ -49,7 +49,7 @@ class NumberField extends StatefulWidget {
   final void Function()? onSubmitted;
   final int? sizeHint;
 
-  const NumberField(this._color, this._controller,
+  const NumberFieldW(this._color, this._controller,
       {Key? key,
       this.outlined = false,
       this.autofocus = false,
@@ -58,10 +58,10 @@ class NumberField extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<NumberField> createState() => _NumberFieldState();
+  State<NumberFieldW> createState() => _NumberFieldWState();
 }
 
-class _NumberFieldState extends State<NumberField> {
+class _NumberFieldWState extends State<NumberFieldW> {
   Color get color => widget._controller.hasError ? Colors.red : widget._color;
 
   // takes the potential hint into account

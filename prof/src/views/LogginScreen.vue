@@ -133,13 +133,14 @@
           </v-row>
           <v-row v-if="mode == 'inscription'">
             <v-col>
-              <v-switch
+              <v-select
                 density="compact"
-                v-model="mathMode"
+                variant="outlined"
+                v-model="favoriteMatiere"
                 color="primary"
-                label="Utilisation scientifique"
-                messages="Décocher pour masquer les fonctions spécifiques aux mathématiques."
-              ></v-switch>
+                label="Matière principale"
+                :items="Object.keys(MatiereTagLabels)"
+              ></v-select>
             </v-col>
           </v-row>
         </v-form>
@@ -171,52 +172,57 @@
 </template>
 
 <script setup lang="ts">
-import type { AskInscriptionOut } from "@/controller/api_gen";
+import {
+  MatiereTag,
+  type AskInscriptionOut,
+  MatiereTagLabels,
+} from "@/controller/api_gen";
 import { controller, isInscriptionValidated } from "@/controller/controller";
-import { computed } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 
 const emit = defineEmits<{
   (e: "loggin"): void;
 }>();
 
-let showInscriptionValidated = $ref(isInscriptionValidated());
+const showInscriptionValidated = ref(isInscriptionValidated());
 function removeInscriptionValidated() {
   window.location.search = "";
 }
 
-let mode = $ref<"inscription" | "connection">("connection");
-let mathMode = $ref(true);
+const mode = ref<"inscription" | "connection">("connection");
 
-let mail = $ref("");
-let password = $ref("");
-let showPassword = $ref(false);
-let error = $ref<AskInscriptionOut>({ Error: "", IsPasswordError: false });
-let showSuccessInscription = $ref(false);
-let isLoading = $ref(false);
+const mail = ref("");
+const password = ref("");
+const favoriteMatiere = ref<MatiereTag>(MatiereTag.Mathematiques);
+const showPassword = ref(false);
+const error = ref<AskInscriptionOut>({ Error: "", IsPasswordError: false });
+const showSuccessInscription = ref(false);
+const isLoading = ref(false);
 
 const areCredencesValid = computed(
-  () => !isLoading && isEmailValid && password != ""
+  () => !isLoading.value && isEmailValid && password.value != ""
 );
 
-const isEmailValid = computed(() => mail.includes("@") && mail.includes("."));
+const isEmailValid = computed(
+  () => mail.value.includes("@") && mail.value.includes(".")
+);
 
 async function inscription() {
   if (!areCredencesValid.value) return;
 
-  isLoading = true;
+  isLoading.value = true;
   const res = await controller.AskInscription({
-    Mail: mail,
-    Password: password,
-    HasEditorSimplified: !mathMode,
+    Mail: mail.value,
+    Password: password.value,
+    FavoriteMatiere: favoriteMatiere.value,
   });
-  isLoading = false;
+  isLoading.value = false;
   if (res == undefined) {
     return;
   }
-  error = res;
-  if (error.Error == "") {
-    showSuccessInscription = true;
+  error.value = res;
+  if (error.value.Error == "") {
+    showSuccessInscription.value = true;
   }
 }
 
@@ -224,26 +230,26 @@ async function connection() {
   if (!areCredencesValid.value) return;
 
   const res = await controller.Loggin({
-    Mail: mail,
-    Password: password,
+    Mail: mail.value,
+    Password: password.value,
   });
   if (res == undefined) {
     return;
   }
 
-  error = res;
-  if (error.Error) return;
+  error.value = res;
+  if (error.value.Error) return;
 
   const settings = await controller.TeacherGetSettings();
   if (settings) controller.settings = settings;
   emit("loggin");
 }
 
-let showResetDone = $ref(false);
+const showResetDone = ref(false);
 async function resetPassword() {
-  const res = await controller.TeacherResetPassword({ mail: mail });
+  const res = await controller.TeacherResetPassword({ mail: mail.value });
   if (res == undefined) return;
-  showResetDone = true;
+  showResetDone.value = true;
 }
 </script>
 

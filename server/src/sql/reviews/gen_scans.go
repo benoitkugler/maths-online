@@ -9,6 +9,7 @@ import (
 	"errors"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	"github.com/lib/pq"
@@ -180,6 +181,19 @@ func ScanReviewExercices(rs *sql.Rows) (ReviewExercices, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertReviewExercice(db DB, item ReviewExercice) error {
+	_, err := db.Exec(`INSERT INTO review_exercices (
+			idreview, idexercice, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdExercice, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links ReviewExercice in the database.
@@ -365,6 +379,19 @@ func ScanReviewParticipations(rs *sql.Rows) (ReviewParticipations, error) {
 	return structs, nil
 }
 
+func InsertReviewParticipation(db DB, item ReviewParticipation) error {
+	_, err := db.Exec(`INSERT INTO review_participations (
+			idreview, idteacher, approval, comments
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdReview, item.IdTeacher, item.Approval, item.Comments)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ReviewParticipation in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyReviewParticipations(tx *sql.Tx, items ...ReviewParticipation) error {
@@ -536,6 +563,19 @@ func ScanReviewQuestions(rs *sql.Rows) (ReviewQuestions, error) {
 	return structs, nil
 }
 
+func InsertReviewQuestion(db DB, item ReviewQuestion) error {
+	_, err := db.Exec(`INSERT INTO review_questions (
+			idreview, idquestion, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdQuestion, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ReviewQuestion in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyReviewQuestions(tx *sql.Tx, items ...ReviewQuestion) error {
@@ -668,6 +708,199 @@ func DeleteReviewQuestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestion
 	return ScanReviewQuestions(rows)
 }
 
+func scanOneReviewSheet(row scanner) (ReviewSheet, error) {
+	var item ReviewSheet
+	err := row.Scan(
+		&item.IdReview,
+		&item.IdSheet,
+		&item.Kind,
+	)
+	return item, err
+}
+
+func ScanReviewSheet(row *sql.Row) (ReviewSheet, error) { return scanOneReviewSheet(row) }
+
+// SelectAll returns all the items in the review_sheets table.
+func SelectAllReviewSheets(db DB) (ReviewSheets, error) {
+	rows, err := db.Query("SELECT * FROM review_sheets")
+	if err != nil {
+		return nil, err
+	}
+	return ScanReviewSheets(rows)
+}
+
+type ReviewSheets []ReviewSheet
+
+func ScanReviewSheets(rs *sql.Rows) (ReviewSheets, error) {
+	var (
+		item ReviewSheet
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ReviewSheets, 0, 16)
+	for rs.Next() {
+		item, err = scanOneReviewSheet(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func InsertReviewSheet(db DB, item ReviewSheet) error {
+	_, err := db.Exec(`INSERT INTO review_sheets (
+			idreview, idsheet, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdSheet, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links ReviewSheet in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyReviewSheets(tx *sql.Tx, items ...ReviewSheet) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("review_sheets",
+		"idreview",
+		"idsheet",
+		"kind",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdReview, item.IdSheet, item.Kind)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ReviewSheet from the database.
+// Only the foreign keys IdReview, IdSheet fields are used in 'item'.
+func (item ReviewSheet) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM review_sheets WHERE IdReview = $1 AND IdSheet = $2;`, item.IdReview, item.IdSheet)
+	return err
+}
+
+// ByIdReview returns a map with 'IdReview' as keys.
+func (items ReviewSheets) ByIdReview() map[IdReview]ReviewSheet {
+	out := make(map[IdReview]ReviewSheet, len(items))
+	for _, target := range items {
+		out[target.IdReview] = target
+	}
+	return out
+}
+
+// IdReviews returns the list of ids of IdReview
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items ReviewSheets) IdReviews() []IdReview {
+	out := make([]IdReview, len(items))
+	for index, target := range items {
+		out[index] = target.IdReview
+	}
+	return out
+}
+
+// SelectReviewSheetByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewSheetByIdReview(tx DB, idReview IdReview) (item ReviewSheet, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM review_sheets WHERE idreview = $1", idReview)
+	item, err = ScanReviewSheet(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectReviewSheetsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewSheets, error) {
+	rows, err := tx.Query("SELECT * FROM review_sheets WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanReviewSheets(rows)
+}
+
+func DeleteReviewSheetsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewSheets, error) {
+	rows, err := tx.Query("DELETE FROM review_sheets WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanReviewSheets(rows)
+}
+
+// ByIdSheet returns a map with 'IdSheet' as keys.
+func (items ReviewSheets) ByIdSheet() map[homework.IdSheet]ReviewSheet {
+	out := make(map[homework.IdSheet]ReviewSheet, len(items))
+	for _, target := range items {
+		out[target.IdSheet] = target
+	}
+	return out
+}
+
+// IdSheets returns the list of ids of IdSheet
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items ReviewSheets) IdSheets() []homework.IdSheet {
+	out := make([]homework.IdSheet, len(items))
+	for index, target := range items {
+		out[index] = target.IdSheet
+	}
+	return out
+}
+
+// SelectReviewSheetByIdSheet return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewSheetByIdSheet(tx DB, idSheet homework.IdSheet) (item ReviewSheet, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM review_sheets WHERE idsheet = $1", idSheet)
+	item, err = ScanReviewSheet(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectReviewSheetsByIdSheets(tx DB, idSheets_ ...homework.IdSheet) (ReviewSheets, error) {
+	rows, err := tx.Query("SELECT * FROM review_sheets WHERE idsheet = ANY($1)", homework.IdSheetArrayToPQ(idSheets_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanReviewSheets(rows)
+}
+
+func DeleteReviewSheetsByIdSheets(tx DB, idSheets_ ...homework.IdSheet) (ReviewSheets, error) {
+	rows, err := tx.Query("DELETE FROM review_sheets WHERE idsheet = ANY($1) RETURNING *", homework.IdSheetArrayToPQ(idSheets_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanReviewSheets(rows)
+}
+
 func scanOneReviewTrivial(row scanner) (ReviewTrivial, error) {
 	var item ReviewTrivial
 	err := row.Scan(
@@ -714,6 +947,19 @@ func ScanReviewTrivials(rs *sql.Rows) (ReviewTrivials, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertReviewTrivial(db DB, item ReviewTrivial) error {
+	_, err := db.Exec(`INSERT INTO review_trivials (
+			idreview, idtrivial, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdTrivial, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links ReviewTrivial in the database.

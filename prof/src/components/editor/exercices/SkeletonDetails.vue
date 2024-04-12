@@ -21,7 +21,7 @@
                 class="mx-2 my-1"
                 size="x-small"
                 icon
-                @click.stop="duplicateQuestion(index)"
+                @click.stop="duplicateQuestion(index as Int)"
                 title="Dupliquer cette question"
               >
                 <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
@@ -103,12 +103,13 @@ import DropZone from "@/components/DropZone.vue";
 import type {
   ExerciceExt,
   ExerciceQuestionExt,
+  Int,
   LoopbackShowExercice,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
-import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
+import { ref } from "vue";
 
 interface Props {
   exercice: ExerciceExt;
@@ -123,7 +124,7 @@ const emit = defineEmits<{
 
 function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
   return questions.map((qu) => ({
-    id_exercice: -1,
+    id_exercice: -1 as Int,
     id_question: qu.Question.Id,
     bareme: qu.Bareme,
   }));
@@ -141,7 +142,7 @@ async function removeQuestion(index: number) {
   emit("preview", res.Preview);
 }
 
-async function duplicateQuestion(index: number) {
+async function duplicateQuestion(index: Int) {
   const res = await controller.EditorExerciceDuplicateQuestion({
     IdExercice: props.exercice.Exercice.Id,
     QuestionIndex: index,
@@ -151,17 +152,17 @@ async function duplicateQuestion(index: number) {
   emit("preview", res.Preview);
 }
 
-let questionToEdit = $ref<ExerciceQuestionExt | null>(null);
-let questionIndexToEdit = $ref<number | null>(null);
+const questionToEdit = ref<ExerciceQuestionExt | null>(null);
+const questionIndexToEdit = ref<number | null>(null);
 async function saveEditedQuestion() {
-  if (questionIndexToEdit == null || questionToEdit == null) {
+  if (questionIndexToEdit.value == null || questionToEdit.value == null) {
     return;
   }
   const current = copy(props.exercice.Questions || []);
-  current[questionIndexToEdit] = questionToEdit;
+  current[questionIndexToEdit.value] = questionToEdit.value;
 
-  questionToEdit = null;
-  questionIndexToEdit = null;
+  questionToEdit.value = null;
+  questionIndexToEdit.value = null;
   const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: toExerciceQuestions(current),
@@ -173,14 +174,14 @@ async function saveEditedQuestion() {
   emit("preview", res.Preview);
 }
 
-let showDropZone = $ref(false);
+const showDropZone = ref(false);
 
 function onDragStart() {
-  setTimeout(() => (showDropZone = true), 100); // workaround bug
+  setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
-function onDragEnd(ev: DragEvent) {
-  showDropZone = false;
+function onDragEnd() {
+  showDropZone.value = false;
 }
 
 function onItemDragStart(paylod: DragEvent, index: number) {

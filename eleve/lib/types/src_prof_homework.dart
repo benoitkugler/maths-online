@@ -2,6 +2,7 @@
 
 import 'predefined.dart';
 import 'src_pass.dart';
+import 'src_sql_events.dart';
 import 'src_sql_homework.dart';
 import 'src_sql_tasks.dart';
 import 'src_sql_teacher.dart';
@@ -13,16 +14,17 @@ class Sheet {
   final String title;
   final bool noted;
   final Time deadline;
+  final bool ignoreForMark;
   final int notation;
   final bool activated;
   final IdClassroom idClassroom;
 
-  const Sheet(this.id, this.title, this.noted, this.deadline, this.notation,
-      this.activated, this.idClassroom);
+  const Sheet(this.id, this.title, this.noted, this.deadline,
+      this.ignoreForMark, this.notation, this.activated, this.idClassroom);
 
   @override
   String toString() {
-    return "Sheet($id, $title, $noted, $deadline, $notation, $activated, $idClassroom)";
+    return "Sheet($id, $title, $noted, $deadline, $ignoreForMark, $notation, $activated, $idClassroom)";
   }
 }
 
@@ -33,6 +35,7 @@ Sheet sheetFromJson(dynamic json_) {
       stringFromJson(json['Title']),
       boolFromJson(json['Noted']),
       dateTimeFromJson(json['Deadline']),
+      boolFromJson(json['IgnoreForMark']),
       intFromJson(json['Notation']),
       boolFromJson(json['Activated']),
       intFromJson(json['IdClassroom']));
@@ -44,6 +47,7 @@ Map<String, dynamic> sheetToJson(Sheet item) {
     "Title": stringToJson(item.title),
     "Noted": boolToJson(item.noted),
     "Deadline": dateTimeToJson(item.deadline),
+    "IgnoreForMark": boolToJson(item.ignoreForMark),
     "Notation": intToJson(item.notation),
     "Activated": boolToJson(item.activated),
     "IdClassroom": intToJson(item.idClassroom)
@@ -118,23 +122,34 @@ Map<String, dynamic> studentEvaluateTaskInToJson(StudentEvaluateTaskIn item) {
 class StudentEvaluateTaskOut {
   final EvaluateWorkOut ex;
   final int mark;
+  final bool wasProgressionRegistred;
+  final EventNotification advance;
 
-  const StudentEvaluateTaskOut(this.ex, this.mark);
+  const StudentEvaluateTaskOut(
+      this.ex, this.mark, this.wasProgressionRegistred, this.advance);
 
   @override
   String toString() {
-    return "StudentEvaluateTaskOut($ex, $mark)";
+    return "StudentEvaluateTaskOut($ex, $mark, $wasProgressionRegistred, $advance)";
   }
 }
 
 StudentEvaluateTaskOut studentEvaluateTaskOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentEvaluateTaskOut(
-      evaluateWorkOutFromJson(json['Ex']), intFromJson(json['Mark']));
+      evaluateWorkOutFromJson(json['Ex']),
+      intFromJson(json['Mark']),
+      boolFromJson(json['WasProgressionRegistred']),
+      eventNotificationFromJson(json['Advance']));
 }
 
 Map<String, dynamic> studentEvaluateTaskOutToJson(StudentEvaluateTaskOut item) {
-  return {"Ex": evaluateWorkOutToJson(item.ex), "Mark": intToJson(item.mark)};
+  return {
+    "Ex": evaluateWorkOutToJson(item.ex),
+    "Mark": intToJson(item.mark),
+    "WasProgressionRegistred": boolToJson(item.wasProgressionRegistred),
+    "Advance": eventNotificationToJson(item.advance)
+  };
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/homework.StudentResetTaskIn

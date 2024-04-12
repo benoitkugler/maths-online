@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
 interface Props {
   description: string;
@@ -28,7 +28,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-let description = $ref(props.description);
+const description = ref(props.description);
 
 const emit = defineEmits<{
   (e: "save", description: string): void;

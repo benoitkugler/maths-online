@@ -36,7 +36,7 @@ func newGameSummary(s tv.Summary) (out GameSummary) {
 
 	for p, su := range s.Successes {
 		out.Players = append(out.Players, GamePlayers{
-			Player:    p.Pseudo,
+			Player:    p,
 			Successes: su,
 		})
 	}

@@ -8,10 +8,10 @@ import (
 
 func TestRandomVariables_range(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{
+		rv := RandomParameters{defs: map[Variable]*Expr{
 			NewVar('a'): mustParse(t, "3*randInt(1; 10)"),
 			NewVar('b'): mustParse(t, "-a"),
-		}
+		}}
 		values, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -24,10 +24,10 @@ func TestRandomVariables_range(t *testing.T) {
 			t.Fatal(a)
 		}
 
-		rv = RandomParameters{
+		rv = RandomParameters{defs: map[Variable]*Expr{
 			NewVar('a'): mustParse(t, "randInt(1; 10)"),
 			NewVar('b'): mustParse(t, "sgn(2*randInt(0;1)-1) * a"),
-		}
+		}}
 		values, err = rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -67,28 +67,28 @@ func TestExpression_IsValidNumber(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, false,
+			"2a - sin(a) + exp(1 + a)", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "2")}}, false, false,
 		},
 		{
-			"2a + b", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, true,
+			"2a + b", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "2")}}, false, true,
 		},
 		{
 			"1/0", RandomParameters{}, false, true,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;4)")}, false, true,
+			"1/a", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "randInt(0;4)")}}, false, true,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false, false,
+			"1/a", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "randInt(1;4)")}}, false, false,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randDecDen()")}, true, false,
+			"1/a", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): mustParse(t, "randDecDen()")}}, true, false,
 		},
 		{
-			"(v_f - v_i) / v_i", RandomParameters{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}, true, false,
+			"(v_f - v_i) / v_i", RandomParameters{defs: map[Variable]*Expr{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}}, true, false,
 		},
 		{
-			"round(1/3; 3)", nil, true, false,
+			"round(1/3; 3)", RandomParameters{}, true, false,
 		},
 	}
 	for _, tt := range tests {
@@ -241,7 +241,7 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 			Function: expr,
 			Variable: NewVar(tt.variable),
 		}
-		err := fn.IsValid(Domain{mustParse(t, tt.from), mustParse(t, tt.to)}, tt.vars, tt.bound)
+		err := fn.IsValidAsFunction(Domain{mustParse(t, tt.from), mustParse(t, tt.to)}, tt.vars, tt.bound)
 		if (err == nil) != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
 		}
@@ -362,6 +362,28 @@ func TestExpr_IsIncludedIntoOne(t *testing.T) {
 		domains := mustParseDomains(t, tt.domains)
 		if err := e.IsIncludedIntoOne(domains, tt.vars); (err != nil) != tt.wantErr {
 			t.Errorf("Domain.IsIncludedIntoOne() error = %v, wantErr %v", err, tt.wantErr)
+		}
+	}
+}
+
+func Test_binomialCoefficient(t *testing.T) {
+	tests := []struct {
+		k    int
+		n    int
+		want int
+	}{
+		{0, 4, 1},
+		{4, 4, 1},
+		{1, 4, 4},
+		{3, 4, 4},
+		{-3, 4, 0},
+		{2, 4, 6},
+		{2, 3, 3},
+		{2, 5, 10},
+	}
+	for _, tt := range tests {
+		if got := binomialCoefficient(tt.k, tt.n); got != tt.want {
+			t.Errorf("binomialCoefficient() = %v, want %v", got, tt.want)
 		}
 	}
 }

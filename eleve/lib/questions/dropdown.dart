@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 
 typedef DropDownController = RadioController;
 
-class DropDownField extends StatefulWidget {
+class DropDownFieldW extends StatefulWidget {
   final Color color;
   final DropDownController controller;
 
-  const DropDownField(this.color, this.controller, {Key? key})
+  const DropDownFieldW(this.color, this.controller, {Key? key})
       : super(key: key);
 
   @override
-  _DropDownFieldState createState() => _DropDownFieldState();
+  _DropDownFieldWState createState() => _DropDownFieldWState();
 }
 
-class _DropDownFieldState extends State<DropDownField> {
+class _DropDownFieldWState extends State<DropDownFieldW> {
   static const fontSize = 16.0;
 
   @override

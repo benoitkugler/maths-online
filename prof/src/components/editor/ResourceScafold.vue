@@ -149,9 +149,9 @@
       </v-col>
 
       <v-spacer></v-spacer>
+      <!-- Variants tabs -->
       <v-col cols="6" align-self="center" v-if="titleToEdit == null">
         <v-tabs
-          style="max-width: 90vh"
           density="compact"
           show-arrows
           color="grey"
@@ -192,7 +192,7 @@
                     </v-btn>
                   </template>
                   <v-list>
-                    <v-list-item @click="variantToEdit = copy(variant)" link>
+                    <v-list-item @click="variantToEdit = copy(variant)">
                       <template v-slot:prepend>
                         <v-icon
                           icon="mdi-pencil"
@@ -206,7 +206,6 @@
                       @click="
                         props.readonly ? {} : emit('duplicateVariant', variant)
                       "
-                      :link="!props.readonly"
                     >
                       <template v-slot:prepend>
                         <v-icon
@@ -219,7 +218,6 @@
                     </v-list-item>
                     <v-list-item
                       @click="props.readonly ? {} : (variantToDelete = variant)"
-                      :link="!props.readonly"
                     >
                       <template v-slot:prepend>
                         <v-icon
@@ -252,14 +250,13 @@ import {
   type ResourceGroup,
   type VariantG,
 } from "@/controller/editor";
-import { $ref } from "vue/macros";
 
 import TagChip from "./utils/TagChip.vue";
 import ResourceVariantEdit from "./ResourceVariantEdit.vue";
 import { copy } from "@/controller/utils";
 import type { Tags, TagsDB, TagSection } from "@/controller/api_gen";
 import TagListEdit from "./TagListEdit.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 interface Props {
   resource: ResourceGroup;
@@ -283,7 +280,7 @@ const emit = defineEmits<{
 defineExpose({ showEditVariant });
 
 function showEditVariant(variant: VariantG) {
-  variantToEdit = copy(variant);
+  variantToEdit.value = copy(variant);
 }
 
 function tabTitle(index: number) {
@@ -296,23 +293,23 @@ function tabTooltip(variant: VariantG) {
   return `(${variant.Id}) -  ${variant.Subtitle || "Sans titre"}`;
 }
 
-let variantToDelete = $ref<VariantG | null>(null);
+const variantToDelete = ref<VariantG | null>(null);
 
-let variantToEdit = $ref<VariantG | null>(null);
+const variantToEdit = ref<VariantG | null>(null);
 
-let titleToEdit = $ref<string | null>(null);
+const titleToEdit = ref<string | null>(null);
 function onDoneEditTitle() {
-  const newTitle = titleToEdit || "";
+  const newTitle = titleToEdit.value || "";
   // avoid useless query
   if (newTitle != props.resource.Title) {
     emit("updateTitle", newTitle);
   }
-  titleToEdit = null;
+  titleToEdit.value = null;
 }
 
-let tagsToEdit = $ref<TagSection[] | null>(null);
+const tagsToEdit = ref<TagSection[] | null>(null);
 const areEditedTagsDistinct = computed(
-  () => !areTagsEquals(props.resource.Tags, tagsToEdit)
+  () => !areTagsEquals(props.resource.Tags, tagsToEdit.value)
 );
 </script>
 

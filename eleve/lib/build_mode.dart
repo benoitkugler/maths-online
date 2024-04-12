@@ -10,8 +10,8 @@ enum BuildMode {
   debug,
 }
 
-String _withQuery(String baseUrl, Map<String, dynamic> query) {
-  return Uri.parse(baseUrl).replace(queryParameters: query).toString();
+Uri _withQuery(String baseUrl, Map<String, dynamic> query) {
+  return Uri.parse(baseUrl).replace(queryParameters: query);
 }
 
 extension APISetting on BuildMode {
@@ -29,29 +29,28 @@ extension APISetting on BuildMode {
   /// websocketURL returns url ending by the [endpoint],
   /// or an empty string
   /// [endpoint] is expected to start with a slash
-  String websocketURL(String endpoint,
-      {Map<String, dynamic> query = const {}}) {
+  Uri websocketURL(String endpoint, {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
         return _withQuery("wss://isyro.fr$endpoint", query);
       case BuildMode.dev:
         return _withQuery("ws://localhost:1323$endpoint", query);
       case BuildMode.debug:
-        return "";
+        return Uri();
     }
   }
 
   /// serverURL returns url ending by the [endpoint],
   /// or an empty string
   /// [endpoint] is expected to start with a slash
-  String serverURL(String endpoint, {Map<String, dynamic> query = const {}}) {
+  Uri serverURL(String endpoint, {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
         return _withQuery("https://isyro.fr$endpoint", query);
       case BuildMode.dev:
         return _withQuery("http://localhost:1323$endpoint", query);
       case BuildMode.debug:
-        return "";
+        return Uri();
     }
   }
 }

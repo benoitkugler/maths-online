@@ -14,16 +14,11 @@
 
 <script setup lang="ts">
 import { controller, PreviewMode } from "@/controller/controller";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
 import {
   LoopbackServerEventKind,
   type LoopbackServerEvent,
 } from "@/controller/loopback_gen";
-import type {
-  LoopbackShowExercice,
-  LoopbackShowQuestion,
-} from "@/controller/api_gen";
+import { computed, ref } from "vue";
 
 interface Props {
   hide?: boolean;
@@ -31,14 +26,15 @@ interface Props {
 
 const props = defineProps<Props>();
 
-defineExpose({ pause, showQuestion, showExercice });
+defineExpose({ pause, preview, data });
 
-let iframe = $ref<HTMLIFrameElement | null>(null);
+const iframe = ref<HTMLIFrameElement | null>(null);
 
 /** transfer the given payload to the flutter embedded app */
 function sendEvent(previewEvent: LoopbackServerEvent) {
-  if (iframe == null) return;
-  iframe.contentWindow?.postMessage(JSON.stringify(previewEvent), "*");
+  currentData.value = previewEvent;
+  if (iframe.value == null) return;
+  iframe.value.contentWindow?.postMessage(JSON.stringify(previewEvent), "*");
 }
 
 function pause() {
@@ -48,21 +44,19 @@ function pause() {
   });
 }
 
-function showQuestion(qu: LoopbackShowQuestion) {
-  sendEvent({
-    Kind: LoopbackServerEventKind.LoopbackShowQuestion,
-    Data: qu,
-  });
+function preview(data: LoopbackServerEvent) {
+  sendEvent(data);
 }
 
-function showExercice(qu: LoopbackShowExercice) {
-  sendEvent({
-    Kind: LoopbackServerEventKind.LoopbackShowExercice,
-    Data: qu,
-  });
+const currentData = ref<LoopbackServerEvent>({
+  Kind: LoopbackServerEventKind.LoopbackPaused,
+  Data: {},
+});
+function data() {
+  return currentData.value;
 }
 
-let src = computed(() =>
+const src = computed(() =>
   controller.getURL(`/prof-loopback-app?mode=${PreviewMode}`)
 );
 </script>

@@ -1,14 +1,13 @@
 <template>
-  <v-card :title="props.classroom.Classroom.name" class="ma-2">
+  <v-card
+    :title="props.classroom.Classroom.name"
+    class="ma-2"
+    @click="emit('showStudents')"
+  >
     <v-card-text>
       <v-row justify="center" class="mt-1">
         <v-col cols="auto">
-          <v-chip
-            @click="emit('showStudents')"
-            link
-            variant="elevated"
-            color="primary"
-          >
+          <v-chip link variant="elevated" color="primary">
             {{ eleveText }}
           </v-chip>
         </v-col>
@@ -16,11 +15,16 @@
     </v-card-text>
 
     <v-card-actions>
-      <v-btn icon color="red" title="Supprimer" @click="emit('delete')">
+      <v-btn icon color="red" title="Supprimer" @click.stop="emit('delete')">
         <v-icon icon="mdi-delete"></v-icon>
       </v-btn>
       <v-spacer></v-spacer>
-      <v-btn @click="emit('update')"> Renommer </v-btn>
+      <v-btn @click.stop="emit('update')">
+        <template v-slot:append>
+          <v-icon>mdi-cog</v-icon>
+        </template>
+        Modifier
+      </v-btn>
     </v-card-actions>
   </v-card>
 </template>

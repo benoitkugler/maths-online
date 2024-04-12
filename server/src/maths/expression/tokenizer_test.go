@@ -11,6 +11,7 @@ func TestTokens(t *testing.T) {
 		expr   string
 		tokens []tokenData
 	}{
+		{"-2", []tokenData{minus, nT("2")}},
 		{"7x  + 8", []tokenData{nT("7"), mult, x, plus, nT("8")}},
 		{"7*x", []tokenData{nT("7"), mult, x}},
 		{"(2x + 1)(4x)", []tokenData{openPar, nT("2"), mult, x, plus, nT("1"), closePar, mult, openPar, nT("4"), mult, x, closePar}},
@@ -20,11 +21,16 @@ func TestTokens(t *testing.T) {
 		{"7log(10)", []tokenData{nT("7"), mult, logFn, openPar, nT("10"), closePar}},
 		{"7randPrime(1;10)", []tokenData{nT("7"), mult, randPrime, openPar, nT("1"), semicolon, nT("10"), closePar}},
 		{"randChoice(1;2)", []tokenData{randChoice, openPar, nT("1"), semicolon, nT("2"), closePar}},
+		{"randMatrix(1;2)", []tokenData{randMatrixInt, openPar, nT("1"), semicolon, nT("2"), closePar}},
 		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
 		{"choiceFrom()", []tokenData{choiceFrom, openPar, closePar}},
 		{"choiceFrom(x ; 2 )", []tokenData{choiceFrom, openPar, x, semicolon, nT("2"), closePar}},
 		{"min(1)", []tokenData{minFn, openPar, nT("1"), closePar}},
 		{"max(1)", []tokenData{maxFn, openPar, nT("1"), closePar}},
+		{"sum(1)", []tokenData{sumFn, openPar, nT("1"), closePar}},
+		{"prod(1)", []tokenData{prodFn, openPar, nT("1"), closePar}},
+		{"union(1)", []tokenData{unionFn, openPar, nT("1"), closePar}},
+		{"inter(1)", []tokenData{interFn, openPar, nT("1"), closePar}},
 		{"forceDecimal(1/2)", []tokenData{forceDecimalFn, openPar, nT("1"), div, nT("2"), closePar}},
 		{"floor(1)", []tokenData{floorFn, openPar, nT("1"), closePar}},
 		{"round(2.12; 5)", []tokenData{roundFunc{}, openPar, nT("2.12"), semicolon, nT("5"), closePar}},
@@ -35,6 +41,9 @@ func TestTokens(t *testing.T) {
 		{"2 >= 4", []tokenData{nT("2"), greater, nT("4")}},
 		{"2 == 4", []tokenData{nT("2"), equals, nT("4")}},
 		{"2pi^2", []tokenData{nT("2"), mult, piConstant, pow, nT("2")}},
+		// implicit multiplication
+		{"2x", []tokenData{nT("2"), mult, x}},
+		{"n!n", []tokenData{Variable{Name: 'n'}, factorial, mult, Variable{Name: 'n'}}},
 		{"(3;)", []tokenData{openPar, nT("3"), semicolon, closePar}},
 		{"{2;4;}", []tokenData{openCurly, nT("2"), semicolon, nT("4"), semicolon, closeCurly}},
 		{"]-inf;inf[", []tokenData{closeBracket, minus, nT("inf"), semicolon, nT("inf"), openBracket}},
@@ -61,6 +70,10 @@ func TestTokens(t *testing.T) {
 			"x¹ ; x² ; x³ ; x⁴ ; x⁵ ; x⁶ ; x⁷; x⁸; x⁹",
 			[]tokenData{x, pow, nT("1"), semicolon, x, pow, nT("2"), semicolon, x, pow, nT("3"), semicolon, x, pow, nT("4"), semicolon, x, pow, nT("5"), semicolon, x, pow, nT("6"), semicolon, x, pow, nT("7"), semicolon, x, pow, nT("8"), semicolon, x, pow, nT("9")},
 		},
+		// sets
+		{"A \u222A B", []tokenData{NewVar('A'), union, NewVar('B')}},
+		{"A \u2229 B", []tokenData{NewVar('A'), intersection, NewVar('B')}},
+		{"\u00AC B", []tokenData{complement, NewVar('B')}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

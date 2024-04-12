@@ -78,7 +78,7 @@ func TestSelectQuestions(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{}.Insert(db)
+	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	g1, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
@@ -127,7 +127,7 @@ func TestSelectQuestions(t *testing.T) {
 		Difficulties: nil,
 	}
 
-	pool, err := selectQuestions(db, cats, tc.Id)
+	pool, err := selectQuestions(db, cats, tc.Id, true)
 	tu.AssertNoErr(t, err)
 
 	if !reflect.DeepEqual(pool[0].Weights, []float64{

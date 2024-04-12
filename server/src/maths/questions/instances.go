@@ -241,18 +241,28 @@ func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 
 type FunctionsGraphInstance struct {
 	Functions []functiongrapher.FunctionGraph
+	Sequences []functiongrapher.SequenceGraph
 	Areas     []client.FunctionArea
 	Points    []client.FunctionPoint
 }
 
-func (fg FunctionsGraphInstance) toClient() client.Block {
+func (fg FunctionsGraphInstance) toClient() client.Block { return fg.toClientG() }
+
+func (fg FunctionsGraphInstance) toClientG() client.FunctionsGraphBlock {
+	// compute the required bounding box for all drawings
 	var allSegments []functiongrapher.BezierCurve
 	for _, fn := range fg.Functions {
 		allSegments = append(allSegments, fn.Segments...)
 	}
+	for _, seq := range fg.Sequences {
+		for _, point := range seq.Points {
+			allSegments = append(allSegments, functiongrapher.BezierCurve{P0: point, P1: point, P2: point})
+		}
+	}
 
 	return client.FunctionsGraphBlock{
 		Functions: fg.Functions,
+		Sequences: fg.Sequences,
 		Areas:     fg.Areas,
 		Points:    fg.Points,
 		Bounds:    functiongrapher.BoundingBox(allSegments),

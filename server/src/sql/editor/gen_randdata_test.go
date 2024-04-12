@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
-	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
@@ -137,7 +136,7 @@ func randQuestiongroupTag() QuestiongroupTag {
 }
 
 func randSection() Section {
-	choix := [...]Section{Chapter, Level, TrivMath}
+	choix := [...]Section{Chapter, Level, Matiere, SubLevel, TrivMath}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -165,15 +164,6 @@ func randSlicebool() []bool {
 	out := make([]bool, l)
 	for i := range out {
 		out[i] = randbool()
-	}
-	return out
-}
-
-func randSlicecli_FunctionSign() []client.FunctionSign {
-	l := 3 + rand.Intn(5)
-	out := make([]client.FunctionSign, l)
-	for i := range out {
-		out[i] = randcli_FunctionSign()
 	}
 	return out
 }
@@ -219,6 +209,15 @@ func randSliceque_FunctionPoint() []questions.FunctionPoint {
 	out := make([]questions.FunctionPoint, l)
 	for i := range out {
 		out[i] = randque_FunctionPoint()
+	}
+	return out
+}
+
+func randSliceque_FunctionSign() []questions.FunctionSign {
+	l := 3 + rand.Intn(5)
+	out := make([]questions.FunctionSign, l)
+	for i := range out {
+		out[i] = randque_FunctionSign()
 	}
 	return out
 }
@@ -318,15 +317,6 @@ func randbool() bool {
 	return i == 1
 }
 
-func randcli_FunctionSign() client.FunctionSign {
-	var s client.FunctionSign
-	s.Label = randstring()
-	s.FxSymbols = randSlicecli_SignSymbol()
-	s.Signs = randSlicebool()
-
-	return s
-}
-
 func randcli_SignSymbol() client.SignSymbol {
 	choix := [...]client.SignSymbol{client.Nothing, client.Zero, client.ForbiddenValue}
 	i := rand.Intn(len(choix))
@@ -336,7 +326,7 @@ func randcli_SignSymbol() client.SignSymbol {
 func randexp_Variable() expression.Variable {
 	var s expression.Variable
 	s.Indice = randstring()
-	s.Name = randrune()
+	s.Name = randint32()
 
 	return s
 }
@@ -345,16 +335,12 @@ func randfloat64() float64 {
 	return rand.Float64() * float64(rand.Int31())
 }
 
-func randfun_FunctionDecoration() functiongrapher.FunctionDecoration {
-	var s functiongrapher.FunctionDecoration
-	s.Label = randstring()
-	s.Color = randstring()
-
-	return s
-}
-
 func randint() int {
 	return int(rand.Intn(1000000))
+}
+
+func randint32() int32 {
+	return int32(rand.Intn(1000000))
 }
 
 func randint64() int64 {
@@ -364,18 +350,16 @@ func randint64() int64 {
 func randque_Block() questions.Block {
 	choix := [...]questions.Block{
 		randque_ExpressionFieldBlock(),
-		randque_FigureAffineLineFieldBlock(),
 		randque_FigureBlock(),
-		randque_FigurePointFieldBlock(),
-		randque_FigureVectorFieldBlock(),
-		randque_FigureVectorPairFieldBlock(),
 		randque_FormulaBlock(),
 		randque_FunctionPointsFieldBlock(),
 		randque_FunctionsGraphBlock(),
+		randque_GeometricConstructionFieldBlock(),
 		randque_NumberFieldBlock(),
 		randque_OrderedListFieldBlock(),
 		randque_ProofFieldBlock(),
 		randque_RadioFieldBlock(),
+		randque_SetFieldBlock(),
 		randque_SignTableBlock(),
 		randque_SignTableFieldBlock(),
 		randque_TableBlock(),
@@ -387,7 +371,7 @@ func randque_Block() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(23)
+	i := rand.Intn(21)
 	return choix[i]
 }
 
@@ -423,16 +407,6 @@ func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
 	return s
 }
 
-func randque_FigureAffineLineFieldBlock() questions.FigureAffineLineFieldBlock {
-	var s questions.FigureAffineLineFieldBlock
-	s.Label = randstring()
-	s.A = randstring()
-	s.B = randstring()
-	s.Figure = randque_FigureBlock()
-
-	return s
-}
-
 func randque_FigureBlock() questions.FigureBlock {
 	var s questions.FigureBlock
 	s.Drawings = randrep_RandomDrawings()
@@ -443,30 +417,13 @@ func randque_FigureBlock() questions.FigureBlock {
 	return s
 }
 
-func randque_FigurePointFieldBlock() questions.FigurePointFieldBlock {
-	var s questions.FigurePointFieldBlock
-	s.Answer = randque_CoordExpression()
-	s.Figure = randque_FigureBlock()
-
-	return s
-}
-
-func randque_FigureVectorFieldBlock() questions.FigureVectorFieldBlock {
-	var s questions.FigureVectorFieldBlock
-	s.Answer = randque_CoordExpression()
-	s.AnswerOrigin = randque_CoordExpression()
-	s.Figure = randque_FigureBlock()
-	s.MustHaveOrigin = randbool()
-
-	return s
-}
-
-func randque_FigureVectorPairFieldBlock() questions.FigureVectorPairFieldBlock {
-	var s questions.FigureVectorPairFieldBlock
-	s.Figure = randque_FigureBlock()
-	s.Criterion = randque_VectorPairCriterion()
-
-	return s
+func randque_FiguresOrGraphs() questions.FiguresOrGraphs {
+	choix := [...]questions.FiguresOrGraphs{
+		randque_FigureBlock(),
+		randque_FunctionsGraphBlock(),
+	}
+	i := rand.Intn(2)
+	return choix[i]
 }
 
 func randque_FormulaBlock() questions.FormulaBlock {
@@ -487,10 +444,18 @@ func randque_FunctionArea() questions.FunctionArea {
 	return s
 }
 
+func randque_FunctionDecoration() questions.FunctionDecoration {
+	var s questions.FunctionDecoration
+	s.Label = randque_Interpolated()
+	s.Color = randstring()
+
+	return s
+}
+
 func randque_FunctionDefinition() questions.FunctionDefinition {
 	var s questions.FunctionDefinition
 	s.Function = randstring()
-	s.Decoration = randfun_FunctionDecoration()
+	s.Decoration = randque_FunctionDecoration()
 	s.Variable = randexp_Variable()
 	s.From = randstring()
 	s.To = randstring()
@@ -510,6 +475,7 @@ func randque_FunctionPoint() questions.FunctionPoint {
 
 func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
 	var s questions.FunctionPointsFieldBlock
+	s.IsDiscrete = randbool()
 	s.Function = randstring()
 	s.Label = randstring()
 	s.Variable = randexp_Variable()
@@ -518,12 +484,73 @@ func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
 	return s
 }
 
+func randque_FunctionSign() questions.FunctionSign {
+	var s questions.FunctionSign
+	s.Label = randque_Interpolated()
+	s.FxSymbols = randSlicecli_SignSymbol()
+	s.Signs = randSlicebool()
+
+	return s
+}
+
 func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 	var s questions.FunctionsGraphBlock
 	s.FunctionExprs = randSliceque_FunctionDefinition()
 	s.FunctionVariations = randSliceque_VariationTableBlock()
+	s.SequenceExprs = randSliceque_FunctionDefinition()
 	s.Areas = randSliceque_FunctionArea()
 	s.Points = randSliceque_FunctionPoint()
+
+	return s
+}
+
+func randque_GFAffineLine() questions.GFAffineLine {
+	var s questions.GFAffineLine
+	s.Label = randstring()
+	s.A = randstring()
+	s.B = randstring()
+
+	return s
+}
+
+func randque_GFPoint() questions.GFPoint {
+	var s questions.GFPoint
+	s.Answer = randque_CoordExpression()
+
+	return s
+}
+
+func randque_GFVector() questions.GFVector {
+	var s questions.GFVector
+	s.Answer = randque_CoordExpression()
+	s.AnswerOrigin = randque_CoordExpression()
+	s.MustHaveOrigin = randbool()
+
+	return s
+}
+
+func randque_GFVectorPair() questions.GFVectorPair {
+	var s questions.GFVectorPair
+	s.Criterion = randque_VectorPairCriterion()
+
+	return s
+}
+
+func randque_GeoField() questions.GeoField {
+	choix := [...]questions.GeoField{
+		randque_GFAffineLine(),
+		randque_GFPoint(),
+		randque_GFVector(),
+		randque_GFVectorPair(),
+	}
+	i := rand.Intn(4)
+	return choix[i]
+}
+
+func randque_GeometricConstructionFieldBlock() questions.GeometricConstructionFieldBlock {
+	var s questions.GeometricConstructionFieldBlock
+	s.Field = randque_GeoField()
+	s.Background = randque_FiguresOrGraphs()
 
 	return s
 }
@@ -596,10 +623,18 @@ func randque_Rp() questions.Rp {
 	return s
 }
 
+func randque_SetFieldBlock() questions.SetFieldBlock {
+	var s questions.SetFieldBlock
+	s.Answer = randstring()
+	s.AdditionalSets = randSliceque_Interpolated()
+
+	return s
+}
+
 func randque_SignTableBlock() questions.SignTableBlock {
 	var s questions.SignTableBlock
 	s.Xs = randSlicestring()
-	s.Functions = randSlicecli_FunctionSign()
+	s.Functions = randSliceque_FunctionSign()
 
 	return s
 }
@@ -815,10 +850,6 @@ func randrep_SegmentKind() repere.SegmentKind {
 	choix := [...]repere.SegmentKind{repere.SKSegment, repere.SKVector, repere.SKLine}
 	i := rand.Intn(len(choix))
 	return choix[i]
-}
-
-func randrune() rune {
-	return rune(rand.Intn(1000000))
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

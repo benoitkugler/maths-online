@@ -25,7 +25,7 @@ class PawnImage extends StatelessWidget {
 }
 
 class _PawnPainter extends CustomPainter {
-  static const color = Colors.redAccent;
+  static const color = Colors.brown;
 
   // produced from SVG
   static final path = Path()
@@ -82,13 +82,14 @@ class _PawnPainter extends CustomPainter {
     canvas.scale(factor, -factor);
     canvas.translate(0, -1100);
 
+    // shadow
     canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.stroke
           ..color = Colors.white
           ..strokeWidth = 200
-          ..imageFilter = ImageFilter.blur(sigmaX: 100, sigmaY: 100));
+          ..imageFilter = ImageFilter.blur(sigmaX: 150, sigmaY: 150));
     canvas.drawPath(
         path,
         Paint()

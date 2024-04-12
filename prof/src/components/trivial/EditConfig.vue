@@ -2,7 +2,7 @@
   <v-card max-height="80vh" class="overflow-y-auto py-2">
     <v-row>
       <v-col>
-        <v-card-title>Modifier la session de Triv'Maths</v-card-title>
+        <v-card-title>Modifier les réglages Isy'Triv</v-card-title>
       </v-col>
       <v-col style="text-align: right">
         <v-btn icon flat class="mx-2" @click="emit('closed')">
@@ -61,43 +61,13 @@
         </v-col>
       </v-row>
       <v-list>
-        <v-alert
-          class="mt-1 py-2 px-3"
-          variant="outlined"
-          v-if="hint.Pattern?.length"
-          :color="hint.Missing?.length ? 'info' : 'success'"
-          closable
-        >
-          <div
-            v-if="hint.Missing?.length"
-            style="max-height: 50vh"
-            class="overflow-y-auto mr-2"
-          >
-            Les catégories suivantes ne sont pas utilisées :
-            <v-list>
-              <v-list-item v-for="(tags, index) in hint.Missing!" :key="index">
-                <TagChip
-                  :tag="tag"
-                  :key="index"
-                  v-for="(tag, index) in tags || []"
-                  :pointer="false"
-                ></TagChip>
-              </v-list-item>
-            </v-list>
-          </div>
-          <div v-else>
-            Toutes les questions inclusent dans
-            <span>
-              <TagChip
-                :tag="tag"
-                :key="index"
-                v-for="(tag, index) in hint.Pattern"
-                :pointer="false"
-              ></TagChip
-            ></span>
-            sont utilisées.
-          </div>
-        </v-alert>
+        <MissingResourcesHint
+          class="mt-1"
+          :pattern="hint.Pattern"
+          :missing-questions="hint.Missing || []"
+          :missing-exercices="[]"
+        ></MissingResourcesHint>
+
         <CategorieRow
           v-for="(categorie, index) in props.edited.Questions.Tags"
           :key="index"
@@ -113,7 +83,7 @@
               <tags-selector
                 :all-tags="allKnownTags"
                 :model-value="categorie || []"
-                :last-level-chapter="lastLevelChapter"
+                :last-matiere-level-chapter="lastMatiereLevelChapter"
                 @update:model-value="(v) => updateCategorie(index, v)"
               ></tags-selector>
             </v-col>
@@ -155,7 +125,6 @@
 <script setup lang="ts">
 import {
   Section,
-  type CategoriesQuestions,
   type CheckMissingQuestionsOut,
   type DifficultyTag,
   type QuestionCriterion,
@@ -164,13 +133,13 @@ import {
   type Trivial,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "@vue/reactivity";
-import { onMounted } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted } from "vue";
 import TagChip from "../editor/utils/TagChip.vue";
 import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
 import CategorieRow from "./CategorieRow.vue";
+import type { PrefillTrivialCategorie } from "@/controller/utils";
+import MissingResourcesHint from "../MissingResourcesHint.vue";
 
 interface Props {
   edited: Trivial;
@@ -184,22 +153,24 @@ const emit = defineEmits<{
   (e: "update", v: Trivial): void;
 }>();
 
-const lastLevelChapter = computed(() => {
+const lastMatiereLevelChapter = computed<PrefillTrivialCategorie>(() => {
   const all = allTags(props.edited.Questions.Tags);
   if (all.length) {
     const last = all[all.length - 1] || [];
     return {
+      matiere: last.find((s) => s.Section == Section.Matiere)?.Tag || "",
       level: last.find((s) => s.Section == Section.Level)?.Tag || "",
       chapter: last.find((s) => s.Section == Section.Chapter)?.Tag || "",
+      sublevels: last.filter((s) => s.Section == Section.SubLevel),
     };
   }
-  return { level: "", chapter: "" };
+  return { matiere: "", level: "", chapter: "", sublevels: [] };
 });
 
-let showDifficultyCard = $ref(false);
+const showDifficultyCard = ref(false);
 
 function onEditDifficulties(difficulties: DifficultyTag[]) {
-  showDifficultyCard = false;
+  showDifficultyCard.value = false;
   props.edited.Questions.Difficulties = difficulties;
   fetchHintForMissing();
 }
@@ -217,20 +188,20 @@ function updateCategorie(index: number, cat: QuestionCriterion) {
 
 onMounted(fetchHintForMissing);
 
-let hint = $ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
+const hint = ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
 async function fetchHintForMissing() {
   const criteria = props.edited.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
   if (!criteria.Tags.every((qu) => qu?.length)) {
-    hint = { Pattern: [], Missing: [] };
+    hint.value = { Pattern: [], Missing: [] };
     return;
   }
   const res = await controller.CheckMissingQuestions(criteria);
   if (res == undefined) {
     return;
   }
-  hint = res;
+  hint.value = res;
 }
 </script>
 

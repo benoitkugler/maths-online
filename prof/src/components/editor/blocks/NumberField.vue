@@ -4,7 +4,10 @@
       <v-text-field
         variant="outlined"
         density="compact"
-        v-model="props.modelValue.Expression"
+        :model-value="props.modelValue.Expression"
+        @update:model-value="
+          (v) => emit('update:modelValue', { Expression: v })
+        "
         label="Réponse"
         hint="Expression s'évaluant en un nombre (à virgule flottante). Ne crée pas de nouvelle ligne."
         persistent-hint

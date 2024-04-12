@@ -1,12 +1,13 @@
 import ClassroomsListVue from "@/views/ClassroomsList.vue";
 import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import HomeworkActivityVue from "@/views/HomeworkActivity.vue";
-import QuestionEditor from "@/views/QuestionEditor.vue";
+import QuestionEditorVue from "@/views/QuestionEditor.vue";
 import ReviewListVue from "@/views/ReviewList.vue";
 import SettingsPanelVue from "@/views/SettingsPanel.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
+import HomeViewVue from "@/views/HomeView.vue";
+import CeinturesActivityVue from "@/views/CeinturesActivity.vue";
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
 
 const router = createRouter({
   history: createWebHistory("/prof/"),
@@ -14,50 +15,56 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: HomeView,
-      meta: { Label: "Accueil" }
+      component: HomeViewVue,
+      meta: { Label: "Accueil" },
     },
     {
       path: "/settings",
       name: "settings",
       component: SettingsPanelVue,
-      meta: { Label: "Paramètres" }
+      meta: { Label: "Paramètres" },
     },
     {
       path: "/classrooms",
       name: "classrooms",
       component: ClassroomsListVue,
-      meta: { Label: "Classes et élèves" }
+      meta: { Label: "Classes et élèves" },
     },
     {
       path: "/editor-question",
       name: "editor-question",
-      component: QuestionEditor,
-      meta: { Label: "Editeur de question" }
+      component: QuestionEditorVue,
+      meta: { Label: "Editeur de question" },
     },
     {
       path: "/editor-exercice",
       name: "editor-exercice",
       component: ExerciceEditorVue,
-      meta: { Label: "Editeur d'exercices" }
+      meta: { Label: "Editeur d'exercices" },
     },
     {
       path: "/trivial",
       name: "trivial",
       component: TrivialPoursuit,
-      meta: { Label: "Triv'Maths" }
+      meta: { Label: "Isy'Triv" },
     },
     {
       path: "/homework",
       name: "homework",
       component: HomeworkActivityVue,
-      meta: { Label: "Travail à la maison" }
+      meta: { Label: "Travail à la maison" },
+    },
+    {
+      path: "/ceintures",
+      name: "ceintures",
+      component: CeinturesActivityVue,
+      meta: { Label: "Ceintures de calcul" },
     },
     {
       path: "/reviews",
       name: "reviews",
       component: ReviewListVue,
-      meta: { Label: "Publications" }
+      meta: { Label: "Publications" },
     },
     // {
     //   path: '/about',
@@ -69,9 +76,9 @@ const router = createRouter({
     // },
     {
       path: "/:catchAll(.*)",
-      redirect: { name: "home" }
-    }
-  ]
+      redirect: { name: "home" },
+    },
+  ],
 });
 
 export default router;

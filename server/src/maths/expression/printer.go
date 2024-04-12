@@ -148,6 +148,12 @@ func (op operator) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf(`{%s}^{%s}`, leftCode, rightCode)
 	case factorial:
 		return fmt.Sprintf(`%s!`, leftCode)
+	case union:
+		return fmt.Sprintf(`%s \cup %s`, leftCode, rightCode)
+	case intersection:
+		return fmt.Sprintf(`%s \cap %s`, leftCode, rightCode)
+	case complement:
+		return fmt.Sprintf(`\overline{%s}`, rightCode)
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
@@ -223,8 +229,84 @@ func (r roundFunc) asLaTeX(_, right *Expr) string {
 	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(), r.nbDigits)
 }
 
+// try to write the sequence explicitely
+func (r specialFunction) expandSequence(eval bool) (string, error) {
+	start, err := evalInt(r.args[1], nil)
+	if err != nil {
+		return "", err
+	}
+	end, err := evalInt(r.args[2], nil)
+	if err != nil {
+		return "", err
+	}
+	k, _ := r.args[0].atom.(Variable)
+	expr := r.args[3]
+	var chunks []string
+	for i := start; i <= end; i++ {
+		v := newRealInt(i)
+		term := expr.Copy()
+		term.Substitute(Vars{k: v.toExpr()})
+		if eval {
+			term.reduce()
+		}
+		chunks = append(chunks, term.AsLaTeX())
+	}
+
+	var sep string
+	switch r.kind {
+	case sumFn:
+		sep = " + "
+	case prodFn:
+		sep = " \\times "
+	case unionFn:
+		sep = " \\cup "
+	case interFn:
+		sep = " \\cap "
+	}
+	return strings.Join(chunks, sep), nil
+}
+
 func (r specialFunction) asLaTeX(_, _ *Expr) string {
-	return fmt.Sprintf(`\text{%s}`, r.String())
+	_ = exhaustiveSpecialFunctionSwitch
+	switch r.kind {
+	case binomial:
+		k, n := r.args[0], r.args[1]
+		return fmt.Sprintf(`\binom{%s}{%s}`, n.AsLaTeX(), k.AsLaTeX())
+	case sumFn, prodFn, unionFn, interFn:
+		k, start, end, expr := r.args[0], r.args[1], r.args[2], r.args[3]
+		if len(r.args) == 5 {
+			switch r.args[4].atom {
+			case Variable{Indice: "expand-eval"}:
+				// try to write the sequence explicitely
+				code, err := r.expandSequence(true)
+				if err == nil {
+					return code
+				}
+				fallthrough // try only expanding
+			case Variable{Indice: "expand"}:
+				// try to write the sequence explicitely
+				code, err := r.expandSequence(false)
+				if err == nil {
+					return code
+				}
+			}
+			// else, default to general notation
+		}
+		var latexOp string
+		switch r.kind {
+		case sumFn:
+			latexOp = "sum"
+		case prodFn:
+			latexOp = "prod"
+		case unionFn:
+			latexOp = "bigcup"
+		case interFn:
+			latexOp = "bigcap"
+		}
+		return fmt.Sprintf(`\%s_{%s=%s}^{%s} %s`, latexOp, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
+	default:
+		return fmt.Sprintf(`\text{%s}`, r.String())
+	}
 }
 
 func (v Variable) asLaTeX(_, _ *Expr) string {
@@ -286,7 +368,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	}
 
 	// the latex syntax allow to spare some redundant parenthesis
-	if isLaTex && (op == div || op == rem || op == mod) {
+	if isLaTex && (op == div || op == rem || op == mod || op == complement) {
 		return false
 	}
 	if isLaTex && !isLeftArg && op == pow {
@@ -297,6 +379,11 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	case Number, constant, function, Variable, roundFunc, specialFunction, indice, matrix:
 		return false
 	case operator:
+		if isLaTex && atom == complement {
+			// the latex overline is enough to delimit
+			return false
+		}
+
 		_ = exhaustiveOperatorSwitch
 		switch op {
 		case minus:
@@ -321,6 +408,8 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 			return op > atom
 		case factorial:
 			// parenthesis are always needed if the argument is an expression
+			return true
+		case union, intersection, complement:
 			return true
 		default:
 			return op > atom //  (1+2)*4, (1-2)*4, 4*(1+2)
@@ -371,7 +460,7 @@ func (op operator) serialize(left, right *Expr) string {
 	case div:
 		// compact fractions
 		return leftCode + op.String() + rightCode
-	case equals, greater, strictlyGreater, lesser, strictlyLesser,
+	case equals, greater, strictlyGreater, lesser, strictlyLesser, union, intersection, complement,
 		mod, rem, pow:
 		return fmt.Sprintf(`%s %s %s`, leftCode, op.String(), rightCode)
 	default:

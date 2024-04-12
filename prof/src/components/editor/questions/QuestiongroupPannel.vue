@@ -13,7 +13,7 @@
 
   <ResourceScafold
     :resource="resource"
-    :readonly="isReadonly"
+    :readonly="readonly"
     :all-tags="props.allTags"
     v-model="variantIndex"
     @back="backToList"
@@ -24,35 +24,41 @@
     @delete-variant="deleteVariante"
     ref="scafold"
   >
-    <QuestionVariantPannel
-      :question="ownVariants[variantIndex]"
-      :readonly="isReadonly"
-      @update="(qu: Question) => (ownVariants[variantIndex] = qu)"
-      @preview="(qu: LoopbackShowQuestion) => emit('preview', qu)"
-    ></QuestionVariantPannel>
+    <QuestionPageEditor
+      :question="page"
+      :readonly="readonly"
+      :show-dual-parameters="false"
+      :on-save="saveQuestion"
+      :on-export-latex="exportLatex"
+      @update="writeChanges"
+    ></QuestionPageEditor>
   </ResourceScafold>
 </template>
 
 <script setup lang="ts">
 import type {
-  LoopbackShowQuestion,
   Question,
-  QuestionExerciceUses,
   QuestiongroupExt,
   Sheet,
   Tags,
   TagsDB,
+  TaskUses,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type { ResourceGroup, VariantG } from "@/controller/editor";
+import type {
+  QuestionPage,
+  ResourceGroup,
+  SaveQuestionOut,
+  VariantG,
+} from "@/controller/editor";
 import { copy } from "@/controller/utils";
 import { useRouter } from "vue-router";
-import { $computed, $ref } from "vue/macros";
 import UsesCard from "../UsesCard.vue";
-import QuestionVariantPannel from "./QuestionVariantPannel.vue";
 import ResourceScafold from "../ResourceScafold.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import QuestionPageEditor from "../QuestionPageEditor.vue";
+import { LoopbackServerEventKind } from "@/controller/loopback_gen";
 
 interface Props {
   group: QuestiongroupExt;
@@ -64,39 +70,39 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
-  (e: "preview", question: LoopbackShowQuestion): void;
 }>();
 
 const router = useRouter();
 
-let group = $ref(copy(props.group));
-let ownVariants = $ref(copy(props.variants));
-let resource = computed<ResourceGroup>(() => ({
-  Id: group.Group.Id,
-  Title: group.Group.Title,
-  Tags: group.Tags,
-  Variants: ownVariants,
+const group = ref(copy(props.group));
+const ownVariants = ref(copy(props.variants));
+const resource = computed<ResourceGroup>(() => ({
+  Id: group.value.Group.Id,
+  Title: group.value.Group.Title,
+  Tags: group.value.Tags,
+  Variants: ownVariants.value,
+  Origin: group.value.Origin,
 }));
 
-let variantIndex = $ref(0);
+const variantIndex = ref(0);
 
-let isReadonly = $computed(
+const readonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
 function updateTitle(t: string) {
-  group.Group.Title = t;
+  group.value.Group.Title = t;
   updateQuestiongroup();
 }
 
 async function updateQuestiongroup() {
-  if (isReadonly) return;
-  await controller.EditorUpdateQuestiongroup(group.Group);
+  if (readonly.value) return;
+  await controller.EditorUpdateQuestiongroup(group.value.Group);
 }
 
-let deletedBlocked = $ref<QuestionExerciceUses>(null);
+const deletedBlocked = ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
-  deletedBlocked = null;
+  deletedBlocked.value = null;
 
   router.push({ name: "homework", query: { idSheet: sh.Id } });
 }
@@ -106,22 +112,25 @@ async function deleteVariante(que: VariantG) {
   if (res == undefined) return;
   // check if the variant is used
   if (!res.Deleted) {
-    deletedBlocked = res.BlockedBy;
+    deletedBlocked.value = res.BlockedBy;
     return;
   }
 
-  ownVariants = ownVariants.filter((qu) => qu.Id != que.Id);
-  if (ownVariants.length && variantIndex >= ownVariants.length) {
-    variantIndex = 0;
+  ownVariants.value = ownVariants.value.filter((qu) => qu.Id != que.Id);
+  if (
+    ownVariants.value.length &&
+    variantIndex.value >= ownVariants.value.length
+  ) {
+    variantIndex.value = 0;
   }
   // if there is no more variant, that means the questiongroup is deleted:
   // go back
-  if (!ownVariants.length) {
+  if (!ownVariants.value.length) {
     emit("back");
   }
 }
 
-let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
+const scafold = ref<InstanceType<typeof ResourceScafold> | null>(null);
 
 async function duplicateVariante(variant: VariantG) {
   const newQuestion = await controller.EditorDuplicateQuestion({
@@ -130,21 +139,21 @@ async function duplicateVariante(variant: VariantG) {
   if (newQuestion == undefined) {
     return;
   }
-  ownVariants.push(newQuestion);
-  variantIndex = ownVariants.length - 1; // go to the new question
+  ownVariants.value.push(newQuestion);
+  variantIndex.value = ownVariants.value.length - 1; // go to the new question
 
-  if (scafold) scafold.showEditVariant(newQuestion);
+  if (scafold.value) scafold.value.showEditVariant(newQuestion);
 }
 
 async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateQuestionTags({
-    Id: group.Group.Id,
+    Id: group.value.Group.Id,
     Tags: newTags,
   });
   if (rep === undefined) {
     return;
   }
-  group.Tags = newTags;
+  group.value.Tags = newTags;
 }
 
 function backToList() {
@@ -152,14 +161,54 @@ function backToList() {
 }
 
 async function updateVariant(variant: VariantG) {
-  if (isReadonly) {
+  if (readonly.value) {
     return;
   }
-  ownVariants[variantIndex].Subtitle = variant.Subtitle;
-  ownVariants[variantIndex].Difficulty = variant.Difficulty;
+  ownVariants.value[variantIndex.value].Subtitle = variant.Subtitle;
+  ownVariants.value[variantIndex.value].Difficulty = variant.Difficulty;
   await controller.EditorSaveQuestionMeta({
-    Question: ownVariants[variantIndex],
+    Question: ownVariants.value[variantIndex.value],
   });
+}
+
+const variant = computed(() => ownVariants.value[variantIndex.value]);
+
+const page = computed<QuestionPage>(() => ({
+  id: variant.value.Id,
+  parameters: variant.value.Parameters,
+  sharedParameters: [],
+  enonce: variant.value.Enonce,
+  correction: variant.value.Correction,
+}));
+
+function writeChanges(qu: QuestionPage) {
+  ownVariants.value[variantIndex.value].Parameters = qu.parameters;
+  ownVariants.value[variantIndex.value].Enonce = qu.enonce;
+  ownVariants.value[variantIndex.value].Correction = qu.correction;
+}
+
+async function saveQuestion(
+  showCorrection: boolean
+): Promise<SaveQuestionOut | undefined> {
+  const res = await controller.EditorSaveQuestionAndPreview({
+    Id: variant.value.Id,
+    Page: page.value,
+    ShowCorrection: showCorrection,
+  });
+  if (res === undefined) return;
+  return {
+    IsValid: res.IsValid,
+    Error: res.Error,
+    Preview: {
+      Kind: LoopbackServerEventKind.LoopbackShowQuestion,
+      Data: res.Preview,
+    },
+  };
+}
+
+async function exportLatex() {
+  const res = await controller.EditorQuestionExportLateX(page.value);
+  return res;
 }
 </script>
 

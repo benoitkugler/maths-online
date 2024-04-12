@@ -1,17 +1,16 @@
 import 'package:eleve/questions/dropdown.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/figure_point.dart';
-import 'package:eleve/questions/figure_vector.dart';
-import 'package:eleve/questions/figure_vector_pair.dart';
 import 'package:eleve/questions/function_graph.dart';
 import 'package:eleve/questions/function_points.dart';
+import 'package:eleve/questions/geometric_construction.dart';
 import 'package:eleve/questions/number.dart';
 import 'package:eleve/questions/ordered_list.dart';
 import 'package:eleve/questions/probas_tree.dart';
 import 'package:eleve/questions/proof.dart';
 import 'package:eleve/questions/radio.dart';
 import 'package:eleve/questions/repere.dart';
+import 'package:eleve/questions/sets.dart';
 import 'package:eleve/questions/sign_table.dart';
 import 'package:eleve/questions/sign_table_field.dart';
 import 'package:eleve/questions/table.dart';
@@ -90,20 +89,20 @@ abstract class BaseQuestionController extends ChangeNotifier {
   /// later used when building widgets.
   ///
   /// [api] is used to validate expression syntax
-  BaseQuestionController(Question question, FieldAPI api)
+  BaseQuestionController(Question question)
       : state = QuestionState(question: question) {
-    state.fields = _createFieldControllers(question, api, onFieldChange);
+    state.fields = _createFieldControllers(question, onFieldChange);
   }
 }
 
 Map<int, FieldController> _createFieldControllers(
-    Question question, FieldAPI api, void Function() onChange) {
+    Question question, void Function() onChange) {
   final fields = <int, FieldController>{};
   for (var block in question.enonce) {
     if (block is NumberFieldBlock) {
       fields[block.iD] = NumberController(onChange);
     } else if (block is ExpressionFieldBlock) {
-      fields[block.iD] = ExpressionController(api, onChange,
+      fields[block.iD] = ExpressionController(onChange,
           showFractionHelp: block.showFractionHelp);
     } else if (block is RadioFieldBlock) {
       fields[block.iD] = RadioController(onChange, block.proposals);
@@ -111,16 +110,13 @@ Map<int, FieldController> _createFieldControllers(
       fields[block.iD] = DropDownController(onChange, block.proposals);
     } else if (block is OrderedListFieldBlock) {
       fields[block.iD] = OrderedListController(onChange, block);
-    } else if (block is FigurePointFieldBlock) {
-      fields[block.iD] = FigurePointController(onChange);
-    } else if (block is FigureVectorFieldBlock) {
-      fields[block.iD] = FigureVectorController(block, onChange);
-    } else if (block is FigureVectorPairFieldBlock) {
-      fields[block.iD] = FigureVectorPairController(block.figure, onChange);
+    } else if (block is GeometricConstructionFieldBlock) {
+      fields[block.iD] =
+          GeometricConstructionController.fromBlock(onChange, block);
     } else if (block is VariationTableFieldBlock) {
-      fields[block.iD] = VariationTableController(api, block, onChange);
+      fields[block.iD] = VariationTableController(block, onChange);
     } else if (block is SignTableFieldBlock) {
-      fields[block.iD] = SignTableController(api, block, onChange);
+      fields[block.iD] = SignTableController(block, onChange);
     } else if (block is FunctionPointsFieldBlock) {
       fields[block.iD] = FunctionPointsController(block, onChange);
     } else if (block is TreeFieldBlock) {
@@ -131,6 +127,8 @@ Map<int, FieldController> _createFieldControllers(
       fields[block.iD] = VectorController(block, onChange);
     } else if (block is ProofFieldBlock) {
       fields[block.iD] = ProofController(block, onChange);
+    } else if (block is SetFieldBlock) {
+      fields[block.iD] = SetController(onChange, block.sets);
     }
   }
   return fields;
@@ -240,14 +238,14 @@ class _FieldsBuilder {
     // start a new row
     _flushCurrentRow();
 
-    rows.add(Center(child: VariationTable(element)));
+    rows.add(Center(child: VariationTableW(element)));
   }
 
   void _handleSignTableBlock(SignTableBlock element) {
     // start a new row
     _flushCurrentRow();
 
-    rows.add(Center(child: SignTable(element)));
+    rows.add(Center(child: SignTableW(element)));
   }
 
   void _handleFigureBlock(FigureBlock element) {
@@ -274,7 +272,7 @@ class _FieldsBuilder {
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = fields[element.iD] as NumberController;
     _currentRow.add(WidgetSpan(
-        child: NumberField(
+        child: NumberFieldW(
       _color,
       ct,
       sizeHint: element.sizeHint,
@@ -286,7 +284,7 @@ class _FieldsBuilder {
     final ct = fields[element.iD] as ExpressionController;
 
     final field = WidgetSpan(
-        child: ExpressionField(
+        child: ExpressionFieldW(
       _color,
       ct,
       hintWidth: element.sizeHint,
@@ -326,14 +324,14 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(RadioField(_color, ct));
+    rows.add(RadioFieldW(_color, ct));
   }
 
   void _handleDropDownFieldBlock(DropDownFieldBlock element) {
     final ct = fields[element.iD] as DropDownController;
 
     // add inline
-    _currentRow.add(WidgetSpan(child: DropDownField(_color, ct)));
+    _currentRow.add(WidgetSpan(child: DropDownFieldW(_color, ct)));
   }
 
   void _handleOrderedListFieldBlock(OrderedListFieldBlock element) {
@@ -342,11 +340,12 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(OrderedListField(_color, ct));
+    rows.add(OrderedListFieldW(_color, ct));
   }
 
-  void _handleFigurePointFieldBlock(FigurePointFieldBlock element) {
-    final ct = fields[element.iD] as FigurePointController;
+  void _handleGeometricConstructionFieldBlock(
+      GeometricConstructionFieldBlock element) {
+    final ct = fields[element.iD] as GeometricConstructionController;
 
     // start a new line
     _flushCurrentRow();
@@ -355,32 +354,8 @@ class _FieldsBuilder {
     final zoom = TransformationController();
     zoomableKeys.add(key);
     rows.add(Center(
-        child: Zoomable(zoom, FigurePointField(element.figure, ct), key)));
-  }
-
-  void _handleFigureVectorFieldBlock(FigureVectorFieldBlock element) {
-    final ct = fields[element.iD] as FigureVectorController;
-
-    // start a new line
-    _flushCurrentRow();
-
-    final key = GlobalKey();
-    final zoom = TransformationController();
-    zoomableKeys.add(key);
-    rows.add(Center(child: Zoomable(zoom, FigureVectorField(ct, zoom), key)));
-  }
-
-  void _handleFigureVectorPairFieldBlock(FigureVectorPairFieldBlock element) {
-    final ct = fields[element.iD] as FigureVectorPairController;
-
-    // start a new line
-    _flushCurrentRow();
-
-    final key = GlobalKey();
-    final zoom = TransformationController();
-    zoomableKeys.add(key);
-    rows.add(
-        Center(child: Zoomable(zoom, FigureVectorPairField(ct, zoom), key)));
+        child: Zoomable(
+            zoom, GeometricConstructionFieldW(element, ct, zoom), key)));
   }
 
   void _handleVariationTableFieldBlock(VariationTableFieldBlock element) {
@@ -389,7 +364,7 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(Center(child: VariationTableField(_color, ct)));
+    rows.add(Center(child: VariationTableFieldW(_color, ct)));
   }
 
   void _handleSignTableFieldBlock(SignTableFieldBlock element) {
@@ -398,7 +373,7 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(Center(child: SignTableField(_color, ct)));
+    rows.add(Center(child: SignTableFieldW(_color, ct)));
   }
 
   void _handleFunctionPointsFieldBlock(FunctionPointsFieldBlock element) {
@@ -410,14 +385,14 @@ class _FieldsBuilder {
     final key = GlobalKey();
     final zoom = TransformationController();
     zoomableKeys.add(key);
-    rows.add(Center(child: Zoomable(zoom, FunctionPoints(ct, zoom), key)));
+    rows.add(Center(child: Zoomable(zoom, FunctionPointsW(ct, zoom), key)));
   }
 
   void _handleTreeBlock(TreeBlock element) {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(Center(child: Tree(_color, element)));
+    rows.add(Center(child: TreeW(_color, element)));
   }
 
   void _handleTreeFieldBlock(TreeFieldBlock element) {
@@ -426,7 +401,7 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(Center(child: TreeField(_color, ct)));
+    rows.add(Center(child: TreeFieldW(_color, ct)));
   }
 
   void _handleTableFieldBlock(TableFieldBlock element) {
@@ -435,13 +410,13 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(Center(child: TableField(_color, ct)));
+    rows.add(Center(child: TableFieldW(_color, ct)));
   }
 
   void _handleVectorFieldBlock(VectorFieldBlock element) {
     final ct = fields[element.iD] as VectorController;
     _currentRow.add(WidgetSpan(
-        child: VectorField(_color, ct),
+        child: VectorFieldW(_color, ct),
         alignment: element.displayColumn
             ? PlaceholderAlignment.middle
             : PlaceholderAlignment.bottom));
@@ -453,7 +428,16 @@ class _FieldsBuilder {
     // start a new line
     _flushCurrentRow();
 
-    rows.add(ProofField(_color, ct));
+    rows.add(ProofFieldW(_color, ct));
+  }
+
+  void _handleSetFieldBlock(SetFieldBlock element) {
+    final ct = fields[element.iD] as SetController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(SetFieldW(_color, ct));
   }
 
   /// populate [rows]
@@ -487,12 +471,8 @@ class _FieldsBuilder {
         _handleDropDownFieldBlock(element);
       } else if (element is OrderedListFieldBlock) {
         _handleOrderedListFieldBlock(element);
-      } else if (element is FigurePointFieldBlock) {
-        _handleFigurePointFieldBlock(element);
-      } else if (element is FigureVectorFieldBlock) {
-        _handleFigureVectorFieldBlock(element);
-      } else if (element is FigureVectorPairFieldBlock) {
-        _handleFigureVectorPairFieldBlock(element);
+      } else if (element is GeometricConstructionFieldBlock) {
+        _handleGeometricConstructionFieldBlock(element);
       } else if (element is VariationTableFieldBlock) {
         _handleVariationTableFieldBlock(element);
       } else if (element is SignTableFieldBlock) {
@@ -509,6 +489,8 @@ class _FieldsBuilder {
         _handleVectorFieldBlock(element);
       } else if (element is ProofFieldBlock) {
         _handleProofFieldBlock(element);
+      } else if (element is SetFieldBlock) {
+        _handleSetFieldBlock(element);
       }
 
       lastIsText = element is TextBlock;
@@ -595,11 +577,14 @@ class QuestionW extends StatefulWidget {
   /// [title] is the title of the question
   final String title;
 
+  final void Function()? onButtonClick;
+
   const QuestionW(
     this.controller,
     this.color, {
     Key? key,
     this.title = "Question",
+    this.onButtonClick,
   }) : super(key: key);
 
   @override
@@ -637,8 +622,13 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   void onButtonClick() {
-    widget.controller.onPrimaryButtonClick();
-    setState(() {});
+    final cb = widget.onButtonClick;
+    if (cb != null) {
+      cb();
+    } else {
+      widget.controller.onPrimaryButtonClick();
+      setState(() {});
+    }
   }
 
   @override

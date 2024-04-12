@@ -10,15 +10,60 @@ import (
 
 // RandomParameters stores a set of random parameters definitions,
 // which may be related, but cannot contain cycles.
-type RandomParameters map[Variable]*Expr
+type RandomParameters struct {
+	// special functions, called before resolving [defs]
+	specials []intrinsic
+
+	defs map[Variable]*Expr
+}
+
+func NewRandomParameters() *RandomParameters {
+	return &RandomParameters{defs: make(map[Variable]*Expr, 10)}
+}
+
+// IsDefined returns true if the variable [v] is defined (regular variables
+// and special functions included)
+func (rp RandomParameters) IsDefined(v Variable) bool {
+	for _, spe := range rp.specials {
+		if spe.isDef(v) {
+			return true
+		}
+	}
+	_, has := rp.defs[v]
+	return has
+}
+
+func (rp RandomParameters) DefinedVariables() []Variable {
+	var out []Variable
+	for _, spe := range rp.specials {
+		out = append(out, spe.vars()...)
+	}
+	for v := range rp.defs {
+		out = append(out, v)
+	}
+	return out
+}
+
+// ParseVariable parses the given expression and adds it to the parameters
+func (rp RandomParameters) ParseVariable(v Variable, expr string) error {
+	e, err := Parse(expr)
+	if err != nil {
+		return err
+	}
+	if _, has := rp.defs[v]; has {
+		return ErrDuplicateParameter{Duplicate: v}
+	}
+	rp.defs[v] = e
+	return nil
+}
 
 // addAnonymousParam register the given expression under a new variable, not used yet,
 // chosen among a private range
 func (rp RandomParameters) addAnonymousParam(expr *Expr) Variable {
 	for ru := firstPrivateVariable; ru > 0; ru++ {
 		v := Variable{Name: ru}
-		if _, has := rp[v]; !has {
-			rp[v] = expr
+		if _, has := rp.defs[v]; !has {
+			rp.defs[v] = expr
 			return v
 		}
 	}
@@ -65,9 +110,31 @@ func generateDivisors(n, threshold int) (out []int) {
 	return out
 }
 
-func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
-	switch rd.kind {
-	case randInt, randPrime:
+func binomialCoefficient(k, n int) int {
+	if n < 0 || k < 0 || k > n {
+		return 0
+	}
+
+	// Since C(n, k) = C(n, n-k)
+	if k > n-k {
+		k = n - k
+	}
+
+	res := 1
+	// Calculate value of
+	// [n * (n-1) *---* (n-k+1)] / [k * (k-1) *----* 1]
+	for i := 0; i < k; i++ {
+		res *= (n - i)
+		res /= (i + 1)
+	}
+
+	return res
+}
+
+func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) error {
+	_ = exhaustiveSpecialFunctionSwitch
+	switch kind {
+	case randInt, randPrime, randMatrixInt:
 		start, okStart := IsInt(start)
 		end, okEnd := IsInt(end)
 		if !(okStart && okEnd) {
@@ -84,20 +151,31 @@ func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
 			}
 		}
 
-		if rd.kind == randPrime && start < 0 {
+		if kind == randPrime && start < 0 {
 			return ErrInvalidExpr{
 				Reason: "randPrime n'accepte que des nombres positifs",
 				Pos:    pos,
 			}
 		}
 
-		if rd.kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
+		if kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
 			return ErrInvalidExpr{
 				Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", start, end),
 				Pos:    pos,
 			}
 		}
+	case sumFn, prodFn, unionFn, interFn:
+		_, okStart := IsInt(start)
+		_, okEnd := IsInt(end)
+		if !(okStart && okEnd) {
+			return ErrInvalidExpr{
+				Reason: "sum et prod attendent deux entiers comme indices limites",
+				Pos:    pos,
+			}
+		}
+
 	}
+
 	return nil
 }
 
@@ -183,9 +261,9 @@ func (expr *Expr) IsValidIndex(vars Vars, length int) error {
 	return fmt.Errorf("L'expression %s ne définit pas un index valide dans une liste de longueur %d.", expr, length)
 }
 
-// IsValid evaluates the function expression using `vars`, and checks
+// IsValidAsFunction evaluates the function expression using `vars`, and checks
 // if the (estimated) extrema of |f| is less than `bound`, returning an error if not.
-func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
+func (fn FunctionExpr) IsValidAsFunction(domain Domain, vars Vars, bound float64) error {
 	fnExpr := fn.Function.Copy()
 	fnExpr.Substitute(vars)
 
@@ -203,9 +281,39 @@ func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
 		From:         fromV,
 		To:           toV,
 	}
-	ext := def.extrema()
+	ext := def.extrema(false)
 	if ext == -1 {
 		return fmt.Errorf("L'expression %s ne définit pas une fonction valide.", fnExpr)
+	} else if ext > bound {
+		return fmt.Errorf("L'expression %s prend des valeurs trop importantes (%f)", fnExpr, ext)
+	}
+
+	return nil
+}
+
+// IsValidAsSequence evaluates the sequence expression using `vars`, and checks
+// if the (estimated) extrema of |f| is less than `bound`, returning an error if not.
+func (fn FunctionExpr) IsValidAsSequence(domain Domain, vars Vars, bound float64) error {
+	fnExpr := fn.Function.Copy()
+	fnExpr.Substitute(vars)
+
+	fromV, toV, err := domain.eval(vars)
+	if err != nil {
+		return err
+	}
+
+	if fromV >= toV {
+		return fmt.Errorf("Les expressions %s ne définissent pas un intervalle valide (%f, %f).", domain, fromV, toV)
+	}
+
+	def := FunctionDefinition{
+		FunctionExpr: FunctionExpr{Function: fnExpr, Variable: fn.Variable},
+		From:         fromV,
+		To:           toV,
+	}
+	ext := def.extrema(true)
+	if ext == -1 {
+		return fmt.Errorf("L'expression %s ne définit pas une suite valide.", fnExpr)
 	} else if ext > bound {
 		return fmt.Errorf("L'expression %s prend des valeurs trop importantes (%f)", fnExpr, ext)
 	}
@@ -296,7 +404,7 @@ func (d Domain) IsIncludedIntoOne(domains []Domain, vars Vars) error {
 }
 
 // AreDisjointsDomains returns an error if the given intervals [from, to] are not disjoints.
-// Domains must be valid, as defined by `FunctionExpr.IsValid`.
+// Domains must be valid, as defined by `FunctionExpr.IsValidAsFunction`.
 func AreDisjointsDomains(domains []Domain, vars Vars) error {
 	intervals := make([][2]float64, len(domains))
 	for i, ds := range domains {

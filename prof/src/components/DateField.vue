@@ -1,5 +1,6 @@
 <template>
   <v-text-field
+    autofocus
     @focus="onFocus"
     placeholder="JJ/MM/AAAA"
     variant="outlined"
@@ -15,8 +16,7 @@
 <script setup lang="ts">
 import type { Date_ } from "@/controller/api_gen";
 import { formatDate } from "@/controller/utils";
-import { onMounted, watch } from "vue";
-import { $ref } from "vue/macros";
+import { onMounted, ref, watch } from "vue";
 interface Props {
   modelValue: Date_;
   label?: string;
@@ -28,7 +28,7 @@ const emit = defineEmits<{
   (e: "update:modelValue", modelValue: Date_): void;
 }>();
 
-let userInput = $ref("");
+const userInput = ref("");
 
 onMounted(parsePropsDate);
 
@@ -38,11 +38,11 @@ watch(props, () => {
 
 function onType(s: string) {
   if (s.length == 2) {
-    userInput = s + "/";
+    userInput.value = s + "/";
   } else if (s.length == 5) {
-    userInput = s + "/";
+    userInput.value = s + "/";
   } else {
-    userInput = s;
+    userInput.value = s;
   }
   const parsed = tryParseDate();
   if (parsed != null) {
@@ -51,10 +51,10 @@ function onType(s: string) {
 }
 
 function tryParseDate() {
-  if (userInput.length != 10) return null;
-  const day = Number(userInput.substring(0, 2));
-  const month = Number(userInput.substring(3, 5));
-  const year = Number(userInput.substring(6, 10));
+  if (userInput.value.length != 10) return null;
+  const day = Number(userInput.value.substring(0, 2));
+  const month = Number(userInput.value.substring(3, 5));
+  const year = Number(userInput.value.substring(6, 10));
   if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900) {
     return new Date(Date.UTC(year, month - 1, day)).toISOString() as Date_;
   }
@@ -62,7 +62,7 @@ function tryParseDate() {
 }
 
 function parsePropsDate() {
-  userInput = formatDate(props.modelValue);
+  userInput.value = formatDate(props.modelValue);
 }
 
 function onFocus(ev: FocusEvent) {

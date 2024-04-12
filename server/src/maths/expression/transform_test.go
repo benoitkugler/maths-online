@@ -3,6 +3,8 @@ package expression
 import (
 	"reflect"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 // an empty string return nil
@@ -171,7 +173,7 @@ func Test_Expression_expandMinus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		expr.expandMinus()
+		expr.enforcePlus()
 
 		want := mustParse(t, tt.want)
 		if !reflect.DeepEqual(expr, want) {
@@ -266,13 +268,30 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"round(2.2; 4) + round(2.2; 5)", "round(2.2; 5) + round(2.2; 4)", ExpandedSubstitutions, true},
 		{"-0.25x+1", "-0,25x+1", SimpleSubstitutions, true},
 		{"1.5x + 1", "(3/2)x+1", ExpandedSubstitutions, true},
+		{"2(x+1)", "2x+2", SimpleSubstitutions, false},
+		{"2(x+1)", "2x+2", ExpandedSubstitutions, true},
 		{"2(x+1)(x+3)", "(2x+2)(x+3)", ExpandedSubstitutions, true},
 		{"2(x+1)(x+3)", "(x+3)(2x+2)", ExpandedSubstitutions, true},
+		{"(x + y) - z", "x + (y - z)", SimpleSubstitutions, true},
+		{"(n * (n+1)) / 2", "n * ((n+1) / 2)", SimpleSubstitutions, true},
+		{"n(n+1)/2", "(n(n+1))/2", SimpleSubstitutions, true},
+		// issue 295
+		{"11/2*x", "11x/2", SimpleSubstitutions, true},
+		{"11/2*x", "11x/2", ExpandedSubstitutions, true},
+		{"3*11/7 * x", "33x/7", SimpleSubstitutions, true},
+		{"3*11/7 * x", "33x/7", ExpandedSubstitutions, true},
+		{"3(11/7 x+13/2)", "33x/7+39/2", SimpleSubstitutions, false},
+		{"3(11/7 x+13/2)", "33x/7+39/2", ExpandedSubstitutions, true},
+		// exponentiel
+		{"e^x", "exp(x)", Strict, false},
+		{"e^-1", "exp(-1)", SimpleSubstitutions, true},
+		{"e^x", "exp(x)", SimpleSubstitutions, true},
+		{"e^(x + b)", "exp(x + b)", SimpleSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
 		if got := AreExpressionsEquivalent(e1, e2, tt.level); got != tt.want {
-			t.Fatalf("AreExpressionEquivalent(%s, %s) = %v, want %v", tt.e1, tt.e2, got, tt.want)
+			t.Fatalf("AreExpressionEquivalent(%s, %s, %s) = %v, want %v", tt.e1, tt.e2, tt.level, got, tt.want)
 		}
 	}
 }
@@ -315,6 +334,9 @@ func TestExpression_Substitute(t *testing.T) {
 			}, "A+2+3",
 		},
 		{"[[x; y]; [1; 2]]", Vars{NewVar('x'): newNb(3)}, "[[3; y]; [1; 2]]"},
+		{"binom(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "binom(l; n)"},
+		{"min(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "min(l; n)"},
+		{"[[ x; y; z]]", Vars{NewVar('x'): newNb(1), NewVar('y'): newNb(1), NewVar('z'): newNb(1)}, "[[ 1; 1; 1]]"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -329,7 +351,9 @@ func TestExpression_Substitute(t *testing.T) {
 
 func TestExpressionNegativeParams(t *testing.T) {
 	e := mustParse(t, "m*x + 1")
-	pr := RandomParameters{NewVar('a'): mustParse(t, "-3"), NewVar('b'): mustParse(t, "2"), NewVar('m'): mustParse(t, "a/b")}
+	pr := RandomParameters{defs: map[Variable]*Expr{
+		NewVar('a'): mustParse(t, "-3"), NewVar('b'): mustParse(t, "2"), NewVar('m'): mustParse(t, "a/b"),
+	}}
 	vars, err := pr.Instantiate()
 	if err != nil {
 		t.Fatal(err)
@@ -360,7 +384,7 @@ func TestExpressionNegativeParams(t *testing.T) {
 }
 
 func TestBug51(t *testing.T) {
-	params := RandomParameters{
+	params := RandomParameters{defs: map[Variable]*Expr{
 		NewVar(109):       mustParse(t, "randChoice(2;4;5;8;10)*randChoice(-1;1)"),
 		NewVar(112):       mustParse(t, "randint(1;50)*randChoice(-1;0;1)"),
 		NewVarI(97, "0"):  mustParse(t, "randChoice(2;4;5;8;10)*randChoice(-1;1)"),
@@ -370,7 +394,7 @@ func TestBug51(t *testing.T) {
 		NewVar(116):       mustParse(t, "(x_1==x_0)+1"),
 		NewVar(97):        mustParse(t, "t*a_0"),
 		NewVarI(120, "2"): mustParse(t, "-b/a"),
-	}
+	}}
 
 	expr := mustParse(t, "-p")
 	for range [100]int{} {
@@ -382,4 +406,18 @@ func TestBug51(t *testing.T) {
 		expr2.Substitute(vars)
 		_ = expr2.AsLaTeX() // check for crashes
 	}
+}
+
+func TestBug300(t *testing.T) {
+	params := RandomParameters{defs: map[Variable]*Expr{
+		NewVar('x'): mustParse(t, "1"),
+		NewVar('y'): mustParse(t, "2"),
+		NewVar('z'): mustParse(t, "3"),
+	}}
+	vars, err := params.Instantiate()
+	tu.AssertNoErr(t, err)
+
+	e := mustParse(t, "[[ x; y; z]]")
+	e.Substitute(vars)
+	tu.Assert(t, e.String() == "[[1 ; 2 ; 3]]")
 }

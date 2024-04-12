@@ -11,6 +11,76 @@ func generateLatex(t *testing.T, lines []string, outFile string) {
 	tu.GenerateLatex(t, strings.Join(lines, "\n"), outFile)
 }
 
+func TestExpression_String(t *testing.T) {
+	tests := []struct {
+		expr string
+		want string
+	}{
+		{"2 + x", "2 + x"},
+		{"2 / x", "2/x"},
+		{"2 * x", "2x"},
+		{"a * x", "ax"},
+		{"2 * 3", "2 * 3"},
+		{"2 - x", "2 - x"},
+		{"2 ^ x", "2 ^ x"},
+		{"2 ^ (x+1)", "2 ^ (x + 1)"},
+		{"e * \u03C0", "e\u03C0"},
+		{"\uE001", "\uE001"},
+
+		{"exp(2)", "exp(2)"},
+		{"sin(2)", "sin(2)"},
+		{"cos(2)", "cos(2)"},
+		{"abs(2)", "abs(2)"},
+		{"sqrt(2)", "sqrt(2)"},
+		{"2 + x + log(10)", "2 + x + log(10)"},
+		{"- x + 3", "-x + 3"},
+		{"1x", "x"},
+		{"+x", "x"},
+		{"min(2) + max(3)", "min(2) + max(3)"},
+		{"-(-a)", "a"},
+		{"floor(4)", "floor(4)"},
+		{"x + (-4 + y)", "x - 4 + y"},
+		{"(1<2)+(3>4)+(5<=6)+(7>=8)", "(1 < 2) + (3 > 4) + (5 <= 6) + (7 >= 8)"},
+		{"1 + 2<3", "1 + 2 < 3"},
+		{"-inf", "-inf"},
+		{"2*n!", "2n!"},
+		{"A \u222A B", "A \u222A B"},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		got := expr.String()
+		if got != tt.want {
+			t.Errorf("Expression.String() = %v, want %v", got, tt.want)
+		}
+
+		expr2 := mustParse(t, got)
+		if expr.String() != expr2.String() {
+			t.Fatalf("inconsitent String() for %s", tt.expr)
+		}
+		if !AreExpressionsEquivalent(expr, expr2, SimpleSubstitutions) {
+			t.Fatalf("inconsitent String() for %s:  %s", tt.expr, got)
+		}
+	}
+}
+
+func TestExpression_StringRoundtrip(t *testing.T) {
+	for _, tt := range expressions {
+		if tt.wantErr {
+			continue
+		}
+
+		expr := mustParse(t, tt.expr)
+		got := expr.String()
+		expr2 := mustParse(t, got)
+		if expr.String() != expr2.String() {
+			t.Fatalf("inconsitent String() for %s", tt.expr)
+		}
+		if !AreExpressionsEquivalent(expr, expr2, SimpleSubstitutions) {
+			t.Fatalf("inconsitent String() for %s:  %s", tt.expr, got)
+		}
+	}
+}
+
 // generate formulas.pdf in a temporary directory to perform visual tests
 func TestExpression_AsLaTeX(t *testing.T) {
 	var lines []string
@@ -86,6 +156,18 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"trans(inv(A))",
 		"det(inv(A))",
 		"trace(inv(A))",
+		"binom(x+5; 2)",
+		// sets
+		"\u00AC(A \u222A B_1)",
+		"A \u222A B_1 \u2229 (\u00AC C \u222A D)",
+		`sum(k; 1; 10; k^2; "expand")`,
+		`sum(k; 1; 10; k^2; "expand-eval")`,
+		`prod(k; 1; 10; 3; "expand")`,
+		`union(k; 1; 10; A_k)`,
+		`inter(k; 1; 10; B_k)`,
+		`union(k; 1; 10; A_{k}; "expand")`,
+		`union(k; 1; 10; A_{2k}; "expand-eval")`,
+		`inter(k; 1; 10; B_{k}; "expand")`,
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -203,9 +285,9 @@ func TestInstantiateMinusZero(t *testing.T) {
 	exprB := mustParse(t, "0 * 1 / (-5)")
 	tu.Assert(t, exprB.String() == "0")
 
-	rp := RandomParameters{
+	rp := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('b'): exprB,
-	}
+	}}
 	vs, err := rp.Instantiate()
 	tu.AssertNoErr(t, err)
 
@@ -239,13 +321,13 @@ func TestPrintFractions(t *testing.T) {
 		Vars RandomParameters
 		want string
 	}{
-		{"6 / 49", nil, "6/49"},
-		{"3 / 49", nil, "3/49"},
-		{"1 / 4", nil, "1/4"},
-		{"0.25", nil, "0,25"},
-		{"x", RandomParameters{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}, "1/3"},
-		{"x", RandomParameters{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}, "1/3"},
-		{"x", RandomParameters{NewVar('x'): mustParse(t, "forceDecimal(3 / 4)")}, "0,75"},
+		{"6 / 49", RandomParameters{}, "6/49"},
+		{"3 / 49", RandomParameters{}, "3/49"},
+		{"1 / 4", RandomParameters{}, "1/4"},
+		{"0.25", RandomParameters{}, "0,25"},
+		{"x", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}}, "1/3"},
+		{"x", RandomParameters{defs: map[Variable]*Expr{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}}, "1/3"},
+		{"x", RandomParameters{defs: map[Variable]*Expr{NewVar('x'): mustParse(t, "forceDecimal(3 / 4)")}}, "0,75"},
 	} {
 		e := mustParse(t, tt.expr)
 		vars, err := tt.Vars.Instantiate()

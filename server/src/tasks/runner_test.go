@@ -3,6 +3,7 @@ package tasks
 import (
 	"database/sql"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -98,7 +99,7 @@ func TestEvaluateExercice(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ex, questions, monoquestion, _ := createEx(t, db.DB, tc.Id)
@@ -140,7 +141,7 @@ func TestProgression(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
@@ -243,13 +244,25 @@ func Test_selectVariants(t *testing.T) {
 			t.Errorf("selectVariants() = %v, want %v", got, tt.want)
 		}
 	}
+
+	tu.Assert(t, ed.Diff1 < ed.Diff2)
+	got := selectVariants(4, []ed.Question{
+		{Difficulty: ed.Diff1},
+		{Difficulty: ed.Diff1},
+		{Difficulty: ed.Diff2},
+		{Difficulty: ed.Diff2},
+		{Difficulty: ed.Diff3},
+		{Difficulty: ed.Diff3},
+		{Difficulty: ed.Diff3},
+	})
+	tu.Assert(t, sort.SliceIsSorted(got, func(i, j int) bool { return got[i].Difficulty < got[j].Difficulty }))
 }
 
 func TestRandomMonoquestion(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)

@@ -23,7 +23,7 @@ const typicalUpdates = [
         PlayerAnswerResults(Categorie.orange, {
           "0": PlayerAnswerResult(false, false),
           "1": PlayerAnswerResult(false, false),
-        }),
+        }, {}),
         PlayersStillInQuestionResult(["1"], ["Katia"]),
       ],
       GameState({
@@ -49,7 +49,7 @@ const typicalUpdates = [
         ], [
           "Pierre",
           "Benoit"
-        ])
+        ], {})
       ],
       GameState({
         "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),

@@ -3,6 +3,7 @@
 import 'predefined.dart';
 import 'src_maths_expression.dart';
 import 'src_maths_questions_client.dart';
+import 'src_sql_ceintures.dart';
 import 'src_sql_editor.dart';
 import 'src_sql_tasks.dart';
 
@@ -61,14 +62,16 @@ Map<String, dynamic> evaluateQuestionInToJson(EvaluateQuestionIn item) {
 // github.com/benoitkugler/maths-online/server/src/tasks.EvaluateWorkIn
 class EvaluateWorkIn {
   final WorkID iD;
-  final Map<int, AnswerP> answers;
   final ProgressionExt progression;
+  final int answerIndex;
+  final AnswerP answer;
 
-  const EvaluateWorkIn(this.iD, this.answers, this.progression);
+  const EvaluateWorkIn(
+      this.iD, this.progression, this.answerIndex, this.answer);
 
   @override
   String toString() {
-    return "EvaluateWorkIn($iD, $answers, $progression)";
+    return "EvaluateWorkIn($iD, $progression, $answerIndex, $answer)";
   }
 }
 
@@ -76,45 +79,51 @@ EvaluateWorkIn evaluateWorkInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkIn(
       workIDFromJson(json['ID']),
-      dictIntToAnswerPFromJson(json['Answers']),
-      progressionExtFromJson(json['Progression']));
+      progressionExtFromJson(json['Progression']),
+      intFromJson(json['AnswerIndex']),
+      answerPFromJson(json['Answer']));
 }
 
 Map<String, dynamic> evaluateWorkInToJson(EvaluateWorkIn item) {
   return {
     "ID": workIDToJson(item.iD),
-    "Answers": dictIntToAnswerPToJson(item.answers),
-    "Progression": progressionExtToJson(item.progression)
+    "Progression": progressionExtToJson(item.progression),
+    "AnswerIndex": intToJson(item.answerIndex),
+    "Answer": answerPToJson(item.answer)
   };
 }
 
 // github.com/benoitkugler/maths-online/server/src/tasks.EvaluateWorkOut
 class EvaluateWorkOut {
-  final Map<int, QuestionAnswersOut> results;
   final ProgressionExt progression;
   final List<InstantiatedQuestion> newQuestions;
+  final int answerIndex;
+  final QuestionAnswersOut result;
 
-  const EvaluateWorkOut(this.results, this.progression, this.newQuestions);
+  const EvaluateWorkOut(
+      this.progression, this.newQuestions, this.answerIndex, this.result);
 
   @override
   String toString() {
-    return "EvaluateWorkOut($results, $progression, $newQuestions)";
+    return "EvaluateWorkOut($progression, $newQuestions, $answerIndex, $result)";
   }
 }
 
 EvaluateWorkOut evaluateWorkOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkOut(
-      dictIntToQuestionAnswersOutFromJson(json['Results']),
       progressionExtFromJson(json['Progression']),
-      listInstantiatedQuestionFromJson(json['NewQuestions']));
+      listInstantiatedQuestionFromJson(json['NewQuestions']),
+      intFromJson(json['AnswerIndex']),
+      questionAnswersOutFromJson(json['Result']));
 }
 
 Map<String, dynamic> evaluateWorkOutToJson(EvaluateWorkOut item) {
   return {
-    "Results": dictIntToQuestionAnswersOutToJson(item.results),
     "Progression": progressionExtToJson(item.progression),
-    "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions)
+    "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions),
+    "AnswerIndex": intToJson(item.answerIndex),
+    "Result": questionAnswersOutToJson(item.result)
   };
 }
 
@@ -129,30 +138,65 @@ dynamic instantiateQuestionsOutToJson(InstantiateQuestionsOut item) {
   return listInstantiatedQuestionToJson(item);
 }
 
+// github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedBeltQuestion
+class InstantiatedBeltQuestion {
+  final IdBeltquestion id;
+  final Question question;
+  final Params params;
+
+  const InstantiatedBeltQuestion(this.id, this.question, this.params);
+
+  @override
+  String toString() {
+    return "InstantiatedBeltQuestion($id, $question, $params)";
+  }
+}
+
+InstantiatedBeltQuestion instantiatedBeltQuestionFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return InstantiatedBeltQuestion(intFromJson(json['Id']),
+      questionFromJson(json['Question']), paramsFromJson(json['Params']));
+}
+
+Map<String, dynamic> instantiatedBeltQuestionToJson(
+    InstantiatedBeltQuestion item) {
+  return {
+    "Id": intToJson(item.id),
+    "Question": questionToJson(item.question),
+    "Params": paramsToJson(item.params)
+  };
+}
+
 // github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedQuestion
 class InstantiatedQuestion {
   final IdQuestion id;
   final Question question;
+  final DifficultyTag difficulty;
   final Params params;
 
-  const InstantiatedQuestion(this.id, this.question, this.params);
+  const InstantiatedQuestion(
+      this.id, this.question, this.difficulty, this.params);
 
   @override
   String toString() {
-    return "InstantiatedQuestion($id, $question, $params)";
+    return "InstantiatedQuestion($id, $question, $difficulty, $params)";
   }
 }
 
 InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return InstantiatedQuestion(intFromJson(json['Id']),
-      questionFromJson(json['Question']), paramsFromJson(json['Params']));
+  return InstantiatedQuestion(
+      intFromJson(json['Id']),
+      questionFromJson(json['Question']),
+      difficultyTagFromJson(json['Difficulty']),
+      paramsFromJson(json['Params']));
 }
 
 Map<String, dynamic> instantiatedQuestionToJson(InstantiatedQuestion item) {
   return {
     "Id": intToJson(item.id),
     "Question": questionToJson(item.question),
+    "Difficulty": difficultyTagToJson(item.difficulty),
     "Params": paramsToJson(item.params)
   };
 }
@@ -342,36 +386,20 @@ extension _WorkKindExt on WorkKind {
   }
 }
 
+String workKindLabel(WorkKind v) {
+  switch (v) {
+    case WorkKind.workExercice:
+      return "";
+    case WorkKind.workMonoquestion:
+      return "";
+    case WorkKind.workRandomMonoquestion:
+      return "";
+  }
+}
+
 WorkKind workKindFromJson(dynamic json) => _WorkKindExt.fromValue(json as int);
 
 dynamic workKindToJson(WorkKind item) => item.toValue();
-
-Map<int, AnswerP> dictIntToAnswerPFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(int.parse(k), answerPFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToAnswerPToJson(Map<int, AnswerP> item) {
-  return item
-      .map((k, v) => MapEntry(intToJson(k).toString(), answerPToJson(v)));
-}
-
-Map<int, QuestionAnswersOut> dictIntToQuestionAnswersOutFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(int.parse(k), questionAnswersOutFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToQuestionAnswersOutToJson(
-    Map<int, QuestionAnswersOut> item) {
-  return item.map(
-      (k, v) => MapEntry(intToJson(k).toString(), questionAnswersOutToJson(v)));
-}
 
 List<InstantiatedQuestion> listInstantiatedQuestionFromJson(dynamic json) {
   if (json == null) {

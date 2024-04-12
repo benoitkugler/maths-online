@@ -34,25 +34,25 @@ class VectorController extends FieldController {
   }
 }
 
-class VectorField extends StatelessWidget {
+class VectorFieldW extends StatelessWidget {
   final Color color;
 
   final VectorController controller;
 
-  const VectorField(this.color, this.controller, {Key? key}) : super(key: key);
+  const VectorFieldW(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final color = controller.hasError ? Colors.red : this.color;
     // use the largest size hint
     final sizeHint = max(controller.data.sizeHintX, controller.data.sizeHintY);
-    final x = NumberField(
+    final x = NumberFieldW(
       color,
       controller.x,
       onSubmitted: controller.onChange,
       sizeHint: sizeHint,
     );
-    final y = NumberField(
+    final y = NumberFieldW(
       color,
       controller.y,
       onSubmitted: controller.onChange,

@@ -45,6 +45,10 @@ func compareNodes(n1, n2 *Expr) int {
 			} else if a1 > a2 {
 				return 1
 			} else {
+				// the only operator with nil right child is !
+				if a1 == factorial {
+					return compareNodes(n1.left, n2.left)
+				}
 				// use the children
 				if n1.left == nil && n2.left != nil {
 					return -1
@@ -275,13 +279,13 @@ func (expr *Expr) groupAdditions() {
 
 // replace a-c by a + (-c)
 // so that plus operation may trigger
-func (expr *Expr) expandMinus() {
+func (expr *Expr) enforcePlus() {
 	if expr == nil {
 		return
 	}
 
-	expr.left.expandMinus()
-	expr.right.expandMinus()
+	expr.left.enforcePlus()
+	expr.right.enforcePlus()
 
 	if expr.atom != minus {
 		return
@@ -297,6 +301,26 @@ func (expr *Expr) expandMinus() {
 		}
 		return
 	}
+}
+
+// replace a / c by a * (1/c)
+// so that sort operation on mult may trigger
+func (expr *Expr) enforceMult() {
+	if expr == nil {
+		return
+	}
+
+	expr.left.enforceMult()
+	expr.right.enforceMult()
+
+	if expr.atom != div {
+		return
+	}
+
+	// a / c => a * (1/c)
+	expr.atom = mult
+	expr.right = &Expr{atom: div, left: newNb(1), right: expr.right}
+	return
 }
 
 // replace + (- 8) by -8 to have a better formatted output
@@ -430,7 +454,7 @@ func (expr *Expr) simplify0And1() {
 		if left.atom == Number(1) || left.atom == Number(0) { // 0! = 1, 1! = 1
 			*expr = Expr{atom: Number(1)}
 		}
-	case mod, rem, equals, lesser, strictlyLesser, greater, strictlyGreater:
+	case mod, rem, equals, lesser, strictlyLesser, greater, strictlyGreater, union, intersection, complement:
 		// nothing to do
 	default:
 		panic(exhaustiveOperatorSwitch)
@@ -474,6 +498,19 @@ func (expr *Expr) extractNegativeInMults() {
 	}
 }
 
+// replace e^(...) by exp()
+func (expr *Expr) normalizeExp() {
+	if expr == nil {
+		return
+	}
+	expr.left.normalizeExp()
+	expr.right.normalizeExp()
+
+	if op, isOp := expr.atom.(operator); isOp && op == pow && expr.left.atom == eConstant {
+		*expr = Expr{atom: expFn, right: expr.right}
+	}
+}
+
 const maxIterations = 10_000 // very very unlikely in pratice
 
 func (expr *Expr) basicSimplification() (nbPasses int) {
@@ -484,7 +521,10 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 		expr.simplifyNumbers()
 		expr.normalizeNegativeNumbers()
 
-		expr.expandMinus()
+		expr.normalizeExp()
+
+		expr.enforcePlus()
+		expr.enforceMult()
 		expr.sortPlusAndMultOperands()
 		expr.DefaultSimplify()
 		expr.extractNegativeInMults()
@@ -506,13 +546,17 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 		expr.simplifyNumbers()
 		expr.normalizeNegativeNumbers()
 
+		expr.normalizeExp()
+
 		expr.expandPow()
-		expr.expandMinus()
+		expr.enforcePlus()
+		expr.enforceMult()
 		expr.expandMult()
 		expr.sortPlusAndMultOperands()
 		expr.groupAdditions()
 		expr.simplify0And1()
 		expr.simplifyNumbers()
+
 		if expr.equals(ref) {
 			break
 		}
@@ -557,6 +601,19 @@ const (
 	ExpandedSubstitutions
 )
 
+func (l ComparisonLevel) String() string {
+	switch l {
+	case Strict:
+		return "strict"
+	case SimpleSubstitutions:
+		return "simple"
+	case ExpandedSubstitutions:
+		return "expanded"
+	default:
+		return "<invalid ComparisonLevel>"
+	}
+}
+
 // AreExpressionsEquivalent compares the two expressions using
 // mathematical knowledge, as hinted by `level`.
 // For instance, (a+b)^2 and (a^2 + 2ab + b^2) are equivalent
@@ -593,22 +650,25 @@ func (expr *Expr) Substitute(vars Vars) {
 		return
 	}
 
-	if mat, ok := expr.atom.(matrix); ok {
-		for i := range mat {
-			for j := range mat {
-				mat[i][j].Substitute(vars)
-			}
-		}
-		return
-	}
-
 	expr.left.Substitute(vars)
 	expr.right.Substitute(vars)
 
-	if v, isVariable := expr.atom.(Variable); isVariable {
-		value, has := vars[v]
+	_ = exhaustiveAtomSwitch
+	switch atom := expr.atom.(type) {
+	case Variable:
+		value, has := vars[atom]
 		if has {
 			*expr = *value.Copy()
+		}
+	case specialFunction:
+		for _, e := range atom.args {
+			e.Substitute(vars)
+		}
+	case matrix:
+		for i := range atom {
+			for j := range atom[i] {
+				atom[i][j].Substitute(vars)
+			}
 		}
 	}
 }

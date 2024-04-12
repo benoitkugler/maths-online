@@ -38,7 +38,7 @@ func (expr *Expr) isLinearEquation() (linearCoefficients, error) {
 	expr.basicSimplification()
 
 	// extract each term
-	expr.expandMinus() // required by the following step
+	expr.enforcePlus() // required by the following step
 	terms := expr.extractOperator(plus)
 	out := make(linearCoefficients)
 	for _, term := range terms {

@@ -228,17 +228,17 @@ class _SequenceController extends _AssertionController {
   }
 }
 
-class ProofField extends StatefulWidget {
+class ProofFieldW extends StatefulWidget {
   final Color color;
   final ProofController controller;
 
-  const ProofField(this.color, this.controller, {Key? key}) : super(key: key);
+  const ProofFieldW(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
-  State<ProofField> createState() => _ProofFieldState();
+  State<ProofFieldW> createState() => _ProofFieldWState();
 }
 
-class _ProofFieldState extends State<ProofField> {
+class _ProofFieldWState extends State<ProofFieldW> {
   void _removeProposal(_TermUsed term) {
     // if the old value is empty, do not replace it
     setState(() {

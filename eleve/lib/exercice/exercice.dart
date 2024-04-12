@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:eleve/exercice/congratulations.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
@@ -12,7 +13,7 @@ import 'package:flutter/material.dart' hide Flow;
 
 class NotificationExerciceDone extends Notification {}
 
-abstract class ExerciceAPI extends FieldAPI {
+abstract class ExerciceAPI {
   /// [evaluate] must evaluate the exercice answers, according
   /// to the exercice mode, and returns the feedback and the new version
   /// of the questions if needed
@@ -22,8 +23,8 @@ abstract class ExerciceAPI extends FieldAPI {
 class _ExerciceQuestionController extends BaseQuestionController {
   void Function() onClick;
 
-  _ExerciceQuestionController(Question question, FieldAPI api, this.onClick)
-      : super(question, api);
+  _ExerciceQuestionController(Question question, this.onClick)
+      : super(question);
 
   void markDone() {
     state.buttonLabel = "Question terminée";
@@ -69,11 +70,8 @@ class ExerciceController {
   /// and is filled by the widget using the controller
   void Function()? onValid;
 
-  final FieldAPI api;
-
-  ExerciceController(this.exeAndProg, this.questionIndex, this.api)
-      : _questions = [] {
-    _questions = _createControllers(api);
+  ExerciceController(this.exeAndProg, this.questionIndex) : _questions = [] {
+    _questions = _createControllers();
     _refreshStates();
   }
 
@@ -88,10 +86,9 @@ class ExerciceController {
     return exeAndProg.progression.questions[questionIndex!].isNotEmpty;
   }
 
-  List<_ExerciceQuestionController> _createControllers(FieldAPI api) {
+  List<_ExerciceQuestionController> _createControllers() {
     return exeAndProg.exercice.questions
-        .map((qu) =>
-            _ExerciceQuestionController(qu.question, api, _onQuestionValid))
+        .map((qu) => _ExerciceQuestionController(qu.question, _onQuestionValid))
         .toList();
   }
 
@@ -133,7 +130,7 @@ class ExerciceController {
 
   void resetWithNextQuestions(List<InstantiatedQuestion> nextQuestions) {
     exeAndProg = exeAndProg.copyWithQuestions(nextQuestions);
-    _questions = _createControllers(api);
+    _questions = _createControllers();
     reset();
   }
 
@@ -246,6 +243,12 @@ class ExerciceW extends StatefulWidget {
   /// Only used in loopback
   final bool instantShowCorrection;
 
+  /// if true, show an alter about progression not being updated
+  final bool noticeSandbox;
+
+  /// optional, if given and reached, shows a dialog
+  final DateTime? deadline;
+
   const ExerciceW(
     this.api,
     this.controller, {
@@ -253,6 +256,8 @@ class ExerciceW extends StatefulWidget {
     this.onShowCorrectAnswer,
     this.showCorrectionButtonOnFail = true,
     this.instantShowCorrection = false,
+    this.noticeSandbox = false,
+    this.deadline,
   }) : super(key: key);
 
   @override
@@ -260,6 +265,9 @@ class ExerciceW extends StatefulWidget {
 }
 
 class _ExerciceWState extends State<ExerciceW> {
+  bool noticeSandbox = false;
+  Timer? deadlineTimer;
+
   // the questions to display when trying again
   // this is a temporay slice, affected to the controller on user validation
   List<InstantiatedQuestion> nextQuestions = [];
@@ -276,7 +284,25 @@ class _ExerciceWState extends State<ExerciceW> {
     super.didUpdateWidget(oldWidget);
   }
 
+  @override
+  void dispose() {
+    deadlineTimer?.cancel();
+    super.dispose();
+  }
+
   void _init() {
+    noticeSandbox = widget.noticeSandbox;
+
+    // cancel the timer
+    deadlineTimer?.cancel();
+    final d = widget.deadline;
+    if (d != null) {
+      final now = DateTime.now();
+      if (d.isAfter(now)) {
+        deadlineTimer = Timer(d.difference(DateTime.now()), _onDeadlineReached);
+      }
+    }
+
     nextQuestions = [];
     widget.controller.reset();
     widget.controller.onValid = onQuestionButtonClick;
@@ -314,12 +340,33 @@ class _ExerciceWState extends State<ExerciceW> {
                 ct.questionStates,
                 (index) => setState(() {
                       ct.questionIndex = index;
-                    }))
+                    }),
+                noticeSandbox)
             : QuestionW(
                 widget.controller._questions[widget.controller.questionIndex!],
                 Colors.purpleAccent,
                 title: "Question ${widget.controller.questionIndex! + 1}",
               ));
+  }
+
+  void _onDeadlineReached() {
+    if (!mounted) return;
+
+    setState(() {
+      noticeSandbox = true;
+    });
+    showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text("Date de rendu"),
+              content: const Text(
+                  "Attention, la date de rendu est maintenant dépassée. Ta progression n'est plus enregistrée."),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("OK"))
+              ],
+            ));
   }
 
   // handle the errors
@@ -342,6 +389,7 @@ class _ExerciceWState extends State<ExerciceW> {
     await showDialog<void>(
         context: context,
         builder: (context) => const Dialog(child: Congrats()));
+    if (!mounted) return;
     NotificationExerciceDone().dispatch(context);
   }
 
@@ -361,66 +409,79 @@ class _ExerciceWState extends State<ExerciceW> {
 
     // validate the given answer
     final resp = await _evaluate(EvaluateWorkIn(
-        ct.exeAndProg.exercice.iD,
-        {
-          index: AnswerP(ct.exeAndProg.exercice.questions[index].params,
-              ct._questions[index].answers())
-        },
-        ct.exeAndProg.progression));
-    if (resp == null) {
+      ct.exeAndProg.exercice.iD,
+      ct.exeAndProg.progression,
+      index,
+      AnswerP(ct.exeAndProg.exercice.questions[index].params,
+          ct._questions[index].answers()),
+    ));
+    if (resp == null || !mounted) {
       return;
     }
 
     ct.updateProgression(resp.progression); // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
 
-    final isCorrect = resp.results[index]!.isCorrect;
-    final hasNextQuestion =
-        isCorrect && ct.exeAndProg.progression.nextQuestion != -1;
-    final showButtonCorrection = widget.showCorrectionButtonOnFail &&
-        ct.currentCorrection.isNotEmpty &&
-        !isCorrect;
-
-    final SnackBarAction? action = hasNextQuestion
-        ? SnackBarAction(
-            label: "Continuer l'exercice",
-            textColor: Colors.black,
-            onPressed: () {
-              setState(() {
-                ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
-              });
-            },
-          )
-        : (showButtonCorrection)
-            ? SnackBarAction(
-                backgroundColor: Colors.white,
-                label: "Correction",
-                onPressed: _showCorrection)
-            : null;
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade200,
-      duration: Duration(
-          seconds: hasNextQuestion ? 20 : 4), // block on correct answer
-      content: Text(isCorrect
-          ? "Bonne réponse ! Bravo."
-          : "Dommage, la réponse est incorrecte"),
-      action: action,
-      actionOverflowThreshold: 0.5,
-    ));
-
     if (ct.exeAndProg.progression.nextQuestion == -1) {
       onExerciceOver();
       return;
     }
 
-    if (isCorrect) {
-      // wait for the user to go to the next question
-    } else {
+    final isCorrect = resp.result.isCorrect;
+    if (!isCorrect) {
       // show errors and ask for retry
       setState(() {
-        ct.showFeedback({index: resp.results[index]!});
+        ct.showFeedback({index: resp.result});
       });
+    } else {
+      // update the menu status
+      setState(() {});
+    }
+
+    _showValidDialogOrSnack(isCorrect);
+  }
+
+  // handle the following cases :
+  //  - the answer is correct and there is more to do
+  //  - the answer is incorrect and there is a correction to display
+  //  - the answer is incorrect and there is no correction to display
+  void _showValidDialogOrSnack(bool isAnswerCorrect) async {
+    final ct = widget.controller;
+    final hasNextQuestion =
+        isAnswerCorrect && ct.exeAndProg.progression.nextQuestion != -1;
+    final showButtonCorrection = widget.showCorrectionButtonOnFail &&
+        ct.currentCorrection.isNotEmpty &&
+        !isAnswerCorrect;
+
+    if (hasNextQuestion) {
+      // show a dialog with next button
+      await showDialog<void>(
+          context: context,
+          builder: (context) => CorrectAnswerDialog(() {
+                Navigator.of(context).pop();
+                setState(() {
+                  ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
+                });
+              }));
+    } else if (showButtonCorrection) {
+      // show a "persitent" snackbar
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red.shade200,
+        duration: const Duration(seconds: 120),
+        content: const Text("Dommage, la réponse est incorrecte."),
+        action: SnackBarAction(
+            backgroundColor: Colors.white,
+            label: "Correction",
+            onPressed: _showCorrection),
+        actionOverflowThreshold: 0.5,
+      ));
+    } else if (!isAnswerCorrect) {
+      // just show a short snackbar
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red.shade200,
+        duration: const Duration(seconds: 4),
+        content: const Text("Dommage, la réponse est incorrecte."),
+      ));
     }
   }
 
@@ -435,6 +496,8 @@ class _ExerciceWState extends State<ExerciceW> {
   }
 
   void onQuestionButtonClick() {
+    // cleanup potential snackbar
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     switch (widget.controller.status) {
       case ExerciceStatus.answering:
         return _onValideQuestion();

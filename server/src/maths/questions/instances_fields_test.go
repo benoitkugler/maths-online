@@ -142,27 +142,25 @@ func TestBug72(t *testing.T) {
 }
 
 func TestFigureAffineLineField(t *testing.T) {
-	field := FigureAffineLineFieldInstance{
-		Figure: repere.Figure{
-			Bounds: repere.RepereBounds{
-				Width: 20, Height: 20,
-				Origin: repere.Coord{4, 4},
+	field := GeometricConstructionFieldInstance{
+		Field: gfAffineLine{
+			AnswerA: 1. / 3,
+			AnswerB: +3,
+		},
+		Background: client.FigureBlock{
+			Figure: repere.Figure{
+				Bounds: repere.RepereBounds{
+					Width: 20, Height: 20,
+					Origin: repere.Coord{4, 4},
+				},
 			},
 		},
-		AnswerA: 1. / 3,
-		AnswerB: +3,
 	}
 	if ans := field.correctAnswer(); !field.evaluateAnswer(ans) {
 		t.Fatalf("inconsistent answer %v", ans)
 	}
 
-	field = FigureAffineLineFieldInstance{
-		Figure: repere.Figure{
-			Bounds: repere.RepereBounds{
-				Width: 20, Height: 20,
-				Origin: repere.Coord{4, 4},
-			},
-		},
+	field.Field = gfAffineLine{
 		AnswerA: math.Inf(1),
 		AnswerB: -2,
 	}

@@ -14,10 +14,10 @@ Widget _forSymbol(SignSymbol symbol) {
   }
 }
 
-class SignTable extends StatelessWidget {
+class SignTableW extends StatelessWidget {
   final SignTableBlock data;
 
-  const SignTable(this.data, {Key? key}) : super(key: key);
+  const SignTableW(this.data, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

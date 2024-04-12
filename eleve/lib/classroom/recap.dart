@@ -3,10 +3,12 @@
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/classroom/student_advance.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/hyperlink.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_teacher.dart';
+import 'package:eleve/types/src_sql_events.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -23,8 +25,14 @@ class ClassroomCard extends StatefulWidget {
   State<ClassroomCard> createState() => _ClassroomCardState();
 }
 
+class _Profile {
+  final StudentClassroomHeader meta;
+  final StudentAdvance advance;
+  const _Profile(this.meta, this.advance);
+}
+
 class _ClassroomCardState extends State<ClassroomCard> {
-  late Future<StudentClassroomHeader> meta;
+  late Future<_Profile> meta;
 
   @override
   void initState() {
@@ -33,13 +41,13 @@ class _ClassroomCardState extends State<ClassroomCard> {
     super.initState();
   }
 
-  Future<StudentClassroomHeader> loadMeta() async {
-    final uri = Uri.parse(widget.buildMode.serverURL("/api/classroom/login",
-        query: {studentIDKey: widget.studentID}));
+  Future<_Profile> loadMeta() async {
+    final uri = widget.buildMode.serverURL("/api/classroom/login",
+        query: {studentIDKey: widget.studentID});
     final resp = await http.get(uri);
     final res = checkStudentClassroomOutFromJson(jsonDecode(resp.body));
     if (res.isOK) {
-      return res.meta;
+      return _Profile(res.meta, res.advance);
     }
     widget.onInvalidID();
     throw ("L'identifiant n'est plus valide");
@@ -58,26 +66,19 @@ class _ClassroomCardState extends State<ClassroomCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.lightBlue, width: 2),
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
-      ),
-      child: FutureBuilder<StudentClassroomHeader>(
-          future: meta,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return ErrorBar(
-                  "Impossible de charger les données.", snapshot.error!);
-            }
+    return FutureBuilder<_Profile>(
+        future: meta,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return ErrorBar(
+                "Impossible de charger les données.", snapshot.error!);
+          }
 
-            if (snapshot.hasData) {
-              return LoadedClassroom(snapshot.data!);
-            }
-            return const _Loading();
-          }),
-    );
+          if (snapshot.hasData) {
+            return _LoadedProfile(snapshot.data!);
+          }
+          return const _Loading();
+        });
   }
 }
 
@@ -94,22 +95,47 @@ class _Loading extends StatelessWidget {
   }
 }
 
-class LoadedClassroom extends StatelessWidget {
-  final StudentClassroomHeader meta;
+class _LoadedProfile extends StatelessWidget {
+  final _Profile profile;
 
-  const LoadedClassroom(this.meta, {Key? key}) : super(key: key);
+  const _LoadedProfile(this.profile, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    const style = TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
-    return Column(
-      children: [
-        _FormRow("Nom",
-            Text("${meta.student.surname} ${meta.student.name}", style: style)),
-        _FormRow("Classe", Text(meta.classroomName, style: style)),
-        _FormRow("Contact",
-            hyperlink(meta.teacherMail, meta.teacherContactURL, style: style)),
-      ],
+    final meta = profile.meta;
+    const detailsStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.bold);
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const Icon(Icons.account_circle),
+              const SizedBox(width: 12),
+              Text(
+                "Compte enregistré",
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          AdvanceSummary(profile.advance),
+          const SizedBox(height: 12),
+          const Divider(thickness: 2),
+          const SizedBox(height: 12),
+          _FormRow(
+              "Nom",
+              Text("${meta.student.surname} ${meta.student.name}",
+                  style: detailsStyle)),
+          _FormRow("Classe", Text(meta.classroomName, style: detailsStyle)),
+          _FormRow(
+              "Contact",
+              hyperlink(meta.teacherMail, meta.teacherContactURL,
+                  style: detailsStyle)),
+        ],
+      ),
     );
   }
 }
@@ -128,7 +154,7 @@ class _FormRow extends StatelessWidget {
         children: [
           Text(
             left,
-            style: const TextStyle(fontSize: 18),
+            style: const TextStyle(fontSize: 10),
           ),
           right
         ],

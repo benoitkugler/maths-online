@@ -1,7 +1,6 @@
 package teacher
 
 import (
-	"database/sql"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -9,17 +8,17 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
-	"github.com/benoitkugler/maths-online/server/src/pass"
+	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
 
-const classroomCodeDuration = 6 * time.Hour
+// 2 days
+const classroomCodeDuration = 2 * 24 * time.Hour
 
 type ClassroomExt struct {
 	Classroom tc.Classroom
@@ -27,18 +26,18 @@ type ClassroomExt struct {
 	NbStudents int
 }
 
-func (ct *Controller) checkAcces(userID tc.IdTeacher, classroomID tc.IdClassroom) error {
+func (ct *Controller) checkAcces(userID tc.IdTeacher, classroomID tc.IdClassroom) (tc.Classroom, error) {
 	// check the access
 	classroom, err := tc.SelectClassroom(ct.db, classroomID)
 	if err != nil {
-		return utils.SQLError(err)
+		return tc.Classroom{}, utils.SQLError(err)
 	}
 
 	if classroom.IdTeacher != userID {
-		return accessForbidden
+		return tc.Classroom{}, accessForbidden
 	}
 
-	return nil
+	return classroom, nil
 }
 
 // check that the user has the ownership on the student
@@ -48,7 +47,7 @@ func (ct *Controller) checkStudentOwnership(userID tc.IdTeacher, studentID tc.Id
 		return utils.SQLError(err)
 	}
 
-	if err := ct.checkAcces(userID, student.IdClassroom); err != nil {
+	if _, err := ct.checkAcces(userID, student.IdClassroom); err != nil {
 		return err
 	}
 
@@ -82,7 +81,11 @@ func (ct *Controller) TeacherGetClassrooms(c echo.Context) error {
 func (ct *Controller) TeacherCreateClassroom(c echo.Context) error {
 	userID := JWTTeacher(c)
 
-	_, err := tc.Classroom{IdTeacher: userID, Name: "Nouvelle classe"}.Insert(ct.db)
+	_, err := tc.Classroom{
+		IdTeacher:        userID,
+		Name:             "Nouvelle classe",
+		MaxRankThreshold: 40_000,
+	}.Insert(ct.db)
 	if err != nil {
 		return err
 	}
@@ -99,16 +102,25 @@ func (ct *Controller) TeacherUpdateClassroom(c echo.Context) error {
 	}
 
 	// check the access
-	if err := ct.checkAcces(userID, args.Id); err != nil {
+	classroom, err := ct.checkAcces(userID, args.Id)
+	if err != nil {
 		return err
 	}
 
-	args, err := args.Update(ct.db)
+	// basic check on MaxRank
+	if !(100 <= args.MaxRankThreshold && args.MaxRankThreshold <= 1_000_000) {
+		return errors.New("Seuil de la dernière guilde invalide")
+	}
+
+	classroom.Name = args.Name
+	classroom.MaxRankThreshold = args.MaxRankThreshold
+
+	classroom, err = classroom.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	return c.JSON(200, args)
+	return c.JSON(200, classroom)
 }
 
 // TeacherDeleteClassroom remove the classrooms and all related students
@@ -130,7 +142,7 @@ func (ct *Controller) TeacherDeleteClassroom(c echo.Context) error {
 
 func (ct *Controller) deleteClassroom(idClassroom tc.IdClassroom, userID tc.IdTeacher) error {
 	// check the access
-	if err := ct.checkAcces(userID, idClassroom); err != nil {
+	if _, err := ct.checkAcces(userID, idClassroom); err != nil {
 		return err
 	}
 
@@ -168,11 +180,12 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	}
 
 	// check the access
-	if err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
+	classroom, err := ct.checkAcces(userID, tc.IdClassroom(idClassroom))
+	if err != nil {
 		return err
 	}
 
-	out, err := ct.getClassroomStudents(tc.IdClassroom(idClassroom))
+	out, err := ct.getClassroomStudents(classroom)
 	if err != nil {
 		return err
 	}
@@ -180,27 +193,34 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// LoadClassroomStudents returns the students for one classroom,
-// sorted alphabetically.
-func LoadClassroomStudents(db tc.DB, id tc.IdClassroom) ([]tc.Student, error) {
-	stds, err := tc.SelectStudentsByIdClassrooms(db, id)
+type StudentExt struct {
+	Student tc.Student
+	Success evs.StudentAdvance
+}
+
+func (ct *Controller) getClassroomStudents(classroom tc.Classroom) ([]StudentExt, error) {
+	students, err := tc.SelectStudentsByIdClassrooms(ct.db, classroom.Id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	out := make([]tc.Student, 0, len(stds))
-	for _, student := range stds {
-		out = append(out, student)
+	events, err := evs.SelectEventsByIdStudents(ct.db, students.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	m := events.ByIdStudent()
+
+	out := make([]StudentExt, 0, len(students))
+	for _, student := range students {
+		out = append(out, StudentExt{
+			Student: student,
+			Success: evs.NewAdvance(m[student.Id]).Stats(classroom.MaxRankThreshold),
+		})
 	}
 
-	sort.Slice(out, func(i, j int) bool { return out[i].Surname < out[j].Surname })
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	// data is sorted client side, to handle new profiles
 
 	return out, nil
-}
-
-func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
-	return LoadClassroomStudents(ct.db, idClassroom)
 }
 
 // split NAME NAME Surname into NAME NAME ; Surname
@@ -272,7 +292,7 @@ func (ct *Controller) TeacherImportStudents(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter %s : %s", idClassroomS, err)
 	}
 
-	if err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
+	if _, err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
@@ -341,18 +361,21 @@ func (ct *Controller) TeacherAddStudent(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher) (tc.Student, error) {
+func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher) (StudentExt, error) {
 	// check the access
-	if err := ct.checkAcces(userID, idClassroom); err != nil {
-		return tc.Student{}, err
+	if _, err := ct.checkAcces(userID, idClassroom); err != nil {
+		return StudentExt{}, err
 	}
 
 	st, err := tc.Student{IdClassroom: idClassroom, Name: "Nouvel", Surname: "Eleve", Birthday: tc.Date(time.Now())}.Insert(ct.db)
 	if err != nil {
-		return tc.Student{}, utils.SQLError(err)
+		return StudentExt{}, utils.SQLError(err)
 	}
 
-	return st, nil
+	return StudentExt{
+		Student: st,
+		Success: evs.StudentAdvance{},
+	}, nil
 }
 
 // TeacherDeleteStudent removes the student from the classroom and
@@ -425,47 +448,6 @@ func (ct *Controller) updateStudent(st tc.Student, userID tc.IdTeacher) error {
 	return nil
 }
 
-type classroomsCode struct {
-	lock  sync.Mutex
-	codes map[string]tc.IdClassroom // code for student -> id_classroom
-}
-
-func (cc *classroomsCode) newCode(idClassroom tc.IdClassroom) string {
-	cc.lock.Lock()
-	defer cc.lock.Unlock()
-
-	// generated the code
-	code := utils.RandomID(true, 4, func(s string) bool {
-		_, has := cc.codes[s]
-		return has
-	})
-	// register it
-	cc.codes[code] = idClassroom
-
-	// time its removal
-	time.AfterFunc(classroomCodeDuration, func() { cc.expireCode(code) })
-
-	return code
-}
-
-func (cc *classroomsCode) expireCode(code string) {
-	cc.lock.Lock()
-	defer cc.lock.Unlock()
-	delete(cc.codes, code)
-}
-
-// return the ID of the classroom
-func (cc *classroomsCode) checkCode(code string) (tc.IdClassroom, error) {
-	cc.lock.Lock()
-	defer cc.lock.Unlock()
-
-	out, ok := cc.codes[code]
-	if !ok {
-		return 0, fmt.Errorf("Le code %s est invalide ou a expiré.", code)
-	}
-	return out, nil
-}
-
 type GenerateClassroomCodeOut struct {
 	Code string
 }
@@ -481,189 +463,42 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 	}
 
 	// check the access
-	if err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
+	if _, err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
-	code := ct.classCodes.newCode(tc.IdClassroom(idClassroom))
+	code, err := ct.generateClassroomCode(tc.IdClassroom(idClassroom))
+	if err != nil {
+		return err
+	}
 	out := GenerateClassroomCodeOut{Code: code}
 
 	return c.JSON(200, out)
 }
 
-// ------------------------- student client API -------------------------
-
-// CheckStudentClassroom is called on app startup, to check that the
-// student credentials are still up to date.
-func (ct *Controller) CheckStudentClassroom(c echo.Context) error {
-	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
-
-	out, err := ct.checkStudentClassroom(idCrypted)
+func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
+	// load the existing codes
+	ccs, err := tc.SelectAllClassroomCodes(ct.db)
 	if err != nil {
-		return err
+		return "", utils.SQLError(err)
 	}
+	m := ccs.Codes()
 
-	return c.JSON(200, out)
-}
+	// generate the code
+	code := utils.RandomID(true, 4, func(s string) bool { return m[s] })
 
-func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out CheckStudentClassroomOut, err error) {
-	idStudent, err := ct.studentKey.DecryptID(idCrypted)
+	// register it
+	err = tc.InsertClassroomCode(ct.db, tc.ClassroomCode{
+		IdClassroom: id,
+		Code:        code,
+		ExpiresAt:   tc.Time(time.Now().Add(classroomCodeDuration)),
+	})
 	if err != nil {
-		// maybe the ID is out of date
-		return CheckStudentClassroomOut{IsOK: false}, nil
+		return "", utils.SQLError(err)
 	}
 
-	student, err := tc.SelectStudent(ct.db, tc.IdStudent(idStudent))
-	if err == sql.ErrNoRows {
-		// the student has been removed
-		return CheckStudentClassroomOut{IsOK: false}, nil
-	} else if err != nil {
-		return out, utils.SQLError(err)
-	}
+	// time its removal
+	time.AfterFunc(classroomCodeDuration, func() { tc.CleanupClassroomCodes(ct.db) })
 
-	classroom, err := tc.SelectClassroom(ct.db, student.IdClassroom)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	teacher, err := tc.SelectTeacher(ct.db, classroom.IdTeacher)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	// display the teacher coordinates
-	mail, url := teacher.Contact.Name, teacher.Contact.URL
-	if mail == "" {
-		mail, url = teacher.Mail, ""
-	}
-	return CheckStudentClassroomOut{
-		IsOK: true,
-		Meta: StudentClassroomHeader{
-			Student:           student,
-			ClassroomName:     classroom.Name,
-			TeacherMail:       mail,
-			TeacherContactURL: url,
-		},
-	}, nil
-}
-
-// AttachStudentToClassroomStep1 uses a temporary classroom code to
-// attach a student to the classroom.
-// More precisely, it checks the given code and returns a list of student
-// propositions.
-// As a special case, it also accepts a special demo code <DEMO_CODE>.[0-9] which creates a
-// profile linked to the demo classroom.
-func (ct *Controller) AttachStudentToClassroomStep1(c echo.Context) error {
-	code := c.QueryParam("code")
-
-	out, err := ct.attachStudentCandidates(code)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) attachStudentCandidates(code string) (AttachStudentToClassroom1Out, error) {
-	// look for demonstration code
-	if isDemoCode(ct.demoCode, code) {
-		return ct.createDemoStudent()
-	}
-
-	idClassroom, err := ct.classCodes.checkCode(code)
-	if err != nil {
-		return nil, err
-	}
-
-	// return the list of the student who are not yet identified
-	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	var out AttachStudentToClassroom1Out
-	for _, student := range stds {
-		if student.IsClientAttached {
-			continue
-		}
-		out = append(out, NewStudentHeader(student))
-	}
-
-	sort.Slice(out, func(i, j int) bool { return out[i].Label < out[j].Label })
-	return out, nil
-}
-
-func isDemoCode(demoCode string, userCode string) bool {
-	chunks := strings.Split(userCode, ".")
-	if len(chunks) == 2 {
-		return chunks[0] == demoCode
-	}
-	return false
-}
-
-func (ct *Controller) createDemoStudent() (AttachStudentToClassroom1Out, error) {
-	student, err := tc.Student{
-		Name:        "DEMO",
-		Surname:     fmt.Sprintf("User %d", time.Now().Unix()),
-		Birthday:    tc.Date(time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)),
-		IdClassroom: ct.demoClassroom.Id,
-	}.Insert(ct.db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	return AttachStudentToClassroom1Out{NewStudentHeader(student)}, nil
-}
-
-// AttachStudentToClassroomStep2 validates the birthday and actually attaches the client to
-// a student account and a classroom.
-func (ct *Controller) AttachStudentToClassroomStep2(c echo.Context) error {
-	var args AttachStudentToClassroom2In
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-
-	out, err := ct.validAttachStudent(args)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out AttachStudentToClassroom2Out, err error) {
-	// check for expired codes
-	if !isDemoCode(ct.demoCode, args.ClassroomCode) {
-		_, err = ct.classCodes.checkCode(args.ClassroomCode)
-		if err != nil {
-			return out, err
-		}
-	}
-
-	student, err := tc.SelectStudent(ct.db, args.IdStudent)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	// avoid usurpation
-	if student.IsClientAttached {
-		return AttachStudentToClassroom2Out{ErrAlreadyAttached: true}, nil
-	}
-
-	// check if the birthday is correct
-	if args.Birthday != time.Time(student.Birthday).Format(tc.DateLayout) {
-		return AttachStudentToClassroom2Out{ErrInvalidBirthday: true}, nil
-	}
-
-	out = AttachStudentToClassroom2Out{
-		IdCrypted: string(ct.studentKey.EncryptID(int64(args.IdStudent))),
-	}
-
-	student.IsClientAttached = true
-	_, err = student.Update(ct.db)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	return out, nil
+	return code, nil
 }

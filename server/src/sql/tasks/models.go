@@ -49,9 +49,9 @@ type Task struct {
 // gomacro:SQL ADD UNIQUE(IdStudent, IdRandomMonoquestion, Index)
 // gomacro:SQL _SELECT KEY (IdStudent, IdRandomMonoquestion)
 type RandomMonoquestionVariant struct {
-	IdStudent            teacher.IdStudent
-	IdRandomMonoquestion IdRandomMonoquestion
-	Index                int `json:"index"`
+	IdStudent            teacher.IdStudent    `gomacro-sql-on-delete:"CASCADE"`
+	IdRandomMonoquestion IdRandomMonoquestion `gomacro-sql-on-delete:"CASCADE"`
+	Index                int16                `json:"index"`
 	IdQuestion           editor.IdQuestion
 }
 
@@ -66,7 +66,7 @@ type Progression struct {
 	// Index in the question list
 	// For exercice, it is the question number
 	// For monoquestion, it is the "repetion" number
-	Index int `json:"index"`
+	Index int16 `json:"index"`
 
 	History QuestionHistory `json:"history"`
 }

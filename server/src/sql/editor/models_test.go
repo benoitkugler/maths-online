@@ -35,7 +35,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 
 	L := len(questions)
 
-	user, err := teacher.Teacher{}.Insert(db)
+	user, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	group := randQuestiongroup()

@@ -88,6 +88,34 @@
             "Output": "sql/reviews/gen_randdata_test.go"
         }
     ],
+    "sql/events/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/events/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/events/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/events/gen_randdata_test.go"
+        }
+    ],
+    "sql/ceintures/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/ceintures/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/ceintures/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/ceintures/gen_randdata_test.go"
+        }
+    ],
     "maths/questions/blocks_field_proof.go": [
         {
             "Mode": "go/unions",
@@ -116,7 +144,7 @@
             "Output": ""
         }
     ],
-    "prof/editor/loopback_types.go": [
+    "prof/preview/loopback_types.go": [
         {
             "Mode": "dart",
             "Output": ""
@@ -127,7 +155,7 @@
         },
         {
             "Mode": "go/unions",
-            "Output": "prof/editor/gen_itfs.go"
+            "Output": "prof/preview/gen_itfs.go"
         }
     ],
     "prof/trivial/monitor_preview_types.go": [
@@ -171,6 +199,12 @@
         }
     ],
     "prof/homework/student_types.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
+        }
+    ],
+    "prof/ceintures/student_types.go": [
         {
             "Mode": "dart",
             "Output": ""

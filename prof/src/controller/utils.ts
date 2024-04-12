@@ -1,10 +1,15 @@
-import type {
-  ClassroomTravaux,
-  Date_,
-  Monoquestion,
-  SheetExt,
-  TaskExt,
-  Time
+import {
+  PublicStatus,
+  type ClassroomTravaux,
+  type Date_,
+  type Origin,
+  type SheetExt,
+  type Tags,
+  type TaskExt,
+  type Time,
+  Stage,
+  Visibility,
+  Rank,
 } from "./api_gen";
 
 /** copy returns a deep copy of `obj` */
@@ -17,19 +22,29 @@ export function formatDate(date: Date_) {
   return d.toLocaleDateString();
 }
 
-export function formatTime(time: Time, showMinute = false) {
+export function formatTime(
+  time: Time,
+  showMinute = false,
+  showWeekday = false
+) {
   const ti = new Date(time);
   if (isNaN(ti.valueOf()) || ti.getFullYear() <= 1) {
     return "";
   }
-  return ti.toLocaleString(undefined, {
+  const s = ti.toLocaleString(undefined, {
     year: "numeric",
     day: "numeric",
     month: "short",
     hour: "2-digit",
-    minute: showMinute ? "2-digit" : undefined
+    minute: showMinute ? "2-digit" : undefined,
   });
+  if (showWeekday) {
+    return `${_weekdays[ti.getDay()]} ${s}`;
+  }
+  return s;
 }
+
+const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
 
 export function onDragListItemStart(payload: DragEvent, index: number) {
   if (payload.dataTransfer == null) return;
@@ -75,4 +90,41 @@ export function sheetBareme(sheet: SheetExt) {
 export interface HomeworksT {
   Sheets: Map<number, SheetExt>;
   Travaux: ClassroomTravaux[];
+}
+
+export interface PrefillTrivialCategorie {
+  matiere: string;
+  level: string;
+  chapter: string;
+  sublevels: Tags;
+}
+
+/** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
+export const ColorAdmin = "yellow-lighten-4";
+export const ColorPersonnal = "light-blue-lighten-5";
+export const ColorPublic = "blue-lighten-4";
+
+export function colorForOrigin(origin: Origin) {
+  if (origin.PublicStatus == PublicStatus.AdminPublic) return ColorPublic;
+  return origin.Visibility == Visibility.Personnal
+    ? ColorPersonnal
+    : ColorAdmin;
+}
+
+export const rankColors: { [key in Rank]: string } = {
+  [Rank.StartRank]: "",
+  [Rank.Blanche]: "white",
+  [Rank.Jaune]: "yellow-accent-2",
+  [Rank.Orange]: "orange-lighten-1",
+  [Rank.VerteI]: "lime",
+  [Rank.VerteII]: "green",
+  [Rank.Bleue]: "blue",
+  [Rank.Violet]: "purple",
+  [Rank.Rouge]: "red",
+  [Rank.Marron]: "deep-orange-darken-4",
+  [Rank.Noire]: "black",
+};
+
+export function sameStage(loc1: Stage, loc2: Stage) {
+  return loc1.Domain == loc2.Domain && loc1.Rank == loc2.Rank;
 }

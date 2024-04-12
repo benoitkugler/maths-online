@@ -10,7 +10,7 @@
     </v-row>
     <v-card-text class="pt-1">
       <resource-query-row
-        v-model="props.query"
+        :model-value="props.query"
         :all-tags="props.tags"
         @update:model-value="updateQuery"
       >
@@ -91,13 +91,18 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { $ref } from "vue/macros";
 import type { Query, TagsDB } from "../controller/api_gen";
 import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
 import ResourceQueryRow from "./editor/ResourceQueryRow.vue";
 import { computed } from "vue";
-import type { ResourceGroup, VariantG } from "@/controller/editor";
+import {
+  exerciceToResource,
+  questionToResource,
+  type ResourceGroup,
+  type VariantG,
+} from "@/controller/editor";
+import { ref } from "vue";
 
 interface Props {
   tags: TagsDB;
@@ -123,14 +128,17 @@ onMounted(() => {
   }
 });
 
-let groups = $ref<ResourceGroup[]>([]);
-let serverNbVariants = $ref(0);
+const groups = ref<ResourceGroup[]>([]);
+const serverNbVariants = ref(0);
 // groups are cut in slice of `pagination` length,
 // and currentPage is the index of the page
 const pagination = 6;
-let currentPage = $ref(1);
+const currentPage = ref(1);
 const displayedGroups = computed(() =>
-  groups.slice((currentPage - 1) * pagination, currentPage * pagination)
+  groups.value.slice(
+    (currentPage.value - 1) * pagination,
+    currentPage.value * pagination
+  )
 );
 
 async function updateQuery(qu: Query) {
@@ -144,30 +152,20 @@ async function fetchResources() {
       {
         const result = await controller.EditorSearchExercices(props.query);
         if (result == undefined) return;
-        groups = (result.Groups || []).map((group) => ({
-          Id: group.Group.Id,
-          Title: group.Group.Title,
-          Tags: group.Tags,
-          Variants: group.Variants || [],
-        }));
-        serverNbVariants = result.NbExercices;
+        groups.value = (result.Groups || []).map(exerciceToResource);
+        serverNbVariants.value = result.NbExercices;
       }
       break;
     case "questions":
       {
         const result = await controller.EditorSearchQuestions(props.query);
         if (result == undefined) return;
-        groups = (result.Groups || []).map((group) => ({
-          Id: group.Group.Id,
-          Title: group.Group.Title,
-          Tags: group.Tags,
-          Variants: group.Variants || [],
-        }));
-        serverNbVariants = result.NbQuestions;
+        groups.value = (result.Groups || []).map(questionToResource);
+        serverNbVariants.value = result.NbQuestions;
       }
       break;
   }
-  currentPage = 1;
+  currentPage.value = 1;
 }
 </script>
 

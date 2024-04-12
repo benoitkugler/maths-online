@@ -106,8 +106,7 @@ import type {
   stopGame,
 } from "@/controller/api_gen";
 import { colorsPerCategorie } from "@/controller/trivial";
-import { computed } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 import TrivPie from "./TrivPie.vue";
 
 interface Props {
@@ -123,10 +122,10 @@ const emit = defineEmits<{
   (e: "showQuestion", args: QuestionContent): void;
 }>();
 
-let showConfirmStopGame = $ref(false);
+const showConfirmStopGame = ref(false);
 function emitStopGame(restart: boolean) {
   emit("stopGame", { ID: props.summary.GameID, Restart: restart });
-  showConfirmStopGame = false;
+  showConfirmStopGame.value = false;
 }
 
 const nbJoueurs = computed(() => {

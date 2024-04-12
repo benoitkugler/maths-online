@@ -1,13 +1,13 @@
 <template>
   <v-card
     title="Accès en autonomie"
-    subtitle="Les élèves des classes sélectionnées peuvent lancer une partie de ce TrivMaths en autonomie."
+    subtitle="Les élèves des classes sélectionnées peuvent lancer la partie d'IsyTriv en autonomie."
   >
     <v-card-text>
       <v-list
         v-if="data != null"
         select-strategy="classic"
-        v-model:selected="selected"
+        :selected="selected"
         class="my-1 overflow-y-auto"
         style="max-height: 55vh"
       >
@@ -18,6 +18,7 @@
           :value="classroom.id"
           rounded
           class="my-1"
+          @click="() => onSelect(classroom.id)"
         >
           <template v-slot:append="{ isActive }">
             <v-list-item-action end>
@@ -35,11 +36,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Trivial, TrivialSelfaccess } from "@/controller/api_gen";
+import type {
+  IdClassroom,
+  Trivial,
+  TrivialSelfaccess,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onMounted } from "vue";
-import { onActivated } from "vue";
-import { $ref } from "vue/macros";
+import { reactive } from "vue";
+import { computed } from "vue";
+import { ref, onActivated, onMounted } from "vue";
 
 interface Props {
   config: Trivial;
@@ -54,22 +59,33 @@ const emit = defineEmits<{
 onMounted(() => fetch());
 onActivated(() => fetch());
 
-let selected = $ref<number[]>([]);
-let data = $ref<TrivialSelfaccess | null>(null);
+const crible = reactive(new Set<IdClassroom>());
+const selected = computed(() => Array.from(crible.keys()));
+const data = ref<TrivialSelfaccess | null>(null);
 
 async function fetch() {
   const res = await controller.TrivialGetSelfaccess({
     "id-trivial": props.config.Id,
   });
   if (res == undefined) return;
-  data = res;
-  selected = res.Actives || [];
+  data.value = res;
+  crible.clear();
+  (res.Actives || []).forEach((id) => crible.add(id));
+}
+
+function onSelect(id: IdClassroom) {
+  if (crible.has(id)) {
+    crible.delete(id);
+  } else {
+    crible.add(id);
+  }
+  console.log(crible);
 }
 
 async function save() {
   await controller.TrivialUpdateSelfaccess({
     IdTrivial: props.config.Id,
-    IdClassrooms: selected,
+    IdClassrooms: selected.value,
   });
   emit("close");
 }

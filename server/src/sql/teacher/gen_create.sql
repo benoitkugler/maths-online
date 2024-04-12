@@ -2,7 +2,14 @@
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
     IdTeacher integer NOT NULL,
-    Name text NOT NULL
+    Name text NOT NULL,
+    MaxRankThreshold integer NOT NULL
+);
+
+CREATE TABLE classroom_codes (
+    IdClassroom integer NOT NULL,
+    Code text NOT NULL,
+    ExpiresAt timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE students (
@@ -10,9 +17,8 @@ CREATE TABLE students (
     Name text NOT NULL,
     Surname text NOT NULL,
     Birthday date NOT NULL,
-    TrivialSuccess integer NOT NULL,
-    IsClientAttached boolean NOT NULL,
-    IdClassroom integer NOT NULL
+    IdClassroom integer NOT NULL,
+    Clients jsonb NOT NULL
 );
 
 CREATE TABLE teachers (
@@ -21,7 +27,8 @@ CREATE TABLE teachers (
     PasswordCrypted bytea NOT NULL,
     IsAdmin boolean NOT NULL,
     HasSimplifiedEditor boolean NOT NULL,
-    Contact jsonb NOT NULL
+    Contact jsonb NOT NULL,
+    FavoriteMatiere text CHECK (FavoriteMatiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 -- constraints
@@ -34,8 +41,37 @@ ALTER TABLE classrooms
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
+ALTER TABLE classroom_codes
+    ADD UNIQUE (Code);
+
+ALTER TABLE classroom_codes
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_teac_Client (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_teac_Client (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
     RETURNS boolean
@@ -46,6 +82,28 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a string', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_teac_Client (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Device', 'Time'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Device')
+        AND gomacro_validate_json_string (data -> 'Time');
     RETURN is_valid;
 END;
 $$
@@ -73,6 +131,9 @@ END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
+
+ALTER TABLE students
+    ADD CONSTRAINT Clients_gomacro CHECK (gomacro_validate_json_array_teac_Client (Clients));
 
 ALTER TABLE teachers
     ADD CONSTRAINT Contact_gomacro CHECK (gomacro_validate_json_teac_Contact (Contact));
