@@ -24,6 +24,7 @@
                 <v-col cols="3" class="mb-4">
                   <interpolated-text
                     v-model="fn.Decoration.Label"
+                    @update:model-value="emitUpdate"
                     force-latex
                     center
                     label="Légende"
@@ -37,6 +38,7 @@
                     variant="outlined"
                     density="compact"
                     v-model="fn.Function"
+                    @update:model-value="emitUpdate"
                     label="Expression de la fonction"
                     hide-details
                     :color="expressionColor"
@@ -45,18 +47,21 @@
                 <v-col md="4" align-self="center">
                   <ExpressionField
                     v-model="fn.From"
+                    @update:model-value="emitUpdate"
                     label="Xmin"
                   ></ExpressionField>
                 </v-col>
                 <v-col md="4">
                   <ExpressionField
                     v-model="fn.To"
+                    @update:model-value="emitUpdate"
                     label="Xmax"
                   ></ExpressionField>
                 </v-col>
                 <v-col>
                   <BtnColorPicker
                     v-model="fn.Decoration.Color"
+                    @update:model-value="emitUpdate"
                   ></BtnColorPicker>
                 </v-col>
               </v-row>
@@ -137,6 +142,7 @@
                 <v-col cols="3" class="mb-4">
                   <interpolated-text
                     v-model="fn.Decoration.Label"
+                    @update:model-value="emitUpdate"
                     force-latex
                     center
                     label="Légende"
@@ -150,6 +156,7 @@
                     variant="outlined"
                     density="compact"
                     v-model="fn.Function"
+                    @update:model-value="emitUpdate"
                     label="Expression de la suite"
                     hide-details
                     :color="expressionColor"
@@ -158,18 +165,21 @@
                 <v-col md="4" align-self="center">
                   <ExpressionField
                     v-model="fn.From"
+                    @update:model-value="emitUpdate"
                     label="Xmin"
                   ></ExpressionField>
                 </v-col>
                 <v-col md="4">
                   <ExpressionField
                     v-model="fn.To"
+                    @update:model-value="emitUpdate"
                     label="Xmax"
                   ></ExpressionField>
                 </v-col>
                 <v-col>
                   <BtnColorPicker
                     v-model="fn.Decoration.Color"
+                    @update:model-value="emitUpdate"
                   ></BtnColorPicker>
                 </v-col>
               </v-row>
@@ -205,7 +215,10 @@
         <v-list-item>
           <v-row class="mt-1">
             <v-col cols="2" align-self="center">
-              <btn-color-picker v-model="area.Color"></btn-color-picker>
+              <btn-color-picker
+                v-model="area.Color"
+                @update:model-value="emitUpdate"
+              ></btn-color-picker>
             </v-col>
             <v-col cols="9" align-self="center">
               <v-row>
@@ -219,9 +232,10 @@
                     :items="functionsNamesItems"
                     item
                     :model-value="nameToSelection(area.Top)"
-                    @update:model-value="
-                      (s) => (area.Top = nameFromSelection(s as string))
-                    "
+                    @update:model-value="   (s) => {
+                        area.Top = nameFromSelection(s as string); 
+                        emitUpdate()
+                    }                    "
                     :color="expressionColor"
                   ></v-combobox>
                 </v-col>
@@ -229,6 +243,7 @@
                   <ExpressionField
                     label="Xmin"
                     v-model="area.Left"
+                    @update:model-value="emitUpdate"
                   ></ExpressionField>
                 </v-col>
               </v-row>
@@ -243,8 +258,10 @@
                     :items="functionsNamesItems"
                     :model-value="nameToSelection(area.Bottom)"
                     @update:model-value="
-                      (s) => (area.Bottom = nameFromSelection(s as string))
-                    "
+                      (s) => {
+                        area.Bottom = nameFromSelection(s as string);
+                         emitUpdate();
+                        }                  "
                     :color="expressionColor"
                   ></v-combobox>
                 </v-col>
@@ -252,6 +269,7 @@
                   <ExpressionField
                     label="Xmax"
                     v-model="area.Right"
+                    @update:model-value="emitUpdate"
                   ></ExpressionField>
                 </v-col>
               </v-row>
@@ -285,7 +303,10 @@
         <v-list-item>
           <v-row>
             <v-col cols="2" align-self="center">
-              <btn-color-picker v-model="point.Color"></btn-color-picker>
+              <btn-color-picker
+                v-model="point.Color"
+                @update:model-value="emitUpdate"
+              ></btn-color-picker>
             </v-col>
             <v-col cols="4" align-self="center">
               <v-combobox
@@ -297,17 +318,26 @@
                 :items="functionsNamesItems"
                 item
                 :model-value="nameToSelection(point.Function)"
-                @update:model-value="
-                  (s) => (point.Function = nameFromSelection(s as string))
-                "
+                @update:model-value="(s) => {
+                    point.Function = nameFromSelection(s as string);
+                     emitUpdate();
+                }"
                 :color="expressionColor"
               ></v-combobox>
             </v-col>
             <v-col cols="2" align-self="center">
-              <ExpressionField label="X" v-model="point.X"></ExpressionField>
+              <ExpressionField
+                label="X"
+                v-model="point.X"
+                @update:model-value="emitUpdate"
+              ></ExpressionField>
             </v-col>
             <v-col cols="3" align-self="center">
-              <InterpolatedText v-model="point.Legend" label="Légende">
+              <InterpolatedText
+                v-model="point.Legend"
+                @update:model-value="emitUpdate"
+                label="Légende"
+              >
               </InterpolatedText>
             </v-col>
             <v-col md="1" align-self="center" class="pl-1 pr-0">
@@ -352,6 +382,10 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionsGraphBlock): void;
 }>();
 
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
 function addFunctionExpr() {
   props.modelValue.FunctionExprs?.push({
     Function: "x^2",
@@ -363,12 +397,12 @@ function addFunctionExpr() {
     From: "-4",
     To: "4",
   });
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function deleteFunctionExpr(index: number) {
   props.modelValue.FunctionExprs?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function addSequenceExpr() {
@@ -382,12 +416,12 @@ function addSequenceExpr() {
     From: "-4",
     To: "4",
   });
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function deleteSequenceExpr(index: number) {
   props.modelValue.SequenceExprs?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function addFunctionVar() {
@@ -396,17 +430,17 @@ function addFunctionVar() {
     Xs: ["-5", "0", "5"],
     Fxs: ["-3", "2", "-1"],
   });
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function deleteFunctionVar(index: number) {
   props.modelValue.FunctionVariations?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function updateVar(index: number, v: VariationTableBlock) {
   props.modelValue.FunctionVariations![index] = v;
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 /** includes the special [abscisseAxis] value */
@@ -439,12 +473,12 @@ function addArea() {
     Left: "0",
     Right: "2",
   });
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function deleteArea(index: number) {
   props.modelValue.Areas?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function addPoint() {
@@ -454,12 +488,12 @@ function addPoint() {
     X: "0",
     Legend: `P_${1 + (props.modelValue.Points.length || 0)}`,
   });
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function deletePoint(index: number) {
   props.modelValue.Points?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 const expressionColor = ExpressionColor;

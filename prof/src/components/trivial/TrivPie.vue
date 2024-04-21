@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { colorsPerCategorie } from "@/controller/trivial";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 
 interface Props {
   success: boolean[];

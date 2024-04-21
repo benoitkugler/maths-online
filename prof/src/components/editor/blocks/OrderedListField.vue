@@ -26,7 +26,10 @@
           >
             <v-row no-gutters>
               <v-col>
-                <interpolated-text v-model="props.modelValue.Answer![index]">
+                <interpolated-text
+                  v-model="props.modelValue.Answer![index]"
+                  @update:model-value="emitUpdate"
+                >
                 </interpolated-text>
               </v-col>
               <v-col cols="auto">
@@ -75,6 +78,7 @@
               <v-col>
                 <interpolated-text
                   v-model="props.modelValue.AdditionalProposals![index]"
+                  @update:model-value="emitUpdate"
                 >
                 </interpolated-text>
               </v-col>
@@ -101,6 +105,7 @@
       <interpolated-text
         force-latex
         v-model="props.modelValue.Label"
+        @update:model-value="emitUpdate"
         label="Préfixe"
         hint="Code LaTeX ajouté devant le champ de réponse. (Optionnel)."
       ></interpolated-text>
@@ -125,9 +130,13 @@ const emit = defineEmits<{
 
 const answerPropsRefs = ref<any>([]);
 
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
 function addAnswer() {
   props.modelValue.Answer?.push("$x$");
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
   nextTick(() => {
     answerPropsRefs.value[
       answerPropsRefs.value.length - 1
@@ -137,17 +146,17 @@ function addAnswer() {
 
 function removeAnswer(index: number) {
   props.modelValue.Answer?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function addAdditionalProposal() {
   props.modelValue.AdditionalProposals?.push("$y$");
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function removeAdditionalProposal(index: number) {
   props.modelValue.AdditionalProposals?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 </script>
 

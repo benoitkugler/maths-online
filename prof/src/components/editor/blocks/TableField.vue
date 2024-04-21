@@ -37,7 +37,10 @@
               <text-part-field
                 :model-value="props.modelValue.HorizontalHeaders[index]!"
                 @update:model-value="
-                v => props.modelValue.HorizontalHeaders![index] = v
+                v => {
+                    props.modelValue.HorizontalHeaders![index] = v;
+                emitUpdate();
+                }
               "
               >
               </text-part-field>
@@ -65,7 +68,9 @@
               <text-part-field
                 :model-value="props.modelValue.VerticalHeaders[index]!"
                 @update:model-value="
-                v => props.modelValue.VerticalHeaders![index] = v
+                v => {props.modelValue.VerticalHeaders![index] = v;
+emitUpdate();
+                }
               "
               >
               </text-part-field>
@@ -81,7 +86,10 @@
                 hide-details
                 :color="expressionColor"
                 :model-value="x"
-                @update:model-value="v => (row![j] = v)"
+                @update:model-value="v => {
+                    row![j] = v;
+                    emitUpdate();
+                }"
               >
               </v-text-field>
             </td>
@@ -120,7 +128,7 @@
 import type { TableFieldBlock, Variable } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
@@ -135,6 +143,10 @@ const emit = defineEmits<{
 
 const expressionColor = ExpressionColor;
 
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
 function addColumn() {
   if (props.modelValue.HorizontalHeaders != null) {
     props.modelValue.HorizontalHeaders.push({
@@ -143,6 +155,7 @@ function addColumn() {
     });
   }
   props.modelValue.Answer?.forEach((row) => row!.push("1"));
+  emitUpdate();
 }
 
 const rowLength = computed(() => {
@@ -169,6 +182,7 @@ function addRow() {
   props.modelValue.Answer?.push(
     Array.from(new Array(rowLength.value), () => "1")
   );
+  emitUpdate();
 }
 
 function removeColumn(index: number) {
@@ -176,6 +190,8 @@ function removeColumn(index: number) {
     props.modelValue.HorizontalHeaders.splice(index, 1);
   }
   props.modelValue.Answer?.forEach((row) => row!.splice(index, 1));
+
+  emitUpdate();
 }
 
 function removeRow(index: number) {
@@ -183,34 +199,8 @@ function removeRow(index: number) {
     props.modelValue.VerticalHeaders.splice(index, 1);
   }
   props.modelValue.Answer?.splice(index, 1);
-}
 
-function toogleHorizontal(b: boolean) {
-  if (b) {
-    props.modelValue.HorizontalHeaders = Array.from(
-      new Array(rowLength.value),
-      () => ({
-        Kind: TextKind.Text,
-        Content: "",
-      })
-    );
-  } else {
-    props.modelValue.HorizontalHeaders = null;
-  }
-}
-
-function toogleVertical(b: boolean) {
-  if (b) {
-    props.modelValue.VerticalHeaders = Array.from(
-      new Array(props.modelValue.Answer?.length || 0),
-      () => ({
-        Kind: TextKind.Text,
-        Content: "",
-      })
-    );
-  } else {
-    props.modelValue.VerticalHeaders = null;
-  }
+  emitUpdate();
 }
 </script>
 

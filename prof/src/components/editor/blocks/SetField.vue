@@ -71,6 +71,9 @@
               <interpolated-text
                 force-latex
                 v-model="props.modelValue.AdditionalSets![index]"
+                @update:model-value="
+                  emit('update:modelValue', props.modelValue)
+                "
               >
               </interpolated-text>
             </v-col>

@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import type { TreeNodeAnswer } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 
 interface Props {
   modelValue: TreeNodeAnswer;

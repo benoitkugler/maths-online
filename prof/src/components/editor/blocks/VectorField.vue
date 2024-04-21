@@ -14,7 +14,10 @@
             :color="expressionColor"
             v-model="props.modelValue.Answer.X"
             @update:model-value="
-              (s) => completePoint(s, props.modelValue.Answer)
+              (s) => {
+                completePoint(s, props.modelValue.Answer);
+                emitUpdate();
+              }
             "
           ></v-text-field>
         </v-col>
@@ -26,6 +29,7 @@
             hint="Expression, comparée comme nombre à virgule."
             :color="expressionColor"
             v-model="props.modelValue.Answer.Y"
+            @update:model-value="emitUpdate"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -34,6 +38,7 @@
           <v-switch
             density="compact"
             v-model="props.modelValue.AcceptColinear"
+            @update:model-value="emitUpdate"
             color="secondary"
             label="Accepter un vecteur colinéaire (non nul)"
             hide-details
@@ -44,6 +49,7 @@
           <v-switch
             density="compact"
             v-model="props.modelValue.DisplayColumn"
+            @update:model-value="emitUpdate"
             color="secondary"
             label="Afficher en colonne"
             hide-details
@@ -72,6 +78,10 @@ const emit = defineEmits<{
 }>();
 
 const expressionColor = colorByKind[TextKind.Expression];
+
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
 </script>
 
 <style scoped></style>

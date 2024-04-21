@@ -17,7 +17,7 @@
 import type { TextPart } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 
 interface Props {
   modelValue: TextPart;
@@ -55,7 +55,7 @@ function onTextChange(s: string) {
   if (s.startsWith("$") && s.endsWith("$") && s.length >= 3) {
     emit("update:model-value", {
       Kind: TextKind.StaticMath,
-      Content: s.substring(1, s.length - 1)
+      Content: s.substring(1, s.length - 1),
     });
   } else if (
     s.startsWith(exprSeparator) &&
@@ -64,12 +64,12 @@ function onTextChange(s: string) {
   ) {
     emit("update:model-value", {
       Kind: TextKind.Expression,
-      Content: s.substring(1, s.length - 1)
+      Content: s.substring(1, s.length - 1),
     });
   } else {
     emit("update:model-value", {
       Kind: props.forceLatex ? TextKind.StaticMath : TextKind.Text,
-      Content: s
+      Content: s,
     });
   }
 }

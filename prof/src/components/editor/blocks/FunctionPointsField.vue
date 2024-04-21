@@ -10,12 +10,17 @@
         variant="outlined"
         density="compact"
         v-model="props.modelValue.Label"
+        @update:model-value="emitUpdate"
         label="Nom"
         hide-details
       ></v-text-field>
     </v-col>
     <v-col md="2" align-self="center">
-      <VariableField v-model="props.modelValue.Variable" label="Variable">
+      <VariableField
+        v-model="props.modelValue.Variable"
+        @update:model-value="emitUpdate"
+        label="Variable"
+      >
       </VariableField>
     </v-col>
     <v-col md="8" align-self="center">
@@ -23,6 +28,7 @@
         variant="outlined"
         density="compact"
         v-model="props.modelValue.Function"
+        @update:model-value="emitUpdate"
         label="Expression de la fonction ou de la suite"
         hide-details
         :color="color"
@@ -43,6 +49,7 @@
       <v-checkbox
         density="compact"
         v-model="props.modelValue.IsDiscrete"
+        @update:model-value="emitUpdate"
         label="Afficher comme une suite"
         hide-details
       ></v-checkbox>
@@ -66,9 +73,13 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionPointsFieldBlock): void;
 }>();
 
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
 function updateXGrid(g: string[]) {
   props.modelValue.XGrid = g;
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 const color = ExpressionColor;

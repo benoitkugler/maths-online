@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 
 interface Props {
   modelValue: string;

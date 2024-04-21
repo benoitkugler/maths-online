@@ -32,7 +32,10 @@
               </v-list-item-title></v-col
             >
             <v-col>
-              <interpolated-text v-model="props.modelValue.Proposals![index]">
+              <interpolated-text
+                v-model="props.modelValue.Proposals![index]"
+                @update:model-value="emitUpdate"
+              >
               </interpolated-text>
             </v-col>
             <v-col cols="auto">
@@ -55,6 +58,7 @@
     <v-col class="mb-0 pb-0">
       <expression-field
         v-model="props.modelValue.Answer"
+        @update:model-value="emitUpdate"
         label="Réponse"
         :hint="hint"
         prefix="Choix"
@@ -67,6 +71,7 @@
       <v-switch
         label="Afficher comme menu déroulant"
         v-model="props.modelValue.AsDropDown"
+        @update:model-value="emitUpdate"
         color="secondary"
         hide-details
       ></v-switch>
@@ -76,7 +81,7 @@
 
 <script setup lang="ts">
 import type { RadioFieldBlock, Variable } from "@/controller/api_gen";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 import ExpressionField from "../utils/ExpressionField.vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
@@ -97,14 +102,18 @@ const hint = computed(
     "."
 );
 
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
 function addProposal() {
   props.modelValue.Proposals?.push("");
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function removeProposal(index: number) {
   props.modelValue.Proposals?.splice(index, 1);
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 </script>
 

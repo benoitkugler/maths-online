@@ -10,6 +10,7 @@
             density="compact"
             variant="outlined"
             v-model.number="props.modelValue.Bounds.Width"
+            @update:model-value="emitUpdate"
             label="Largeur"
             hint="Largeur de la figure, en nombre de carreaux"
             hide-details
@@ -21,6 +22,7 @@
             density="compact"
             variant="outlined"
             v-model.number="props.modelValue.Bounds.Height"
+            @update:model-value="emitUpdate"
             label="Hauteur"
             hint="Hauteur de la figure, en nombre de carreaux"
           ></v-text-field>
@@ -32,6 +34,7 @@
             density="compact"
             variant="outlined"
             v-model.number="props.modelValue.Bounds.Origin.X"
+            @update:model-value="emitUpdate"
             label="Origine : abscisse"
             hint="Abscisse de l'origine par rapport au coin inférieur gauche."
           ></v-text-field>
@@ -41,6 +44,7 @@
             density="compact"
             variant="outlined"
             v-model.number="props.modelValue.Bounds.Origin.Y"
+            @update:model-value="emitUpdate"
             label="Origine : ordonnée"
             hint="Ordonnée de l'origine par rapport au coin inférieur gauche."
           ></v-text-field>
@@ -52,6 +56,7 @@
             density="compact"
             label="Afficher la grille"
             v-model="props.modelValue.ShowGrid"
+            @update:model-value="emitUpdate"
             hide-details
           ></v-checkbox>
         </v-col>
@@ -60,6 +65,7 @@
             density="compact"
             label="Afficher l'origine"
             v-model="props.modelValue.ShowOrigin"
+            @update:model-value="emitUpdate"
             hide-details
           ></v-checkbox>
         </v-col>
@@ -121,6 +127,7 @@
                     density="compact"
                     variant="outlined"
                     v-model="point.Point.Coord.X"
+                    @update:model-value="emitUpdate"
                     label="X"
                     hint="Expression"
                     class="mr-2"
@@ -132,13 +139,17 @@
                     density="compact"
                     variant="outlined"
                     v-model="point.Point.Coord.Y"
+                    @update:model-value="emitUpdate"
                     label="Y"
                     hint="Expression"
                     :color="expressionColor"
                   ></v-text-field>
                 </v-col>
                 <v-col md="12">
-                  <label-pos-field v-model="point.Point.Pos"></label-pos-field>
+                  <label-pos-field
+                    v-model="point.Point.Pos"
+                    @update:model-value="emitUpdate"
+                  ></label-pos-field>
                 </v-col>
               </v-row>
             </v-col>
@@ -190,6 +201,7 @@
                     label="Origine"
                     :items="pointsNamesHints"
                     v-model="segment.From"
+                    @update:model-value="emitUpdate"
                     :color="expressionColor"
                   ></v-combobox>
                 </v-col>
@@ -202,11 +214,15 @@
                     label="Extrémité"
                     :items="pointsNamesHints"
                     v-model="segment.To"
+                    @update:model-value="emitUpdate"
                     :color="expressionColor"
                   ></v-combobox>
                 </v-col>
                 <v-col md="12" style="text-align: center">
-                  <btn-color-picker v-model="segment.Color"></btn-color-picker>
+                  <btn-color-picker
+                    v-model="segment.Color"
+                    @update:model-value="emitUpdate"
+                  ></btn-color-picker>
                 </v-col>
               </v-row>
             </v-col>
@@ -215,17 +231,22 @@
                 <v-col md="12">
                   <segment-kind-field
                     v-model="segment.Kind"
+                    @update:model-value="emitUpdate"
                   ></segment-kind-field>
                 </v-col>
                 <v-col md="12">
                   <interpolated-text
                     label="Légende (Optionnelle)"
                     v-model="segment.LabelName"
+                    @update:model-value="emitUpdate"
                   >
                   </interpolated-text>
                 </v-col>
                 <v-col md="12" class="pt-4">
-                  <label-pos-field v-model="segment.LabelPos"></label-pos-field>
+                  <label-pos-field
+                    v-model="segment.LabelPos"
+                    @update:model-value="emitUpdate"
+                  ></label-pos-field>
                 </v-col>
               </v-row>
             </v-col>
@@ -274,6 +295,7 @@
                     label="A"
                     hint="Expression du coefficient directeur"
                     v-model="line.A"
+                    @update:model-value="emitUpdate"
                     :color="expressionColor"
                     class="no-hint-padding"
                   ></v-text-field>
@@ -284,6 +306,7 @@
                     variant="outlined"
                     label="B"
                     v-model="line.B"
+                    @update:model-value="emitUpdate"
                     hint="Expression de l'ordonnée à l'origine"
                     :color="expressionColor"
                     class="no-hint-padding"
@@ -297,11 +320,15 @@
                     variant="outlined"
                     label="Légende"
                     v-model="line.Label"
+                    @update:model-value="emitUpdate"
                     hide-details
                   ></v-text-field>
                 </v-col>
                 <v-col>
-                  <btn-color-picker v-model="line.Color"></btn-color-picker>
+                  <btn-color-picker
+                    v-model="line.Color"
+                    @update:model-value="emitUpdate"
+                  ></btn-color-picker>
                 </v-col>
               </v-row>
             </v-col>
@@ -346,6 +373,7 @@
               <interpolated-text
                 label="Légende (optionnelle)"
                 v-model="circle.Legend"
+                @update:model-value="emitUpdate"
               >
               </interpolated-text>
             </v-col>
@@ -358,6 +386,7 @@
                     label="Centre: X"
                     hint="Expression"
                     v-model="circle.Center.X"
+                    @update:model-value="emitUpdate"
                     :color="expressionColor"
                     class="no-hint-padding"
                   ></v-text-field>
@@ -368,6 +397,7 @@
                     variant="outlined"
                     label="Centre: Y"
                     v-model="circle.Center.Y"
+                    @update:model-value="emitUpdate"
                     hint="Expression"
                     :color="expressionColor"
                     class="no-hint-padding"
@@ -379,6 +409,7 @@
                     variant="outlined"
                     label="Rayon"
                     v-model="circle.Radius"
+                    @update:model-value="emitUpdate"
                     hint="Expression"
                     :color="expressionColor"
                     class="no-hint-padding"
@@ -393,6 +424,7 @@
                   </div>
                   <btn-color-picker
                     v-model="circle.LineColor"
+                    @update:model-value="emitUpdate"
                   ></btn-color-picker>
                 </v-col>
                 <v-col>
@@ -401,6 +433,7 @@
                   </div>
                   <btn-color-picker
                     v-model="circle.FillColor"
+                    @update:model-value="emitUpdate"
                   ></btn-color-picker>
                 </v-col>
               </v-row>
@@ -443,14 +476,22 @@
       >
         <v-row class="mt-1">
           <v-col cols="2" align-self="center">
-            <btn-color-picker v-model="area.Color"></btn-color-picker>
+            <btn-color-picker
+              v-model="area.Color"
+              @update:model-value="emitUpdate"
+            ></btn-color-picker>
           </v-col>
           <v-col cols="9" align-self="center">
             <expression-list-field
               label="Extrémités"
               hint="Défini la surface à colorier (l'ordre compte)"
               :model-value="area.Points || []"
-              @update:model-value="(v) => (area.Points = v)"
+              @update:model-value="
+                (v) => {
+                  area.Points = v;
+                  emitUpdate();
+                }
+              "
             ></expression-list-field>
           </v-col>
           <v-col cols="auto" align-self="center" class="pl-0 pr-0">
@@ -593,6 +634,7 @@ const availablePoints = computed(() =>
 
 function onTypePointName(index: number, name: string) {
   if (!availablePoints.value.includes(name)) {
+    emitUpdate();
     return;
   }
 
@@ -604,6 +646,8 @@ function onTypePointName(index: number, name: string) {
   if (!point.Point.Coord.Y) {
     point.Point.Coord.Y = "y_" + name;
   }
+
+  emitUpdate();
 }
 </script>
 

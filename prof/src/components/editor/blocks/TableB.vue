@@ -37,7 +37,9 @@
               <text-part-field
                 :model-value="props.modelValue.HorizontalHeaders[index]!"
                 @update:model-value="
-                v => props.modelValue.HorizontalHeaders![index] = v
+                v => {props.modelValue.HorizontalHeaders![index] = v;
+                    emitUpdate();
+                }
               "
               >
               </text-part-field>
@@ -65,7 +67,7 @@
               <text-part-field
                 :model-value="props.modelValue.VerticalHeaders[index]!"
                 @update:model-value="
-                v => props.modelValue.VerticalHeaders![index] = v
+                v => {props.modelValue.VerticalHeaders![index] = v; emitUpdate()}
               "
               >
               </text-part-field>
@@ -77,7 +79,10 @@
             >
               <text-part-field
                 :model-value="x"
-                @update:model-value="v => (row![j] = v)"
+                @update:model-value="v => {
+                    row![j] = v;
+                    emitUpdate();
+                    }"
               >
               </text-part-field>
             </td>
@@ -133,7 +138,7 @@
 <script setup lang="ts">
 import type { TableBlock, Variable } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
-import { computed } from "@vue/runtime-core";
+import { computed } from "vue";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
@@ -145,6 +150,10 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: TableBlock): void;
 }>();
+
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
 
 function addColumn() {
   if (props.modelValue.HorizontalHeaders != null) {
@@ -160,7 +169,7 @@ function addColumn() {
     })
   );
 
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 const rowLength = computed(() => {
@@ -191,7 +200,7 @@ function addRow() {
     }))
   );
 
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function removeColumn(index: number) {
@@ -202,7 +211,7 @@ function removeColumn(index: number) {
   }
   props.modelValue.Values?.forEach((row) => row!.splice(index, 1));
 
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function removeRow(index: number) {
@@ -211,7 +220,7 @@ function removeRow(index: number) {
   }
   props.modelValue.Values?.splice(index, 1);
 
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function toogleHorizontal(b: boolean) {
@@ -227,7 +236,7 @@ function toogleHorizontal(b: boolean) {
     props.modelValue.HorizontalHeaders = null;
   }
 
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 
 function toogleVertical(b: boolean) {
@@ -243,7 +252,7 @@ function toogleVertical(b: boolean) {
     props.modelValue.VerticalHeaders = null;
   }
 
-  emit("update:modelValue", props.modelValue);
+  emitUpdate();
 }
 </script>
 
