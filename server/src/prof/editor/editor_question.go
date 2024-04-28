@@ -362,20 +362,30 @@ func loadTaskDetails(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, error) {
 	return out, nil
 }
 
-// getQuestionUses returns the item using the given question
+// getQuestionUses returns the item using the given question (Monoquestion and RandomMonoquestion)
 // exercices are not considered since questions in exercices can't be accessed directly
-func getQuestionUses(db ed.DB, id ed.IdQuestion) (out TaskUses, err error) {
+func getQuestionUses(db ed.DB, id ed.IdQuestion, idGroup ed.IdQuestiongroup) (out TaskUses, err error) {
 	monoquestions, err := tasks.SelectMonoquestionsByIdQuestions(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	tasks, err := tasks.SelectTasksByIdMonoquestions(db, monoquestions.IDs()...)
+	ts1, err := tasks.SelectTasksByIdMonoquestions(db, monoquestions.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	return loadTaskDetails(db, tasks.IDs())
+	randMono, err := tasks.SelectRandomMonoquestionsByIdQuestiongroups(db, idGroup)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	ts2, err := tasks.SelectTasksByIdRandomMonoquestions(db, randMono.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	return loadTaskDetails(db, append(ts1.IDs(), ts2.IDs()...))
 }
 
 // getQuestiongroupUses returns the item using the given questiongroup
@@ -431,7 +441,7 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuesti
 		return DeleteQuestionOut{}, errAccessForbidden
 	}
 
-	uses, err := getQuestionUses(ct.db, id)
+	uses, err := getQuestionUses(ct.db, id, group.Id)
 	if err != nil {
 		return DeleteQuestionOut{}, err
 	}
