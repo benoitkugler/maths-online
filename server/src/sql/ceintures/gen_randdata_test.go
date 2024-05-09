@@ -59,6 +59,7 @@ func randBeltquestion() Beltquestion {
 	s.Enonce = randque_Enonce()
 	s.Correction = randque_Enonce()
 	s.Repeat = randint()
+	s.Title = randstring()
 
 	return s
 }

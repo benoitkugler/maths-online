@@ -37,6 +37,10 @@ type Beltquestion struct {
 	// Repeat is the number of times the question is proposed,
 	// defaulting to 1
 	Repeat int
+
+	// Title is a description of the question, only displayed
+	// to the teacher
+	Title string
 }
 
 func (qu Beltquestion) Page() questions.QuestionPage {

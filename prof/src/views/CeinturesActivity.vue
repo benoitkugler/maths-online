@@ -8,8 +8,8 @@
         type="card"
       ></v-skeleton-loader>
       <v-row v-else-if="stageToEdit == null" justify="space-evenly">
-        <v-col cols="8" align-self="center">
-          <v-alert v-if="missingQuestions.length" icon="mdi-alert">
+        <v-col cols="7" align-self="center">
+          <v-alert v-if="missingQuestions.length" icon="mdi-alert" closable>
             <v-row>
               <v-col align-self="center" cols="4"
                 >Certaines ceintures sont vides !</v-col
@@ -26,7 +26,10 @@
           </v-alert>
           <v-card class="overflow-x-auto">
             <v-card-text class="pa-1">
-              <table style="table-layout: fixed; width: 200%">
+              <table
+                style="table-layout: fixed; width: 200%"
+                v-if="scheme != null"
+              >
                 <tr>
                   <th></th>
                   <th v-for="(k, v) in DomainLabels" :key="v" class="pa-2">
@@ -49,26 +52,13 @@
                     :key="index"
                     class="pa-1"
                   >
-                    <v-card
+                    <StageHeaderCard
                       v-if="simulateProgression == null"
-                      :color="rankColors[stage.Rank]"
-                      link
+                      :stage="stage"
+                      :header="scheme.Stages[stage.Domain][stage.Rank]"
                       @click="stageToEdit = stage"
                     >
-                      <v-card-text class="text-center pa-1">
-                        <v-tooltip
-                          v-if="stageHasTODO(stage)"
-                          text="Certaines questions sont en cours d'édition."
-                        >
-                          <template v-slot:activator="{ isActive, props }">
-                            <v-icon v-on="{ isActive }" v-bind="props"
-                              >mdi-progress-alert</v-icon
-                            >
-                          </template>
-                        </v-tooltip>
-                        {{ stageText(stage) }}
-                      </v-card-text>
-                    </v-card>
+                    </StageHeaderCard>
                     <v-card
                       v-else
                       :color="
@@ -112,7 +102,7 @@
             </v-card-text>
           </v-card>
         </v-col>
-        <v-col cols="4" align-self="center" v-if="currentDomain != null">
+        <v-col cols="5" align-self="center" v-if="currentDomain != null">
           <v-card
             title="Progression et prérequis"
             :subtitle="DomainLabels[currentDomain]"
@@ -134,6 +124,7 @@
                 <domain-line
                   :domain="currentDomain"
                   :scheme="scheme.Scheme"
+                  :stages="scheme.Stages[currentDomain]"
                   @go-to="(d) => (currentDomain = d)"
                 ></domain-line>
               </v-fade-transition>
@@ -158,11 +149,12 @@
 <script setup lang="ts">
 import DomainLine from "@/components/ceintures/DomainLine.vue";
 import StageChip from "@/components/ceintures/StageChip.vue";
+import StageHeaderCard from "@/components/ceintures/StageHeaderCard.vue";
 import StageQuestionsEditor from "@/components/ceintures/StageQuestionsEditor.vue";
 import { Advance, Domain, Rank, Stage } from "@/controller/api_gen";
 import { GetSchemeOut, DomainLabels, RankLabels } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { rankColors, sameStage } from "@/controller/utils";
+import { sameStage } from "@/controller/utils";
 import { computed } from "vue";
 import { ref } from "vue";
 import { onMounted } from "vue";
@@ -179,10 +171,11 @@ async function fetchScheme() {
 
 const missingQuestions = computed(() => {
   const out: Stage[] = [];
-  scheme.value?.NbQuestions.forEach((ar, domain) =>
-    ar.forEach((nb, rank) => {
+  scheme.value?.Stages.forEach((ar, domain) =>
+    ar.forEach((stage, rank) => {
       if (rank == Rank.StartRank) return;
-      if (nb == 0) out.push({ Domain: domain as Domain, Rank: rank as Rank });
+      if (!stage.Questions?.length)
+        out.push({ Domain: domain as Domain, Rank: rank as Rank });
     })
   );
   return out;
@@ -212,18 +205,6 @@ const currentDomain = ref<Domain | null>(0);
 
 function stagesFor(rank: Rank): Stage[] {
   return Object.values(Domain).map((d) => ({ Domain: d, Rank: rank }));
-}
-
-function stageText(stage: Stage) {
-  const s = scheme.value;
-  if (s == null) return;
-  return `${s.NbQuestions[stage.Domain][stage.Rank]} qu.`;
-}
-
-function stageHasTODO(stage: Stage) {
-  const s = scheme.value;
-  if (s == null) return false;
-  return s.HasTODO[stage.Domain][stage.Rank];
 }
 
 // show/hide question editor

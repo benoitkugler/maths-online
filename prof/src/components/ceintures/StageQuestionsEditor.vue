@@ -25,8 +25,21 @@
       @update:model-value="settingsToEdit = null"
       width="600px"
     >
-      <v-card title="Réglages de la question" v-if="settingsToEdit != null">
+      <v-card title="Modifier la question" v-if="settingsToEdit != null">
         <v-card-text>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Titre"
+                variant="outlined"
+                density="compact"
+                persistent-hint
+                hint="Description, non visible par les élèves"
+                v-model="settingsToEdit.Title"
+              >
+              </v-text-field>
+            </v-col>
+          </v-row>
           <v-row
             ><v-col>
               <v-select
@@ -157,7 +170,7 @@
                     <template v-slot:prepend>
                       <v-icon icon="mdi-cog" color="info" size="small"></v-icon>
                     </template>
-                    Réglages
+                    Modifier
                   </v-list-item>
                   <v-divider></v-divider>
                   <v-list-item
@@ -334,6 +347,7 @@ async function updateQuestion() {
   const res = await controller.CeinturesUpdateQuestion({
     Id: qu.Id,
     Repeat: qu.Repeat,
+    Title: qu.Title,
   });
   if (res === undefined) return;
   questions.value.find((q) => q.Id == qu.Id)!.Repeat = qu.Repeat;

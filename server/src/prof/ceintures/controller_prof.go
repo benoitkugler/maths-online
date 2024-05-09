@@ -49,11 +49,20 @@ func (ct *Controller) CeinturesGetScheme(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type BeltquestionHeader struct {
+	Id    ce.IdBeltquestion
+	Title string
+}
+
+type StageHeader struct {
+	Questions []BeltquestionHeader
+	HasTODO   bool
+}
+
 type GetSchemeOut struct {
-	Scheme      Scheme
-	NbQuestions [ce.NbDomains][ce.NbRanks]int
-	HasTODO     [ce.NbDomains][ce.NbRanks]bool
-	IsAdmin     bool
+	Scheme  Scheme
+	Stages  [ce.NbDomains][ce.NbRanks]StageHeader
+	IsAdmin bool
 }
 
 func (ct *Controller) getScheme(userID uID) (GetSchemeOut, error) {
@@ -66,12 +75,15 @@ func (ct *Controller) getScheme(userID uID) (GetSchemeOut, error) {
 	}
 
 	for stage, l := range byStage(questions) {
-		out.NbQuestions[stage.Domain][stage.Rank] = len(l)
-		for _, qu := range l {
+		var hasTODO bool
+		qus := make([]BeltquestionHeader, len(l))
+		for i, qu := range l {
+			qus[i] = BeltquestionHeader{qu.Id, qu.Title}
 			if qu.Parameters.HasTODO() {
-				out.HasTODO[stage.Domain][stage.Rank] = true
+				hasTODO = true
 			}
 		}
+		out.Stages[stage.Domain][stage.Rank] = StageHeader{qus, hasTODO}
 	}
 
 	return out, nil
@@ -153,6 +165,7 @@ func (ct *Controller) createQuestion(stage Stage) (ce.Beltquestion, error) {
 type UpdateBeltquestionIn struct {
 	Id     ce.IdBeltquestion
 	Repeat int
+	Title  string
 }
 
 func (ct *Controller) CeinturesUpdateQuestion(c echo.Context) error {
@@ -172,6 +185,7 @@ func (ct *Controller) CeinturesUpdateQuestion(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 	qu.Repeat = args.Repeat
+	qu.Title = args.Title
 
 	_, err = qu.Update(ct.db)
 	if err != nil {

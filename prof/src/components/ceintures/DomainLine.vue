@@ -5,6 +5,14 @@
         <v-col align-self="center" cols="3" class="text-center">
           <RankIcon :rank="stage.Rank"></RankIcon>
         </v-col>
+        <v-col align-self="center" cols="5">
+          <div
+            v-for="(question, i) in props.stages[stage.Rank].Questions"
+            :key="i"
+          >
+            {{ question.Title }}
+          </div>
+        </v-col>
         <v-col align-self="center" cols="1">
           <v-icon v-if="needs(stage).length">mdi-chevron-left</v-icon>
         </v-col>
@@ -32,7 +40,13 @@
 </template>
 
 <script setup lang="ts">
-import { Domain, Rank, Scheme, Stage } from "@/controller/api_gen";
+import {
+  Ar11_StageHeader,
+  Domain,
+  Rank,
+  Scheme,
+  Stage,
+} from "@/controller/api_gen";
 import { computed } from "vue";
 import StageChip from "./StageChip.vue";
 import { sameStage } from "@/controller/utils";
@@ -41,6 +55,7 @@ import RankIcon from "./RankIcon.vue";
 interface Props {
   domain: Domain;
   scheme: Scheme;
+  stages: Ar11_StageHeader;
 }
 
 const props = defineProps<Props>();

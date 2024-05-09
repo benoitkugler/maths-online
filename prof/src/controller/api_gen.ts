@@ -3,47 +3,33 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-export type Ar11_boolean = [
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
-  boolean,
+export type Ar11_StageHeader = [
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
+  StageHeader,
 ];
 export type Ar11_Int = [Int, Int, Int, Int, Int, Int, Int, Int, Int, Int, Int];
-export type Ar12_Ar11_boolean = [
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-  Ar11_boolean,
-];
-export type Ar12_Ar11_Int = [
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
-  Ar11_Int,
+export type Ar12_Ar11_StageHeader = [
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
+  Ar11_StageHeader,
 ];
 export type Ar12_Level = [
   Level,
@@ -652,11 +638,15 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.BeltquestionHeader
+export interface BeltquestionHeader {
+  Id: IdBeltquestion;
+  Title: string;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.GetSchemeOut
 export interface GetSchemeOut {
   Scheme: Scheme;
-  NbQuestions: Ar12_Ar11_Int;
-  HasTODO: Ar12_Ar11_boolean;
+  Stages: Ar12_Ar11_StageHeader;
   IsAdmin: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
@@ -685,10 +675,16 @@ export interface Stage {
   Domain: Domain;
   Rank: Rank;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.StageHeader
+export interface StageHeader {
+  Questions: BeltquestionHeader[] | null;
+  HasTODO: boolean;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.UpdateBeltquestionIn
 export interface UpdateBeltquestionIn {
   Id: IdBeltquestion;
   Repeat: Int;
+  Title: string;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
@@ -1322,6 +1318,7 @@ export interface Beltquestion {
   Enonce: Enonce;
   Correction: Enonce;
   Repeat: Int;
+  Title: string;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
 export const Domain = {

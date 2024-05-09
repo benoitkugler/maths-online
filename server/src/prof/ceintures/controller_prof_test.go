@@ -41,7 +41,7 @@ func TestCRUDQuestion(t *testing.T) {
 
 	out, err := ct.getScheme(1)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, out.HasTODO[stage.Domain][stage.Rank])
+	tu.Assert(t, out.Stages[stage.Domain][stage.Rank].HasTODO)
 
 	err = ct.deleteQuestion(qu.Id)
 	tu.AssertNoErr(t, err)
@@ -49,5 +49,4 @@ func TestCRUDQuestion(t *testing.T) {
 	l, err = ct.getQuestions(stage)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l) == 0)
-
 }
