@@ -4,6 +4,8 @@
 package ceintures
 
 import (
+	"sort"
+
 	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 )
 
@@ -122,6 +124,9 @@ func byStage(questions ce.Beltquestions) map[Stage][]ce.Beltquestion {
 	for _, qu := range questions {
 		key := Stage{qu.Domain, qu.Rank}
 		out[key] = append(out[key], qu)
+	}
+	for _, v := range out {
+		sort.Slice(v, func(i, j int) bool { return v[i].Id < v[j].Id })
 	}
 	return out
 }
