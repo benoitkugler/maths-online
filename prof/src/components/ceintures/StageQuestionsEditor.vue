@@ -366,7 +366,11 @@ async function updateQuestion() {
     Title: qu.Title,
   });
   if (res === undefined) return;
-  questions.value.find((q) => q.Id == qu.Id)!.Repeat = qu.Repeat;
+
+  const toUpdate = questions.value.find((q) => q.Id == qu.Id)!;
+  toUpdate.Repeat = qu.Repeat;
+  toUpdate.Title = qu.Title;
+
   controller.showMessage("Réglages modifiés avec succès.");
 }
 
