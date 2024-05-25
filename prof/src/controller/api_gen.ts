@@ -643,6 +643,10 @@ export interface BeltquestionHeader {
   Id: IdBeltquestion;
   Title: string;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.DeleteBeltquestionOut
+export interface DeleteBeltquestionOut {
+  Preview: LoopbackServerEvent;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.DuplicateQuestionOut
 export interface DuplicateQuestionOut {
   Question: Beltquestion;
@@ -1038,6 +1042,25 @@ export interface TaskStat {
 export interface TravailMarks {
   Marks: { [key in IdStudent]: StudentTravailMark } | null;
   TaskStats: TaskStat[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackPaused
+export type LoopbackPaused = Record<string, never>;
+
+export enum LoopbackServerEventKind {
+  LoopbackPaused = "LoopbackPaused",
+  LoopbackShowCeinture = "LoopbackShowCeinture",
+  LoopbackShowExercice = "LoopbackShowExercice",
+  LoopbackShowQuestion = "LoopbackShowQuestion",
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackServerEvent
+export interface LoopbackServerEvent {
+  Kind: LoopbackServerEventKind;
+  Data:
+    | LoopbackPaused
+    | LoopbackShowCeinture
+    | LoopbackShowExercice
+    | LoopbackShowQuestion;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
 export interface LoopbackShowCeinture {
@@ -4012,11 +4035,11 @@ export abstract class AbstractAPI {
 
   protected async rawCeinturesDeleteQuestion(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
+    const rep: AxiosResponse<DeleteBeltquestionOut> = await Axios.delete(
+      fullUrl,
+      { headers: this.getHeaders(), params: { id: String(params["id"]) } },
+    );
+    return rep.data;
   }
 
   /** CeinturesDeleteQuestion wraps rawCeinturesDeleteQuestion and handles the error */
@@ -4024,14 +4047,16 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawCeinturesDeleteQuestion(params);
-      this.onSuccessCeinturesDeleteQuestion();
+      this.onSuccessCeinturesDeleteQuestion(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesDeleteQuestion(): void {}
+  protected onSuccessCeinturesDeleteQuestion(
+    data: DeleteBeltquestionOut,
+  ): void {}
 
   protected async rawCeinturesDuplicateQuestion(params: {
     "id-question": Int;

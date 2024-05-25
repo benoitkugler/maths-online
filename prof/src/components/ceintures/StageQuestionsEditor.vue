@@ -312,6 +312,8 @@ async function deleteQuestion() {
   questions.value = questions.value.filter((qu) => qu.Id != id);
   questionIndex.value = 0;
   toDelete.value = null;
+
+  editor.value?.updatePreview(res.Preview);
 }
 
 const question = computed(() => questions.value[questionIndex.value]);

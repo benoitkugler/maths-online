@@ -2,6 +2,7 @@ package ceintures
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"sort"
 
@@ -335,6 +336,18 @@ func (ct *Controller) LoopbackEvaluateCeinture(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// required to properly handle interface to JSON
+type DeleteBeltquestionOut struct {
+	Preview preview.LoopbackServerEvent
+}
+
+func (d DeleteBeltquestionOut) MarshalJSON() ([]byte, error) {
+	data := struct {
+		Preview preview.LoopbackServerEventWrapper
+	}{preview.LoopbackServerEventWrapper{Data: d.Preview}}
+	return json.Marshal(data)
+}
+
 func (ct *Controller) CeinturesDeleteQuestion(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
@@ -347,18 +360,35 @@ func (ct *Controller) CeinturesDeleteQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteQuestion(ce.IdBeltquestion(id))
+	out, err := ct.deleteQuestion(ce.IdBeltquestion(id))
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, DeleteBeltquestionOut{out})
 }
 
-func (ct *Controller) deleteQuestion(id ce.IdBeltquestion) error {
-	_, err := ce.DeleteBeltquestionById(ct.db, id)
+func (ct *Controller) deleteQuestion(id ce.IdBeltquestion) (preview.LoopbackServerEvent, error) {
+	deleted, err := ce.DeleteBeltquestionById(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
-	return nil
+
+	stage := Stage{deleted.Domain, deleted.Rank}
+	others, err := ct.getQuestions(stage)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(others) == 0 { // nothing to show
+		return preview.LoopbackPaused{}, nil
+	}
+
+	// select the first question
+	preview, err := ct.preview(stage, false, others[0].Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return preview, nil
 }

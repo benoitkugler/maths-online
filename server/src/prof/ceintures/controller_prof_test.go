@@ -6,6 +6,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/prof/preview"
 	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
@@ -47,10 +48,13 @@ func TestCRUDQuestion(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Stages[stage.Domain][stage.Rank].HasTODO)
 
-	err = ct.deleteQuestion(qu.Id)
+	prev, err := ct.deleteQuestion(qu.Id)
 	tu.AssertNoErr(t, err)
-	err = ct.deleteQuestion(dup.Question.Id)
+	tu.Assert(t, prev.(preview.LoopbackShowCeinture).QuestionIndex == 0)
+	prev, err = ct.deleteQuestion(dup.Question.Id)
 	tu.AssertNoErr(t, err)
+	_, ok := prev.(preview.LoopbackPaused)
+	tu.Assert(t, ok)
 
 	l, err = ct.getQuestions(stage)
 	tu.AssertNoErr(t, err)
