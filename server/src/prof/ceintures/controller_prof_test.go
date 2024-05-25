@@ -39,11 +39,17 @@ func TestCRUDQuestion(t *testing.T) {
 	pr, err = ct.saveQuestion(SaveBeltQuestionIn{Question: qu})
 	tu.Assert(t, !pr.IsValid) // x is not defined
 
+	dup, err := ct.duplicateQuestion(qu.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, dup.Preview.QuestionIndex == 1)
+
 	out, err := ct.getScheme(1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Stages[stage.Domain][stage.Rank].HasTODO)
 
 	err = ct.deleteQuestion(qu.Id)
+	tu.AssertNoErr(t, err)
+	err = ct.deleteQuestion(dup.Question.Id)
 	tu.AssertNoErr(t, err)
 
 	l, err = ct.getQuestions(stage)

@@ -195,6 +195,52 @@ func (ct *Controller) CeinturesUpdateQuestion(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+// CeinturesDuplicateQuestion duplicates the given question into
+// the same stage
+func (ct *Controller) CeinturesDuplicateQuestion(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	if userID != ct.admin.Id {
+		return errAccess
+	}
+
+	id, err := utils.QueryParamInt64(c, "id-question")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.duplicateQuestion(ce.IdBeltquestion(id))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type DuplicateQuestionOut struct {
+	Question ce.Beltquestion
+	Preview  preview.LoopbackShowCeinture
+}
+
+func (ct *Controller) duplicateQuestion(id ce.IdBeltquestion) (DuplicateQuestionOut, error) {
+	question, err := ce.SelectBeltquestion(ct.db, id)
+	if err != nil {
+		return DuplicateQuestionOut{}, utils.SQLError(err)
+	}
+	out := question
+	out, err = out.Insert(ct.db)
+	if err != nil {
+		return DuplicateQuestionOut{}, utils.SQLError(err)
+	}
+
+	preview, err := ct.preview(Stage{out.Domain, out.Rank}, false, out.Id)
+	if err != nil {
+		return DuplicateQuestionOut{}, err
+	}
+
+	return DuplicateQuestionOut{out, preview}, nil
+}
+
 type SaveBeltQuestionIn struct {
 	Question       ce.Beltquestion
 	ShowCorrection bool

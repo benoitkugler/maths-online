@@ -172,6 +172,21 @@
                     </template>
                     Modifier
                   </v-list-item>
+
+                  <v-list-item
+                    @click="props.readonly ? {} : duplicate(question)"
+                    :link="!props.readonly"
+                  >
+                    <template v-slot:prepend>
+                      <v-icon
+                        icon="mdi-content-copy"
+                        color="info"
+                        size="small"
+                      ></v-icon>
+                    </template>
+                    Dupliquer
+                  </v-list-item>
+
                   <v-divider></v-divider>
                   <v-list-item
                     @click="props.readonly ? {} : (toDelete = question.Id)"
@@ -369,5 +384,20 @@ function refreshPreview() {
   d.QuestionIndex = questionIndex.value as Int;
   data.Data = d;
   editor.value?.updatePreview(data);
+}
+
+async function duplicate(question: Beltquestion) {
+  const res = await controller.CeinturesDuplicateQuestion({
+    "id-question": question.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Question dupliquée avec sucès.");
+
+  questions.value.push(res.Question);
+  questionIndex.value = questions.value.length - 1;
+  editor.value?.updatePreview({
+    Kind: LoopbackServerEventKind.LoopbackShowCeinture,
+    Data: res.Preview,
+  });
 }
 </script>

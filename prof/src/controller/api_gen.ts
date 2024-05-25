@@ -643,6 +643,11 @@ export interface BeltquestionHeader {
   Id: IdBeltquestion;
   Title: string;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.DuplicateQuestionOut
+export interface DuplicateQuestionOut {
+  Question: Beltquestion;
+  Preview: LoopbackShowCeinture;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.GetSchemeOut
 export interface GetSchemeOut {
   Scheme: Scheme;
@@ -4027,6 +4032,37 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessCeinturesDeleteQuestion(): void {}
+
+  protected async rawCeinturesDuplicateQuestion(params: {
+    "id-question": Int;
+  }) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question-duplicate";
+    const rep: AxiosResponse<DuplicateQuestionOut> = await Axios.post(
+      fullUrl,
+      null,
+      {
+        headers: this.getHeaders(),
+        params: { "id-question": String(params["id-question"]) },
+      },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesDuplicateQuestion wraps rawCeinturesDuplicateQuestion and handles the error */
+  async CeinturesDuplicateQuestion(params: { "id-question": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesDuplicateQuestion(params);
+      this.onSuccessCeinturesDuplicateQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesDuplicateQuestion(
+    data: DuplicateQuestionOut,
+  ): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";
