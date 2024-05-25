@@ -141,8 +141,7 @@
               :key="index"
               class="text-subtitle-2 font-weight-light"
             >
-              Question {{ index + 1 }}
-
+              {{ question.Title ? question.Title : `Question ${index + 1}` }}
               <v-menu
                 offset-y
                 close-on-content-click
