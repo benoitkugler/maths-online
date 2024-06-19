@@ -216,6 +216,7 @@ CREATE TABLE beltquestions (
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
     Correction jsonb NOT NULL,
-    Repeat integer NOT NULL
+    Repeat integer NOT NULL,
+    Title text NOT NULL
 );
 
