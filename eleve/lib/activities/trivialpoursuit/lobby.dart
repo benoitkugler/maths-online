@@ -45,7 +45,7 @@ class GameLobby extends StatelessWidget {
               alignment: WrapAlignment.spaceEvenly,
               children: sorted
                   .map((e) =>
-                      _PlayerAvatar(players[e]!, playerRanks[e]!, e == player))
+                      PlayerCard(players[e]!, playerRanks[e]!, e == player))
                   .toList(),
             ),
           ),
@@ -61,11 +61,13 @@ class GameLobby extends StatelessWidget {
   }
 }
 
-class _PlayerAvatar extends StatelessWidget {
+/// [PlayerCard] displays the name and rank of the player.
+
+class PlayerCard extends StatelessWidget {
   final String name;
   final int rank;
   final bool isCurrentPlayer;
-  const _PlayerAvatar(this.name, this.rank, this.isCurrentPlayer, {Key? key})
+  const PlayerCard(this.name, this.rank, this.isCurrentPlayer, {Key? key})
       : super(key: key);
 
   @override
@@ -79,7 +81,7 @@ class _PlayerAvatar extends StatelessWidget {
           ],
           color:
               isCurrentPlayer ? Colors.yellow : Colors.white.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(5))),
+          borderRadius: const BorderRadius.all(Radius.circular(12))),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(8.0),

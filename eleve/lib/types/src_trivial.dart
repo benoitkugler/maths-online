@@ -228,28 +228,28 @@ Map<String, dynamic> gameStartToJson(GameStart item) {
 // github.com/benoitkugler/maths-online/server/src/trivial.GameState
 class GameState {
   final Map<PlayerID, PlayerStatus> players;
-  final int pawnTile;
   final PlayerID playerTurn;
+  final int pawnTile;
 
-  const GameState(this.players, this.pawnTile, this.playerTurn);
+  const GameState(this.players, this.playerTurn, this.pawnTile);
 
   @override
   String toString() {
-    return "GameState($players, $pawnTile, $playerTurn)";
+    return "GameState($players, $playerTurn, $pawnTile)";
   }
 }
 
 GameState gameStateFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return GameState(dictStringToPlayerStatusFromJson(json['Players']),
-      intFromJson(json['PawnTile']), stringFromJson(json['PlayerTurn']));
+      stringFromJson(json['PlayerTurn']), intFromJson(json['PawnTile']));
 }
 
 Map<String, dynamic> gameStateToJson(GameState item) {
   return {
     "Players": dictStringToPlayerStatusToJson(item.players),
-    "PawnTile": intToJson(item.pawnTile),
-    "PlayerTurn": stringToJson(item.playerTurn)
+    "PlayerTurn": stringToJson(item.playerTurn),
+    "PawnTile": intToJson(item.pawnTile)
   };
 }
 
@@ -482,12 +482,14 @@ class PlayerStatus {
   final QuestionReview review;
   final Success success;
   final bool isInactive;
+  final int rank;
 
-  const PlayerStatus(this.name, this.review, this.success, this.isInactive);
+  const PlayerStatus(
+      this.name, this.review, this.success, this.isInactive, this.rank);
 
   @override
   String toString() {
-    return "PlayerStatus($name, $review, $success, $isInactive)";
+    return "PlayerStatus($name, $review, $success, $isInactive, $rank)";
   }
 }
 
@@ -497,7 +499,8 @@ PlayerStatus playerStatusFromJson(dynamic json_) {
       stringFromJson(json['Name']),
       questionReviewFromJson(json['Review']),
       successFromJson(json['Success']),
-      boolFromJson(json['IsInactive']));
+      boolFromJson(json['IsInactive']),
+      intFromJson(json['Rank']));
 }
 
 Map<String, dynamic> playerStatusToJson(PlayerStatus item) {
@@ -505,7 +508,8 @@ Map<String, dynamic> playerStatusToJson(PlayerStatus item) {
     "Name": stringToJson(item.name),
     "Review": questionReviewToJson(item.review),
     "Success": successToJson(item.success),
-    "IsInactive": boolToJson(item.isInactive)
+    "IsInactive": boolToJson(item.isInactive),
+    "Rank": intToJson(item.rank)
   };
 }
 

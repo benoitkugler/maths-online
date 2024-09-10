@@ -1,3 +1,4 @@
+import 'package:eleve/classroom/student_advance.dart';
 import 'package:eleve/activities/trivialpoursuit/pie.dart';
 import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,7 @@ class _PlayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      leading: rankIcon(status.rank),
       title: Text(status.name),
       trailing: Hero(
         tag: "recap_$playerID",

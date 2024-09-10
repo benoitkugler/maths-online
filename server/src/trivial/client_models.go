@@ -21,8 +21,8 @@ type serial = PlayerID
 // GameState represents an on-going game.
 type GameState struct {
 	Players    map[serial]PlayerStatus // per-player advance
-	PawnTile   int                     // position of the pawn
 	PlayerTurn serial                  // the player currently playing (choosing where to move)
+	PawnTile   int                     // position of the pawn
 }
 
 type QR struct {
@@ -76,6 +76,7 @@ type PlayerStatus struct {
 	Success Success
 	// Has the player disconnect ?
 	IsInactive bool
+	Rank       int // added in v1.9
 }
 
 // StateUpdate describes a list of events yielding

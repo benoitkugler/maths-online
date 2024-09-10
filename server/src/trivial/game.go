@@ -702,6 +702,7 @@ func (r *Room) state() GameState {
 			Review:     pl.advance.review,
 			Success:    pl.advance.success,
 			IsInactive: pl.conn == nil,
+			Rank:       pl.pl.Rank,
 		}
 	}
 	return out

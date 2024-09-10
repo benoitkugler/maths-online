@@ -92,6 +92,7 @@ const _rankColors = [
 ];
 
 Image rankIcon(int rank, {double width = 80}) {
+  rank = rank.clamp(0, _rankColors.length - 1);
   return Image.asset("assets/images/ranks/rank-$rank.png", width: width);
 }
 

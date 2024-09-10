@@ -1,3 +1,4 @@
+import 'package:eleve/activities/trivialpoursuit/lobby.dart';
 import 'package:eleve/activities/trivialpoursuit/pie.dart';
 import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
@@ -71,20 +72,8 @@ class GameEndPannel extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: winners.map((e) {
-                  final name = players[e]!.name;
-                  return DecoratedBox(
-                      decoration: const BoxDecoration(boxShadow: [
-                        BoxShadow(
-                          color: Colors.yellow,
-                          blurRadius: 5,
-                        )
-                      ], borderRadius: BorderRadius.all(Radius.circular(10))),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text(name),
-                        ),
-                      ));
+                  final pl = players[e]!;
+                  return PlayerCard(pl.name, pl.rank, true);
                 }).toList(),
               ),
             ],

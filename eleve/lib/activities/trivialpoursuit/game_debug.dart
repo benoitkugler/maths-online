@@ -7,10 +7,10 @@ const typicalUpdates = [
       [],
       GameState({
         "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false], false),
+            [true, true, false, true, false], false, 2),
         "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-      }, 0, "0")),
+            [false, false, false, false, false], false, 2),
+      }, "0", 0)),
   StateUpdate(
       [
         PlayerJoin("0"),
@@ -28,16 +28,16 @@ const typicalUpdates = [
       ],
       GameState({
         "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false], false),
+            [true, true, false, true, false], false, 0),
         "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
+            [false, false, false, false, false], false, 1),
         "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
+            [false, false, false, false, false], false, 2),
         "3": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
+            [false, false, false, false, false], false, 3),
         "4": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-      }, 0, "0")),
+            [false, false, false, false, false], false, 4),
+      }, "0", 0)),
   StateUpdate(
       [
         PlayerTurn("Ben", "0"),
@@ -51,18 +51,22 @@ const typicalUpdates = [
           "Benoit"
         ], {})
       ],
-      GameState({
-        "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false], false),
-        "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-        "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-        "3": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-        "4": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-      }, 0, "0")),
+      GameState(
+        {
+          "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
+              [true, true, false, true, false], false, 0),
+          "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
+              [false, false, false, false, false], false, 1),
+          "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
+              [false, false, false, false, false], false, 2),
+          "3": PlayerStatus("Annonymous 065686", QuestionReview([], []),
+              [false, false, false, false, false], false, 3),
+          "4": PlayerStatus("Annonymous 065686", QuestionReview([], []),
+              [false, false, false, false, false], false, 4),
+        },
+        "0",
+        0,
+      )),
 ];
 
 const updates = typicalUpdates;
@@ -77,36 +81,36 @@ const devUpdates = [
       ],
       GameState({
         "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false], false),
+            [true, true, false, true, false], false, 0),
         "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
+            [false, false, false, false, false], false, 0),
         "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-      }, 0, "0")),
+            [false, false, false, false, false], false, 0),
+      }, "0", 0)),
   StateUpdate(
       [
         PlayersStillInQuestionResult(["1", "2"], ["Bubeu", "Guigui"]),
       ],
       GameState({
         "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false], false),
+            [true, true, false, true, false], false, 0),
         "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
+            [false, false, false, false, false], false, 0),
         "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-      }, 0, "0")),
+            [false, false, false, false, false], false, 0),
+      }, "0", 0)),
   StateUpdate(
       [
         PlayersStillInQuestionResult(["1"], ["Guigui"]),
       ],
       GameState({
         "0": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false], false),
+            [true, true, false, true, false], false, 0),
         "1": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
+            [false, false, false, false, false], false, 0),
         "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false], false),
-      }, 0, "0")),
+            [false, false, false, false, false], false, 0),
+      }, "0", 0)),
   // StateUpdate(
   //     [
   //       PlayerAnswerResults(Categorie.orange, {
@@ -122,5 +126,5 @@ const devUpdates = [
   //           [false, false, false, false, false], false),
   //       "2": PlayerStatus("Annonymous 065686", QuestionReview([], []),
   //           [false, false, false, false, false], false),
-  //     }, 0, "0")),
+  //     }, "0",0 )),
 ];

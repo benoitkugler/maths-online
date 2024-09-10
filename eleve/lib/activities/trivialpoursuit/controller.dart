@@ -78,7 +78,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   LobbyUpdate lobby = const LobbyUpdate({}, "", "", false, {});
 
   GameState state = const GameState(
-      {"": PlayerStatus("", QuestionReview([], []), [], false)}, 0, "");
+      {"": PlayerStatus("", QuestionReview([], []), [], false, 0)}, "", 0);
   Set<int> highligthedTiles = {};
 
   /// null when no animation is displayed
@@ -335,7 +335,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
     for (var tile in event.path) {
       setState(() {
-        state = GameState(state.players, tile, state.playerTurn);
+        state = GameState(state.players, state.playerTurn, tile);
       });
 
       await Future<void>.delayed(const Duration(milliseconds: 800));
