@@ -72,7 +72,7 @@ dev_dependencies:
 
   flutter_native_splash: ^2.2.18
 
-# flutter pub run flutter_native_splash:create
+# dart run flutter_native_splash:create
 flutter_native_splash:
   color: "#104986"
   image: icon.png
