@@ -81,23 +81,16 @@ class ActivityStart extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(boxShadow: [
-                BoxShadow(
-                  color: Colors.lightGreen,
-                  spreadRadius: 2,
-                  blurRadius: 10,
-                ),
-              ]),
-              child: ElevatedButton(
-                onPressed: onContinue,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.lightGreen,
-                    padding: const EdgeInsets.all(16)),
-                child: const Text(
-                  "J'ai mon matériel !",
-                  style: TextStyle(fontSize: 18),
-                ),
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                  elevation: 4,
+                  shadowColor: Colors.white,
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.all(16)),
+              child: const Text(
+                "J'ai mon matériel !",
+                style: TextStyle(fontSize: 18),
               ),
             ),
           ),

@@ -251,7 +251,7 @@ class _StageTile extends StatelessWidget {
           children: [
             Text(
               domainLabel(stage.domain),
-              style: Theme.of(context).textTheme.labelLarge,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
             pending == null
                 ? const Icon(Icons.check, size: 48)
@@ -362,6 +362,8 @@ class _StageDetailsDialog extends StatelessWidget {
                         ),
                       const SizedBox(height: 32),
                       ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              elevation: 2, shadowColor: Colors.teal.shade200),
                           child: const Text("Lancer la séance !"),
                           onPressed: () => Navigator.of(context).pop(true)),
                     ]),
