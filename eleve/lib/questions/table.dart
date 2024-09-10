@@ -67,13 +67,14 @@ class _Table extends StatelessWidget {
       if (verticalHeaders.isNotEmpty) const SizedBox(),
       ...horizontalHeaders.map((e) => _Cell(e, true)).toList(),
     ];
+    final hideHorizontalHeader = horizontalHeaders.every((t) => t.text.isEmpty);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Table(
           defaultColumnWidth: const IntrinsicColumnWidth(),
           border: TableBorder.all(),
           children: [
-            if (horizontalHeaders.isNotEmpty) TableRow(children: firstRow),
+            if (!hideHorizontalHeader) TableRow(children: firstRow),
             ...List<TableRow>.generate(
                 values.length,
                 (i) => TableRow(children: [
