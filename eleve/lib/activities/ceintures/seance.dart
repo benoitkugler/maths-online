@@ -3,6 +3,7 @@ import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
+import 'package:eleve/shared/title.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_ceintures.dart';
 import 'package:eleve/types/src_sql_ceintures.dart';
@@ -242,17 +243,22 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
       return;
     }
 
-    final goTo = res.indexWhere((r) => !r.isCorrect);
-
-    // display feedback and go to the "first" error
+    // always display the feedback and show a summary
     setState(() {
       widget.controller.setFeedback(res);
+    });
+
+    // display a recap of errors
+    final goTo = await Navigator.of(context).push(MaterialPageRoute<int>(
+      builder: (context) => _ResultsPage(res),
+    ));
+    if (goTo == null) return;
+
+    // if asked, go to a question
+    setState(() {
       widget.controller._pageC.animateToPage(goTo,
           duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Colors.red.shade400,
-        content: const Text("Dommage, il y a des réponses incorrectes...")));
   }
 }
 
@@ -267,4 +273,46 @@ class _QuestionController extends BaseQuestionController {
 
 extension on EvaluateAnswersOut {
   bool get success => answers.every((element) => element.isCorrect);
+}
+
+class _ResultsPage extends StatelessWidget {
+  final List<QuestionAnswersOut> resultats;
+  const _ResultsPage(this.resultats, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Résultats"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            const ColoredTitle("Voici ton bilan", Colors.orange),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView(
+                  children: List.generate(resultats.length, (index) {
+                final ok = resultats[index].isCorrect;
+                return ListTile(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  title: Text("Question ${index + 1}"),
+                  trailing: Icon(
+                    ok ? Icons.check : Icons.clear,
+                    color: ok ? Colors.green : Colors.red,
+                    size: 32,
+                  ),
+                  onTap: () => Navigator.of(context).pop(index),
+                );
+              })),
+            ),
+            Quote(pickQuote()),
+          ],
+        ),
+      ),
+    );
+  }
 }
