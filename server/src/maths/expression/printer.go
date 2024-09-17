@@ -241,6 +241,28 @@ func (r specialFunction) expandSequence(eval bool) (string, error) {
 	}
 	k, _ := r.args[0].atom.(Variable)
 	expr := r.args[3]
+
+	var (
+		sep string
+		op  operator
+	)
+	switch r.kind {
+	case sumFn:
+		sep = " + "
+		op = plus
+	case prodFn:
+		sep = " \\times "
+		op = mult
+	case unionFn:
+		sep = " \\cup "
+		op = union
+	case interFn:
+		sep = " \\cap "
+		op = intersection
+	}
+
+	addParenthesis := op.needParenthesis(expr, false, true)
+
 	var chunks []string
 	for i := start; i <= end; i++ {
 		v := newRealInt(i)
@@ -249,20 +271,13 @@ func (r specialFunction) expandSequence(eval bool) (string, error) {
 		if eval {
 			term.reduce()
 		}
-		chunks = append(chunks, term.AsLaTeX())
+		chunk := term.AsLaTeX()
+		if addParenthesis {
+			chunk = addParenthesisLatex(chunk)
+		}
+		chunks = append(chunks, chunk)
 	}
 
-	var sep string
-	switch r.kind {
-	case sumFn:
-		sep = " + "
-	case prodFn:
-		sep = " \\times "
-	case unionFn:
-		sep = " \\cup "
-	case interFn:
-		sep = " \\cap "
-	}
 	return strings.Join(chunks, sep), nil
 }
 

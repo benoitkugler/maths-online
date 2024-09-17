@@ -168,6 +168,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		`union(k; 1; 10; A_{k}; "expand")`,
 		`union(k; 1; 10; A_{2k}; "expand-eval")`,
 		`inter(k; 1; 10; B_{k}; "expand")`,
+		`prod(k ; 1 ; 3 ; n+k)`,
+		`prod(k ; 1 ; 3 ; n+k; "expand")`,
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -336,4 +338,13 @@ func TestPrintFractions(t *testing.T) {
 
 		tu.Assert(t, e.String() == tt.want)
 	}
+}
+
+func TestProdParenthesis(t *testing.T) {
+	// https://github.com/benoitkugler/maths-online/issues/358
+	e := mustParse(t, `prod(k ; 1 ; 3 ; n+k ; "expand")`)
+	tu.Assert(t, strings.Contains(e.AsLaTeX(), "("))
+
+	e = mustParse(t, `prod(k ; 1 ; 3 ; k ; "expand")`)
+	tu.Assert(t, !strings.Contains(e.AsLaTeX(), "("))
 }
