@@ -222,6 +222,22 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 			},
 			false,
 		},
+		// sequence
+		{
+			map[Variable]string{
+				NewVar('A'): "randint(2;2)",
+				NewVar('b'): "prod(k; 1; A; n+k)",
+				NewVar('c'): `prod(k; 1; A; n+k; "expand")`,
+				NewVar('d'): `prod(k; 1; A; n+k; "expand-eval")`,
+			},
+			Vars{
+				NewVar('A'): mustParse(t, "2"),
+				NewVar('b'): mustParse(t, "prod(k; 1; 2; n+k)"),
+				NewVar('c'): mustParse(t, "(n+1)(n+2)"),
+				NewVar('d'): mustParse(t, "(n+1)(n+2)"),
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		rv := NewRandomParameters()

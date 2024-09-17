@@ -537,6 +537,16 @@ func (expr *Expr) expandSequence() {
 		return
 	}
 
+	if len(r.args) != 5 {
+		return
+	}
+	switch r.args[4].atom {
+	case Variable{Indice: "expand-eval"}, Variable{Indice: "expand"}:
+	default:
+		// else, default to general notation
+		return
+	}
+
 	start, err := evalInt(r.args[1], nil)
 	if err != nil {
 		return

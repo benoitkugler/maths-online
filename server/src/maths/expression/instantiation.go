@@ -405,6 +405,7 @@ func (expr *Expr) instantiate(ctx *resolver) (*Expr, error) {
 				}
 			}
 			out := &Expr{atom: inst}
+			out.expandSequence()
 			return out.tryEval(ctx), nil
 		default:
 			panic(exhaustiveSpecialFunctionSwitch)
