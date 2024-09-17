@@ -275,6 +275,7 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"(x + y) - z", "x + (y - z)", SimpleSubstitutions, true},
 		{"(n * (n+1)) / 2", "n * ((n+1) / 2)", SimpleSubstitutions, true},
 		{"n(n+1)/2", "(n(n+1))/2", SimpleSubstitutions, true},
+		{"0!", "1", SimpleSubstitutions, true},
 		// issue 295
 		{"11/2*x", "11x/2", SimpleSubstitutions, true},
 		{"11/2*x", "11x/2", ExpandedSubstitutions, true},
@@ -287,6 +288,9 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"e^-1", "exp(-1)", SimpleSubstitutions, true},
 		{"e^x", "exp(x)", SimpleSubstitutions, true},
 		{"e^(x + b)", "exp(x + b)", SimpleSubstitutions, true},
+		// sequence
+		{"prod(k; 1; 2; n+k)", "(n+1)(n+2)", Strict, false},
+		{"prod(k; 1; 2; n+k)", "(n+1)(n+2)", SimpleSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
@@ -420,4 +424,23 @@ func TestBug300(t *testing.T) {
 	e := mustParse(t, "[[ x; y; z]]")
 	e.Substitute(vars)
 	tu.Assert(t, e.String() == "[[1 ; 2 ; 3]]")
+}
+
+func TestExpandSequence(t *testing.T) {
+	for _, test := range []struct {
+		expr string
+		want string
+	}{
+		{"1+2", "1+2"},
+		{"prod(k; 1; 1; k)", "1"},
+		{"prod(k; 1; 1; k+1)", "2"},
+		{"sum(k; 1; 2; k)", "1+2"},
+		{"prod(k; 1; 2; k)", "1*2"},
+		{"prod(k; 1; 2; n+k)", "(n+1)(n+2)"},
+	} {
+		e := mustParse(t, test.expr)
+		e.expandSequence()
+
+		tu.Assert(t, reflect.DeepEqual(e, mustParse(t, test.want)))
+	}
 }

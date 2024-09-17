@@ -221,6 +221,7 @@ func Test0And1(t *testing.T) {
 		{"-1(4x + 3)", "-\\left(4 x + 3\\right)"},
 		{"-1sqrt(100)", "-\\sqrt{100}"},
 		{"x + (-y + 2 - 4 + 5)", "x - y + 2 - 4 + 5"},
+		{"0!", "1"},
 	} {
 		expr := mustParse(t, test.expr)
 		latex := expr.AsLaTeX()

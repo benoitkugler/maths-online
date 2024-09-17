@@ -511,6 +511,59 @@ func (expr *Expr) normalizeExp() {
 	}
 }
 
+func (expr *Expr) expandSequence() {
+	if expr == nil {
+		return
+	}
+	expr.left.expandSequence()
+	expr.right.expandSequence()
+
+	r, ok := expr.atom.(specialFunction)
+	if !ok {
+		return
+	}
+
+	var op operator
+	switch r.kind {
+	case sumFn:
+		op = plus
+	case prodFn:
+		op = mult
+	case unionFn:
+		op = union
+	case interFn:
+		op = intersection
+	default:
+		return
+	}
+
+	start, err := evalInt(r.args[1], nil)
+	if err != nil {
+		return
+	}
+	end, err := evalInt(r.args[2], nil)
+	if err != nil {
+		return
+	}
+	k, _ := r.args[0].atom.(Variable)
+	pattern := r.args[3]
+
+	var out *Expr
+	for i := start; i <= end; i++ {
+		v := newRealInt(i)
+		term := pattern.Copy()
+		term.Substitute(Vars{k: v.toExpr()})
+		term.reduce()
+		if i == start {
+			out = term
+		} else {
+			out = &Expr{left: out, right: term, atom: op}
+		}
+	}
+
+	*expr = *out
+}
+
 const maxIterations = 10_000 // very very unlikely in pratice
 
 func (expr *Expr) basicSimplification() (nbPasses int) {
@@ -528,6 +581,7 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 		expr.sortPlusAndMultOperands()
 		expr.DefaultSimplify()
 		expr.extractNegativeInMults()
+		expr.expandSequence()
 
 		if expr.equals(ref) {
 			break
@@ -556,6 +610,7 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 		expr.groupAdditions()
 		expr.simplify0And1()
 		expr.simplifyNumbers()
+		expr.expandSequence()
 
 		if expr.equals(ref) {
 			break
