@@ -368,3 +368,25 @@ func TestCos(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, !math.IsNaN(v))
 }
+
+func TestBug353(t *testing.T) {
+	// https://github.com/benoitkugler/maths-online/issues/353
+	params := NewRandomParameters()
+	err := params.ParseVariable(NewVar('r'), "sqrt(a*c)*x+b*sqrt(c)")
+	tu.AssertNoErr(t, err)
+	err = params.ParseVariable(NewVar('a'), "3")
+	tu.AssertNoErr(t, err)
+	err = params.ParseVariable(NewVar('b'), "4")
+	tu.AssertNoErr(t, err)
+	err = params.ParseVariable(NewVar('c'), "7")
+	tu.AssertNoErr(t, err)
+
+	vars, err := params.Instantiate()
+	tu.AssertNoErr(t, err)
+
+	got := vars[NewVar('r')]
+	exp := mustParse(t, "sqrt(21)*x+4*sqrt(7)")
+
+	// 'got' is evaluated, not 'exp'
+	tu.Assert(t, !AreExpressionsEquivalent(exp, got, SimpleSubstitutions))
+}

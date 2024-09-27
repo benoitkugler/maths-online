@@ -291,6 +291,9 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		// sequence
 		{`prod(k; 1; 2; n+k; "expand")`, "(n+1)(n+2)", Strict, false},
 		{`prod(k; 1; 2; n+k; "expand")`, "(n+1)(n+2)", SimpleSubstitutions, true},
+		// square root
+		// {`prod(k; 1; 2; n+k; "expand")`, "(n+1)(n+2)", Strict, false},
+
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
