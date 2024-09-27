@@ -235,8 +235,8 @@ const fonctionsDesc = [
   ],
   ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [
-    "randDecDen()",
-    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal).",
+    "randDecDen(min; max)",
+    "Renvoie un entier aléatoire entre min et max tel que diviser n'importe quel autre entier par ce nombre donne un nombre décimal (min et max sont optionnels et valent 1 et 100 par défaut).",
   ],
   [
     "randMatrix(n, p, min, max)",
