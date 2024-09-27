@@ -183,6 +183,9 @@ func Test_Expression_eval(t *testing.T) {
 			"0 * randDecDen( )", nil, 0,
 		},
 		{
+			"randDecDen(100; 100)", nil, 100,
+		},
+		{
 			"2 * isPrime(8)", nil, 0,
 		},
 		{
@@ -272,6 +275,9 @@ func TestExpression_Evaluate_err(t *testing.T) {
 			"randInt(a;b)", nil,
 		},
 		{
+			"randDecDen(101;101)", nil,
+		},
+		{
 			"randInt(a;3)", Vars{NewVar('a'): NewNb(6)},
 		},
 		{
@@ -354,10 +360,10 @@ func TestIsDecimal(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, is := IsInt(n.eval() * maxDecDen); !is {
+		if _, is := IsInt(n.eval() * 10_000); !is {
 			t.Fatal(n)
 		}
-		if n.eval() <= 0 || n.eval() > thresholdDecDen {
+		if n.eval() <= 0 || n.eval() > 100 {
 			t.Fatal(n)
 		}
 	}

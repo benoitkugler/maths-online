@@ -425,13 +425,6 @@ func isPrime(n int) bool {
 	return n > 1
 }
 
-const (
-	maxDecDen       = 10_000
-	thresholdDecDen = 100
-)
-
-var decimalDividors = generateDivisors(maxDecDen, thresholdDecDen)
-
 func startEnd(startE, endE *Expr, res *resolver) (float64, float64, error) {
 	start, err := startE.evalFloat(res)
 	if err != nil {
@@ -510,8 +503,22 @@ func (r specialFunction) evalRat(ctx *resolver) (real, error) {
 		}
 		return choice.evalReal(ctx)
 	case randDenominator:
-		index := rand.Intn(len(decimalDividors))
-		return newRealInt(decimalDividors[index]), nil
+		// use default values [1, 100]
+		min, max := 1, 100
+		if len(r.args) != 0 {
+			start, end, err := startEnd(r.args[0], r.args[1], ctx)
+			if err != nil {
+				return real{}, err
+			}
+			err = r.kind.validateStartEnd(start, end, 0)
+			if err != nil {
+				return real{}, err
+			}
+			min, max = int(start), int(end)
+		}
+		choices := generateDecDenominator(min, max)
+		index := rand.Intn(len(choices))
+		return newRealInt(choices[index]), nil
 	case minFn:
 		min, _, err := minMax(r.args, ctx)
 		return newReal(min), err

@@ -462,6 +462,8 @@ var expressions = [...]struct {
 	{"randPrime(2; 12)", &Expr{atom: specialFunction{kind: randPrime, args: []*Expr{NewNb(2), NewNb(12)}}}, false},
 	{"randChoice(1.2;4 ; -3)", &Expr{atom: specialFunction{kind: randChoice, args: []*Expr{NewNb(1.2), NewNb(4), NewNb(-3)}}}, false},
 	{"randDecDen( )", &Expr{atom: specialFunction{kind: randDenominator, args: nil}}, false},
+	{"randDecDen(1)", nil, true},
+	{"randDecDen(1; 10)", &Expr{atom: specialFunction{kind: randDenominator, args: []*Expr{NewNb(1), NewNb(10)}}}, false},
 	{"randInt(15; 12)", nil, true},
 	{"randChoice( )", nil, true},
 	{"randChoice(2;", nil, true},

@@ -4,6 +4,8 @@ import (
 	"math"
 	"reflect"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestRandomVariables_range(t *testing.T) {
@@ -386,4 +388,12 @@ func Test_binomialCoefficient(t *testing.T) {
 			t.Errorf("binomialCoefficient() = %v, want %v", got, tt.want)
 		}
 	}
+}
+
+func TestDecDenominator(t *testing.T) {
+	tu.Assert(t, reflect.DeepEqual(generateDecDenominator(33, 33), []int{}))
+	tu.Assert(t, reflect.DeepEqual(generateDecDenominator(32, 32), []int{32}))
+	tu.Assert(t, reflect.DeepEqual(generateDecDenominator(30, 40), []int{40, 32}))
+	tu.Assert(t, reflect.DeepEqual(generateDecDenominator(20, 24), []int{20}))
+	tu.Assert(t, reflect.DeepEqual(generateDecDenominator(1, 100), []int{1, 5, 25, 2, 10, 50, 4, 20, 100, 8, 40, 16, 80, 32, 64}))
 }

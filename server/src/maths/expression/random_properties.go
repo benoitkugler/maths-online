@@ -95,15 +95,28 @@ func generateRandPrime(min, max int) int {
 	return choices[index]
 }
 
-func generateDivisors(n, threshold int) (out []int) {
-	max := int(math.Sqrt(float64(n)))
-	for i := 1; i <= max; i++ {
+// return all the dividors of [n] in [min, max] (inclusive)
+func generateDivisors(n, min, max int) (out []int) {
+	stop := int(math.Sqrt(float64(n)))
+	for i := 1; i <= stop; i++ {
 		if n%i == 0 {
-			if i <= threshold {
+			if min <= i && i <= max {
 				out = append(out, i)
 			}
-			if n/i <= threshold {
-				out = append(out, n/i)
+			if v := n / i; min <= v && v <= max {
+				out = append(out, v)
+			}
+		}
+	}
+	return out
+}
+
+func generateDecDenominator(min, max int) []int {
+	out := make([]int, 0, 12)
+	for pow2 := 1; pow2 <= max; pow2 *= 2 {
+		for v := pow2; v <= max; v *= 5 {
+			if v >= min {
+				out = append(out, v)
 			}
 		}
 	}
@@ -134,7 +147,7 @@ func binomialCoefficient(k, n int) int {
 func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) error {
 	_ = exhaustiveSpecialFunctionSwitch
 	switch kind {
-	case randInt, randPrime, randMatrixInt:
+	case randInt, randPrime, randDenominator, randMatrixInt:
 		start, okStart := IsInt(start)
 		end, okEnd := IsInt(end)
 		if !(okStart && okEnd) {
@@ -161,6 +174,13 @@ func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) er
 		if kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
 			return ErrInvalidExpr{
 				Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", start, end),
+				Pos:    pos,
+			}
+		}
+
+		if kind == randDenominator && len(generateDecDenominator(start, end)) == 0 {
+			return ErrInvalidExpr{
+				Reason: fmt.Sprintf("aucun diviseur d'un nombre décimal n'existe entre %d et %d", start, end),
 				Pos:    pos,
 			}
 		}

@@ -607,8 +607,14 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
-	case randDenominator: // nothing to validate
-
+	case randDenominator:
+		// 0 or 2 arguments
+		if len(rd.args) != 0 && len(rd.args) != 2 {
+			return ErrInvalidExpr{
+				Reason: "randDecDen doit préciser zéro ou deux arguments",
+				Pos:    pos,
+			}
+		}
 	case minFn, maxFn:
 		if len(rd.args) == 0 {
 			return ErrInvalidExpr{
