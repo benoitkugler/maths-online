@@ -33,18 +33,17 @@ type Scheme struct {
 	Levels [ce.NbDomains]ce.Level // level minimum
 }
 
-// we do not store the implicit links which are intern to one domain,
+// we do not store the implicit links which are internal to one domain,
 // such as (CalculMental, Blanche) -> (CalculMental, Jaune)
 var mathScheme = Scheme{
 	Ps: []Prerequisite{
-		{Stage{ce.CalculMentalI, ce.VerteI}, Stage{ce.CalculMentalII, ce.Orange}},
-
 		// TODO: this is not decided yet
-		{Stage{ce.CalculMentalI, ce.Blanche}, Stage{ce.Equations, ce.Blanche}},
-		{Stage{ce.Fractions, ce.Jaune}, Stage{ce.Equations, ce.Blanche}},
-		{Stage{ce.Reduction, ce.Rouge}, Stage{ce.Equations, ce.Blanche}},
-		{Stage{ce.CalculMentalII, ce.Blanche}, Stage{ce.Factorisation, ce.Jaune}},
-		{Stage{ce.Fractions, ce.Blanche}, Stage{ce.Factorisation, ce.Orange}},
+		// {Stage{ce.CalculMentalI, ce.VerteI}, Stage{ce.CalculMentalII, ce.Orange}},
+		// {Stage{ce.CalculMentalI, ce.Blanche}, Stage{ce.Equations, ce.Blanche}},
+		// {Stage{ce.Fractions, ce.Jaune}, Stage{ce.Equations, ce.Blanche}},
+		// {Stage{ce.Reduction, ce.Rouge}, Stage{ce.Equations, ce.Blanche}},
+		// {Stage{ce.CalculMentalII, ce.Blanche}, Stage{ce.Factorisation, ce.Jaune}},
+		// {Stage{ce.Fractions, ce.Blanche}, Stage{ce.Factorisation, ce.Orange}},
 	},
 	Levels: [ce.NbDomains]ce.Level{
 		ce.Derivation: ce.Terminale,
