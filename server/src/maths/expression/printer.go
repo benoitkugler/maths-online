@@ -513,3 +513,14 @@ func shouldOmitTimes(left *Expr, rightHasParenthesis bool, right *Expr) bool {
 		panic(exhaustiveAtomSwitch)
 	}
 }
+
+func (expr *Expr) debug() string {
+	if expr == nil {
+		return ""
+	}
+	atom := expr.atom.String()
+	if expr.left == nil && expr.right == nil {
+		return atom
+	}
+	return fmt.Sprintf("<%s %s %s>", expr.left.debug(), atom, expr.right.debug())
+}
