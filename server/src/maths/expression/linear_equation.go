@@ -113,6 +113,15 @@ func (expr *Expr) isConstantTerm() (float64, bool) {
 	return res.eval(), true
 }
 
+// isConstantTermInt returns [true] if [expr] is a constant integer
+func (expr *Expr) isConstantTermInt() (int, bool) {
+	v, ok := expr.isConstantTerm()
+	if !ok {
+		return 0, false
+	}
+	return IsInt(v)
+}
+
 // AreLinearEquationsEquivalent returns [true] if both expressions
 // defines the same linear equation (up to a non zero factor).
 //

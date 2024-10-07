@@ -294,11 +294,12 @@ func (expr *Expr) enforcePlus() {
 	// do not transform (-a)
 	if expr.left != nil { // a - c => a + (-c)
 		expr.atom = plus
-		if number, isNumber := expr.right.atom.(Number); isNumber {
-			expr.right = &Expr{atom: Number(-number)}
-		} else { // general case
-			expr.right = &Expr{atom: minus, right: expr.right}
-		}
+		// if number, isNumber := expr.right.atom.(Number); isNumber {
+		// 	expr.right = &Expr{atom: Number(-number)}
+		// } else { // general case
+		tmp := *expr.right
+		expr.right = &Expr{atom: minus, right: &tmp}
+		// }
 		return
 	}
 }
@@ -574,7 +575,31 @@ func (expr *Expr) expandSequence() {
 	*expr = *out
 }
 
-const maxIterations = 10_000 // very very unlikely in pratice
+// assume normalizeNegativeNumbers and enforcePlus have been called
+// replace (-a + b)^n by (a - b)^n if n is even
+func (expr *Expr) normalizeDiffSquared() {
+	if expr == nil {
+		return
+	}
+	expr.left.normalizeDiffSquared()
+	expr.right.normalizeDiffSquared()
+
+	if expr.atom != pow {
+		return
+	}
+	if v, ok := expr.right.isConstantTermInt(); ok && v%2 == 0 {
+		base := expr.left
+		if base.atom == plus && base.left != nil && base.left.atom == minus && base.left.left == nil {
+			// change (-a + b) to (-b + a)
+			if compareNodes(base.left.right, base.right) == -1 {
+				base.left.right, base.right = base.right, base.left.right
+			}
+		}
+	}
+	return
+}
+
+const maxIterations = 1_00 // very very unlikely in pratice
 
 func (expr *Expr) basicSimplification() (nbPasses int) {
 	ref := expr.Copy()
@@ -589,10 +614,12 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 		expr.enforcePlus()
 		expr.enforceMult()
 		expr.sortPlusAndMultOperands()
-		expr.DefaultSimplify()
 		expr.extractNegativeInMults()
 		expr.expandSequence()
 
+		expr.normalizeDiffSquared()
+
+		expr.DefaultSimplify()
 		if expr.equals(ref) {
 			break
 		}
@@ -621,6 +648,8 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 		expr.simplify0And1()
 		expr.simplifyNumbers()
 		expr.expandSequence()
+
+		expr.normalizeDiffSquared()
 
 		if expr.equals(ref) {
 			break

@@ -291,9 +291,14 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		// sequence
 		{`prod(k; 1; 2; n+k; "expand")`, "(n+1)(n+2)", Strict, false},
 		{`prod(k; 1; 2; n+k; "expand")`, "(n+1)(n+2)", SimpleSubstitutions, true},
-		// square root
-		// {`prod(k; 1; 2; n+k; "expand")`, "(n+1)(n+2)", Strict, false},
-
+		// square (see https://github.com/benoitkugler/maths-online/issues/361)
+		{`(1-x)^2`, "(x-1)^2", Strict, false},
+		{`(1-x)^2`, "(x-1)^2", SimpleSubstitutions, true},
+		{`(1-x)^2`, "(x-1)^2", ExpandedSubstitutions, true},
+		{`(a-b)^2`, "(b-a)^2", SimpleSubstitutions, true},
+		{`(a-b)^4`, "(b-a)^4", SimpleSubstitutions, true},
+		{`(a-b)^3`, "(b-a)^3", ExpandedSubstitutions, false},
+		{`(4x-5)^2`, "(5-4x)^2", SimpleSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
