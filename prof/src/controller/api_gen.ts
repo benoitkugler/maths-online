@@ -16,6 +16,19 @@ export type Ar11_StageHeader = [
   StageHeader,
   StageHeader,
 ];
+export type Ar11_Stat = [
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+  Stat,
+];
 export type Ar11_Int = [Int, Int, Int, Int, Int, Int, Int, Int, Int, Int, Int];
 export type Ar12_Ar11_StageHeader = [
   Ar11_StageHeader,
@@ -30,6 +43,20 @@ export type Ar12_Ar11_StageHeader = [
   Ar11_StageHeader,
   Ar11_StageHeader,
   Ar11_StageHeader,
+];
+export type Ar12_Ar11_Stat = [
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
+  Ar11_Stat,
 ];
 export type Ar12_Level = [
   Level,
@@ -657,6 +684,7 @@ export interface GetSchemeOut {
   Scheme: Scheme;
   Stages: Ar12_Ar11_StageHeader;
   IsAdmin: boolean;
+  Classrooms: Classroom[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
 export interface Prerequisite {
@@ -694,6 +722,11 @@ export interface UpdateBeltquestionIn {
   Id: IdBeltquestion;
   Repeat: Int;
   Title: string;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.studentAdvance
+export interface studentAdvance {
+  Student: Student;
+  Advance: Beltevolution;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
@@ -1337,6 +1370,13 @@ export interface stopGame {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Advance
 export type Advance = Ar12_Rank;
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Beltevolution
+export interface Beltevolution {
+  IdStudent: IdStudent;
+  Level: Level;
+  Advance: Advance;
+  Stats: Stats;
+}
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Beltquestion
 export interface Beltquestion {
   Id: IdBeltquestion;
@@ -1428,6 +1468,13 @@ export const RankLabels: { [key in Rank]: string } = {
   [Rank.Noire]: "Noire",
 };
 
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Stat
+export interface Stat {
+  Success: Int;
+  Failure: Int;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Stats
+export type Stats = Ar12_Ar11_Stat;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyTag
@@ -4087,6 +4134,36 @@ export abstract class AbstractAPI {
 
   protected onSuccessCeinturesDuplicateQuestion(
     data: DuplicateQuestionOut,
+  ): void {}
+
+  protected async rawCeinturesGetStudentsAdvance(params: {
+    "classroom-id": Int;
+  }) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/advance";
+    const rep: AxiosResponse<studentAdvance[] | null> = await Axios.get(
+      fullUrl,
+      {
+        headers: this.getHeaders(),
+        params: { "classroom-id": String(params["classroom-id"]) },
+      },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesGetStudentsAdvance wraps rawCeinturesGetStudentsAdvance and handles the error */
+  async CeinturesGetStudentsAdvance(params: { "classroom-id": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetStudentsAdvance(params);
+      this.onSuccessCeinturesGetStudentsAdvance(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetStudentsAdvance(
+    data: studentAdvance[] | null,
   ): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {

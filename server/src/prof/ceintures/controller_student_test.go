@@ -53,6 +53,10 @@ func TestGetEvolution(t *testing.T) {
 	tu.Assert(t, has)
 	tu.Assert(t, len(get.Pending) != 0)
 	tu.Assert(t, get.SuggestionIndex != -1)
+
+	l, err := ct.getStudentsAdvance(cl.Id, cl.IdTeacher)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l) == 1)
 }
 
 // populate each stage

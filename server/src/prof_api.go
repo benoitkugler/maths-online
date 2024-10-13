@@ -132,6 +132,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/ceintures/question", ce.CeinturesSaveQuestion)
 	gr.DELETE("/api/prof/ceintures/question", ce.CeinturesDeleteQuestion)
 	gr.POST("/api/prof/ceintures/question-duplicate", ce.CeinturesDuplicateQuestion)
+	gr.GET("/api/prof/ceintures/advance", ce.CeinturesGetStudentsAdvance)
 
 	// review page
 	gr.PUT("/api/prof/review", review.ReviewCreate)

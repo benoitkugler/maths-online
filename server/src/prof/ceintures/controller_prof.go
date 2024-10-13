@@ -61,14 +61,21 @@ type StageHeader struct {
 }
 
 type GetSchemeOut struct {
-	Scheme  Scheme
-	Stages  [ce.NbDomains][ce.NbRanks]StageHeader
-	IsAdmin bool
+	Scheme     Scheme
+	Stages     [ce.NbDomains][ce.NbRanks]StageHeader
+	IsAdmin    bool
+	Classrooms []teacher.Classroom
 }
 
 func (ct *Controller) getScheme(userID uID) (GetSchemeOut, error) {
 	// for now, there is only one scheme
 	out := GetSchemeOut{Scheme: mathScheme, IsAdmin: userID == ct.admin.Id}
+
+	classrooms, err := teacher.SelectClassroomsByIdTeachers(ct.db, userID)
+	for _, cl := range classrooms {
+		out.Classrooms = append(out.Classrooms, cl)
+	}
+	sort.Slice(out.Classrooms, func(i, j int) bool { return out.Classrooms[i].Id < out.Classrooms[j].Id })
 
 	questions, err := ce.SelectAllBeltquestions(ct.db)
 	if err != nil {
@@ -391,4 +398,55 @@ func (ct *Controller) deleteQuestion(id ce.IdBeltquestion) (preview.LoopbackServ
 	}
 
 	return preview, nil
+}
+
+// CeinturesGetStudentsAdvance returns the belt advance for the given classroom
+func (ct *Controller) CeinturesGetStudentsAdvance(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	id_, err := utils.QueryParamInt64(c, "classroom-id")
+	if err != nil {
+		return err
+	}
+	out, err := ct.getStudentsAdvance(teacher.IdClassroom(id_), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type studentAdvance struct {
+	Student teacher.Student
+	Advance ce.Beltevolution
+}
+
+func (ct *Controller) getStudentsAdvance(id teacher.IdClassroom, user uID) ([]studentAdvance, error) {
+	classroom, err := teacher.SelectClassroom(ct.db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	if classroom.IdTeacher != user {
+		return nil, errAccess
+	}
+
+	students, err := teacher.SelectStudentsByIdClassrooms(ct.db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	links, err := ce.SelectBeltevolutionsByIdStudents(ct.db, students.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	byStudent := links.ByIdStudent()
+
+	out := make([]studentAdvance, 0, len(students))
+	for _, student := range students {
+		evolution := byStudent[student.Id]
+		out = append(out, studentAdvance{student, evolution})
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Student.Name < out[j].Student.Name })
+	return out, nil
 }

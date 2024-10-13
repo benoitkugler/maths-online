@@ -1,5 +1,8 @@
 <template>
   <v-container class="pa-2 fill-height" fluid>
+    <v-dialog v-model="showStudentsAdvance" v-if="scheme != null">
+      <StudentsAdvance :classrooms="scheme.Classrooms || []"></StudentsAdvance>
+    </v-dialog>
     <v-fade-transition hide-on-leave>
       <v-skeleton-loader
         v-if="scheme == null"
@@ -25,6 +28,12 @@
             </v-row>
           </v-alert>
           <v-card class="overflow-x-auto">
+            <template v-slot:append>
+              <v-btn @click="showStudentsAdvance = true">
+                <v-icon>mdi-view-list</v-icon>
+                Progression élèves</v-btn
+              >
+            </template>
             <v-card-text class="pa-1">
               <table
                 style="table-layout: fixed; width: 200%"
@@ -148,6 +157,7 @@
 
 <script setup lang="ts">
 import DomainLine from "@/components/ceintures/DomainLine.vue";
+import StudentsAdvance from "@/components/ceintures/StudentsAdvance.vue";
 import StageChip from "@/components/ceintures/StageChip.vue";
 import StageHeaderCard from "@/components/ceintures/StageHeaderCard.vue";
 import StageQuestionsEditor from "@/components/ceintures/StageQuestionsEditor.vue";
@@ -158,8 +168,10 @@ import { sameStage } from "@/controller/utils";
 import { computed } from "vue";
 import { ref } from "vue";
 import { onMounted } from "vue";
+import { onActivated } from "vue";
 
 onMounted(fetchScheme);
+onActivated(fetchScheme);
 
 const scheme = ref<GetSchemeOut | null>(null);
 
@@ -185,8 +197,9 @@ function initAdvance(): Advance {
   return Array.from({ length: nbDomains }).map(() => Rank.StartRank) as Advance;
 }
 
-const simulateProgression = ref<Advance | null>(null);
+const showStudentsAdvance = ref(false);
 
+const simulateProgression = ref<Advance | null>(null);
 const pending = ref<Stage[]>([]);
 async function updatePending() {
   if (simulateProgression.value == null) return;

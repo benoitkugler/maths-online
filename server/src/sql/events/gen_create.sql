@@ -2,7 +2,7 @@
 CREATE TABLE events (
     IdStudent integer NOT NULL,
     Event smallint CHECK (Event IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
-    Date date NOT NULL
+    Date timestamp(0) with time zone NOT NULL
 );
 
 -- constraints
