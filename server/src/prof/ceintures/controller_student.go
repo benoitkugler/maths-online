@@ -237,7 +237,11 @@ func (ct *Controller) evaluateAnswers(args EvaluateAnswersIn) (EvaluateAnswersOu
 		return EvaluateAnswersOut{}, fmt.Errorf("Erreur interne (évolution manquante)")
 	}
 
-	// We should check that the stage and the questions are correct,
+	if current.Advance[args.Stage.Domain]+1 != args.Stage.Rank {
+		return EvaluateAnswersOut{}, fmt.Errorf("Erreur interne (rang %v déjà validé ou inaccesible)", args.Stage.Rank)
+	}
+
+	// We should check that the questions are correct,
 	// but we "trust" the client for now
 
 	res, err := tasks.EvaluateBelt(ct.db, args.Questions, args.Answers)
