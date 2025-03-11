@@ -46,7 +46,7 @@ var mathScheme = Scheme{
 		// {Stage{ce.Fractions, ce.Blanche}, Stage{ce.Factorisation, ce.Orange}},
 	},
 	Levels: [ce.NbDomains]ce.Level{
-		ce.Derivation: ce.Terminale,
+		ce.Derivation: ce.Premiere,
 		ce.Matrices:   ce.PostBac,
 		// others : ca.Seconde
 	},
