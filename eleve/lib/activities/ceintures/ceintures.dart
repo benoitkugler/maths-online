@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 class CeinturesActivityIcon extends StatelessWidget {
   final void Function() onTap;
 
-  const CeinturesActivityIcon(this.onTap, {Key? key}) : super(key: key);
+  const CeinturesActivityIcon(this.onTap, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +93,7 @@ class _CeinturesStartState extends State<CeinturesStart> {
 
 class _CreateEvolution extends StatefulWidget {
   final void Function(Level level) onCreate;
-  const _CreateEvolution(this.onCreate, {super.key});
+  const _CreateEvolution(this.onCreate);
 
   @override
   State<_CreateEvolution> createState() => _CreateEvolutionState();
@@ -138,8 +138,7 @@ class _CeinturesEvolution extends StatefulWidget {
   final StudentTokens tokens;
   final StudentEvolution initialEvolution;
 
-  const _CeinturesEvolution(this.api, this.tokens, this.initialEvolution,
-      {super.key});
+  const _CeinturesEvolution(this.api, this.tokens, this.initialEvolution);
 
   @override
   State<_CeinturesEvolution> createState() => _CeinturesEvolutionState();
@@ -233,8 +232,7 @@ class _StageTile extends StatelessWidget {
   final Stat? pendingStat;
   final void Function() onLaunch;
   const _StageTile(
-      this.scheme, this.stage, this.locked, this.pendingStat, this.onLaunch,
-      {super.key});
+      this.scheme, this.stage, this.locked, this.pendingStat, this.onLaunch);
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +243,7 @@ class _StageTile extends StatelessWidget {
       child: Card(
         elevation: locked ? 0 : 4,
         shadowColor: locked ? Colors.grey : Colors.white,
-        color: Colors.teal.withOpacity(0.2),
+        color: Colors.teal.withAlpha(50),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -288,8 +286,7 @@ class _StageDetailsDialog extends StatelessWidget {
   final bool locked;
   final Stat? pendingStat;
   const _StageDetailsDialog(
-      this.scheme, this.stage, this.locked, this.pendingStat,
-      {super.key});
+      this.scheme, this.stage, this.locked, this.pendingStat);
 
   @override
   Widget build(BuildContext context) {
