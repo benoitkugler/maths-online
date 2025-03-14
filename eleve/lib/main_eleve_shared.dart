@@ -254,6 +254,8 @@ class __AppScaffoldState extends State<_AppScaffold> {
           ? body
           : UpgradeAlert(
               upgrader: widget.checkUprades,
+              showIgnore: false,
+              showLater: false,
               child: body,
             ),
     );

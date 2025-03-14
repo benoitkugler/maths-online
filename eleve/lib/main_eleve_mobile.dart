@@ -22,9 +22,6 @@ void main() async {
       bm,
       checkUprades: Upgrader(
         messages: _UpgraderMessages(),
-        canDismissDialog: false,
-        showIgnore: false,
-        showLater: false,
         durationUntilAlertAgain: const Duration(seconds: 1),
       ),
     ),
