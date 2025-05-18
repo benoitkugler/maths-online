@@ -60,13 +60,14 @@ func TestGetEvolution(t *testing.T) {
 }
 
 // populate each stage
-func createQuestions(t *testing.T, db *sql.DB) {
+func createQuestions(t *testing.T, db *sql.DB) (questionsNumber [ce.NbDomains][ce.NbRanks]int) {
 	tx, err := db.Begin()
 	tu.AssertNoErr(t, err)
 
 	for d := ce.Domain(0); d < ce.NbDomains; d++ {
 		for r := ce.Rank(0); r < ce.NbRanks; r++ {
 			i := 1 + rand.Intn(3)
+			questionsNumber[d][r] = i
 			for n := 0; n < i; n++ {
 				_, err = ce.Beltquestion{Domain: d, Rank: r, Repeat: 1, Enonce: questions.Enonce{
 					questions.TextBlock{Parts: "1+1="},
@@ -86,6 +87,8 @@ func createQuestions(t *testing.T, db *sql.DB) {
 
 	err = tx.Commit()
 	tu.AssertNoErr(t, err)
+
+	return questionsNumber
 }
 
 func TestInitDevQuestions(t *testing.T) {
@@ -100,23 +103,26 @@ func TestInitDevQuestions(t *testing.T) {
 func TestSelectEvaluateQuestions(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/ceintures/gen_create.sql")
 	defer db.Remove()
-	createQuestions(t, db.DB)
+	questionsNumber := createQuestions(t, db.DB)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1}, pass.Encrypter{})
 
 	out, err := ct.selectQuestions(SelectQuestionsIn{Stage: Stage{ce.CalculMentalI, ce.Blanche}})
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out.Questions) == 3)
+	tu.Assert(t, len(out.Questions) == questionsNumber[ce.CalculMentalI][ce.Blanche])
 
 	for d := ce.Domain(0); d < ce.NbDomains; d++ {
-		out, err = ct.selectQuestions(SelectQuestionsIn{Stage: Stage{d, ce.Rouge}})
+		stage := Stage{d, ce.Rouge}
+		out, err = ct.selectQuestions(SelectQuestionsIn{Stage: stage})
 		tu.AssertNoErr(t, err)
-		tu.Assert(t, len(out.Questions) == 4)
+		tu.Assert(t, len(out.Questions) == questionsNumber[stage.Domain][stage.Rank])
 	}
 
-	ev, _ := ct.createEvolution(CreateEvolutionIn{Level: ce.Seconde})
+	ev, err := ct.createEvolution(CreateEvolutionIn{Level: ce.Seconde})
+	tu.AssertNoErr(t, err)
 	stage := Stage{ce.CalculMentalI, ce.Blanche}
-	out, _ = ct.selectQuestions(SelectQuestionsIn{Stage: stage})
+	out, err = ct.selectQuestions(SelectQuestionsIn{Stage: stage})
+	tu.AssertNoErr(t, err)
 
 	var ids []ce.IdBeltquestion
 	for _, qu := range out.Questions {

@@ -175,37 +175,19 @@ func (ct *Controller) selectQuestions(args SelectQuestionsIn) (SelectQuestionsOu
 	byStage := byStage(questions)
 
 	var selected []ce.Beltquestion
-	// we include every question (with their repetition),
-	// padding up to 3
+	// include every question (with their repetition)
 	origin := byStage[args.Stage]
 	for _, qu := range origin {
 		for i := 0; i < qu.Repeat; i++ {
 			selected = append(selected, qu)
 		}
 	}
-	switch len(selected) {
-	case 0:
+	if len(selected) == 0 {
 		return SelectQuestionsOut{}, fmt.Errorf("Erreur interne: question manquante !")
-	case 1:
-		qu := selected[0]
-		selected = append(selected, qu, qu)
-	case 2:
-		qu := selected[rand.Intn(2)]
-		selected = append(selected, qu)
 	}
 
 	// randomize
 	rand.Shuffle(len(selected), func(i, j int) { selected[i], selected[j] = selected[j], selected[i] })
-
-	// we include one question from the previous rank, always at first
-	if rank := args.Stage.Rank; rank >= ce.Jaune {
-		previous := byStage[Stage{args.Stage.Domain, rank - 1}]
-		if len(previous) == 0 {
-			return SelectQuestionsOut{}, fmt.Errorf("Erreur interne: question manquante !")
-		}
-		qu := previous[rand.Intn(len(previous))]
-		selected = append([]ce.Beltquestion{qu}, selected...)
-	}
 
 	l, err := instantiateQuestions(selected)
 	if err != nil {
