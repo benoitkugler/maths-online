@@ -55,7 +55,8 @@ function isSimplified(k: BlockKind) {
     k == BlockKind.TextBlock ||
     k == BlockKind.TableBlock ||
     k == BlockKind.OrderedListFieldBlock ||
-    k == BlockKind.RadioFieldBlock
+    k == BlockKind.RadioFieldBlock ||
+    k == BlockKind.ExpressionFieldBlock
   );
 }
 
