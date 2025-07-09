@@ -1,30 +1,30 @@
 <template>
-  <v-list-item link class="py-1 my-2">
-    <v-row>
-      <v-col cols="4" sm="2" lg="2" align-self="center">
-        <v-chip color="primary-darken-1">
-          {{ labels[props.review.Kind] }}
-        </v-chip>
-      </v-col>
-      <v-col cols="8" sm="6" lg="8" align-self="center">
-        ({{ props.review.Id }}) {{ props.review.Title }}
-      </v-col>
-
-      <v-col
-        cols="12"
-        sm="4"
-        lg="2"
-        align-self="center"
-        style="text-align: center"
-      >
-        <v-chip> {{ props.review.NbComments }} commentaire(s) </v-chip>
-      </v-col>
-    </v-row>
+  <v-list-item
+    link
+    class="py-1 my-2"
+    :title="`(${props.review.Id}) ${props.review.Title}`"
+    :subtitle="labels[props.review.Kind]"
+  >
+    <template #prepend>
+      <v-chip class="mx-1" size="small" label :color="MatiereColor">{{
+        props.review.Matiere
+      }}</v-chip>
+      <v-chip class="mr-4" size="small" label :color="LevelColor">{{
+        props.review.Level
+      }}</v-chip>
+    </template>
+    <template #append>
+      <v-chip prepend-icon="mdi-comment">
+        {{ props.review.NbComments }}
+      </v-chip>
+    </template>
   </v-list-item>
 </template>
 
 <script setup lang="ts">
 import { ReviewKindLabels, type ReviewHeader } from "@/controller/api_gen";
+import TagChip from "../editor/utils/TagChip.vue";
+import { LevelColor, MatiereColor } from "@/controller/editor";
 
 interface Props {
   review: ReviewHeader;

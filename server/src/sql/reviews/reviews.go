@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
@@ -58,8 +58,10 @@ func (k ReviewKind) String() string {
 }
 
 type TargetHeader struct {
-	Title string
-	Owner teacher.IdTeacher
+	Title   string
+	Owner   teacher.IdTeacher
+	Matiere teacher.MatiereTag
+	Level   ed.LevelTag
 }
 
 type Target interface {
@@ -94,19 +96,29 @@ func (tr ReviewTrivial) Insert(tx *sql.Tx) error  { return InsertManyReviewTrivi
 func (tr ReviewSheet) Insert(tx *sql.Tx) error    { return InsertManyReviewSheets(tx, tr) }
 
 func (tr ReviewQuestion) Load(db DB) (TargetHeader, error) {
-	item, err := editor.SelectQuestiongroup(db, tr.IdQuestion)
+	item, err := ed.SelectQuestiongroup(db, tr.IdQuestion)
 	if err != nil {
 		return TargetHeader{}, err
 	}
-	return TargetHeader{Title: item.Title, Owner: item.IdTeacher}, nil
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, item.Id)
+	if err != nil {
+		return TargetHeader{}, err
+	}
+	s := tags.Tags().BySection()
+	return TargetHeader{item.Title, item.IdTeacher, s.Matiere, s.Level}, nil
 }
 
 func (tr ReviewExercice) Load(db DB) (TargetHeader, error) {
-	item, err := editor.SelectExercicegroup(db, tr.IdExercice)
+	item, err := ed.SelectExercicegroup(db, tr.IdExercice)
 	if err != nil {
 		return TargetHeader{}, err
 	}
-	return TargetHeader{Title: item.Title, Owner: item.IdTeacher}, nil
+	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, item.Id)
+	if err != nil {
+		return TargetHeader{}, err
+	}
+	s := tags.Tags().BySection()
+	return TargetHeader{item.Title, item.IdTeacher, s.Matiere, s.Level}, nil
 }
 
 func (tr ReviewTrivial) Load(db DB) (TargetHeader, error) {
@@ -126,11 +138,11 @@ func (tr ReviewSheet) Load(db DB) (TargetHeader, error) {
 	if item.Level != "" {
 		title = fmt.Sprintf("%s (%s)", item.Title, item.Level)
 	}
-	return TargetHeader{Title: title, Owner: item.IdTeacher}, nil
+	return TargetHeader{title, item.IdTeacher, item.Matiere, ed.LevelTag(item.Level)}, nil
 }
 
 func (tr ReviewQuestion) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
-	item, err := editor.SelectQuestiongroup(db, tr.IdQuestion)
+	item, err := ed.SelectQuestiongroup(db, tr.IdQuestion)
 	if err != nil {
 		return err
 	}
@@ -141,7 +153,7 @@ func (tr ReviewQuestion) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
 }
 
 func (tr ReviewExercice) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
-	item, err := editor.SelectExercicegroup(db, tr.IdExercice)
+	item, err := ed.SelectExercicegroup(db, tr.IdExercice)
 	if err != nil {
 		return err
 	}

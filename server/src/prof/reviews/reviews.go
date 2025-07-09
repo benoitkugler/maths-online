@@ -45,6 +45,8 @@ type ReviewHeader struct {
 	Kind       re.ReviewKind
 	OwnerMail  string
 	NbComments int
+	Matiere    teacher.MatiereTag
+	Level      editor.LevelTag
 }
 
 // ReviewsList returns the list of all the reviews.
@@ -101,11 +103,13 @@ func (ct *Controller) listReviews() (out []ReviewHeader, err error) {
 		}
 
 		out = append(out, ReviewHeader{
-			Id:         idReview,
-			Title:      taHeader.Title,
-			OwnerMail:  tc.Mail,
-			Kind:       reviews[idReview].Kind,
-			NbComments: nbComments,
+			idReview,
+			taHeader.Title,
+			reviews[idReview].Kind,
+			tc.Mail,
+			nbComments,
+			taHeader.Matiere,
+			taHeader.Level,
 		})
 	}
 
