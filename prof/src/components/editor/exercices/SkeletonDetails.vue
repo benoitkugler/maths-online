@@ -103,6 +103,7 @@ import DropZone from "@/components/DropZone.vue";
 import type {
   ExerciceExt,
   ExerciceQuestionExt,
+  IdExercice,
   Int,
   LoopbackShowExercice,
 } from "@/controller/api_gen";
@@ -124,7 +125,7 @@ const emit = defineEmits<{
 
 function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
   return questions.map((qu) => ({
-    id_exercice: -1 as Int,
+    id_exercice: -1 as IdExercice,
     id_question: qu.Question.Id,
     bareme: qu.Bareme,
   }));

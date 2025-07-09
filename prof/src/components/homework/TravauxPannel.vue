@@ -36,7 +36,14 @@
 import type { HomeworksT } from "@/controller/utils";
 import { ref } from "vue";
 import ClassroomTravaux from "./ClassroomTravaux.vue";
-import type { Int, Sheet, SheetExt, Travail } from "@/controller/api_gen";
+import type {
+  IdClassroom,
+  IdSheet,
+  Int,
+  Sheet,
+  SheetExt,
+  Travail,
+} from "@/controller/api_gen";
 
 interface Props {
   homeworks: HomeworksT;
@@ -45,11 +52,11 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "create", idClassroom: Int): void;
-  (e: "createWith", idSheet: Int, idClassroom: Int): void;
+  (e: "create", idClassroom: IdClassroom): void;
+  (e: "createWith", idSheet: IdSheet, idClassroom: IdClassroom): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "delete", travail: Travail): void;
-  (e: "copy", travail: Travail, target: Int): void;
+  (e: "copy", travail: Travail, target: IdClassroom): void;
   (e: "update", travail: Travail): void;
   (e: "editSheet", sheet: SheetExt): void;
 }>();

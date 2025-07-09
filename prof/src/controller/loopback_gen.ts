@@ -6,56 +6,58 @@ export interface Variable {
   Name: Int;
 }
 
-export enum BlockKind {
-  ExpressionFieldBlock = "ExpressionFieldBlock",
-  FigureBlock = "FigureBlock",
-  FormulaBlock = "FormulaBlock",
-  FunctionPointsFieldBlock = "FunctionPointsFieldBlock",
-  FunctionsGraphBlock = "FunctionsGraphBlock",
-  GeometricConstructionFieldBlock = "GeometricConstructionFieldBlock",
-  NumberFieldBlock = "NumberFieldBlock",
-  OrderedListFieldBlock = "OrderedListFieldBlock",
-  ProofFieldBlock = "ProofFieldBlock",
-  RadioFieldBlock = "RadioFieldBlock",
-  SetFieldBlock = "SetFieldBlock",
-  SignTableBlock = "SignTableBlock",
-  SignTableFieldBlock = "SignTableFieldBlock",
-  TableBlock = "TableBlock",
-  TableFieldBlock = "TableFieldBlock",
-  TextBlock = "TextBlock",
-  TreeBlock = "TreeBlock",
-  TreeFieldBlock = "TreeFieldBlock",
-  VariationTableBlock = "VariationTableBlock",
-  VariationTableFieldBlock = "VariationTableFieldBlock",
-  VectorFieldBlock = "VectorFieldBlock",
-}
+export const BlockKind = {
+  ExpressionFieldBlock: "ExpressionFieldBlock",
+  FigureBlock: "FigureBlock",
+  FormulaBlock: "FormulaBlock",
+  FunctionPointsFieldBlock: "FunctionPointsFieldBlock",
+  FunctionsGraphBlock: "FunctionsGraphBlock",
+  GeometricConstructionFieldBlock: "GeometricConstructionFieldBlock",
+  NumberFieldBlock: "NumberFieldBlock",
+  OrderedListFieldBlock: "OrderedListFieldBlock",
+  ProofFieldBlock: "ProofFieldBlock",
+  RadioFieldBlock: "RadioFieldBlock",
+  SetFieldBlock: "SetFieldBlock",
+  SignTableBlock: "SignTableBlock",
+  SignTableFieldBlock: "SignTableFieldBlock",
+  TableBlock: "TableBlock",
+  TableFieldBlock: "TableFieldBlock",
+  TextBlock: "TextBlock",
+  TreeBlock: "TreeBlock",
+  TreeFieldBlock: "TreeFieldBlock",
+  VariationTableBlock: "VariationTableBlock",
+  VariationTableFieldBlock: "VariationTableFieldBlock",
+  VectorFieldBlock: "VectorFieldBlock",
+} as const;
+export type BlockKind = (typeof BlockKind)[keyof typeof BlockKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Block
-export interface Block {
-  Kind: BlockKind;
-  Data:
-    | ExpressionFieldBlock
-    | FigureBlock
-    | FormulaBlock
-    | FunctionPointsFieldBlock
-    | FunctionsGraphBlock
-    | GeometricConstructionFieldBlock
-    | NumberFieldBlock
-    | OrderedListFieldBlock
-    | ProofFieldBlock
-    | RadioFieldBlock
-    | SetFieldBlock
-    | SignTableBlock
-    | SignTableFieldBlock
-    | TableBlock
-    | TableFieldBlock
-    | TextBlock
-    | TreeBlock
-    | TreeFieldBlock
-    | VariationTableBlock
-    | VariationTableFieldBlock
-    | VectorFieldBlock;
-}
+export type Block =
+  | { Kind: "ExpressionFieldBlock"; Data: ExpressionFieldBlock }
+  | { Kind: "FigureBlock"; Data: FigureBlock }
+  | { Kind: "FormulaBlock"; Data: FormulaBlock }
+  | { Kind: "FunctionPointsFieldBlock"; Data: FunctionPointsFieldBlock }
+  | { Kind: "FunctionsGraphBlock"; Data: FunctionsGraphBlock }
+  | {
+      Kind: "GeometricConstructionFieldBlock";
+      Data: GeometricConstructionFieldBlock;
+    }
+  | { Kind: "NumberFieldBlock"; Data: NumberFieldBlock }
+  | { Kind: "OrderedListFieldBlock"; Data: OrderedListFieldBlock }
+  | { Kind: "ProofFieldBlock"; Data: ProofFieldBlock }
+  | { Kind: "RadioFieldBlock"; Data: RadioFieldBlock }
+  | { Kind: "SetFieldBlock"; Data: SetFieldBlock }
+  | { Kind: "SignTableBlock"; Data: SignTableBlock }
+  | { Kind: "SignTableFieldBlock"; Data: SignTableFieldBlock }
+  | { Kind: "TableBlock"; Data: TableBlock }
+  | { Kind: "TableFieldBlock"; Data: TableFieldBlock }
+  | { Kind: "TextBlock"; Data: TextBlock }
+  | { Kind: "TreeBlock"; Data: TreeBlock }
+  | { Kind: "TreeFieldBlock"; Data: TreeFieldBlock }
+  | { Kind: "VariationTableBlock"; Data: VariationTableBlock }
+  | { Kind: "VariationTableFieldBlock"; Data: VariationTableFieldBlock }
+  | { Kind: "VectorFieldBlock"; Data: VectorFieldBlock };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Co
 export type Co = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
@@ -68,7 +70,7 @@ export const ComparisonLevel = {
 export type ComparisonLevel =
   (typeof ComparisonLevel)[keyof typeof ComparisonLevel];
 
-export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
+export const ComparisonLevelLabels: Record<ComparisonLevel, string> = {
   [ComparisonLevel.AsLinearEquation]: "",
   [ComparisonLevel.ExpandedSubstitutions]: "Complète",
   [ComparisonLevel.SimpleSubstitutions]: "Simple",
@@ -97,16 +99,18 @@ export interface FigureBlock {
   ShowOrigin: boolean;
 }
 
-export enum FiguresOrGraphsKind {
-  FigureBlock = "FigureBlock",
-  FunctionsGraphBlock = "FunctionsGraphBlock",
-}
+export const FiguresOrGraphsKind = {
+  FigureBlock: "FigureBlock",
+  FunctionsGraphBlock: "FunctionsGraphBlock",
+} as const;
+export type FiguresOrGraphsKind =
+  (typeof FiguresOrGraphsKind)[keyof typeof FiguresOrGraphsKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FiguresOrGraphs
-export interface FiguresOrGraphs {
-  Kind: FiguresOrGraphsKind;
-  Data: FigureBlock | FunctionsGraphBlock;
-}
+export type FiguresOrGraphs =
+  | { Kind: "FigureBlock"; Data: FigureBlock }
+  | { Kind: "FunctionsGraphBlock"; Data: FunctionsGraphBlock };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
@@ -182,18 +186,21 @@ export interface GFVectorPair {
   Criterion: VectorPairCriterion;
 }
 
-export enum GeoFieldKind {
-  GFAffineLine = "GFAffineLine",
-  GFPoint = "GFPoint",
-  GFVector = "GFVector",
-  GFVectorPair = "GFVectorPair",
-}
+export const GeoFieldKind = {
+  GFAffineLine: "GFAffineLine",
+  GFPoint: "GFPoint",
+  GFVector: "GFVector",
+  GFVectorPair: "GFVectorPair",
+} as const;
+export type GeoFieldKind = (typeof GeoFieldKind)[keyof typeof GeoFieldKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.GeoField
-export interface GeoField {
-  Kind: GeoFieldKind;
-  Data: GFAffineLine | GFPoint | GFVector | GFVectorPair;
-}
+export type GeoField =
+  | { Kind: "GFAffineLine"; Data: GFAffineLine }
+  | { Kind: "GFPoint"; Data: GFPoint }
+  | { Kind: "GFVector"; Data: GFVector }
+  | { Kind: "GFVectorPair"; Data: GFVectorPair };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.GeometricConstructionFieldBlock
 export interface GeometricConstructionFieldBlock {
   Field: GeoField;
@@ -214,38 +221,41 @@ export interface OrderedListFieldBlock {
   AdditionalProposals: Interpolated[] | null;
 }
 
-export enum ParameterEntryKind {
-  Co = "Co",
-  In = "In",
-  Rp = "Rp",
-}
+export const ParameterEntryKind = {
+  Co: "Co",
+  In: "In",
+  Rp: "Rp",
+} as const;
+export type ParameterEntryKind =
+  (typeof ParameterEntryKind)[keyof typeof ParameterEntryKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ParameterEntry
-export interface ParameterEntry {
-  Kind: ParameterEntryKind;
-  Data: Co | In | Rp;
-}
+export type ParameterEntry =
+  | { Kind: "Co"; Data: Co }
+  | { Kind: "In"; Data: In }
+  | { Kind: "Rp"; Data: Rp };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
 export type Parameters = ParameterEntry[] | null;
 
-export enum ProofAssertionKind {
-  ProofEquality = "ProofEquality",
-  ProofInvalid = "ProofInvalid",
-  ProofNode = "ProofNode",
-  ProofSequence = "ProofSequence",
-  ProofStatement = "ProofStatement",
-}
+export const ProofAssertionKind = {
+  ProofEquality: "ProofEquality",
+  ProofInvalid: "ProofInvalid",
+  ProofNode: "ProofNode",
+  ProofSequence: "ProofSequence",
+  ProofStatement: "ProofStatement",
+} as const;
+export type ProofAssertionKind =
+  (typeof ProofAssertionKind)[keyof typeof ProofAssertionKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertion
-export interface ProofAssertion {
-  Kind: ProofAssertionKind;
-  Data:
-    | ProofEquality
-    | ProofInvalid
-    | ProofNode
-    | ProofSequence
-    | ProofStatement;
-}
+export type ProofAssertion =
+  | { Kind: "ProofEquality"; Data: ProofEquality }
+  | { Kind: "ProofInvalid"; Data: ProofInvalid }
+  | { Kind: "ProofNode"; Data: ProofNode }
+  | { Kind: "ProofSequence"; Data: ProofSequence }
+  | { Kind: "ProofStatement"; Data: ProofStatement };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertions
 export type ProofAssertions = ProofAssertion[] | null;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ProofEquality
@@ -330,7 +340,7 @@ export const TextKind = {
 } as const;
 export type TextKind = (typeof TextKind)[keyof typeof TextKind];
 
-export const TextKindLabels: { [key in TextKind]: string } = {
+export const TextKindLabels: Record<TextKind, string> = {
   [TextKind.Text]: "Text simple",
   [TextKind.StaticMath]: "Code LaTeX",
   [TextKind.Expression]: "Expression",
@@ -381,9 +391,7 @@ export const VectorPairCriterion = {
 export type VectorPairCriterion =
   (typeof VectorPairCriterion)[keyof typeof VectorPairCriterion];
 
-export const VectorPairCriterionLabels: {
-  [key in VectorPairCriterion]: string;
-} = {
+export const VectorPairCriterionLabels: Record<VectorPairCriterion, string> = {
   [VectorPairCriterion.VectorEquals]: "Vecteurs égaux",
   [VectorPairCriterion.VectorColinear]: "Vecteurs colinéaires",
   [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
@@ -397,7 +405,7 @@ export const Binary = {
 } as const;
 export type Binary = (typeof Binary)[keyof typeof Binary];
 
-export const BinaryLabels: { [key in Binary]: string } = {
+export const BinaryLabels: Record<Binary, string> = {
   [Binary.Invalid]: "Invalide",
   [Binary.And]: "Et",
   [Binary.Or]: "Ou",
@@ -411,7 +419,7 @@ export const SignSymbol = {
 } as const;
 export type SignSymbol = (typeof SignSymbol)[keyof typeof SignSymbol];
 
-export const SignSymbolLabels: { [key in SignSymbol]: string } = {
+export const SignSymbolLabels: Record<SignSymbol, string> = {
   [SignSymbol.Nothing]: "",
   [SignSymbol.Zero]: "0",
   [SignSymbol.ForbiddenValue]: "||",
@@ -438,7 +446,7 @@ export const LabelPos = {
 } as const;
 export type LabelPos = (typeof LabelPos)[keyof typeof LabelPos];
 
-export const LabelPosLabels: { [key in LabelPos]: string } = {
+export const LabelPosLabels: Record<LabelPos, string> = {
   [LabelPos.Top]: "Au dessus",
   [LabelPos.Bottom]: "En dessous",
   [LabelPos.Left]: "A gauche",
@@ -517,7 +525,7 @@ export const SegmentKind = {
 } as const;
 export type SegmentKind = (typeof SegmentKind)[keyof typeof SegmentKind];
 
-export const SegmentKindLabels: { [key in SegmentKind]: string } = {
+export const SegmentKindLabels: Record<SegmentKind, string> = {
   [SegmentKind.SKSegment]: "Segment",
   [SegmentKind.SKVector]: "Vecteur",
   [SegmentKind.SKLine]: "Droite (infinie)",
@@ -544,22 +552,22 @@ export interface LoopbackEvaluateQuestionOut {
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackPaused
 export type LoopbackPaused = Record<string, never>;
 
-export enum LoopbackServerEventKind {
-  LoopbackPaused = "LoopbackPaused",
-  LoopbackShowCeinture = "LoopbackShowCeinture",
-  LoopbackShowExercice = "LoopbackShowExercice",
-  LoopbackShowQuestion = "LoopbackShowQuestion",
-}
+export const LoopbackServerEventKind = {
+  LoopbackPaused: "LoopbackPaused",
+  LoopbackShowCeinture: "LoopbackShowCeinture",
+  LoopbackShowExercice: "LoopbackShowExercice",
+  LoopbackShowQuestion: "LoopbackShowQuestion",
+} as const;
+export type LoopbackServerEventKind =
+  (typeof LoopbackServerEventKind)[keyof typeof LoopbackServerEventKind];
 
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackServerEvent
-export interface LoopbackServerEvent {
-  Kind: LoopbackServerEventKind;
-  Data:
-    | LoopbackPaused
-    | LoopbackShowCeinture
-    | LoopbackShowExercice
-    | LoopbackShowQuestion;
-}
+export type LoopbackServerEvent =
+  | { Kind: "LoopbackPaused"; Data: LoopbackPaused }
+  | { Kind: "LoopbackShowCeinture"; Data: LoopbackShowCeinture }
+  | { Kind: "LoopbackShowExercice"; Data: LoopbackShowExercice }
+  | { Kind: "LoopbackShowQuestion"; Data: LoopbackShowQuestion };
+
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
 export interface LoopbackShowCeinture {
   Questions: unknown;
@@ -590,5 +598,4 @@ export interface LoopbackShowQuestionAnswerIn {
 export interface LoopbackShowQuestionAnswerOut {
   Answers: unknown;
 }
-// github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
-export type IdBeltquestion = Int;
+export type IdBeltquestion = Int & { __opaque_int__: "IdBeltquestion" };

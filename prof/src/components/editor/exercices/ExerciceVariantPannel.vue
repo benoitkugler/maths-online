@@ -69,6 +69,8 @@ import {
   type LoopbackShowExercice,
   type TagsDB,
   Int,
+  IdExercice,
+  IdExercicegroup,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, computed, onMounted, watch } from "vue";
@@ -94,8 +96,8 @@ const questionIndex = ref(0 as Int);
 
 const exercice = ref<ExerciceExt>({
   Exercice: {
-    Id: 0 as Int,
-    IdGroup: 0 as Int,
+    Id: 0 as IdExercice,
+    IdGroup: 0 as IdExercicegroup,
     Subtitle: "",
     Parameters: [],
     Difficulty: DifficultyTag.DiffEmpty,

@@ -116,56 +116,58 @@ export interface Variable {
   Name: Int;
 }
 
-export enum BlockKind {
-  ExpressionFieldBlock = "ExpressionFieldBlock",
-  FigureBlock = "FigureBlock",
-  FormulaBlock = "FormulaBlock",
-  FunctionPointsFieldBlock = "FunctionPointsFieldBlock",
-  FunctionsGraphBlock = "FunctionsGraphBlock",
-  GeometricConstructionFieldBlock = "GeometricConstructionFieldBlock",
-  NumberFieldBlock = "NumberFieldBlock",
-  OrderedListFieldBlock = "OrderedListFieldBlock",
-  ProofFieldBlock = "ProofFieldBlock",
-  RadioFieldBlock = "RadioFieldBlock",
-  SetFieldBlock = "SetFieldBlock",
-  SignTableBlock = "SignTableBlock",
-  SignTableFieldBlock = "SignTableFieldBlock",
-  TableBlock = "TableBlock",
-  TableFieldBlock = "TableFieldBlock",
-  TextBlock = "TextBlock",
-  TreeBlock = "TreeBlock",
-  TreeFieldBlock = "TreeFieldBlock",
-  VariationTableBlock = "VariationTableBlock",
-  VariationTableFieldBlock = "VariationTableFieldBlock",
-  VectorFieldBlock = "VectorFieldBlock",
-}
+export const BlockKind = {
+  ExpressionFieldBlock: "ExpressionFieldBlock",
+  FigureBlock: "FigureBlock",
+  FormulaBlock: "FormulaBlock",
+  FunctionPointsFieldBlock: "FunctionPointsFieldBlock",
+  FunctionsGraphBlock: "FunctionsGraphBlock",
+  GeometricConstructionFieldBlock: "GeometricConstructionFieldBlock",
+  NumberFieldBlock: "NumberFieldBlock",
+  OrderedListFieldBlock: "OrderedListFieldBlock",
+  ProofFieldBlock: "ProofFieldBlock",
+  RadioFieldBlock: "RadioFieldBlock",
+  SetFieldBlock: "SetFieldBlock",
+  SignTableBlock: "SignTableBlock",
+  SignTableFieldBlock: "SignTableFieldBlock",
+  TableBlock: "TableBlock",
+  TableFieldBlock: "TableFieldBlock",
+  TextBlock: "TextBlock",
+  TreeBlock: "TreeBlock",
+  TreeFieldBlock: "TreeFieldBlock",
+  VariationTableBlock: "VariationTableBlock",
+  VariationTableFieldBlock: "VariationTableFieldBlock",
+  VectorFieldBlock: "VectorFieldBlock",
+} as const;
+export type BlockKind = (typeof BlockKind)[keyof typeof BlockKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Block
-export interface Block {
-  Kind: BlockKind;
-  Data:
-    | ExpressionFieldBlock
-    | FigureBlock
-    | FormulaBlock
-    | FunctionPointsFieldBlock
-    | FunctionsGraphBlock
-    | GeometricConstructionFieldBlock
-    | NumberFieldBlock
-    | OrderedListFieldBlock
-    | ProofFieldBlock
-    | RadioFieldBlock
-    | SetFieldBlock
-    | SignTableBlock
-    | SignTableFieldBlock
-    | TableBlock
-    | TableFieldBlock
-    | TextBlock
-    | TreeBlock
-    | TreeFieldBlock
-    | VariationTableBlock
-    | VariationTableFieldBlock
-    | VectorFieldBlock;
-}
+export type Block =
+  | { Kind: "ExpressionFieldBlock"; Data: ExpressionFieldBlock }
+  | { Kind: "FigureBlock"; Data: FigureBlock }
+  | { Kind: "FormulaBlock"; Data: FormulaBlock }
+  | { Kind: "FunctionPointsFieldBlock"; Data: FunctionPointsFieldBlock }
+  | { Kind: "FunctionsGraphBlock"; Data: FunctionsGraphBlock }
+  | {
+      Kind: "GeometricConstructionFieldBlock";
+      Data: GeometricConstructionFieldBlock;
+    }
+  | { Kind: "NumberFieldBlock"; Data: NumberFieldBlock }
+  | { Kind: "OrderedListFieldBlock"; Data: OrderedListFieldBlock }
+  | { Kind: "ProofFieldBlock"; Data: ProofFieldBlock }
+  | { Kind: "RadioFieldBlock"; Data: RadioFieldBlock }
+  | { Kind: "SetFieldBlock"; Data: SetFieldBlock }
+  | { Kind: "SignTableBlock"; Data: SignTableBlock }
+  | { Kind: "SignTableFieldBlock"; Data: SignTableFieldBlock }
+  | { Kind: "TableBlock"; Data: TableBlock }
+  | { Kind: "TableFieldBlock"; Data: TableFieldBlock }
+  | { Kind: "TextBlock"; Data: TextBlock }
+  | { Kind: "TreeBlock"; Data: TreeBlock }
+  | { Kind: "TreeFieldBlock"; Data: TreeFieldBlock }
+  | { Kind: "VariationTableBlock"; Data: VariationTableBlock }
+  | { Kind: "VariationTableFieldBlock"; Data: VariationTableFieldBlock }
+  | { Kind: "VectorFieldBlock"; Data: VectorFieldBlock };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Co
 export type Co = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
@@ -178,7 +180,7 @@ export const ComparisonLevel = {
 export type ComparisonLevel =
   (typeof ComparisonLevel)[keyof typeof ComparisonLevel];
 
-export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
+export const ComparisonLevelLabels: Record<ComparisonLevel, string> = {
   [ComparisonLevel.AsLinearEquation]: "",
   [ComparisonLevel.ExpandedSubstitutions]: "Complète",
   [ComparisonLevel.SimpleSubstitutions]: "Simple",
@@ -212,7 +214,7 @@ export const ErrorKind = {
 } as const;
 export type ErrorKind = (typeof ErrorKind)[keyof typeof ErrorKind];
 
-export const ErrorKindLabels: { [key in ErrorKind]: string } = {
+export const ErrorKindLabels: Record<ErrorKind, string> = {
   [ErrorKind.ErrParameters_]: "",
   [ErrorKind.ErrEnonce]: "",
   [ErrorKind.ErrCorrection]: "",
@@ -233,16 +235,18 @@ export interface FigureBlock {
   ShowOrigin: boolean;
 }
 
-export enum FiguresOrGraphsKind {
-  FigureBlock = "FigureBlock",
-  FunctionsGraphBlock = "FunctionsGraphBlock",
-}
+export const FiguresOrGraphsKind = {
+  FigureBlock: "FigureBlock",
+  FunctionsGraphBlock: "FunctionsGraphBlock",
+} as const;
+export type FiguresOrGraphsKind =
+  (typeof FiguresOrGraphsKind)[keyof typeof FiguresOrGraphsKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FiguresOrGraphs
-export interface FiguresOrGraphs {
-  Kind: FiguresOrGraphsKind;
-  Data: FigureBlock | FunctionsGraphBlock;
-}
+export type FiguresOrGraphs =
+  | { Kind: "FigureBlock"; Data: FigureBlock }
+  | { Kind: "FunctionsGraphBlock"; Data: FunctionsGraphBlock };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
@@ -318,18 +322,21 @@ export interface GFVectorPair {
   Criterion: VectorPairCriterion;
 }
 
-export enum GeoFieldKind {
-  GFAffineLine = "GFAffineLine",
-  GFPoint = "GFPoint",
-  GFVector = "GFVector",
-  GFVectorPair = "GFVectorPair",
-}
+export const GeoFieldKind = {
+  GFAffineLine: "GFAffineLine",
+  GFPoint: "GFPoint",
+  GFVector: "GFVector",
+  GFVectorPair: "GFVectorPair",
+} as const;
+export type GeoFieldKind = (typeof GeoFieldKind)[keyof typeof GeoFieldKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.GeoField
-export interface GeoField {
-  Kind: GeoFieldKind;
-  Data: GFAffineLine | GFPoint | GFVector | GFVectorPair;
-}
+export type GeoField =
+  | { Kind: "GFAffineLine"; Data: GFAffineLine }
+  | { Kind: "GFPoint"; Data: GFPoint }
+  | { Kind: "GFVector"; Data: GFVector }
+  | { Kind: "GFVectorPair"; Data: GFVectorPair };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.GeometricConstructionFieldBlock
 export interface GeometricConstructionFieldBlock {
   Field: GeoField;
@@ -350,38 +357,41 @@ export interface OrderedListFieldBlock {
   AdditionalProposals: Interpolated[] | null;
 }
 
-export enum ParameterEntryKind {
-  Co = "Co",
-  In = "In",
-  Rp = "Rp",
-}
+export const ParameterEntryKind = {
+  Co: "Co",
+  In: "In",
+  Rp: "Rp",
+} as const;
+export type ParameterEntryKind =
+  (typeof ParameterEntryKind)[keyof typeof ParameterEntryKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ParameterEntry
-export interface ParameterEntry {
-  Kind: ParameterEntryKind;
-  Data: Co | In | Rp;
-}
+export type ParameterEntry =
+  | { Kind: "Co"; Data: Co }
+  | { Kind: "In"; Data: In }
+  | { Kind: "Rp"; Data: Rp };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
 export type Parameters = ParameterEntry[] | null;
 
-export enum ProofAssertionKind {
-  ProofEquality = "ProofEquality",
-  ProofInvalid = "ProofInvalid",
-  ProofNode = "ProofNode",
-  ProofSequence = "ProofSequence",
-  ProofStatement = "ProofStatement",
-}
+export const ProofAssertionKind = {
+  ProofEquality: "ProofEquality",
+  ProofInvalid: "ProofInvalid",
+  ProofNode: "ProofNode",
+  ProofSequence: "ProofSequence",
+  ProofStatement: "ProofStatement",
+} as const;
+export type ProofAssertionKind =
+  (typeof ProofAssertionKind)[keyof typeof ProofAssertionKind];
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertion
-export interface ProofAssertion {
-  Kind: ProofAssertionKind;
-  Data:
-    | ProofEquality
-    | ProofInvalid
-    | ProofNode
-    | ProofSequence
-    | ProofStatement;
-}
+export type ProofAssertion =
+  | { Kind: "ProofEquality"; Data: ProofEquality }
+  | { Kind: "ProofInvalid"; Data: ProofInvalid }
+  | { Kind: "ProofNode"; Data: ProofNode }
+  | { Kind: "ProofSequence"; Data: ProofSequence }
+  | { Kind: "ProofStatement"; Data: ProofStatement };
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertions
 export type ProofAssertions = ProofAssertion[] | null;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ProofEquality
@@ -466,7 +476,7 @@ export const TextKind = {
 } as const;
 export type TextKind = (typeof TextKind)[keyof typeof TextKind];
 
-export const TextKindLabels: { [key in TextKind]: string } = {
+export const TextKindLabels: Record<TextKind, string> = {
   [TextKind.Text]: "Text simple",
   [TextKind.StaticMath]: "Code LaTeX",
   [TextKind.Expression]: "Expression",
@@ -517,9 +527,7 @@ export const VectorPairCriterion = {
 export type VectorPairCriterion =
   (typeof VectorPairCriterion)[keyof typeof VectorPairCriterion];
 
-export const VectorPairCriterionLabels: {
-  [key in VectorPairCriterion]: string;
-} = {
+export const VectorPairCriterionLabels: Record<VectorPairCriterion, string> = {
   [VectorPairCriterion.VectorEquals]: "Vecteurs égaux",
   [VectorPairCriterion.VectorColinear]: "Vecteurs colinéaires",
   [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
@@ -529,7 +537,7 @@ export const VectorPairCriterionLabels: {
 export interface errEnonce {
   Error: string;
   Block: Int;
-  Vars: { [key in string]: string } | null;
+  Vars: Record<string, string> | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Binary
 export const Binary = {
@@ -539,7 +547,7 @@ export const Binary = {
 } as const;
 export type Binary = (typeof Binary)[keyof typeof Binary];
 
-export const BinaryLabels: { [key in Binary]: string } = {
+export const BinaryLabels: Record<Binary, string> = {
   [Binary.Invalid]: "Invalide",
   [Binary.And]: "Et",
   [Binary.Or]: "Ou",
@@ -553,7 +561,7 @@ export const SignSymbol = {
 } as const;
 export type SignSymbol = (typeof SignSymbol)[keyof typeof SignSymbol];
 
-export const SignSymbolLabels: { [key in SignSymbol]: string } = {
+export const SignSymbolLabels: Record<SignSymbol, string> = {
   [SignSymbol.Nothing]: "",
   [SignSymbol.Zero]: "0",
   [SignSymbol.ForbiddenValue]: "||",
@@ -580,7 +588,7 @@ export const LabelPos = {
 } as const;
 export type LabelPos = (typeof LabelPos)[keyof typeof LabelPos];
 
-export const LabelPosLabels: { [key in LabelPos]: string } = {
+export const LabelPosLabels: Record<LabelPos, string> = {
   [LabelPos.Top]: "Au dessus",
   [LabelPos.Bottom]: "En dessous",
   [LabelPos.Left]: "A gauche",
@@ -659,7 +667,7 @@ export const SegmentKind = {
 } as const;
 export type SegmentKind = (typeof SegmentKind)[keyof typeof SegmentKind];
 
-export const SegmentKindLabels: { [key in SegmentKind]: string } = {
+export const SegmentKindLabels: Record<SegmentKind, string> = {
   [SegmentKind.SKSegment]: "Segment",
   [SegmentKind.SKVector]: "Vecteur",
   [SegmentKind.SKLine]: "Droite (infinie)",
@@ -864,7 +872,7 @@ export const OriginKind = {
 } as const;
 export type OriginKind = (typeof OriginKind)[keyof typeof OriginKind];
 
-export const OriginKindLabels: { [key in OriginKind]: string } = {
+export const OriginKindLabels: Record<OriginKind, string> = {
   [OriginKind.All]: "",
   [OriginKind.OnlyPersonnal]: "",
   [OriginKind.OnlyAdmin]: "",
@@ -933,11 +941,9 @@ export interface SaveQuestionMetaIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TagsDB
 export interface TagsDB {
   Levels: string[] | null;
-  ChaptersByLevel: { [key in string]: string[] | null } | null;
-  TrivByChapters:
-    | { [key in string]: { [key in string]: string[] | null } | null }
-    | null;
-  SubLevelsByLevel: { [key in string]: string[] | null } | null;
+  ChaptersByLevel: Record<string, string[] | null> | null;
+  TrivByChapters: Record<string, Record<string, string[] | null> | null> | null;
+  SubLevelsByLevel: Record<string, string[] | null> | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TaskDetails
 export interface TaskDetails {
@@ -1009,11 +1015,11 @@ export interface Exceptions {
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
-  Marks: { [key in IdTravail]: TravailMarks } | null;
+  Marks: Record<IdTravail, TravailMarks> | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.Homeworks
 export interface Homeworks {
-  Sheets: { [key in IdSheet]: SheetExt } | null;
+  Sheets: Record<IdSheet, SheetExt> | null;
   Travaux: ClassroomTravaux[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HowemorkMarksIn
@@ -1073,28 +1079,28 @@ export interface TaskStat {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
 export interface TravailMarks {
-  Marks: { [key in IdStudent]: StudentTravailMark } | null;
+  Marks: Record<IdStudent, StudentTravailMark> | null;
   TaskStats: TaskStat[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackPaused
 export type LoopbackPaused = Record<string, never>;
 
-export enum LoopbackServerEventKind {
-  LoopbackPaused = "LoopbackPaused",
-  LoopbackShowCeinture = "LoopbackShowCeinture",
-  LoopbackShowExercice = "LoopbackShowExercice",
-  LoopbackShowQuestion = "LoopbackShowQuestion",
-}
+export const LoopbackServerEventKind = {
+  LoopbackPaused: "LoopbackPaused",
+  LoopbackShowCeinture: "LoopbackShowCeinture",
+  LoopbackShowExercice: "LoopbackShowExercice",
+  LoopbackShowQuestion: "LoopbackShowQuestion",
+} as const;
+export type LoopbackServerEventKind =
+  (typeof LoopbackServerEventKind)[keyof typeof LoopbackServerEventKind];
 
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackServerEvent
-export interface LoopbackServerEvent {
-  Kind: LoopbackServerEventKind;
-  Data:
-    | LoopbackPaused
-    | LoopbackShowCeinture
-    | LoopbackShowExercice
-    | LoopbackShowQuestion;
-}
+export type LoopbackServerEvent =
+  | { Kind: "LoopbackPaused"; Data: LoopbackPaused }
+  | { Kind: "LoopbackShowCeinture"; Data: LoopbackShowCeinture }
+  | { Kind: "LoopbackShowExercice"; Data: LoopbackShowExercice }
+  | { Kind: "LoopbackShowQuestion"; Data: LoopbackShowQuestion };
+
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
 export interface LoopbackShowCeinture {
   Questions: unknown;
@@ -1146,6 +1152,8 @@ export interface ReviewHeader {
   Kind: ReviewKind;
   OwnerMail: string;
   NbComments: Int;
+  Matiere: MatiereTag;
+  Level: LevelTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewUpdateApprovalIn
 export interface ReviewUpdateApprovalIn {
@@ -1158,18 +1166,22 @@ export interface ReviewUpdateCommentsIn {
   Comments: Comments;
 }
 
-export enum TargetContentKind {
-  TargetExercice = "TargetExercice",
-  TargetQuestion = "TargetQuestion",
-  TargetSheet = "TargetSheet",
-  TargetTrivial = "TargetTrivial",
-}
+export const TargetContentKind = {
+  TargetExercice: "TargetExercice",
+  TargetQuestion: "TargetQuestion",
+  TargetSheet: "TargetSheet",
+  TargetTrivial: "TargetTrivial",
+} as const;
+export type TargetContentKind =
+  (typeof TargetContentKind)[keyof typeof TargetContentKind];
 
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetContent
-export interface TargetContent {
-  Kind: TargetContentKind;
-  Data: TargetExercice | TargetQuestion | TargetSheet | TargetTrivial;
-}
+export type TargetContent =
+  | { Kind: "TargetExercice"; Data: TargetExercice }
+  | { Kind: "TargetQuestion"; Data: TargetQuestion }
+  | { Kind: "TargetSheet"; Data: TargetSheet }
+  | { Kind: "TargetTrivial"; Data: TargetTrivial };
+
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetExercice
 export interface TargetExercice {
   Group: ExercicegroupExt;
@@ -1240,7 +1252,7 @@ export const PublicStatus = {
 } as const;
 export type PublicStatus = (typeof PublicStatus)[keyof typeof PublicStatus];
 
-export const PublicStatusLabels: { [key in PublicStatus]: string } = {
+export const PublicStatusLabels: Record<PublicStatus, string> = {
   [PublicStatus.NotAdmin]: "",
   [PublicStatus.AdminPublic]: "",
   [PublicStatus.AdminNotPublic]: "",
@@ -1273,7 +1285,7 @@ export const Visibility = {
 } as const;
 export type Visibility = (typeof Visibility)[keyof typeof Visibility];
 
-export const VisibilityLabels: { [key in Visibility]: string } = {
+export const VisibilityLabels: Record<Visibility, string> = {
   [Visibility.Hidden]: "not accessible by the user, except in reviews",
   [Visibility.Personnal]: "Personnel",
   [Visibility.Admin]: "Officiel",
@@ -1299,16 +1311,18 @@ export interface GameSummary {
   InQuestionStudents: string[] | null;
 }
 
-export enum GroupsStrategyKind {
-  GroupsStrategyAuto = "GroupsStrategyAuto",
-  GroupsStrategyManual = "GroupsStrategyManual",
-}
+export const GroupsStrategyKind = {
+  GroupsStrategyAuto: "GroupsStrategyAuto",
+  GroupsStrategyManual: "GroupsStrategyManual",
+} as const;
+export type GroupsStrategyKind =
+  (typeof GroupsStrategyKind)[keyof typeof GroupsStrategyKind];
 
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategy
-export interface GroupsStrategy {
-  Kind: GroupsStrategyKind;
-  Data: GroupsStrategyAuto | GroupsStrategyManual;
-}
+export type GroupsStrategy =
+  | { Kind: "GroupsStrategyAuto"; Data: GroupsStrategyAuto }
+  | { Kind: "GroupsStrategyManual"; Data: GroupsStrategyManual };
+
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyAuto
 export interface GroupsStrategyAuto {
   Groups: Int[] | null;
@@ -1405,7 +1419,7 @@ export const Domain = {
 } as const;
 export type Domain = (typeof Domain)[keyof typeof Domain];
 
-export const DomainLabels: { [key in Domain]: string } = {
+export const DomainLabels: Record<Domain, string> = {
   [Domain.CalculMentalI]: "Calcul mental I",
   [Domain.CalculMentalII]: "Calcul mental II",
   [Domain.Puissances]: "Puissances et racines",
@@ -1420,8 +1434,7 @@ export const DomainLabels: { [key in Domain]: string } = {
   [Domain.Matrices]: "Matrices et systèmes",
 };
 
-// github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
-export type IdBeltquestion = Int;
+export type IdBeltquestion = Int & { __opaque_int__: "IdBeltquestion" };
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Level
 export const Level = {
   Seconde: 0,
@@ -1431,7 +1444,7 @@ export const Level = {
 } as const;
 export type Level = (typeof Level)[keyof typeof Level];
 
-export const LevelLabels: { [key in Level]: string } = {
+export const LevelLabels: Record<Level, string> = {
   [Level.Seconde]: "Seconde",
   [Level.Premiere]: "Première",
   [Level.Terminale]: "Terminale",
@@ -1454,7 +1467,7 @@ export const Rank = {
 } as const;
 export type Rank = (typeof Rank)[keyof typeof Rank];
 
-export const RankLabels: { [key in Rank]: string } = {
+export const RankLabels: Record<Rank, string> = {
   [Rank.StartRank]: "Départ",
   [Rank.Blanche]: "Blanche",
   [Rank.Jaune]: "Jaune",
@@ -1486,7 +1499,7 @@ export const DifficultyTag = {
 } as const;
 export type DifficultyTag = (typeof DifficultyTag)[keyof typeof DifficultyTag];
 
-export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
+export const DifficultyTagLabels: Record<DifficultyTag, string> = {
   [DifficultyTag.Diff1]: "1 étoile",
   [DifficultyTag.Diff2]: "2 étoiles",
   [DifficultyTag.Diff3]: "3 étoiles",
@@ -1516,14 +1529,10 @@ export interface Exercicegroup {
   Public: boolean;
   IdTeacher: IdTeacher;
 }
-// github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercice
-export type IdExercice = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercicegroup
-export type IdExercicegroup = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestion
-export type IdQuestion = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestiongroup
-export type IdQuestiongroup = Int;
+export type IdExercice = Int & { __opaque_int__: "IdExercice" };
+export type IdExercicegroup = Int & { __opaque_int__: "IdExercicegroup" };
+export type IdQuestion = Int & { __opaque_int__: "IdQuestion" };
+export type IdQuestiongroup = Int & { __opaque_int__: "IdQuestiongroup" };
 // github.com/benoitkugler/maths-online/server/src/sql/editor.LevelTag
 export const LevelTag = {
   CPGE: "CPGE",
@@ -1533,7 +1542,7 @@ export const LevelTag = {
 } as const;
 export type LevelTag = (typeof LevelTag)[keyof typeof LevelTag];
 
-export const LevelTagLabels: { [key in LevelTag]: string } = {
+export const LevelTagLabels: Record<LevelTag, string> = {
   [LevelTag.CPGE]: "CPGE",
   [LevelTag.Premiere]: "Première",
   [LevelTag.Seconde]: "Seconde",
@@ -1578,7 +1587,7 @@ export const Section = {
 } as const;
 export type Section = (typeof Section)[keyof typeof Section];
 
-export const SectionLabels: { [key in Section]: string } = {
+export const SectionLabels: Record<Section, string> = {
   [Section.Chapter]: "Chapitre",
   [Section.Level]: "Niveau",
   [Section.Matiere]: "Matière",
@@ -1602,10 +1611,8 @@ export interface StudentAdvance {
   PointsCurrentRank: Int;
   PointsNextRank: Int;
 }
-// github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
-export type IdSheet = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
-export type IdTravail = Int;
+export type IdSheet = Int & { __opaque_int__: "IdSheet" };
+export type IdTravail = Int & { __opaque_int__: "IdTravail" };
 // github.com/benoitkugler/maths-online/server/src/sql/homework.OptionalIdTravail
 export interface OptionalIdTravail {
   Valid: boolean;
@@ -1647,7 +1654,7 @@ export const Approval = {
 } as const;
 export type Approval = (typeof Approval)[keyof typeof Approval];
 
-export const ApprovalLabels: { [key in Approval]: string } = {
+export const ApprovalLabels: Record<Approval, string> = {
   [Approval.Neutral]: "",
   [Approval.InFavor]: "",
   [Approval.Opposed]: "",
@@ -1660,8 +1667,7 @@ export interface Comment {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Comments
 export type Comments = Comment[] | null;
-// github.com/benoitkugler/maths-online/server/src/sql/reviews.IdReview
-export type IdReview = Int;
+export type IdReview = Int & { __opaque_int__: "IdReview" };
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Review
 export interface Review {
   Id: IdReview;
@@ -1676,19 +1682,18 @@ export const ReviewKind = {
 } as const;
 export type ReviewKind = (typeof ReviewKind)[keyof typeof ReviewKind];
 
-export const ReviewKindLabels: { [key in ReviewKind]: string } = {
+export const ReviewKindLabels: Record<ReviewKind, string> = {
   [ReviewKind.KQuestion]: "Question",
   [ReviewKind.KExercice]: "Exercice",
   [ReviewKind.KTrivial]: "Isy'Triv",
   [ReviewKind.KSheet]: "Feuille d'exercice",
 };
 
-// github.com/benoitkugler/maths-online/server/src/sql/tasks.IdMonoquestion
-export type IdMonoquestion = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/tasks.IdRandomMonoquestion
-export type IdRandomMonoquestion = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/tasks.IdTask
-export type IdTask = Int;
+export type IdMonoquestion = Int & { __opaque_int__: "IdMonoquestion" };
+export type IdRandomMonoquestion = Int & {
+  __opaque_int__: "IdRandomMonoquestion";
+};
+export type IdTask = Int & { __opaque_int__: "IdTask" };
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.Monoquestion
 export interface Monoquestion {
   Id: IdMonoquestion;
@@ -1725,12 +1730,9 @@ export interface Contact {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Date
 export type Date = Date_;
-// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
-export type IdClassroom = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
-export type IdStudent = Int;
-// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
-export type IdTeacher = Int;
+export type IdClassroom = Int & { __opaque_int__: "IdClassroom" };
+export type IdStudent = Int & { __opaque_int__: "IdStudent" };
+export type IdTeacher = Int & { __opaque_int__: "IdTeacher" };
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.MatiereTag
 export const MatiereTag = {
   Allemand: "ALLEMAND",
@@ -1747,7 +1749,7 @@ export const MatiereTag = {
 } as const;
 export type MatiereTag = (typeof MatiereTag)[keyof typeof MatiereTag];
 
-export const MatiereTagLabels: { [key in MatiereTag]: string } = {
+export const MatiereTagLabels: Record<MatiereTag, string> = {
   [MatiereTag.Allemand]: "",
   [MatiereTag.Anglais]: "",
   [MatiereTag.Autre]: "",
@@ -1771,14 +1773,13 @@ export interface Student {
   Clients: Clients;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Students
-export type Students = { [key in IdStudent]: Student } | null;
+export type Students = Record<IdStudent, Student> | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.CategoriesQuestions
 export interface CategoriesQuestions {
   Tags: Ar5_QuestionCriterion;
   Difficulties: DifficultyQuery;
 }
-// github.com/benoitkugler/maths-online/server/src/sql/trivial.IdTrivial
-export type IdTrivial = Int;
+export type IdTrivial = Int & { __opaque_int__: "IdTrivial" };
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (TagSection[] | null)[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.Trivial
@@ -1807,7 +1808,7 @@ export const WorkKind = {
 } as const;
 export type WorkKind = (typeof WorkKind)[keyof typeof WorkKind];
 
-export const WorkKindLabels: { [key in WorkKind]: string } = {
+export const WorkKindLabels: Record<WorkKind, string> = {
   [WorkKind.WorkExercice]: "",
   [WorkKind.WorkMonoquestion]: "",
   [WorkKind.WorkRandomMonoquestion]: "",
@@ -1824,7 +1825,7 @@ export const Categorie = {
 } as const;
 export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
-export const CategorieLabels: { [key in Categorie]: string } = {
+export const CategorieLabels: Record<Categorie, string> = {
   [Categorie.Purple]: "purple",
   [Categorie.Green]: "green",
   [Categorie.Orange]: "orange",
@@ -1848,8 +1849,8 @@ export type Success = Ar5_boolean;
 	*/
 export abstract class AbstractAPI {
   constructor(
-    protected baseUrl: string,
-    protected authToken: string,
+    protected baseURL: string,
+    public authToken: string,
   ) {}
 
   protected abstract handleError(error: any): void;
@@ -1860,2485 +1861,1559 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawAskInscription(params: AskInscriptionIn) {
-    const fullUrl = this.baseUrl + "/prof/inscription";
-    const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** AskInscription wraps rawAskInscription and handles the error */
+  /** AskInscription performs the request and handles the error */
   async AskInscription(params: AskInscriptionIn) {
+    const fullUrl = this.baseURL + "/prof/inscription";
     this.startRequest();
     try {
-      const out = await this.rawAskInscription(params);
-      this.onSuccessAskInscription(out);
-      return out;
+      const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessAskInscription(data: AskInscriptionOut): void {}
-
-  protected async rawValidateInscription(params: { data: string }) {
-    const fullUrl = this.baseUrl + "inscription";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { data: params["data"] },
-    });
-    return true;
-  }
-
-  /** ValidateInscription wraps rawValidateInscription and handles the error */
+  /** ValidateInscription performs the request and handles the error */
   async ValidateInscription(params: { data: string }) {
+    const fullUrl = this.baseURL + "inscription";
     this.startRequest();
     try {
-      const out = await this.rawValidateInscription(params);
-      this.onSuccessValidateInscription();
-      return out;
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { data: params["data"] },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessValidateInscription(): void {}
-
-  protected async rawLoggin(params: LogginIn) {
-    const fullUrl = this.baseUrl + "/prof/loggin";
-    const rep: AxiosResponse<LogginOut> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** Loggin wraps rawLoggin and handles the error */
+  /** Loggin performs the request and handles the error */
   async Loggin(params: LogginIn) {
+    const fullUrl = this.baseURL + "/prof/loggin";
     this.startRequest();
     try {
-      const out = await this.rawLoggin(params);
-      this.onSuccessLoggin(out);
-      return out;
+      const rep: AxiosResponse<LogginOut> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLoggin(data: LogginOut): void {}
-
-  protected async rawTeacherResetPassword(params: { mail: string }) {
-    const fullUrl = this.baseUrl + "/api/prof/reset";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { mail: params["mail"] },
-    });
-    return true;
-  }
-
-  /** TeacherResetPassword wraps rawTeacherResetPassword and handles the error */
+  /** TeacherResetPassword performs the request and handles the error */
   async TeacherResetPassword(params: { mail: string }) {
+    const fullUrl = this.baseURL + "/api/prof/reset";
     this.startRequest();
     try {
-      const out = await this.rawTeacherResetPassword(params);
-      this.onSuccessTeacherResetPassword();
-      return out;
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { mail: params["mail"] },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherResetPassword(): void {}
-
-  protected async rawTeacherGetSettings() {
-    const fullUrl = this.baseUrl + "/api/prof/settings";
-    const rep: AxiosResponse<TeacherSettings> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** TeacherGetSettings wraps rawTeacherGetSettings and handles the error */
+  /** TeacherGetSettings performs the request and handles the error */
   async TeacherGetSettings() {
+    const fullUrl = this.baseURL + "/api/prof/settings";
     this.startRequest();
     try {
-      const out = await this.rawTeacherGetSettings();
-      this.onSuccessTeacherGetSettings(out);
-      return out;
+      const rep: AxiosResponse<TeacherSettings> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherGetSettings(data: TeacherSettings): void {}
-
-  protected async rawTeacherUpdateSettings(params: TeacherSettings) {
-    const fullUrl = this.baseUrl + "/api/prof/settings";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** TeacherUpdateSettings wraps rawTeacherUpdateSettings and handles the error */
+  /** TeacherUpdateSettings performs the request and handles the error */
   async TeacherUpdateSettings(params: TeacherSettings) {
+    const fullUrl = this.baseURL + "/api/prof/settings";
     this.startRequest();
     try {
-      const out = await this.rawTeacherUpdateSettings(params);
-      this.onSuccessTeacherUpdateSettings();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherUpdateSettings(): void {}
-
-  protected async rawTeacherGetClassrooms() {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms";
-    const rep: AxiosResponse<ClassroomExt[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** TeacherGetClassrooms wraps rawTeacherGetClassrooms and handles the error */
+  /** TeacherGetClassrooms performs the request and handles the error */
   async TeacherGetClassrooms() {
+    const fullUrl = this.baseURL + "/api/prof/classrooms";
     this.startRequest();
     try {
-      const out = await this.rawTeacherGetClassrooms();
-      this.onSuccessTeacherGetClassrooms(out);
-      return out;
+      const rep: AxiosResponse<ClassroomExt[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherGetClassrooms(data: ClassroomExt[] | null): void {}
-
-  protected async rawTeacherCreateClassroom() {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms";
-    await Axios.put(fullUrl, null, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** TeacherCreateClassroom wraps rawTeacherCreateClassroom and handles the error */
+  /** TeacherCreateClassroom performs the request and handles the error */
   async TeacherCreateClassroom() {
+    const fullUrl = this.baseURL + "/api/prof/classrooms";
     this.startRequest();
     try {
-      const out = await this.rawTeacherCreateClassroom();
-      this.onSuccessTeacherCreateClassroom();
-      return out;
+      await Axios.put(fullUrl, null, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherCreateClassroom(): void {}
-
-  protected async rawTeacherUpdateClassroom(params: Classroom) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms";
-    const rep: AxiosResponse<Classroom> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** TeacherUpdateClassroom wraps rawTeacherUpdateClassroom and handles the error */
+  /** TeacherUpdateClassroom performs the request and handles the error */
   async TeacherUpdateClassroom(params: Classroom) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms";
     this.startRequest();
     try {
-      const out = await this.rawTeacherUpdateClassroom(params);
-      this.onSuccessTeacherUpdateClassroom(out);
-      return out;
+      const rep: AxiosResponse<Classroom> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherUpdateClassroom(data: Classroom): void {}
-
-  protected async rawTeacherDeleteClassroom(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** TeacherDeleteClassroom wraps rawTeacherDeleteClassroom and handles the error */
+  /** TeacherDeleteClassroom performs the request and handles the error */
   async TeacherDeleteClassroom(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms";
     this.startRequest();
     try {
-      const out = await this.rawTeacherDeleteClassroom(params);
-      this.onSuccessTeacherDeleteClassroom();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherDeleteClassroom(): void {}
-
-  protected async rawTeacherGetClassroomStudents(params: {
-    "id-classroom": Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    const rep: AxiosResponse<StudentExt[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-classroom": String(params["id-classroom"]) },
-    });
-    return rep.data;
-  }
-
-  /** TeacherGetClassroomStudents wraps rawTeacherGetClassroomStudents and handles the error */
+  /** TeacherGetClassroomStudents performs the request and handles the error */
   async TeacherGetClassroomStudents(params: { "id-classroom": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/students";
     this.startRequest();
     try {
-      const out = await this.rawTeacherGetClassroomStudents(params);
-      this.onSuccessTeacherGetClassroomStudents(out);
-      return out;
+      const rep: AxiosResponse<StudentExt[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherGetClassroomStudents(
-    data: StudentExt[] | null,
-  ): void {}
-
-  protected async rawTeacherAddStudent(params: { "id-classroom": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    const rep: AxiosResponse<StudentExt> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-      params: { "id-classroom": String(params["id-classroom"]) },
-    });
-    return rep.data;
-  }
-
-  /** TeacherAddStudent wraps rawTeacherAddStudent and handles the error */
+  /** TeacherAddStudent performs the request and handles the error */
   async TeacherAddStudent(params: { "id-classroom": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/students";
     this.startRequest();
     try {
-      const out = await this.rawTeacherAddStudent(params);
-      this.onSuccessTeacherAddStudent(out);
-      return out;
+      const rep: AxiosResponse<StudentExt> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherAddStudent(data: StudentExt): void {}
-
-  protected async rawTeacherUpdateStudent(params: Student) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** TeacherUpdateStudent wraps rawTeacherUpdateStudent and handles the error */
+  /** TeacherUpdateStudent performs the request and handles the error */
   async TeacherUpdateStudent(params: Student) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/students";
     this.startRequest();
     try {
-      const out = await this.rawTeacherUpdateStudent(params);
-      this.onSuccessTeacherUpdateStudent();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherUpdateStudent(): void {}
-
-  protected async rawTeacherDeleteStudent(params: { "id-student": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-student": String(params["id-student"]) },
-    });
-    return true;
-  }
-
-  /** TeacherDeleteStudent wraps rawTeacherDeleteStudent and handles the error */
+  /** TeacherDeleteStudent performs the request and handles the error */
   async TeacherDeleteStudent(params: { "id-student": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/students";
     this.startRequest();
     try {
-      const out = await this.rawTeacherDeleteStudent(params);
-      this.onSuccessTeacherDeleteStudent();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-student": String(params["id-student"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherDeleteStudent(): void {}
-
-  protected async rawTeacherImportStudents(
-    params: { "id-classroom": string },
+  /** TeacherImportStudents performs the request and handles the error */
+  async TeacherImportStudents(
+    formParams: { "id-classroom": string },
     file: File,
   ) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students/import";
-    const formData = new FormData();
-    formData.append("file", file, file.name);
-    formData.append("id-classroom", params["id-classroom"]);
-    await Axios.post(fullUrl, formData, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** TeacherImportStudents wraps rawTeacherImportStudents and handles the error */
-  async TeacherImportStudents(params: { "id-classroom": string }, file: File) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/students/import";
     this.startRequest();
     try {
-      const out = await this.rawTeacherImportStudents(params, file);
-      this.onSuccessTeacherImportStudents();
-      return out;
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      formData.append("id-classroom", formParams["id-classroom"]);
+      await Axios.post(fullUrl, formData, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherImportStudents(): void {}
-
-  protected async rawTeacherGenerateClassroomCode(params: {
-    "id-classroom": Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students/connect";
-    const rep: AxiosResponse<GenerateClassroomCodeOut> = await Axios.get(
-      fullUrl,
-      {
-        headers: this.getHeaders(),
-        params: { "id-classroom": String(params["id-classroom"]) },
-      },
-    );
-    return rep.data;
-  }
-
-  /** TeacherGenerateClassroomCode wraps rawTeacherGenerateClassroomCode and handles the error */
+  /** TeacherGenerateClassroomCode performs the request and handles the error */
   async TeacherGenerateClassroomCode(params: { "id-classroom": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/students/connect";
     this.startRequest();
     try {
-      const out = await this.rawTeacherGenerateClassroomCode(params);
-      this.onSuccessTeacherGenerateClassroomCode(out);
-      return out;
+      const rep: AxiosResponse<GenerateClassroomCodeOut> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { "id-classroom": String(params["id-classroom"]) },
+        },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessTeacherGenerateClassroomCode(
-    data: GenerateClassroomCodeOut,
-  ): void {}
-
-  protected async rawGetTrivialPoursuit(params: { matiere: string }) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/config";
-    const rep: AxiosResponse<TrivialExt[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { matiere: params["matiere"] },
-    });
-    return rep.data;
-  }
-
-  /** GetTrivialPoursuit wraps rawGetTrivialPoursuit and handles the error */
+  /** GetTrivialPoursuit performs the request and handles the error */
   async GetTrivialPoursuit(params: { matiere: string }) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/config";
     this.startRequest();
     try {
-      const out = await this.rawGetTrivialPoursuit(params);
-      this.onSuccessGetTrivialPoursuit(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {}
-
-  protected async rawCreateTrivialPoursuit(params: { matiere: string }) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/config";
-    const rep: AxiosResponse<TrivialExt> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-      params: { matiere: params["matiere"] },
-    });
-    return rep.data;
-  }
-
-  /** CreateTrivialPoursuit wraps rawCreateTrivialPoursuit and handles the error */
-  async CreateTrivialPoursuit(params: { matiere: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawCreateTrivialPoursuit(params);
-      this.onSuccessCreateTrivialPoursuit(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessCreateTrivialPoursuit(data: TrivialExt): void {}
-
-  protected async rawUpdateTrivialPoursuit(params: Trivial) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/config";
-    const rep: AxiosResponse<TrivialExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** UpdateTrivialPoursuit wraps rawUpdateTrivialPoursuit and handles the error */
-  async UpdateTrivialPoursuit(params: Trivial) {
-    this.startRequest();
-    try {
-      const out = await this.rawUpdateTrivialPoursuit(params);
-      this.onSuccessUpdateTrivialPoursuit(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {}
-
-  protected async rawDeleteTrivialPoursuit(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/config";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** DeleteTrivialPoursuit wraps rawDeleteTrivialPoursuit and handles the error */
-  async DeleteTrivialPoursuit(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawDeleteTrivialPoursuit(params);
-      this.onSuccessDeleteTrivialPoursuit();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessDeleteTrivialPoursuit(): void {}
-
-  protected async rawUpdateTrivialVisiblity(params: UpdateTrivialVisiblityIn) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/config/visibility";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** UpdateTrivialVisiblity wraps rawUpdateTrivialVisiblity and handles the error */
-  async UpdateTrivialVisiblity(params: UpdateTrivialVisiblityIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawUpdateTrivialVisiblity(params);
-      this.onSuccessUpdateTrivialVisiblity();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessUpdateTrivialVisiblity(): void {}
-
-  protected async rawDuplicateTrivialPoursuit(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/config/duplicate";
-    const rep: AxiosResponse<TrivialExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** DuplicateTrivialPoursuit wraps rawDuplicateTrivialPoursuit and handles the error */
-  async DuplicateTrivialPoursuit(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawDuplicateTrivialPoursuit(params);
-      this.onSuccessDuplicateTrivialPoursuit(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void {}
-
-  protected async rawCheckMissingQuestions(params: CategoriesQuestions) {
-    const fullUrl =
-      this.baseUrl + "/api/prof/trivial/config/check-missing-questions";
-    const rep: AxiosResponse<CheckMissingQuestionsOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** CheckMissingQuestions wraps rawCheckMissingQuestions and handles the error */
-  async CheckMissingQuestions(params: CategoriesQuestions) {
-    this.startRequest();
-    try {
-      const out = await this.rawCheckMissingQuestions(params);
-      this.onSuccessCheckMissingQuestions(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessCheckMissingQuestions(
-    data: CheckMissingQuestionsOut,
-  ): void {}
-
-  protected async rawTrivialTeacherMonitor() {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/monitor";
-    const rep: AxiosResponse<MonitorOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** TrivialTeacherMonitor wraps rawTrivialTeacherMonitor and handles the error */
-  async TrivialTeacherMonitor() {
-    this.startRequest();
-    try {
-      const out = await this.rawTrivialTeacherMonitor();
-      this.onSuccessTrivialTeacherMonitor(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {}
-
-  protected async rawTrivialGetSelfaccess(params: { "id-trivial": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
-    const rep: AxiosResponse<TrivialSelfaccess> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-trivial": String(params["id-trivial"]) },
-    });
-    return rep.data;
-  }
-
-  /** TrivialGetSelfaccess wraps rawTrivialGetSelfaccess and handles the error */
-  async TrivialGetSelfaccess(params: { "id-trivial": Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawTrivialGetSelfaccess(params);
-      this.onSuccessTrivialGetSelfaccess(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessTrivialGetSelfaccess(data: TrivialSelfaccess): void {}
-
-  protected async rawTrivialUpdateSelfaccess(params: UpdateSelfaccessIn) {
-    const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** TrivialUpdateSelfaccess wraps rawTrivialUpdateSelfaccess and handles the error */
-  async TrivialUpdateSelfaccess(params: UpdateSelfaccessIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawTrivialUpdateSelfaccess(params);
-      this.onSuccessTrivialUpdateSelfaccess();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessTrivialUpdateSelfaccess(): void {}
-
-  protected async rawGetTrivialRunningSessions() {
-    const fullUrl = this.baseUrl + "/api/trivial/sessions";
-    const rep: AxiosResponse<RunningSessionMetaOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** GetTrivialRunningSessions wraps rawGetTrivialRunningSessions and handles the error */
-  async GetTrivialRunningSessions() {
-    this.startRequest();
-    try {
-      const out = await this.rawGetTrivialRunningSessions();
-      this.onSuccessGetTrivialRunningSessions(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessGetTrivialRunningSessions(
-    data: RunningSessionMetaOut,
-  ): void {}
-
-  protected async rawLaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
-    const fullUrl = this.baseUrl + "/api/trivial/sessions";
-    const rep: AxiosResponse<LaunchSessionOut> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** LaunchSessionTrivialPoursuit wraps rawLaunchSessionTrivialPoursuit and handles the error */
-  async LaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawLaunchSessionTrivialPoursuit(params);
-      this.onSuccessLaunchSessionTrivialPoursuit(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessLaunchSessionTrivialPoursuit(
-    data: LaunchSessionOut,
-  ): void {}
-
-  protected async rawStartTrivialGame(params: { "game-id": string }) {
-    const fullUrl = this.baseUrl + "/api/trivial/sessions/start";
-    await Axios.post(fullUrl, null, {
-      headers: this.getHeaders(),
-      params: { "game-id": params["game-id"] },
-    });
-    return true;
-  }
-
-  /** StartTrivialGame wraps rawStartTrivialGame and handles the error */
-  async StartTrivialGame(params: { "game-id": string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawStartTrivialGame(params);
-      this.onSuccessStartTrivialGame();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessStartTrivialGame(): void {}
-
-  protected async rawStopTrivialGame(params: stopGame) {
-    const fullUrl = this.baseUrl + "/api/trivial/sessions/stop";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** StopTrivialGame wraps rawStopTrivialGame and handles the error */
-  async StopTrivialGame(params: stopGame) {
-    this.startRequest();
-    try {
-      const out = await this.rawStopTrivialGame(params);
-      this.onSuccessStopTrivialGame();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessStopTrivialGame(): void {}
-
-  protected async rawEditorGetTags() {
-    const fullUrl = this.baseUrl + "/api/prof/editor/tags";
-    const rep: AxiosResponse<TagsDB> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorGetTags wraps rawEditorGetTags and handles the error */
-  async EditorGetTags() {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorGetTags();
-      this.onSuccessEditorGetTags(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorGetTags(data: TagsDB): void {}
-
-  protected async rawEditorGenerateSyntaxHint(params: GenerateSyntaxHintIn) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/syntax-hint";
-    const rep: AxiosResponse<TextBlock> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorGenerateSyntaxHint wraps rawEditorGenerateSyntaxHint and handles the error */
-  async EditorGenerateSyntaxHint(params: GenerateSyntaxHintIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorGenerateSyntaxHint(params);
-      this.onSuccessEditorGenerateSyntaxHint(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorGenerateSyntaxHint(data: TextBlock): void {}
-
-  protected async rawEditorGetQuestionsIndex() {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
-    const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorGetQuestionsIndex wraps rawEditorGetQuestionsIndex and handles the error */
-  async EditorGetQuestionsIndex() {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorGetQuestionsIndex();
-      this.onSuccessEditorGetQuestionsIndex(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorGetQuestionsIndex(data: Index): void {}
-
-  protected async rawEditorSearchQuestions(params: Query) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
-    const rep: AxiosResponse<ListQuestionsOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorSearchQuestions wraps rawEditorSearchQuestions and handles the error */
-  async EditorSearchQuestions(params: Query) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSearchQuestions(params);
-      this.onSuccessEditorSearchQuestions(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {}
-
-  protected async rawEditorDuplicateQuestion(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question/duplicate";
-    const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorDuplicateQuestion wraps rawEditorDuplicateQuestion and handles the error */
-  async EditorDuplicateQuestion(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDuplicateQuestion(params);
-      this.onSuccessEditorDuplicateQuestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDuplicateQuestion(data: Question): void {}
-
-  protected async rawEditorDuplicateQuestiongroup(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
-  async EditorDuplicateQuestiongroup(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDuplicateQuestiongroup(params);
-      this.onSuccessEditorDuplicateQuestiongroup();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDuplicateQuestiongroup(): void {}
-
-  protected async rawEditorCreateQuestiongroup() {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
-    const rep: AxiosResponse<QuestiongroupExt> = await Axios.put(
-      fullUrl,
-      null,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorCreateQuestiongroup wraps rawEditorCreateQuestiongroup and handles the error */
-  async EditorCreateQuestiongroup() {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorCreateQuestiongroup();
-      this.onSuccessEditorCreateQuestiongroup(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorCreateQuestiongroup(data: QuestiongroupExt): void {}
-
-  protected async rawEditorUpdateQuestiongroup(params: Questiongroup) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorUpdateQuestiongroup wraps rawEditorUpdateQuestiongroup and handles the error */
-  async EditorUpdateQuestiongroup(params: Questiongroup) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateQuestiongroup(params);
-      this.onSuccessEditorUpdateQuestiongroup();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorUpdateQuestiongroup(): void {}
-
-  protected async rawEditorDeleteQuestiongroup(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
-    const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorDeleteQuestiongroup wraps rawEditorDeleteQuestiongroup and handles the error */
-  async EditorDeleteQuestiongroup(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDeleteQuestiongroup(params);
-      this.onSuccessEditorDeleteQuestiongroup(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDeleteQuestiongroup(data: DeleteQuestionOut): void {}
-
-  protected async rawEditorUpdateQuestionTags(
-    params: UpdateQuestiongroupTagsIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/tags";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorUpdateQuestionTags wraps rawEditorUpdateQuestionTags and handles the error */
-  async EditorUpdateQuestionTags(params: UpdateQuestiongroupTagsIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateQuestionTags(params);
-      this.onSuccessEditorUpdateQuestionTags();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorUpdateQuestionTags(): void {}
-
-  protected async rawEditorUpdateQuestiongroupVis(
-    params: QuestionUpdateVisiblityIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/visibility";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorUpdateQuestiongroupVis wraps rawEditorUpdateQuestiongroupVis and handles the error */
-  async EditorUpdateQuestiongroupVis(params: QuestionUpdateVisiblityIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateQuestiongroupVis(params);
-      this.onSuccessEditorUpdateQuestiongroupVis();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorUpdateQuestiongroupVis(): void {}
-
-  protected async rawEditorGetQuestions(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    const rep: AxiosResponse<Question[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorGetQuestions wraps rawEditorGetQuestions and handles the error */
-  async EditorGetQuestions(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorGetQuestions(params);
-      this.onSuccessEditorGetQuestions(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorGetQuestions(data: Question[] | null): void {}
-
-  protected async rawEditorDeleteQuestion(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
-  async EditorDeleteQuestion(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDeleteQuestion(params);
-      this.onSuccessEditorDeleteQuestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDeleteQuestion(data: DeleteQuestionOut): void {}
-
-  protected async rawEditorSaveQuestionMeta(params: SaveQuestionMetaIn) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question/variant";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorSaveQuestionMeta wraps rawEditorSaveQuestionMeta and handles the error */
-  async EditorSaveQuestionMeta(params: SaveQuestionMetaIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSaveQuestionMeta(params);
-      this.onSuccessEditorSaveQuestionMeta();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorSaveQuestionMeta(): void {}
-
-  protected async rawEditorCheckQuestionParameters(
-    params: CheckQuestionParametersIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question/check-params";
-    const rep: AxiosResponse<CheckQuestionParametersOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorCheckQuestionParameters wraps rawEditorCheckQuestionParameters and handles the error */
-  async EditorCheckQuestionParameters(params: CheckQuestionParametersIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorCheckQuestionParameters(params);
-      this.onSuccessEditorCheckQuestionParameters(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorCheckQuestionParameters(
-    data: CheckQuestionParametersOut,
-  ): void {}
-
-  protected async rawEditorSaveQuestionAndPreview(
-    params: SaveQuestionAndPreviewIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question/preview";
-    const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorSaveQuestionAndPreview wraps rawEditorSaveQuestionAndPreview and handles the error */
-  async EditorSaveQuestionAndPreview(params: SaveQuestionAndPreviewIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSaveQuestionAndPreview(params);
-      this.onSuccessEditorSaveQuestionAndPreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorSaveQuestionAndPreview(
-    data: SaveQuestionAndPreviewOut,
-  ): void {}
-
-  protected async rawEditorQuestionExportLateX(params: QuestionPage) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question/export/latex";
-    const rep: AxiosResponse<ExportQuestionLatexOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorQuestionExportLateX wraps rawEditorQuestionExportLateX and handles the error */
-  async EditorQuestionExportLateX(params: QuestionPage) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorQuestionExportLateX(params);
-      this.onSuccessEditorQuestionExportLateX(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorQuestionExportLateX(
-    data: ExportQuestionLatexOut,
-  ): void {}
-
-  protected async rawEditorGetExercicesIndex() {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
-    const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorGetExercicesIndex wraps rawEditorGetExercicesIndex and handles the error */
-  async EditorGetExercicesIndex() {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorGetExercicesIndex();
-      this.onSuccessEditorGetExercicesIndex(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorGetExercicesIndex(data: Index): void {}
-
-  protected async rawEditorSearchExercices(params: Query) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
-    const rep: AxiosResponse<ListExercicesOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorSearchExercices wraps rawEditorSearchExercices and handles the error */
-  async EditorSearchExercices(params: Query) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSearchExercices(params);
-      this.onSuccessEditorSearchExercices(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorSearchExercices(data: ListExercicesOut): void {}
-
-  protected async rawEditorUpdateExercicegroup(params: Exercicegroup) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorUpdateExercicegroup wraps rawEditorUpdateExercicegroup and handles the error */
-  async EditorUpdateExercicegroup(params: Exercicegroup) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateExercicegroup(params);
-      this.onSuccessEditorUpdateExercicegroup();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorUpdateExercicegroup(): void {}
-
-  protected async rawEditorDeleteExercicegroup(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
-    const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorDeleteExercicegroup wraps rawEditorDeleteExercicegroup and handles the error */
-  async EditorDeleteExercicegroup(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDeleteExercicegroup(params);
-      this.onSuccessEditorDeleteExercicegroup(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDeleteExercicegroup(data: DeleteExerciceOut): void {}
-
-  protected async rawEditorUpdateExerciceTags(
-    params: UpdateExercicegroupTagsIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/tags";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorUpdateExerciceTags wraps rawEditorUpdateExerciceTags and handles the error */
-  async EditorUpdateExerciceTags(params: UpdateExercicegroupTagsIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateExerciceTags(params);
-      this.onSuccessEditorUpdateExerciceTags();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorUpdateExerciceTags(): void {}
-
-  protected async rawEditorDuplicateExercicegroup(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** EditorDuplicateExercicegroup wraps rawEditorDuplicateExercicegroup and handles the error */
-  async EditorDuplicateExercicegroup(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDuplicateExercicegroup(params);
-      this.onSuccessEditorDuplicateExercicegroup();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDuplicateExercicegroup(): void {}
-
-  protected async rawEditorGetExerciceContent(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorGetExerciceContent wraps rawEditorGetExerciceContent and handles the error */
-  async EditorGetExerciceContent(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorGetExerciceContent(params);
-      this.onSuccessEditorGetExerciceContent(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorGetExerciceContent(data: ExerciceExt): void {}
-
-  protected async rawEditorCreateExercice() {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
-    const rep: AxiosResponse<ExercicegroupExt> = await Axios.put(
-      fullUrl,
-      null,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorCreateExercice wraps rawEditorCreateExercice and handles the error */
-  async EditorCreateExercice() {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorCreateExercice();
-      this.onSuccessEditorCreateExercice(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorCreateExercice(data: ExercicegroupExt): void {}
-
-  protected async rawEditorDeleteExercice(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
-    const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorDeleteExercice wraps rawEditorDeleteExercice and handles the error */
-  async EditorDeleteExercice(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDeleteExercice(params);
-      this.onSuccessEditorDeleteExercice(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDeleteExercice(data: DeleteExerciceOut): void {}
-
-  protected async rawEditorSaveExerciceMeta(params: ExerciceHeader) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
-    const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorSaveExerciceMeta wraps rawEditorSaveExerciceMeta and handles the error */
-  async EditorSaveExerciceMeta(params: ExerciceHeader) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSaveExerciceMeta(params);
-      this.onSuccessEditorSaveExerciceMeta(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorSaveExerciceMeta(data: Exercice): void {}
-
-  protected async rawEditorDuplicateExercice(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";
-    const rep: AxiosResponse<ExerciceHeader> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** EditorDuplicateExercice wraps rawEditorDuplicateExercice and handles the error */
-  async EditorDuplicateExercice(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDuplicateExercice(params);
-      this.onSuccessEditorDuplicateExercice(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorDuplicateExercice(data: ExerciceHeader): void {}
-
-  protected async rawEditorExerciceCreateQuestion(
-    params: ExerciceCreateQuestionIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
-    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorExerciceCreateQuestion wraps rawEditorExerciceCreateQuestion and handles the error */
-  async EditorExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorExerciceCreateQuestion(params);
-      this.onSuccessEditorExerciceCreateQuestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorExerciceCreateQuestion(
-    data: ExerciceWithPreview,
-  ): void {}
-
-  protected async rawEditorExerciceImportQuestion(
-    params: ExerciceImportQuestionIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions/import";
-    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorExerciceImportQuestion wraps rawEditorExerciceImportQuestion and handles the error */
-  async EditorExerciceImportQuestion(params: ExerciceImportQuestionIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorExerciceImportQuestion(params);
-      this.onSuccessEditorExerciceImportQuestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorExerciceImportQuestion(
-    data: ExerciceWithPreview,
-  ): void {}
-
-  protected async rawEditorExerciceDuplicateQuestion(
-    params: ExerciceDuplicateQuestionIn,
-  ) {
-    const fullUrl =
-      this.baseUrl + "/api/prof/editor/exercice/questions/duplicate";
-    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorExerciceDuplicateQuestion wraps rawEditorExerciceDuplicateQuestion and handles the error */
-  async EditorExerciceDuplicateQuestion(params: ExerciceDuplicateQuestionIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorExerciceDuplicateQuestion(params);
-      this.onSuccessEditorExerciceDuplicateQuestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorExerciceDuplicateQuestion(
-    data: ExerciceWithPreview,
-  ): void {}
-
-  protected async rawEditorExerciceUpdateQuestions(
-    params: ExerciceUpdateQuestionsIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
-    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorExerciceUpdateQuestions wraps rawEditorExerciceUpdateQuestions and handles the error */
-  async EditorExerciceUpdateQuestions(params: ExerciceUpdateQuestionsIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorExerciceUpdateQuestions(params);
-      this.onSuccessEditorExerciceUpdateQuestions(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorExerciceUpdateQuestions(
-    data: ExerciceWithPreview,
-  ): void {}
-
-  protected async rawEditorUpdateExercicegroupVis(
-    params: ExerciceUpdateVisiblityIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/visibility";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** EditorUpdateExercicegroupVis wraps rawEditorUpdateExercicegroupVis and handles the error */
-  async EditorUpdateExercicegroupVis(params: ExerciceUpdateVisiblityIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateExercicegroupVis(params);
-      this.onSuccessEditorUpdateExercicegroupVis();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorUpdateExercicegroupVis(): void {}
-
-  protected async rawEditorCheckExerciceParameters(
-    params: CheckExerciceParametersIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/check-params";
-    const rep: AxiosResponse<CheckExerciceParametersOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorCheckExerciceParameters wraps rawEditorCheckExerciceParameters and handles the error */
-  async EditorCheckExerciceParameters(params: CheckExerciceParametersIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorCheckExerciceParameters(params);
-      this.onSuccessEditorCheckExerciceParameters(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorCheckExerciceParameters(
-    data: CheckExerciceParametersOut,
-  ): void {}
-
-  protected async rawEditorSaveExerciceAndPreview(
-    params: SaveExerciceAndPreviewIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/preview";
-    const rep: AxiosResponse<SaveExerciceAndPreviewOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorSaveExerciceAndPreview wraps rawEditorSaveExerciceAndPreview and handles the error */
-  async EditorSaveExerciceAndPreview(params: SaveExerciceAndPreviewIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSaveExerciceAndPreview(params);
-      this.onSuccessEditorSaveExerciceAndPreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorSaveExerciceAndPreview(
-    data: SaveExerciceAndPreviewOut,
-  ): void {}
-
-  protected async rawEditorExerciceExportLateX(params: ExportExerciceLatexIn) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/export/latex";
-    const rep: AxiosResponse<ExportExerciceLatexOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** EditorExerciceExportLateX wraps rawEditorExerciceExportLateX and handles the error */
-  async EditorExerciceExportLateX(params: ExportExerciceLatexIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorExerciceExportLateX(params);
-      this.onSuccessEditorExerciceExportLateX(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessEditorExerciceExportLateX(
-    data: ExportExerciceLatexOut,
-  ): void {}
-
-  protected async rawHomeworkGetSheets(params: { matiere: string }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework";
-    const rep: AxiosResponse<Homeworks> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { matiere: params["matiere"] },
-    });
-    return rep.data;
-  }
-
-  /** HomeworkGetSheets wraps rawHomeworkGetSheets and handles the error */
-  async HomeworkGetSheets(params: { matiere: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkGetSheets(params);
-      this.onSuccessHomeworkGetSheets(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkGetSheets(data: Homeworks): void {}
-
-  protected async rawHomeworkCreateSheet() {
-    const fullUrl = this.baseUrl + "/api/prof/homework";
-    const rep: AxiosResponse<SheetExt> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkCreateSheet wraps rawHomeworkCreateSheet and handles the error */
-  async HomeworkCreateSheet() {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkCreateSheet();
-      this.onSuccessHomeworkCreateSheet(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkCreateSheet(data: SheetExt): void {}
-
-  protected async rawHomeworkUpdateSheet(params: Sheet) {
-    const fullUrl = this.baseUrl + "/api/prof/homework";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** HomeworkUpdateSheet wraps rawHomeworkUpdateSheet and handles the error */
-  async HomeworkUpdateSheet(params: Sheet) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkUpdateSheet(params);
-      this.onSuccessHomeworkUpdateSheet();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkUpdateSheet(): void {}
-
-  protected async rawHomeworkDeleteSheet(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** HomeworkDeleteSheet wraps rawHomeworkDeleteSheet and handles the error */
-  async HomeworkDeleteSheet(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkDeleteSheet(params);
-      this.onSuccessHomeworkDeleteSheet();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkDeleteSheet(): void {}
-
-  protected async rawHomeworkCopySheet(params: CopySheetIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/copy";
-    const rep: AxiosResponse<SheetExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkCopySheet wraps rawHomeworkCopySheet and handles the error */
-  async HomeworkCopySheet(params: CopySheetIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkCopySheet(params);
-      this.onSuccessHomeworkCopySheet(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkCopySheet(data: SheetExt): void {}
-
-  protected async rawHomeworkCreateTravailWith(params: CreateTravailWithIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/travail";
-    const rep: AxiosResponse<Travail> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkCreateTravailWith wraps rawHomeworkCreateTravailWith and handles the error */
-  async HomeworkCreateTravailWith(params: CreateTravailWithIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkCreateTravailWith(params);
-      this.onSuccessHomeworkCreateTravailWith(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkCreateTravailWith(data: Travail): void {}
-
-  protected async rawHomeworkCreateTravail(params: { "id-classroom": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/travail/anonymous";
-    const rep: AxiosResponse<CreateTravailOut> = await Axios.put(
-      fullUrl,
-      null,
-      {
+      const rep: AxiosResponse<TrivialExt[] | null> = await Axios.get(fullUrl, {
         headers: this.getHeaders(),
-        params: { "id-classroom": String(params["id-classroom"]) },
-      },
-    );
-    return rep.data;
-  }
-
-  /** HomeworkCreateTravail wraps rawHomeworkCreateTravail and handles the error */
-  async HomeworkCreateTravail(params: { "id-classroom": Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkCreateTravail(params);
-      this.onSuccessHomeworkCreateTravail(out);
-      return out;
+        params: { matiere: params["matiere"] },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkCreateTravail(data: CreateTravailOut): void {}
-
-  protected async rawHomeworkUpdateTravail(params: Travail) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/travail";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** HomeworkUpdateTravail wraps rawHomeworkUpdateTravail and handles the error */
-  async HomeworkUpdateTravail(params: Travail) {
+  /** CreateTrivialPoursuit performs the request and handles the error */
+  async CreateTrivialPoursuit(params: { matiere: string }) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/config";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkUpdateTravail(params);
-      this.onSuccessHomeworkUpdateTravail();
-      return out;
+      const rep: AxiosResponse<TrivialExt> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { matiere: params["matiere"] },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkUpdateTravail(): void {}
-
-  protected async rawHomeworkDeleteTravail(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/travail";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** HomeworkDeleteTravail wraps rawHomeworkDeleteTravail and handles the error */
-  async HomeworkDeleteTravail(params: { id: Int }) {
+  /** UpdateTrivialPoursuit performs the request and handles the error */
+  async UpdateTrivialPoursuit(params: Trivial) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/config";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkDeleteTravail(params);
-      this.onSuccessHomeworkDeleteTravail();
-      return out;
+      const rep: AxiosResponse<TrivialExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkDeleteTravail(): void {}
-
-  protected async rawHomeworkCopyTravail(params: CopyTravailIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/travail/copy";
-    const rep: AxiosResponse<CopyTravailToOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** HomeworkCopyTravail wraps rawHomeworkCopyTravail and handles the error */
-  async HomeworkCopyTravail(params: CopyTravailIn) {
+  /** DeleteTrivialPoursuit performs the request and handles the error */
+  async DeleteTrivialPoursuit(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/config";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkCopyTravail(params);
-      this.onSuccessHomeworkCopyTravail(out);
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void {}
-
-  protected async rawHomeworkRemoveTask(params: { "id-task": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-task": String(params["id-task"]) },
-    });
-    return true;
-  }
-
-  /** HomeworkRemoveTask wraps rawHomeworkRemoveTask and handles the error */
-  async HomeworkRemoveTask(params: { "id-task": Int }) {
+  /** UpdateTrivialVisiblity performs the request and handles the error */
+  async UpdateTrivialVisiblity(params: UpdateTrivialVisiblityIn) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/config/visibility";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkRemoveTask(params);
-      this.onSuccessHomeworkRemoveTask();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkRemoveTask(): void {}
-
-  protected async rawHomeworkAddExercice(params: AddExerciceToTaskIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/exercice";
-    const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkAddExercice wraps rawHomeworkAddExercice and handles the error */
-  async HomeworkAddExercice(params: AddExerciceToTaskIn) {
+  /** DuplicateTrivialPoursuit performs the request and handles the error */
+  async DuplicateTrivialPoursuit(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/config/duplicate";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkAddExercice(params);
-      this.onSuccessHomeworkAddExercice(out);
-      return out;
+      const rep: AxiosResponse<TrivialExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkAddExercice(data: TaskExt): void {}
-
-  protected async rawHomeworkGetMonoquestion(params: {
-    "id-monoquestion": Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
-    const rep: AxiosResponse<Monoquestion> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-monoquestion": String(params["id-monoquestion"]) },
-    });
-    return rep.data;
-  }
-
-  /** HomeworkGetMonoquestion wraps rawHomeworkGetMonoquestion and handles the error */
-  async HomeworkGetMonoquestion(params: { "id-monoquestion": Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkGetMonoquestion(params);
-      this.onSuccessHomeworkGetMonoquestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkGetMonoquestion(data: Monoquestion): void {}
-
-  protected async rawHomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
-    const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkAddMonoquestion wraps rawHomeworkAddMonoquestion and handles the error */
-  async HomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkAddMonoquestion(params);
-      this.onSuccessHomeworkAddMonoquestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkAddMonoquestion(data: TaskExt): void {}
-
-  protected async rawHomeworkGetRandomMonoquestion(params: {
-    "id-randommonoquestion": Int;
-  }) {
+  /** CheckMissingQuestions performs the request and handles the error */
+  async CheckMissingQuestions(params: CategoriesQuestions) {
     const fullUrl =
-      this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
-    const rep: AxiosResponse<RandomMonoquestion> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: {
-        "id-randommonoquestion": String(params["id-randommonoquestion"]),
-      },
-    });
-    return rep.data;
+      this.baseURL + "/api/prof/trivial/config/check-missing-questions";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CheckMissingQuestionsOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  /** HomeworkGetRandomMonoquestion wraps rawHomeworkGetRandomMonoquestion and handles the error */
+  /** TrivialTeacherMonitor performs the request and handles the error */
+  async TrivialTeacherMonitor() {
+    const fullUrl = this.baseURL + "/api/prof/trivial/monitor";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MonitorOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** TrivialGetSelfaccess performs the request and handles the error */
+  async TrivialGetSelfaccess(params: { "id-trivial": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/selfaccess";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TrivialSelfaccess> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-trivial": String(params["id-trivial"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** TrivialUpdateSelfaccess performs the request and handles the error */
+  async TrivialUpdateSelfaccess(params: UpdateSelfaccessIn) {
+    const fullUrl = this.baseURL + "/api/prof/trivial/selfaccess";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** GetTrivialRunningSessions performs the request and handles the error */
+  async GetTrivialRunningSessions() {
+    const fullUrl = this.baseURL + "/api/trivial/sessions";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<RunningSessionMetaOut> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LaunchSessionTrivialPoursuit performs the request and handles the error */
+  async LaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
+    const fullUrl = this.baseURL + "/api/trivial/sessions";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<LaunchSessionOut> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StartTrivialGame performs the request and handles the error */
+  async StartTrivialGame(params: { "game-id": string }) {
+    const fullUrl = this.baseURL + "/api/trivial/sessions/start";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { "game-id": params["game-id"] },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** StopTrivialGame performs the request and handles the error */
+  async StopTrivialGame(params: stopGame) {
+    const fullUrl = this.baseURL + "/api/trivial/sessions/stop";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorGetTags performs the request and handles the error */
+  async EditorGetTags() {
+    const fullUrl = this.baseURL + "/api/prof/editor/tags";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TagsDB> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorGenerateSyntaxHint performs the request and handles the error */
+  async EditorGenerateSyntaxHint(params: GenerateSyntaxHintIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/syntax-hint";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TextBlock> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorGetQuestionsIndex performs the request and handles the error */
+  async EditorGetQuestionsIndex() {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroups";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorSearchQuestions performs the request and handles the error */
+  async EditorSearchQuestions(params: Query) {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroups";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ListQuestionsOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDuplicateQuestion performs the request and handles the error */
+  async EditorDuplicateQuestion(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question/duplicate";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDuplicateQuestiongroup performs the request and handles the error */
+  async EditorDuplicateQuestiongroup(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup/duplicate";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorCreateQuestiongroup performs the request and handles the error */
+  async EditorCreateQuestiongroup() {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<QuestiongroupExt> = await Axios.put(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorUpdateQuestiongroup performs the request and handles the error */
+  async EditorUpdateQuestiongroup(params: Questiongroup) {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDeleteQuestiongroup performs the request and handles the error */
+  async EditorDeleteQuestiongroup(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(
+        fullUrl,
+        { headers: this.getHeaders(), params: { id: String(params["id"]) } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorUpdateQuestionTags performs the request and handles the error */
+  async EditorUpdateQuestionTags(params: UpdateQuestiongroupTagsIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup/tags";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorUpdateQuestiongroupVis performs the request and handles the error */
+  async EditorUpdateQuestiongroupVis(params: QuestionUpdateVisiblityIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup/visibility";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorGetQuestions performs the request and handles the error */
+  async EditorGetQuestions(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Question[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDeleteQuestion performs the request and handles the error */
+  async EditorDeleteQuestion(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(
+        fullUrl,
+        { headers: this.getHeaders(), params: { id: String(params["id"]) } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorSaveQuestionMeta performs the request and handles the error */
+  async EditorSaveQuestionMeta(params: SaveQuestionMetaIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question/variant";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorCheckQuestionParameters performs the request and handles the error */
+  async EditorCheckQuestionParameters(params: CheckQuestionParametersIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question/check-params";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CheckQuestionParametersOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorSaveQuestionAndPreview performs the request and handles the error */
+  async EditorSaveQuestionAndPreview(params: SaveQuestionAndPreviewIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question/preview";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorQuestionExportLateX performs the request and handles the error */
+  async EditorQuestionExportLateX(params: QuestionPage) {
+    const fullUrl = this.baseURL + "/api/prof/editor/question/export/latex";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExportQuestionLatexOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorGetExercicesIndex performs the request and handles the error */
+  async EditorGetExercicesIndex() {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroups";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorSearchExercices performs the request and handles the error */
+  async EditorSearchExercices(params: Query) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroups";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ListExercicesOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorUpdateExercicegroup performs the request and handles the error */
+  async EditorUpdateExercicegroup(params: Exercicegroup) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDeleteExercicegroup performs the request and handles the error */
+  async EditorDeleteExercicegroup(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(
+        fullUrl,
+        { headers: this.getHeaders(), params: { id: String(params["id"]) } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorUpdateExerciceTags performs the request and handles the error */
+  async EditorUpdateExerciceTags(params: UpdateExercicegroupTagsIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup/tags";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDuplicateExercicegroup performs the request and handles the error */
+  async EditorDuplicateExercicegroup(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup/duplicate";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorGetExerciceContent performs the request and handles the error */
+  async EditorGetExerciceContent(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorCreateExercice performs the request and handles the error */
+  async EditorCreateExercice() {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExercicegroupExt> = await Axios.put(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDeleteExercice performs the request and handles the error */
+  async EditorDeleteExercice(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(
+        fullUrl,
+        { headers: this.getHeaders(), params: { id: String(params["id"]) } },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorSaveExerciceMeta performs the request and handles the error */
+  async EditorSaveExerciceMeta(params: ExerciceHeader) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorDuplicateExercice performs the request and handles the error */
+  async EditorDuplicateExercice(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/duplicate";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExerciceHeader> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorExerciceCreateQuestion performs the request and handles the error */
+  async EditorExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/questions";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExerciceWithPreview> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorExerciceImportQuestion performs the request and handles the error */
+  async EditorExerciceImportQuestion(params: ExerciceImportQuestionIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/questions/import";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorExerciceDuplicateQuestion performs the request and handles the error */
+  async EditorExerciceDuplicateQuestion(params: ExerciceDuplicateQuestionIn) {
+    const fullUrl =
+      this.baseURL + "/api/prof/editor/exercice/questions/duplicate";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorExerciceUpdateQuestions performs the request and handles the error */
+  async EditorExerciceUpdateQuestions(params: ExerciceUpdateQuestionsIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/questions";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorUpdateExercicegroupVis performs the request and handles the error */
+  async EditorUpdateExercicegroupVis(params: ExerciceUpdateVisiblityIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup/visibility";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorCheckExerciceParameters performs the request and handles the error */
+  async EditorCheckExerciceParameters(params: CheckExerciceParametersIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/check-params";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CheckExerciceParametersOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorSaveExerciceAndPreview performs the request and handles the error */
+  async EditorSaveExerciceAndPreview(params: SaveExerciceAndPreviewIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/preview";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SaveExerciceAndPreviewOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** EditorExerciceExportLateX performs the request and handles the error */
+  async EditorExerciceExportLateX(params: ExportExerciceLatexIn) {
+    const fullUrl = this.baseURL + "/api/prof/editor/exercice/export/latex";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ExportExerciceLatexOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkGetSheets performs the request and handles the error */
+  async HomeworkGetSheets(params: { matiere: string }) {
+    const fullUrl = this.baseURL + "/api/prof/homework";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Homeworks> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { matiere: params["matiere"] },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkCreateSheet performs the request and handles the error */
+  async HomeworkCreateSheet() {
+    const fullUrl = this.baseURL + "/api/prof/homework";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SheetExt> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkUpdateSheet performs the request and handles the error */
+  async HomeworkUpdateSheet(params: Sheet) {
+    const fullUrl = this.baseURL + "/api/prof/homework";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkDeleteSheet performs the request and handles the error */
+  async HomeworkDeleteSheet(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkCopySheet performs the request and handles the error */
+  async HomeworkCopySheet(params: CopySheetIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet/copy";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SheetExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkCreateTravailWith performs the request and handles the error */
+  async HomeworkCreateTravailWith(params: CreateTravailWithIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/travail";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Travail> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkCreateTravail performs the request and handles the error */
+  async HomeworkCreateTravail(params: { "id-classroom": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework/travail/anonymous";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CreateTravailOut> = await Axios.put(
+        fullUrl,
+        null,
+        {
+          headers: this.getHeaders(),
+          params: { "id-classroom": String(params["id-classroom"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkUpdateTravail performs the request and handles the error */
+  async HomeworkUpdateTravail(params: Travail) {
+    const fullUrl = this.baseURL + "/api/prof/homework/travail";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkDeleteTravail performs the request and handles the error */
+  async HomeworkDeleteTravail(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework/travail";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkCopyTravail performs the request and handles the error */
+  async HomeworkCopyTravail(params: CopyTravailIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/travail/copy";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<CopyTravailToOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkRemoveTask performs the request and handles the error */
+  async HomeworkRemoveTask(params: { "id-task": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-task": String(params["id-task"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkAddExercice performs the request and handles the error */
+  async HomeworkAddExercice(params: AddExerciceToTaskIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet/exercice";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkGetMonoquestion performs the request and handles the error */
+  async HomeworkGetMonoquestion(params: { "id-monoquestion": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet/monoquestion";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Monoquestion> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-monoquestion": String(params["id-monoquestion"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkAddMonoquestion performs the request and handles the error */
+  async HomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet/monoquestion";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkGetRandomMonoquestion performs the request and handles the error */
   async HomeworkGetRandomMonoquestion(params: {
     "id-randommonoquestion": Int;
   }) {
+    const fullUrl =
+      this.baseURL + "/api/prof/homework/sheet/randommonoquestion";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkGetRandomMonoquestion(params);
-      this.onSuccessHomeworkGetRandomMonoquestion(out);
-      return out;
+      const rep: AxiosResponse<RandomMonoquestion> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          "id-randommonoquestion": String(params["id-randommonoquestion"]),
+        },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkGetRandomMonoquestion(
-    data: RandomMonoquestion,
-  ): void {}
-
-  protected async rawHomeworkAddRandomMonoquestion(
-    params: AddRandomMonoquestionToTaskIn,
-  ) {
-    const fullUrl =
-      this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
-    const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkAddRandomMonoquestion wraps rawHomeworkAddRandomMonoquestion and handles the error */
+  /** HomeworkAddRandomMonoquestion performs the request and handles the error */
   async HomeworkAddRandomMonoquestion(params: AddRandomMonoquestionToTaskIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkAddRandomMonoquestion(params);
-      this.onSuccessHomeworkAddRandomMonoquestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkAddRandomMonoquestion(data: TaskExt): void {}
-
-  protected async rawHomeworkUpdateMonoquestion(params: Monoquestion) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
-    const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkUpdateMonoquestion wraps rawHomeworkUpdateMonoquestion and handles the error */
-  async HomeworkUpdateMonoquestion(params: Monoquestion) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkUpdateMonoquestion(params);
-      this.onSuccessHomeworkUpdateMonoquestion(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void {}
-
-  protected async rawHomeworkUpdateRandomMonoquestion(
-    params: RandomMonoquestion,
-  ) {
     const fullUrl =
-      this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
-    const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
+      this.baseURL + "/api/prof/homework/sheet/randommonoquestion";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  /** HomeworkUpdateRandomMonoquestion wraps rawHomeworkUpdateRandomMonoquestion and handles the error */
+  /** HomeworkUpdateMonoquestion performs the request and handles the error */
+  async HomeworkUpdateMonoquestion(params: Monoquestion) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet/monoquestion";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** HomeworkUpdateRandomMonoquestion performs the request and handles the error */
   async HomeworkUpdateRandomMonoquestion(params: RandomMonoquestion) {
+    const fullUrl =
+      this.baseURL + "/api/prof/homework/sheet/randommonoquestion";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkUpdateRandomMonoquestion(params);
-      this.onSuccessHomeworkUpdateRandomMonoquestion(out);
-      return out;
+      const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkUpdateRandomMonoquestion(data: TaskExt): void {}
-
-  protected async rawHomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** HomeworkReorderSheetTasks wraps rawHomeworkReorderSheetTasks and handles the error */
+  /** HomeworkReorderSheetTasks performs the request and handles the error */
   async HomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkReorderSheetTasks(params);
-      this.onSuccessHomeworkReorderSheetTasks();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkReorderSheetTasks(): void {}
-
-  protected async rawHomeworkMissingTasksHint(params: { "id-sheet": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/missing-hint";
-    const rep: AxiosResponse<MissingTasksHint> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-sheet": String(params["id-sheet"]) },
-    });
-    return rep.data;
-  }
-
-  /** HomeworkMissingTasksHint wraps rawHomeworkMissingTasksHint and handles the error */
+  /** HomeworkMissingTasksHint performs the request and handles the error */
   async HomeworkMissingTasksHint(params: { "id-sheet": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework/sheet/missing-hint";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkMissingTasksHint(params);
-      this.onSuccessHomeworkMissingTasksHint(out);
-      return out;
+      const rep: AxiosResponse<MissingTasksHint> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-sheet": String(params["id-sheet"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkMissingTasksHint(data: MissingTasksHint): void {}
-
-  protected async rawHomeworkGetMarks(params: HowemorkMarksIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/marks";
-    const rep: AxiosResponse<HomeworkMarksOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** HomeworkGetMarks wraps rawHomeworkGetMarks and handles the error */
+  /** HomeworkGetMarks performs the request and handles the error */
   async HomeworkGetMarks(params: HowemorkMarksIn) {
+    const fullUrl = this.baseURL + "/api/prof/homework/marks";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkGetMarks(params);
-      this.onSuccessHomeworkGetMarks(out);
-      return out;
+      const rep: AxiosResponse<HomeworkMarksOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {}
-
-  protected async rawHomeworkGetDispenses(params: { "id-travail": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
-    const rep: AxiosResponse<Exceptions> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-travail": String(params["id-travail"]) },
-    });
-    return rep.data;
-  }
-
-  /** HomeworkGetDispenses wraps rawHomeworkGetDispenses and handles the error */
+  /** HomeworkGetDispenses performs the request and handles the error */
   async HomeworkGetDispenses(params: { "id-travail": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/homework/dispences";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkGetDispenses(params);
-      this.onSuccessHomeworkGetDispenses(out);
-      return out;
+      const rep: AxiosResponse<Exceptions> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-travail": String(params["id-travail"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkGetDispenses(data: Exceptions): void {}
-
-  protected async rawHomeworkSetDispense(params: TravailException) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** HomeworkSetDispense wraps rawHomeworkSetDispense and handles the error */
+  /** HomeworkSetDispense performs the request and handles the error */
   async HomeworkSetDispense(params: TravailException) {
+    const fullUrl = this.baseURL + "/api/prof/homework/dispences";
     this.startRequest();
     try {
-      const out = await this.rawHomeworkSetDispense(params);
-      this.onSuccessHomeworkSetDispense();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessHomeworkSetDispense(): void {}
-
-  protected async rawCeinturesGetScheme() {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/scheme";
-    const rep: AxiosResponse<GetSchemeOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** CeinturesGetScheme wraps rawCeinturesGetScheme and handles the error */
+  /** CeinturesGetScheme performs the request and handles the error */
   async CeinturesGetScheme() {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/scheme";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesGetScheme();
-      this.onSuccessCeinturesGetScheme(out);
-      return out;
+      const rep: AxiosResponse<GetSchemeOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesGetScheme(data: GetSchemeOut): void {}
-
-  protected async rawCeinturesGetPending(params: Advance) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/pending";
-    const rep: AxiosResponse<Stage[] | null> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** CeinturesGetPending wraps rawCeinturesGetPending and handles the error */
+  /** CeinturesGetPending performs the request and handles the error */
   async CeinturesGetPending(params: Advance) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/pending";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesGetPending(params);
-      this.onSuccessCeinturesGetPending(out);
-      return out;
+      const rep: AxiosResponse<Stage[] | null> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesGetPending(data: Stage[] | null): void {}
-
-  protected async rawCeinturesGetQuestions(params: Stage) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/questions";
-    const rep: AxiosResponse<Beltquestion[] | null> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** CeinturesGetQuestions wraps rawCeinturesGetQuestions and handles the error */
+  /** CeinturesGetQuestions performs the request and handles the error */
   async CeinturesGetQuestions(params: Stage) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/questions";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesGetQuestions(params);
-      this.onSuccessCeinturesGetQuestions(out);
-      return out;
+      const rep: AxiosResponse<Beltquestion[] | null> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesGetQuestions(data: Beltquestion[] | null): void {}
-
-  protected async rawCeinturesUpdateQuestion(params: UpdateBeltquestionIn) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/question-meta";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** CeinturesUpdateQuestion wraps rawCeinturesUpdateQuestion and handles the error */
+  /** CeinturesUpdateQuestion performs the request and handles the error */
   async CeinturesUpdateQuestion(params: UpdateBeltquestionIn) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/question-meta";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesUpdateQuestion(params);
-      this.onSuccessCeinturesUpdateQuestion();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesUpdateQuestion(): void {}
-
-  protected async rawCeinturesCreateQuestion(params: Stage) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
-    const rep: AxiosResponse<Beltquestion> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** CeinturesCreateQuestion wraps rawCeinturesCreateQuestion and handles the error */
+  /** CeinturesCreateQuestion performs the request and handles the error */
   async CeinturesCreateQuestion(params: Stage) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/question";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesCreateQuestion(params);
-      this.onSuccessCeinturesCreateQuestion(out);
-      return out;
+      const rep: AxiosResponse<Beltquestion> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesCreateQuestion(data: Beltquestion): void {}
-
-  protected async rawCeinturesSaveQuestion(params: SaveBeltQuestionIn) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
-    const rep: AxiosResponse<SaveBeltquestionAndPreviewOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** CeinturesSaveQuestion wraps rawCeinturesSaveQuestion and handles the error */
+  /** CeinturesSaveQuestion performs the request and handles the error */
   async CeinturesSaveQuestion(params: SaveBeltQuestionIn) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/question";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesSaveQuestion(params);
-      this.onSuccessCeinturesSaveQuestion(out);
-      return out;
+      const rep: AxiosResponse<SaveBeltquestionAndPreviewOut> =
+        await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesSaveQuestion(
-    data: SaveBeltquestionAndPreviewOut,
-  ): void {}
-
-  protected async rawCeinturesDeleteQuestion(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
-    const rep: AxiosResponse<DeleteBeltquestionOut> = await Axios.delete(
-      fullUrl,
-      { headers: this.getHeaders(), params: { id: String(params["id"]) } },
-    );
-    return rep.data;
-  }
-
-  /** CeinturesDeleteQuestion wraps rawCeinturesDeleteQuestion and handles the error */
+  /** CeinturesDeleteQuestion performs the request and handles the error */
   async CeinturesDeleteQuestion(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/question";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesDeleteQuestion(params);
-      this.onSuccessCeinturesDeleteQuestion(out);
-      return out;
+      const rep: AxiosResponse<DeleteBeltquestionOut> = await Axios.delete(
+        fullUrl,
+        { headers: this.getHeaders(), params: { id: String(params["id"]) } },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesDeleteQuestion(
-    data: DeleteBeltquestionOut,
-  ): void {}
-
-  protected async rawCeinturesDuplicateQuestion(params: {
-    "id-question": Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/question-duplicate";
-    const rep: AxiosResponse<DuplicateQuestionOut> = await Axios.post(
-      fullUrl,
-      null,
-      {
-        headers: this.getHeaders(),
-        params: { "id-question": String(params["id-question"]) },
-      },
-    );
-    return rep.data;
-  }
-
-  /** CeinturesDuplicateQuestion wraps rawCeinturesDuplicateQuestion and handles the error */
+  /** CeinturesDuplicateQuestion performs the request and handles the error */
   async CeinturesDuplicateQuestion(params: { "id-question": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/question-duplicate";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesDuplicateQuestion(params);
-      this.onSuccessCeinturesDuplicateQuestion(out);
-      return out;
+      const rep: AxiosResponse<DuplicateQuestionOut> = await Axios.post(
+        fullUrl,
+        null,
+        {
+          headers: this.getHeaders(),
+          params: { "id-question": String(params["id-question"]) },
+        },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesDuplicateQuestion(
-    data: DuplicateQuestionOut,
-  ): void {}
-
-  protected async rawCeinturesGetStudentsAdvance(params: {
-    "classroom-id": Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/prof/ceintures/advance";
-    const rep: AxiosResponse<studentAdvance[] | null> = await Axios.get(
-      fullUrl,
-      {
-        headers: this.getHeaders(),
-        params: { "classroom-id": String(params["classroom-id"]) },
-      },
-    );
-    return rep.data;
-  }
-
-  /** CeinturesGetStudentsAdvance wraps rawCeinturesGetStudentsAdvance and handles the error */
+  /** CeinturesGetStudentsAdvance performs the request and handles the error */
   async CeinturesGetStudentsAdvance(params: { "classroom-id": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/ceintures/advance";
     this.startRequest();
     try {
-      const out = await this.rawCeinturesGetStudentsAdvance(params);
-      this.onSuccessCeinturesGetStudentsAdvance(out);
-      return out;
+      const rep: AxiosResponse<studentAdvance[] | null> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { "classroom-id": String(params["classroom-id"]) },
+        },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessCeinturesGetStudentsAdvance(
-    data: studentAdvance[] | null,
-  ): void {}
-
-  protected async rawReviewCreate(params: ReviewCreateIn) {
-    const fullUrl = this.baseUrl + "/api/prof/review";
-    const rep: AxiosResponse<Review> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** ReviewCreate wraps rawReviewCreate and handles the error */
+  /** ReviewCreate performs the request and handles the error */
   async ReviewCreate(params: ReviewCreateIn) {
+    const fullUrl = this.baseURL + "/api/prof/review";
     this.startRequest();
     try {
-      const out = await this.rawReviewCreate(params);
-      this.onSuccessReviewCreate(out);
-      return out;
+      const rep: AxiosResponse<Review> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewCreate(data: Review): void {}
-
-  protected async rawReviewsList() {
-    const fullUrl = this.baseUrl + "/api/prof/reviews";
-    const rep: AxiosResponse<ReviewHeader[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** ReviewsList wraps rawReviewsList and handles the error */
+  /** ReviewsList performs the request and handles the error */
   async ReviewsList() {
+    const fullUrl = this.baseURL + "/api/prof/reviews";
     this.startRequest();
     try {
-      const out = await this.rawReviewsList();
-      this.onSuccessReviewsList(out);
-      return out;
+      const rep: AxiosResponse<ReviewHeader[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewsList(data: ReviewHeader[] | null): void {}
-
-  protected async rawReviewLoad(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/review";
-    const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return rep.data;
-  }
-
-  /** ReviewLoad wraps rawReviewLoad and handles the error */
+  /** ReviewLoad performs the request and handles the error */
   async ReviewLoad(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/review";
     this.startRequest();
     try {
-      const out = await this.rawReviewLoad(params);
-      this.onSuccessReviewLoad(out);
-      return out;
+      const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewLoad(data: ReviewExt): void {}
-
-  protected async rawReviewLoadTarget(params: { "id-review": Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/review/target";
-    const rep: AxiosResponse<LoadTargetOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-review": String(params["id-review"]) },
-    });
-    return rep.data;
-  }
-
-  /** ReviewLoadTarget wraps rawReviewLoadTarget and handles the error */
+  /** ReviewLoadTarget performs the request and handles the error */
   async ReviewLoadTarget(params: { "id-review": Int }) {
+    const fullUrl = this.baseURL + "/api/prof/review/target";
     this.startRequest();
     try {
-      const out = await this.rawReviewLoadTarget(params);
-      this.onSuccessReviewLoadTarget(out);
-      return out;
+      const rep: AxiosResponse<LoadTargetOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-review": String(params["id-review"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {}
-
-  protected async rawReviewDelete(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/review";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** ReviewDelete wraps rawReviewDelete and handles the error */
+  /** ReviewDelete performs the request and handles the error */
   async ReviewDelete(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/review";
     this.startRequest();
     try {
-      const out = await this.rawReviewDelete(params);
-      this.onSuccessReviewDelete();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewDelete(): void {}
-
-  protected async rawReviewUpdateApproval(params: ReviewUpdateApprovalIn) {
-    const fullUrl = this.baseUrl + "/api/prof/review/approval";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** ReviewUpdateApproval wraps rawReviewUpdateApproval and handles the error */
+  /** ReviewUpdateApproval performs the request and handles the error */
   async ReviewUpdateApproval(params: ReviewUpdateApprovalIn) {
+    const fullUrl = this.baseURL + "/api/prof/review/approval";
     this.startRequest();
     try {
-      const out = await this.rawReviewUpdateApproval(params);
-      this.onSuccessReviewUpdateApproval();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewUpdateApproval(): void {}
-
-  protected async rawReviewUpdateCommnents(params: ReviewUpdateCommentsIn) {
-    const fullUrl = this.baseUrl + "/api/prof/review/comments";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** ReviewUpdateCommnents wraps rawReviewUpdateCommnents and handles the error */
+  /** ReviewUpdateCommnents performs the request and handles the error */
   async ReviewUpdateCommnents(params: ReviewUpdateCommentsIn) {
+    const fullUrl = this.baseURL + "/api/prof/review/comments";
     this.startRequest();
     try {
-      const out = await this.rawReviewUpdateCommnents(params);
-      this.onSuccessReviewUpdateCommnents();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessReviewUpdateCommnents(): void {}
-
-  protected async rawReviewAccept(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/prof/review/accept";
-    await Axios.post(fullUrl, null, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** ReviewAccept wraps rawReviewAccept and handles the error */
+  /** ReviewAccept performs the request and handles the error */
   async ReviewAccept(params: { id: Int }) {
+    const fullUrl = this.baseURL + "/api/prof/review/accept";
     this.startRequest();
     try {
-      const out = await this.rawReviewAccept(params);
-      this.onSuccessReviewAccept();
-      return out;
+      await Axios.post(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
-
-  protected onSuccessReviewAccept(): void {}
 }

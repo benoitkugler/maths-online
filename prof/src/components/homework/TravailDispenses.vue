@@ -76,7 +76,7 @@
         @click="
           toEdit = {
             IdTravail: props.travail.Id,
-            IdStudent: -1 as Int,
+            IdStudent: -1 as IdStudent,
             Deadline: emptyTime(),
             IgnoreForMark: false,
           }
@@ -150,6 +150,7 @@ import type {
   Sheet,
   NullTime,
   Int,
+  IdStudent,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";

@@ -176,6 +176,7 @@ import {
   type SheetExt,
   type Travail,
   Int,
+  IdClassroom,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import PreviewSheet from "./PreviewSheet.vue";
@@ -193,7 +194,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "delete"): void;
   (e: "update", tr: Travail): void;
-  (e: "copy", idTarget: Int): void;
+  (e: "copy", idTarget: IdClassroom): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "editSheet", sheet: SheetExt): void;
   (e: "showDispenses"): void;

@@ -57,7 +57,7 @@ class Controller extends AbstractAPI {
   inRequest = false;
 
   getURL(endpoint: string) {
-    return this.baseUrl + endpoint;
+    return this.baseURL + endpoint;
   }
 
   handleError(error: any): void {

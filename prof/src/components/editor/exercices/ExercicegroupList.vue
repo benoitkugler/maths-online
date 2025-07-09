@@ -140,6 +140,7 @@ import {
   type TaskUses,
   type Sheet,
   Int,
+  IdExercicegroup,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { useRouter } from "vue-router";
@@ -254,7 +255,7 @@ async function startEdit(group: ExercicegroupExt) {
   emit("edit", group);
 }
 
-async function updatePublic(id: Int, isPublic: boolean) {
+async function updatePublic(id: IdExercicegroup, isPublic: boolean) {
   const res = await controller.EditorUpdateExercicegroupVis({
     ID: id,
     Public: isPublic,

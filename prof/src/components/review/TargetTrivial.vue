@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import type { TargetTrivial } from "@/controller/api_gen";
-import { computed } from "@vue/reactivity";
+import { computed } from "vue";
 import TagListField from "../editor/TagListField.vue";
 import CategorieRow from "../trivial/CategorieRow.vue";
 import TagChip from "../editor/utils/TagChip.vue";

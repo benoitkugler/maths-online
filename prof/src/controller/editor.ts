@@ -46,6 +46,9 @@ import {
   Enonce,
   ErrQuestionInvalid,
   SetFieldBlock,
+  IdExercice,
+  IdQuestion,
+  IdReview,
 } from "./api_gen";
 import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
@@ -692,7 +695,7 @@ export function personnalOrigin(): Origin {
   return {
     PublicStatus: PublicStatus.NotAdmin,
     Visibility: Visibility.Personnal,
-    IsInReview: { InReview: false, Id: -1 as Int },
+    IsInReview: { InReview: false, Id: -1 as IdReview },
   };
 }
 
@@ -707,7 +710,7 @@ export function emptyAssertion(): ProofAssertion {
 }
 
 export interface VariantG {
-  Id: Int;
+  Id: IdExercice | IdQuestion;
   Subtitle: string;
   Difficulty: DifficultyTag;
   HasCorrection?: boolean;

@@ -50,6 +50,8 @@ import type {
   Sheet,
   MatiereTag,
   Int,
+  IdClassroom,
+  IdSheet,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import SheetCard from "./SheetCard.vue";
@@ -65,7 +67,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "create"): void;
-  (e: "assign", idSheet: Int, idClassroom: Int): void;
+  (e: "assign", idSheet: IdSheet, idClassroom: IdClassroom): void;
   (e: "edit", sheet: SheetExt): void;
   (e: "duplicate", sheet: SheetExt): void;
   (e: "delete", sheet: SheetExt): void;

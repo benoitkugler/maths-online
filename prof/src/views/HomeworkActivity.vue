@@ -115,6 +115,11 @@ import {
   PublicStatus,
   type IdSheet,
   Int,
+  IdClassroom,
+  IdExercice,
+  IdQuestion,
+  IdQuestiongroup,
+  IdTravail,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, onActivated, onMounted } from "vue";
@@ -203,7 +208,7 @@ async function createTravail(idClassroom: Int) {
   sheetToUpdate.value = res.Sheet;
 }
 
-async function createTravailWith(idSheet: Int, idClassroom: Int) {
+async function createTravailWith(idSheet: IdSheet, idClassroom: IdClassroom) {
   const res = await controller.HomeworkCreateTravailWith({
     IdClassroom: idClassroom,
     IdSheet: idSheet,
@@ -239,7 +244,7 @@ async function deleteSheet() {
   sheetToDelete.value = null;
 }
 
-async function duplicateSheet(idSheet: Int) {
+async function duplicateSheet(idSheet: IdSheet) {
   const res = await controller.HomeworkCopySheet({
     IdSheet: idSheet,
   });
@@ -286,7 +291,7 @@ async function createReview() {
 
 async function addExerciceToSheet(sheet: Sheet, exercice: VariantG) {
   const newTask = await controller.HomeworkAddExercice({
-    IdExercice: exercice.Id,
+    IdExercice: exercice.Id as IdExercice,
     IdSheet: sheet.Id,
   });
   if (newTask == undefined) {
@@ -299,7 +304,7 @@ async function addExerciceToSheet(sheet: Sheet, exercice: VariantG) {
 
 async function addMonoquestionToSheet(sheet: Sheet, question: VariantG) {
   const newTask = await controller.HomeworkAddMonoquestion({
-    IdQuestion: question.Id,
+    IdQuestion: question.Id as IdQuestion,
     IdSheet: sheet.Id,
   });
   if (newTask == undefined) {
@@ -315,7 +320,7 @@ async function addRandomMonoquestionToSheet(
   group: ResourceGroup
 ) {
   const newTask = await controller.HomeworkAddRandomMonoquestion({
-    IdQuestiongroup: group.Id,
+    IdQuestiongroup: group.Id as IdQuestiongroup,
     IdSheet: sheet.Id,
   });
   if (newTask == undefined) {
@@ -365,7 +370,7 @@ async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
 }
 
 async function setSheetFavorite(sheet: Sheet) {
-  sheet.Anonymous = { Valid: false, ID: 0 as Int };
+  sheet.Anonymous = { Valid: false, ID: 0 as IdTravail };
   const res = await controller.HomeworkUpdateSheet(sheet);
   if (res === undefined) return;
 
@@ -381,7 +386,7 @@ async function updateTravail(travail: Travail) {
   cl.Travaux![index] = travail;
 }
 
-async function copyTravailTo(tr: Travail, idClassroom: Int) {
+async function copyTravailTo(tr: Travail, idClassroom: IdClassroom) {
   const res = await controller.HomeworkCopyTravail({
     IdTravail: tr.Id,
     IdClassroom: idClassroom,
