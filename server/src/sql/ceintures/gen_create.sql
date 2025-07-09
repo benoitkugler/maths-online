@@ -1,15 +1,15 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE beltevolutions (
     IdStudent integer NOT NULL,
-    Level integer CHECK (Level IN (0, 1, 2, 3)) NOT NULL,
-    Advance jsonb NOT NULL,
+    Level smallint CHECK (Level IN (0, 1, 2, 3)) NOT NULL,
+    Advance smallint[] CHECK (array_length(Advance, 1) = 12) NOT NULL,
     Stats jsonb NOT NULL
 );
 
 CREATE TABLE beltquestions (
     Id serial PRIMARY KEY,
-    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
-    Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
+    Domain smallint CHECK (DOMAIN IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
+    Rank smallint CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
     Correction jsonb NOT NULL,
@@ -22,7 +22,7 @@ ALTER TABLE beltevolutions
     ADD UNIQUE (IdStudent);
 
 ALTER TABLE beltevolutions
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE beltquestions
     ADD CHECK (Repeat > 0);
@@ -55,24 +55,6 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_array_11_cein_Stat (value))
-        FROM
-            jsonb_array_elements(data))
-        AND jsonb_array_length(data) = 12;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_12_cein_Rank (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_cein_Rank (value))
         FROM
             jsonb_array_elements(data))
         AND jsonb_array_length(data) = 12;
@@ -549,22 +531,6 @@ DECLARE
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_cein_Rank (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a cein_Rank', data;
     END IF;
     RETURN is_valid;
 END;
@@ -2015,9 +1981,6 @@ IMMUTABLE;
 
 ALTER TABLE beltevolutions
     ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_12_array_11_cein_Stat (Stats));
-
-ALTER TABLE beltevolutions
-    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_12_cein_Rank (Advance));
 
 ALTER TABLE beltquestions
     ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));

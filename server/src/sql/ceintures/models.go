@@ -11,7 +11,7 @@ type IdBeltquestion int64
 //
 // gomacro:SQL ADD UNIQUE(IdStudent)
 type Beltevolution struct {
-	IdStudent tc.IdStudent
+	IdStudent tc.IdStudent `gomacro-sql-on-delete:"CASCADE"`
 	Level     Level
 	Advance   Advance
 	Stats     Stats
