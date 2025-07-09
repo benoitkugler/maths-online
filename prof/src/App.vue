@@ -1,13 +1,10 @@
 <template>
   <v-app>
     <v-navigation-drawer app v-model="showSideBar" temporary>
-      <v-list-item>
-        <v-row>
-          <v-col cols="auto">
-            <v-img :src="logoSrc" width="50px"></v-img>
-          </v-col>
-          <v-col align-self="center"> Accéder à la page...</v-col>
-        </v-row>
+      <v-list-item title="Isyro" :subtitle="`version ${version}`">
+        <template #prepend>
+          <v-img :src="logoSrc" width="50px" class="mr-2"></v-img>
+        </template>
       </v-list-item>
       <v-divider></v-divider>
 
@@ -109,13 +106,15 @@
         v-if="isLoggedIn"
       ></v-app-bar-nav-icon>
       <v-app-bar-title tag="h5">
-        Isyro -
         <b>{{ $route.meta.Label }}</b>
       </v-app-bar-title>
       <v-spacer></v-spacer>
-      <div class="mr-2">
-        <small>(Version {{ version }})</small>
-      </div>
+      <v-btn href="https://isyro.fr/contact.html" target="_blank">
+        <template #append>
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </template>
+        Contact</v-btn
+      >
     </v-app-bar>
 
     <v-main :class="{ 'background-logo': !isLoggedIn }">
