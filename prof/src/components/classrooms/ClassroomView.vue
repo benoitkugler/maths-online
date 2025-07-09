@@ -252,7 +252,7 @@
 import type { Classroom, Student, StudentExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, formatDate, formatTime } from "@/controller/utils";
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { computed } from "vue";
 import DateField from "../DateField.vue";
 import DetailsSuccess from "./DetailsSuccess.vue";
@@ -268,6 +268,7 @@ const emit = defineEmits<{
 }>();
 
 onMounted(() => fetchStudents());
+onUnmounted(() => clearTimeout(timerId));
 
 const students = computed(() => {
   const out = _students.value.map((v) => v);
@@ -342,6 +343,7 @@ async function importStudents() {
 }
 
 const classroomCode = ref<string | null>(null);
+let timerId: ReturnType<typeof setTimeout>;
 async function generateClassroomCode() {
   const res = await controller.TeacherGenerateClassroomCode({
     "id-classroom": props.classroom.id,
@@ -355,10 +357,10 @@ async function generateClassroomCode() {
   const refresh = async () => {
     if (classroomCode.value != null) {
       await fetchStudents();
-      setTimeout(refresh, timeout);
+      timerId = setTimeout(refresh, timeout);
     }
   };
-  setTimeout(refresh, timeout);
+  timerId = setTimeout(refresh, timeout);
 }
 
 const rankLabels = [
