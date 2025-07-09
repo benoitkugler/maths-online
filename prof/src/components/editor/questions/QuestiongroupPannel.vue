@@ -97,7 +97,9 @@ function updateTitle(t: string) {
 
 async function updateQuestiongroup() {
   if (readonly.value) return;
-  await controller.EditorUpdateQuestiongroup(group.value.Group);
+  const res = await controller.EditorUpdateQuestiongroup(group.value.Group);
+  if (res === undefined) return;
+  controller.showMessage("Question modifiée avec succès.");
 }
 
 const deletedBlocked = ref<TaskUses>(null);

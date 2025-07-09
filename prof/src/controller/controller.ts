@@ -32,7 +32,7 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
-  private isLoggedIn = false;
+  public isLoggedIn = false;
 
   public onError: (kind: string, htmlError: string) => void = (_, __) => {};
   public showMessage: (message: string, color?: string) => void = (_, __) => {};
@@ -103,7 +103,6 @@ class Controller extends AbstractAPI {
   }
 
   startRequest(): void {
-    console.log("launching request");
     this.inRequest = true;
   }
 
@@ -113,61 +112,6 @@ class Controller extends AbstractAPI {
     this.settings = res;
   }
 
-  protected onSuccessTeacherUpdateSettings(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Paramètres modifiés avec succès.");
-    }
-  }
-
-  protected onSuccessEditorDuplicateQuestiongroup(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question (et variantes) dupliquée avec succès.");
-    }
-  }
-
-  protected onSuccessEditorSaveQuestionMeta(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question enregistrée avec succès.");
-    }
-  }
-
-  protected onSuccessEditorUpdateQuestiongroup(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question modifiée avec succès.");
-    }
-  }
-
-  protected onSuccessEditorUpdateQuestiongroupVis(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Visibilité modifiée avec succès.");
-    }
-  }
-
-  protected onSuccessEditorGenerateSyntaxHint(data: TextBlock): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Conseils ajoutés avec succès.");
-    }
-  }
-
-  protected onSuccessHomeworkRemoveTask(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Exercice retiré avec succès.");
-    }
-  }
-
-  protected onSuccessHomeworkAddExercice(data: TaskExt): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Exercice ajouté avec succès.");
-    }
-  }
   protected onSuccessHomeworkAddMonoquestion(data: TaskExt): void {
     this.inRequest = false;
     if (this.showMessage) {

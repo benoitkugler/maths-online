@@ -397,6 +397,8 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
   });
   if (res == undefined) return;
 
+  controller.showMessage("Conseils ajoutés avec succès.");
+
   questionEnonceNode.value?.addExistingBlock({
     Kind: BlockKind.TextBlock,
     Data: res,

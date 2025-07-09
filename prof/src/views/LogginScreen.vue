@@ -236,6 +236,11 @@ async function connection() {
   if (res == undefined) {
     return;
   }
+  if (res.Error == "") {
+    controller.authToken = res.Token;
+    controller.isLoggedIn = true;
+    controller.showMessage("Bienvenue");
+  }
 
   error.value = res;
   if (error.value.Error) return;

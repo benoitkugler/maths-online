@@ -136,6 +136,7 @@ async function save() {
   if (settings.value == null) return;
   const ok = await controller.TeacherUpdateSettings(settings.value);
   if (ok) {
+    controller.showMessage("Paramètres modifiés avec succès.");
     controller.settings = settings.value;
   }
 }

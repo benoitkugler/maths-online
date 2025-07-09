@@ -297,6 +297,7 @@ async function addExerciceToSheet(sheet: Sheet, exercice: VariantG) {
   if (newTask == undefined) {
     return;
   }
+  controller.showMessage("Exercice ajouté avec succès.");
 
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   sh.Tasks = (sh.Tasks || []).concat(newTask);
@@ -354,6 +355,7 @@ async function updateRandomMonoquestion(sheet: Sheet, qu: RandomMonoquestion) {
 async function removeTaskFromSheet(sheet: Sheet, task: TaskExt) {
   const res = await controller.HomeworkRemoveTask({ "id-task": task.Id });
   if (res === undefined) return;
+  controller.showMessage("Exercice retiré avec succès.");
 
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   sh.Tasks = (sh.Tasks || []).filter((ta) => ta.Id != task.Id);

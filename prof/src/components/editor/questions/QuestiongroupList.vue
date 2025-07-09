@@ -268,6 +268,7 @@ async function updatePublic(id: IdQuestiongroup, isPublic: boolean) {
   if (res === undefined) {
     return;
   }
+  controller.showMessage("Visibilité modifiée avec succès.");
 
   const index = groups.value.findIndex((gr) => gr.Group.Id == id);
   groups.value[index].Origin.PublicStatus = isPublic
