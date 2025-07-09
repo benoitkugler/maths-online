@@ -299,6 +299,10 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{`(a-b)^4`, "(b-a)^4", SimpleSubstitutions, true},
 		{`(a-b)^3`, "(b-a)^3", ExpandedSubstitutions, false},
 		{`(4x-5)^2`, "(5-4x)^2", SimpleSubstitutions, true},
+		// https://github.com/benoitkugler/maths-online/issues/373
+		{`-e^(-x) `, "(-1)e^(-1x)", SimpleSubstitutions, true},
+		{`-e^-x `, "(-1)e^(-1x)", SimpleSubstitutions, true},
+		{`-e^-x `, "(-1)e^-1x", SimpleSubstitutions, false},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
