@@ -176,6 +176,8 @@ async function createQuestion() {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Question ajoutée avec succès.");
+
   // go to the new question
   questionIndex.value = ((res.Ex.Questions?.length || 0) - 1) as Int;
   notifieUpdate(res.Ex);

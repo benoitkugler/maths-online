@@ -299,6 +299,7 @@ async function addStudent() {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Elève ajouté avec succès.");
 
   _students.value.push(res);
 
@@ -310,9 +311,12 @@ async function deleteStudent() {
   if (studentToDelete.value == null) {
     return;
   }
-  await controller.TeacherDeleteStudent({
+  const res = await controller.TeacherDeleteStudent({
     "id-student": studentToDelete.value.Id,
   });
+  if (res === undefined) return;
+  controller.showMessage("Profil supprimé avec succès.");
+
   studentToDelete.value = null;
   await fetchStudents();
 }
@@ -322,7 +326,10 @@ async function updateStudent() {
   if (studentToUpdate.value == null) {
     return;
   }
-  await controller.TeacherUpdateStudent(studentToUpdate.value);
+  const res = await controller.TeacherUpdateStudent(studentToUpdate.value);
+  if (res === undefined) return;
+  controller.showMessage("Profil mis à jour avec succès.");
+
   studentToUpdate.value = null;
   await fetchStudents();
 }
@@ -334,10 +341,13 @@ async function importStudents() {
   if (uploadedFile.value.length == 0) {
     return;
   }
-  await controller.TeacherImportStudents(
+  const res = await controller.TeacherImportStudents(
     { "id-classroom": String(props.classroom.id) },
     uploadedFile.value[0]
   );
+  if (res === undefined) return;
+  controller.showMessage("Liste importée avec succès.");
+
   uploadedFile.value = [];
   await fetchStudents();
 }

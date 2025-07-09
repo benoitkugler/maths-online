@@ -230,6 +230,8 @@ async function createConfig() {
   if (res === undefined) {
     return;
   }
+  controller.showMessage("Partie d'Isy'Triv créée avec succés..");
+
   _configs.value.push(res);
   // launch the edition
   editedConfig.value = res.Config;
@@ -245,6 +247,8 @@ async function updateConfig(config: Trivial) {
   if (res === undefined) {
     return;
   }
+  controller.showMessage("Partie mise à jour.");
+
   const index = _configs.value.findIndex((v) => v.Config.Id == config.Id);
   _configs.value[index] = res;
   editedConfig.value = null;
@@ -258,6 +262,8 @@ async function updatePublic(config: Trivial, isPublic: boolean) {
   if (res === undefined) {
     return;
   }
+  controller.showMessage("Visibilité modifiée avec succès.");
+
   const index = _configs.value.findIndex((v) => v.Config.Id == config.Id);
   _configs.value[index].Origin.PublicStatus = isPublic
     ? PublicStatus.AdminPublic
@@ -282,7 +288,7 @@ async function duplicateConfig(config: Trivial) {
   if (res === undefined) {
     return;
   }
-  console.log(config, res);
+  controller.showMessage("Session dupliquée.");
 
   _configs.value.push(res);
 }
@@ -295,6 +301,8 @@ async function deleteConfig() {
   const res = await controller.DeleteTrivialPoursuit({ id: id });
   trivialToDelete.value = null;
   if (res === undefined) return;
+  controller.showMessage("Partie supprimée.");
+
   _configs.value = _configs.value.filter((c) => c.Config.Id != id);
 }
 
@@ -321,6 +329,8 @@ async function launchSession(groups: GroupsStrategy) {
   if (res === undefined) {
     return;
   }
+  controller.showMessage(`Parties lancées avec succès.`);
+
   fetchSessionMeta();
 
   // automatically jump to monitor screen

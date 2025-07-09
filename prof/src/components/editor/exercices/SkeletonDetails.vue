@@ -139,6 +139,8 @@ async function removeQuestion(index: number) {
     Questions: l,
   });
   if (res == undefined) return;
+  controller.showMessage("Question supprimée avec succès.");
+
   emit("update", res.Ex);
   emit("preview", res.Preview);
 }
@@ -149,6 +151,8 @@ async function duplicateQuestion(index: Int) {
     QuestionIndex: index,
   });
   if (res == undefined) return;
+  controller.showMessage("Question dupliquée avec succès.");
+
   emit("update", res.Ex);
   emit("preview", res.Preview);
 }
@@ -171,6 +175,8 @@ async function saveEditedQuestion() {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Questions modifiées avec succès.");
+
   emit("update", res.Ex);
   emit("preview", res.Preview);
 }
@@ -201,6 +207,8 @@ async function swapQuestions(origin: number, target: number) {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Questions modifiées avec succès.");
+
   emit("update", res.Ex);
   emit("preview", res.Preview);
 }

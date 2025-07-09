@@ -249,6 +249,10 @@ async function deleteGroup() {
   if (!res.Deleted) {
     deletedBlocked.value = res.BlockedBy;
     return;
+  } else {
+    controller.showMessage(
+      "Question (et ses variantes) supprimée avec succès."
+    );
   }
   await fetchQuestions();
 }
@@ -285,6 +289,8 @@ async function createReview() {
   });
   reviewToCreate.value = null;
   if (res == undefined) return;
+  controller.showMessage("Demande de publication créée avec succès.");
+
   router.push({ name: "reviews", query: { id: res.Id } });
 }
 </script>

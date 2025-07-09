@@ -196,6 +196,8 @@ async function setDispense(params: TravailException) {
   toEdit.value = null;
   const res = await controller.HomeworkSetDispense(params);
   if (res === undefined) return;
+  controller.showMessage("Permissions mises à jour avec succès.");
+
   fetchDispenses();
 }
 

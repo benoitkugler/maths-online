@@ -93,7 +93,9 @@ const editor = ref<InstanceType<typeof ExerciceVariantPannel> | null>(null);
 
 async function updateExercicegroup() {
   if (isReadonly.value) return;
-  await controller.EditorUpdateExercicegroup(group.value.Group);
+  const res = await controller.EditorUpdateExercicegroup(group.value.Group);
+  if (res === undefined) return;
+  controller.showMessage("Exercice modifié avec succès.");
 
   // refresh the preview
   editor.value?.refreshExercicePreview();
@@ -115,6 +117,8 @@ async function deleteVariante(variant: VariantG) {
   if (!res.Deleted) {
     deletedBlocked.value = res.BlockedBy;
     return;
+  } else {
+    controller.showMessage("Exercice supprimé avec succès.");
   }
 
   ownVariants.value = ownVariants.value.filter((qu) => qu.Id != variant.Id);
@@ -140,6 +144,8 @@ async function duplicateVariante(exercice: VariantG) {
   if (newExercice == undefined) {
     return;
   }
+  controller.showMessage("Variante dupliquée avec succès.");
+
   ownVariants.value.push(newExercice);
   variantIndex.value = ownVariants.value.length - 1; // go to the new exercice
 
@@ -154,6 +160,8 @@ async function saveTags(newTags: Tags) {
   if (rep === undefined) {
     return;
   }
+  controller.showMessage("Etiquettes modifiées avec succès.");
+
   group.value.Tags = newTags;
 }
 
@@ -167,9 +175,11 @@ async function updateVariant(variant: VariantG) {
   }
   ownVariants.value[variantIndex.value].Subtitle = variant.Subtitle;
   ownVariants.value[variantIndex.value].Difficulty = variant.Difficulty;
-  await controller.EditorSaveExerciceMeta(
+  const res = await controller.EditorSaveExerciceMeta(
     ownVariants.value[variantIndex.value]
   );
+  if (res === undefined) return;
+  controller.showMessage("Exercice modifié avec succès.");
 }
 </script>
 

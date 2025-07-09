@@ -209,6 +209,8 @@ async function duplicate(group: ExercicegroupExt) {
     id: group.Group.Id,
   });
   if (!ok) return;
+  controller.showMessage("Exercice (et variantes) dupliqué avec succès.");
+
   await fetchExercices();
 }
 
@@ -222,6 +224,8 @@ async function deleteGroup() {
   if (!res.Deleted) {
     deletedBlocked.value = res.BlockedBy;
     return;
+  } else {
+    controller.showMessage("Exercice (et ses variantes) supprimé avec succès.");
   }
   await fetchExercices();
 }
@@ -247,6 +251,8 @@ async function createExercicegroup() {
   if (out == undefined) {
     return;
   }
+  controller.showMessage("Exercice crée avec succès.");
+
   await startEdit(out);
 }
 
@@ -263,6 +269,7 @@ async function updatePublic(id: IdExercicegroup, isPublic: boolean) {
   if (res === undefined) {
     return;
   }
+  controller.showMessage("Visibilité modifiée avec succès.");
 
   const index = groups.value.findIndex((gr) => gr.Group.Id == id);
   groups.value[index].Origin.PublicStatus = isPublic
@@ -279,6 +286,8 @@ async function createReview() {
   });
   reviewToCreate.value = null;
   if (res == undefined) return;
+  controller.showMessage("Demande de publication créée avec succès.");
+
   router.push({ name: "reviews", query: { id: res.Id } });
 }
 </script>

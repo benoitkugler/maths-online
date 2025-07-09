@@ -140,7 +140,10 @@ async function fetchClassrooms() {
 }
 
 async function createClassroom() {
-  await controller.TeacherCreateClassroom();
+  const res = await controller.TeacherCreateClassroom();
+  if (res === undefined) return;
+  controller.showMessage("Classe créée avec succès.");
+
   await fetchClassrooms();
 }
 
@@ -149,7 +152,12 @@ async function deleteClassroom() {
   if (classroomToDelete.value == null) {
     return;
   }
-  await controller.TeacherDeleteClassroom({ id: classroomToDelete.value.id });
+  const res = await controller.TeacherDeleteClassroom({
+    id: classroomToDelete.value.id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Classe supprimée avec succès.");
+
   classroomToDelete.value = null;
   await fetchClassrooms();
 }
@@ -164,6 +172,7 @@ async function updateClassroom() {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Classe mise à jour avec succès.");
 
   const index = classrooms.value.findIndex((cl) => cl.Classroom.id == res.id);
   classrooms.value[index].Classroom = res;

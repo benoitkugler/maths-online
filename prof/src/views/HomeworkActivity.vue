@@ -187,6 +187,7 @@ async function createSheet() {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Fiche ajoutée avec succès.");
 
   homeworks.value.Sheets.set(res.Sheet.Id, res);
 
@@ -200,6 +201,7 @@ async function createTravail(idClassroom: Int) {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Feuille de travail ajoutée avec succès.");
 
   homeworks.value.Sheets.set(res.Sheet.Sheet.Id, res.Sheet);
   const cl = travauxByClassroom(idClassroom)!;
@@ -216,6 +218,7 @@ async function createTravailWith(idSheet: IdSheet, idClassroom: IdClassroom) {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Feuille de travail ajoutée avec succès.");
 
   const cl = travauxByClassroom(idClassroom)!;
   cl.Travaux = [res].concat(...(cl.Travaux || []));
@@ -236,6 +239,7 @@ async function deleteSheet() {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Fiche supprimée avec succès.");
 
   homeworks.value.Sheets.delete(id);
   homeworks.value.Travaux?.forEach((cl) => {
@@ -251,6 +255,7 @@ async function duplicateSheet(idSheet: IdSheet) {
   if (res == undefined) {
     return;
   }
+  controller.showMessage("Fiche dupliquée avec succès.");
 
   homeworks.value.Sheets.set(res.Sheet.Id, res);
 }
@@ -311,6 +316,7 @@ async function addMonoquestionToSheet(sheet: Sheet, question: VariantG) {
   if (newTask == undefined) {
     return;
   }
+  controller.showMessage("Question ajoutée avec succès.");
 
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   sh.Tasks = (sh.Tasks || []).concat(newTask);
@@ -327,6 +333,7 @@ async function addRandomMonoquestionToSheet(
   if (newTask == undefined) {
     return;
   }
+  controller.showMessage("Groupe de questions ajouté avec succès.");
 
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   sh.Tasks = (sh.Tasks || []).concat(newTask);
@@ -335,6 +342,7 @@ async function addRandomMonoquestionToSheet(
 async function updateMonoquestion(sheet: Sheet, qu: Monoquestion) {
   const task = await controller.HomeworkUpdateMonoquestion(qu);
   if (task == undefined) return;
+  controller.showMessage("Paramètres de la question modifiés avec succès.");
 
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   const tasks = sh.Tasks || [];
@@ -345,7 +353,9 @@ async function updateMonoquestion(sheet: Sheet, qu: Monoquestion) {
 async function updateRandomMonoquestion(sheet: Sheet, qu: RandomMonoquestion) {
   const task = await controller.HomeworkUpdateRandomMonoquestion(qu);
   if (task == undefined) return;
-
+  controller.showMessage(
+    "Paramètres du groupe de questions modifiés avec succès."
+  );
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   const tasks = sh.Tasks || [];
   const index = tasks.findIndex((v) => v.Id == task.Id);
@@ -366,6 +376,7 @@ async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
     IdSheet: sheet.Id,
     Tasks: tasks.map((t) => t.Id),
   });
+  controller.showMessage("Liste modifiée avec succès.");
 
   const sh = homeworks.value.Sheets.get(sheet.Id)!;
   sh.Tasks = tasks;
@@ -375,6 +386,7 @@ async function setSheetFavorite(sheet: Sheet) {
   sheet.Anonymous = { Valid: false, ID: 0 as IdTravail };
   const res = await controller.HomeworkUpdateSheet(sheet);
   if (res === undefined) return;
+  controller.showMessage("Fiche modifiée avec succès.");
 
   homeworks.value.Sheets.get(sheet.Id)!.Sheet = sheet;
 }
@@ -382,6 +394,7 @@ async function setSheetFavorite(sheet: Sheet) {
 async function updateTravail(travail: Travail) {
   const ok = await controller.HomeworkUpdateTravail(travail);
   if (ok == undefined) return;
+  controller.showMessage("Feuille de travail modifiée avec succès.");
 
   const cl = travauxByClassroom(travail.IdClassroom)!;
   const index = cl.Travaux!.findIndex((tr) => tr.Id == travail.Id);
@@ -394,6 +407,7 @@ async function copyTravailTo(tr: Travail, idClassroom: IdClassroom) {
     IdClassroom: idClassroom,
   });
   if (res === undefined) return;
+  controller.showMessage("Feuille de travail copiée avec succès.");
 
   if (res.HasNewSheet) {
     homeworks.value.Sheets.set(res.NewSheet.Sheet.Id, res.NewSheet);
@@ -405,6 +419,8 @@ async function copyTravailTo(tr: Travail, idClassroom: IdClassroom) {
 async function deleteTravail(tr: Travail) {
   const res = await controller.HomeworkDeleteTravail({ id: tr.Id });
   if (res === undefined) return;
+  controller.showMessage("Feuille de travail supprimée avec succès.");
+
   const cl = travauxByClassroom(tr.IdClassroom)!;
   cl.Travaux = (cl.Travaux || []).filter((t) => t.Id != tr.Id);
 }

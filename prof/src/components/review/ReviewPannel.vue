@@ -180,6 +180,7 @@ async function _updateComments(comments: Comments) {
   });
   isSending.value = false;
   if (res == undefined) return;
+  controller.showMessage("Commentaires modifiés avec succès.");
 
   fetchData();
 }
@@ -212,6 +213,8 @@ async function updateApproval(appro: Approval) {
     Approval: appro,
   });
   if (res == undefined) return;
+  controller.showMessage("Vote modifié avec succès.");
+
   fetchData();
 }
 
@@ -221,6 +224,8 @@ async function deleteReview() {
   showConfirmDelete.value = false;
   const res = await controller.ReviewDelete({ id: props.review.Id });
   if (res == undefined) return;
+  controller.showMessage("Demande de publication supprimée avec succès.");
+
   emit("back");
 }
 
@@ -229,6 +234,8 @@ async function acceptReview() {
   showConfirmAccept.value = false;
   const res = await controller.ReviewAccept({ id: props.review.Id });
   if (res == undefined) return;
+  controller.showMessage("Demande de publication acceptée avec succès.");
+
   emit("back");
 }
 

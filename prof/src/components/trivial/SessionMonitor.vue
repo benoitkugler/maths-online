@@ -78,11 +78,16 @@ async function fetchMonitorData() {
 async function startTrivGame(id: RoomID) {
   const ok = await controller.StartTrivialGame({ "game-id": id });
   if (!ok) return;
+  controller.showMessage("Partie lancée avec succés.");
+
   await fetchMonitorData();
 }
 
 async function stopTrivGame(params: stopGame) {
-  await controller.StopTrivialGame(params);
+  const res = await controller.StopTrivialGame(params);
+  if (res === undefined) return;
+  controller.showMessage("Partie interrompue avec succès");
+
   await fetchMonitorData();
   // automatically close an empty monitor dialog
   if (!summaries.value.length) {

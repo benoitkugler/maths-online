@@ -116,6 +116,8 @@ async function deleteVariante(que: VariantG) {
   if (!res.Deleted) {
     deletedBlocked.value = res.BlockedBy;
     return;
+  } else {
+    controller.showMessage("Question supprimée avec succès.");
   }
 
   ownVariants.value = ownVariants.value.filter((qu) => qu.Id != que.Id);
@@ -141,6 +143,8 @@ async function duplicateVariante(variant: VariantG) {
   if (newQuestion == undefined) {
     return;
   }
+  controller.showMessage("Question dupliquée.");
+
   ownVariants.value.push(newQuestion);
   variantIndex.value = ownVariants.value.length - 1; // go to the new question
 
@@ -155,6 +159,8 @@ async function saveTags(newTags: Tags) {
   if (rep === undefined) {
     return;
   }
+  controller.showMessage("Etiquettes modifiées avec succès.");
+
   group.value.Tags = newTags;
 }
 
@@ -198,6 +204,8 @@ async function saveQuestion(
     ShowCorrection: showCorrection,
   });
   if (res === undefined) return;
+  if (res.IsValid) controller.showMessage(`Question générée avec succès.`);
+
   return {
     IsValid: res.IsValid,
     Error: res.Error,

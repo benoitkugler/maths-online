@@ -83,10 +83,13 @@ function onSelect(id: IdClassroom) {
 }
 
 async function save() {
-  await controller.TrivialUpdateSelfaccess({
+  const res = await controller.TrivialUpdateSelfaccess({
     IdTrivial: props.config.Id,
     IdClassrooms: selected.value,
   });
+  if (res === undefined) return;
+  controller.showMessage(`Accès aux parties modifié avec succès.`);
+
   emit("close");
 }
 </script>
