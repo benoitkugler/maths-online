@@ -29,7 +29,7 @@ func Test(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	item := TravailException{IdStudent: student.Id, IdTravail: travail.Id}
-	err = InsertTravailException(db, item)
+	err = item.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	_, err = DeleteTravailExceptionsByIdStudentAndIdTravail(db, student.Id, travail.Id)
@@ -38,7 +38,7 @@ func Test(t *testing.T) {
 	item = TravailException{IdStudent: student.Id, IdTravail: travail.Id, Deadline: sql.NullTime{
 		Valid: true, Time: time.Now(),
 	}}
-	err = InsertTravailException(db, item)
+	err = item.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	item, ok, err := SelectTravailExceptionByIdStudentAndIdTravail(db, student.Id, travail.Id)

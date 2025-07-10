@@ -67,11 +67,11 @@ func TestGetMarks(t *testing.T) {
 	})
 	tu.AssertNoErr(t, err)
 
-	err = ho.InsertTravailException(ct.db, ho.TravailException{
+	err = ho.TravailException{
 		IdStudent:     student2.Id,
 		IdTravail:     tr.Id,
 		IgnoreForMark: true,
-	})
+	}.Insert(ct.db)
 	tu.AssertNoErr(t, err)
 
 	out, err = ct.getMarks(HowemorkMarksIn{

@@ -67,3 +67,10 @@ func (qus Sheets) RestrictVisible(userID teacher.IdTeacher) {
 		}
 	}
 }
+
+type QuestionRepeat uint8
+
+const (
+	Unlimited QuestionRepeat = iota // Illimité
+	OneTry                          // Un seul
+)

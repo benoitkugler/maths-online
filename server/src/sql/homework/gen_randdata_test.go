@@ -27,6 +27,12 @@ func randOptionalIdTravail() OptionalIdTravail {
 	return s
 }
 
+func randQuestionRepeat() QuestionRepeat {
+	choix := [...]QuestionRepeat{Unlimited, OneTry}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randSheet() Sheet {
 	var s Sheet
 	s.Id = randIdSheet()
@@ -61,6 +67,8 @@ func randTravail() Travail {
 	s.Noted = randbool()
 	s.Deadline = randTime()
 	s.ShowAfter = randTime()
+	s.QuestionRepeat = randQuestionRepeat()
+	s.QuestionTimeLimit = randint()
 
 	return s
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"hash/fnv"
 	"math/rand"
@@ -46,11 +47,33 @@ func WebsocketError(ws *websocket.Conn, err error) {
 	ws.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
 }
 
+// SQLError wraps [*pq.Error] errors only
 func SQLError(err error) error {
 	if err, ok := err.(*pq.Error); ok {
+		//lint:ignore ST1005 Erreur utilisateur
 		return fmt.Errorf("La requête SQL a échoué : %s (table %s)", err, err.Table)
 	}
-	return fmt.Errorf("La requête SQL a échoué : %s %T", err, err)
+	return err
+}
+
+// InTx démarre une transaction, execute [fn] et
+// COMMIT. En cas d'erreur, la transaction est ROLLBACK,
+// et l'erreur renvoyé est passée à [SQLError]
+func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return SQLError(err)
+	}
+	err = fn(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return SQLError(err)
+	}
+	return nil
 }
 
 // QueryParamInt64 parse the query param `name` to an int64

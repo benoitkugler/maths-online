@@ -21,7 +21,9 @@ CREATE TABLE travails (
     IdSheet integer NOT NULL,
     Noted boolean NOT NULL,
     Deadline timestamp(0) with time zone NOT NULL,
-    ShowAfter timestamp(0) with time zone NOT NULL
+    ShowAfter timestamp(0) with time zone NOT NULL,
+    QuestionRepeat smallint CHECK (QuestionRepeat IN (0, 1)) NOT NULL,
+    QuestionTimeLimit integer NOT NULL
 );
 
 CREATE TABLE travail_exceptions (

@@ -1618,6 +1618,19 @@ export interface OptionalIdTravail {
   Valid: boolean;
   ID: IdTravail;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/homework.QuestionRepeat
+export const QuestionRepeat = {
+  Unlimited: 0,
+  OneTry: 1,
+} as const;
+export type QuestionRepeat =
+  (typeof QuestionRepeat)[keyof typeof QuestionRepeat];
+
+export const QuestionRepeatLabels: Record<QuestionRepeat, string> = {
+  [QuestionRepeat.Unlimited]: "Illimité",
+  [QuestionRepeat.OneTry]: "Un seul",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Sheet
 export interface Sheet {
   Id: IdSheet;
@@ -1636,6 +1649,8 @@ export interface Travail {
   Noted: boolean;
   Deadline: Time;
   ShowAfter: Time;
+  QuestionRepeat: QuestionRepeat;
+  QuestionTimeLimit: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.TravailException
 export interface TravailException {

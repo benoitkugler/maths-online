@@ -9,6 +9,8 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 )
 
+//go:generate ../../../../../gomacro/cmd/gomacro models.go sql:gen_create.sql go/sqlcrud:gen_scans.go go/randdata:gen_randdata_test.go
+
 type (
 	IdSheet   int64
 	IdTravail int64
@@ -29,8 +31,9 @@ type Travail struct {
 	IdSheet     IdSheet             `gomacro-sql-on-delete:"CASCADE"`
 
 	// When 'true', the [Sheet] is evaluated, and may only
-	// be done once.
+	// be done until the [Deadline].
 	// Notation : a question gives point if it has been successfully completed (at least) once.
+	//
 	// When 'false' the sheet is always available as free training.
 	Noted bool
 
@@ -41,6 +44,12 @@ type Travail struct {
 
 	// Pospone the access for students to this work
 	ShowAfter Time
+
+	QuestionRepeat QuestionRepeat
+
+	// When not zero, every question is time limited.
+	// (in seconds, zero means no limit)
+	QuestionTimeLimit int
 }
 
 // Sheet is a list of exercices.

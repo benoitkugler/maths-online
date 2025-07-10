@@ -61,7 +61,7 @@
           <v-tooltip
             text="Modifier les exceptions..."
             location="top"
-            v-if="travail.Noted"
+            v-if="inner.Noted"
           >
             <template v-slot:activator="{ isActive, props }">
               <v-btn
@@ -125,13 +125,8 @@
         <v-col cols="auto" align-self="center">
           <DateTimeChip
             title="Modifier le début du travail"
-            :model-value="travail.ShowAfter"
-            @update:model-value="
-              (v) => {
-                travail.ShowAfter = v;
-                emit('update', travail);
-              }
-            "
+            v-model="inner.ShowAfter"
+            @update:model-value="emit('update', inner)"
           ></DateTimeChip>
         </v-col>
       </v-row>
@@ -139,8 +134,8 @@
         <v-col cols="auto" align-self="center">
           <v-switch
             label="Limiter l'accès"
-            v-model="travail.Noted"
-            @update:model-value="emit('update', travail)"
+            v-model="inner.Noted"
+            @update:model-value="emit('update', inner)"
             hide-details
             color="primary"
           >
@@ -151,17 +146,43 @@
           <DateTimeChip
             prefix="clôture le"
             title="Modifier la clôture du travail"
-            v-if="travail.Noted"
-            :model-value="travail.Deadline"
-            @update:model-value="
-              (v) => {
-                travail.Deadline = v;
-                emit('update', travail);
-              }
-            "
-            :min-date="travail.ShowAfter"
+            v-if="inner.Noted"
+            v-model="inner.Deadline"
+            @update:model-value="emit('update', inner)"
+            :min-date="inner.ShowAfter"
           ></DateTimeChip>
           <v-chip v-else> Feuille en accès libre, sans clôture</v-chip>
+        </v-col>
+      </v-row>
+      <v-row v-if="inner.Noted">
+        <v-col>
+          <v-select
+            variant="outlined"
+            density="compact"
+            hide-details
+            :items="selectItems(QuestionRepeatLabels)"
+            label="Nombre d'essais par question"
+            v-model="inner.QuestionRepeat"
+            @update:model-value="emit('update', inner)"
+          ></v-select>
+        </v-col>
+        <v-col>
+          <v-select
+            variant="outlined"
+            density="compact"
+            hide-details
+            :items="[
+              { title: '5 secondes', value: 5 },
+              { title: '10 secondes', value: 10 },
+              { title: '15 secondes', value: 15 },
+              { title: '30 secondes', value: 30 },
+              { title: '60 secondes', value: 60 },
+              { title: 'Aucune limite', value: 0 },
+            ]"
+            label="Limite de temps par question"
+            v-model="inner.QuestionTimeLimit"
+            @update:model-value="emit('update', inner)"
+          ></v-select>
         </v-col>
       </v-row>
     </v-card-text>
@@ -175,13 +196,13 @@ import {
   type Sheet,
   type SheetExt,
   type Travail,
-  Int,
   IdClassroom,
+  QuestionRepeatLabels,
 } from "@/controller/api_gen";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import PreviewSheet from "./PreviewSheet.vue";
 import DateTimeChip from "../DateTimeChip.vue";
-import { colorForOrigin } from "@/controller/utils";
+import { colorForOrigin, copy, selectItems } from "@/controller/utils";
 
 interface Props {
   travail: Travail;
@@ -200,6 +221,8 @@ const emit = defineEmits<{
   (e: "showDispenses"): void;
 }>();
 
+const inner = ref(copy(props.travail));
+
 const nbTasks = computed(() => props.sheet.Tasks?.length || 0);
 
 const subtitle = computed(() => {
@@ -214,10 +237,10 @@ const subtitle = computed(() => {
 
 const color = computed(() => {
   const baseColor = "grey-lighten-3";
-  if (!props.travail.Noted) return baseColor;
+  if (!inner.value.Noted) return baseColor;
   const now = new Date(Date.now());
-  const start = new Date(props.travail.ShowAfter);
-  const end = new Date(props.travail.Deadline);
+  const start = new Date(inner.value.ShowAfter);
+  const end = new Date(inner.value.Deadline);
   return start <= now && now <= end ? "blue-lighten-2" : baseColor;
 });
 </script>

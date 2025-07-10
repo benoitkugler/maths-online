@@ -128,3 +128,30 @@ export const rankColors: { [key in Rank]: string } = {
 export function sameStage(loc1: Stage, loc2: Stage) {
   return loc1.Domain == loc2.Domain && loc1.Rank == loc2.Rank;
 }
+
+const isZero = <T extends string | number>(a: T) => a == "" || a == 0;
+
+function ensureNumber<T extends number | string>(s: T) {
+  const asNumber = Number(s);
+  return (isNaN(asNumber) ? s : asNumber) as T;
+}
+
+export function selectItems<T extends number | string>(
+  labels: {
+    [key in T]: string;
+  },
+  sort?: boolean
+) {
+  const out: { value: T; title: string }[] = [];
+  for (const value in labels) {
+    const title = labels[value];
+    out.push({ value: ensureNumber<T>(value), title });
+  }
+  if (sort) {
+    out.sort((a, b) => {
+      if (isZero(a.value)) return -1;
+      return a.title.localeCompare(b.title);
+    });
+  }
+  return out;
+}

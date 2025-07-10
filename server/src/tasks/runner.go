@@ -597,25 +597,6 @@ type EvaluateWorkIn struct {
 
 	AnswerIndex int     // new in v1.7
 	Answer      AnswerP // new in v1.7
-
-	// Deprecated
-	Answers map[int]AnswerP `gomacro:"ignore"` // by question index (not ID)
-}
-
-func (ew *EvaluateWorkIn) fillFromMap() error {
-	// client is using new API
-	if len(ew.Answers) == 0 {
-		return nil
-	}
-
-	if len(ew.Answers) != 1 {
-		return errors.New("internal error: expected only one question")
-	}
-	for k, v := range ew.Answers {
-		ew.AnswerIndex = k
-		ew.Answer = v
-	}
-	return nil
 }
 
 type EvaluateWorkOut struct {
@@ -624,13 +605,6 @@ type EvaluateWorkOut struct {
 
 	AnswerIndex int
 	Result      client.QuestionAnswersOut
-
-	// Deprecated
-	Results map[int]client.QuestionAnswersOut `gomacro:"ignore"`
-}
-
-func (ew *EvaluateWorkOut) fillMap() {
-	ew.Results = map[int]client.QuestionAnswersOut{ew.AnswerIndex: ew.Result}
 }
 
 // Evaluate checks the answer provided for the given exercice and
@@ -654,11 +628,6 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 	// enforce invariant for existing progressions
 	if L1, L2 := len(qus), len(args.Progression.Questions); L1 != L2 {
 		return EvaluateWorkOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
-	}
-
-	// compat mode
-	if err := args.fillFromMap(); err != nil {
-		return EvaluateWorkOut{}, err
 	}
 
 	if args.AnswerIndex < 0 || args.AnswerIndex >= len(qus) {
@@ -695,9 +664,6 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 		Progression:  updatedProgression,
 		NewQuestions: newVersion.Questions,
 	}
-
-	// compat
-	out.fillMap()
 
 	return out, nil
 }

@@ -112,16 +112,14 @@ func TestEvaluateExercice(t *testing.T) {
 	_, err = EvaluateWorkIn{
 		ID:          newWorkIDFromMono(monoquestion.Id),
 		Progression: progExt,
-		Answers:     map[int]AnswerP{},
 	}.Evaluate(db, -1)
 	tu.AssertNoErr(t, err)
 
 	out, err := EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
-		Answers: map[int]AnswerP{
-			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
-		},
+		AnswerIndex: 0,
+		Answer:      AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
 	}.Evaluate(db, -1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Progression.NextQuestion == 0) // wrong answer
@@ -129,9 +127,8 @@ func TestEvaluateExercice(t *testing.T) {
 	out, err = EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
-		Answers: map[int]AnswerP{
-			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
-		},
+		AnswerIndex: 0,
+		Answer:      AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
 	}.Evaluate(db, -1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Progression.NextQuestion == 1) // correct answer

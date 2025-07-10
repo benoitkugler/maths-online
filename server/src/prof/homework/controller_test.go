@@ -306,9 +306,8 @@ func TestEvaluateTask(t *testing.T) {
 	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 1)
 
 	// finally add an exception...
-	err = ho.InsertTravailException(ct.db,
-		ho.TravailException{IdStudent: student.Id, IdTravail: tr.Id, Deadline: sql.NullTime{Valid: true, Time: time.Now().Add(time.Minute)}},
-	)
+	exc := ho.TravailException{IdStudent: student.Id, IdTravail: tr.Id, Deadline: sql.NullTime{Valid: true, Time: time.Now().Add(time.Minute)}}
+	err = exc.Insert(ct.db)
 	tu.AssertNoErr(t, err)
 	// ... and evaluate again
 	out, err = ct.studentEvaluateTask(args)
