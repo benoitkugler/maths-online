@@ -2,6 +2,7 @@ import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_preview.dart';
+import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_tasks.dart';
 
 class LoopbackExerciceController implements LoopbackController {
@@ -14,6 +15,7 @@ class LoopbackExerciceController implements LoopbackController {
       : controller = ExerciceController(
             StudentWork(
                 data.exercice, data.progression.tryStartFirstQuestion()),
+            QuestionRepeat.unlimited,
             data.progression.startQuestion),
         instantShowCorrection = data.showCorrection;
 }

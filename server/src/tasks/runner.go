@@ -33,7 +33,7 @@ type AnswerP struct {
 	Answer client.QuestionAnswersIn
 }
 
-type InstantiateQuestionsOut []InstantiatedQuestion
+type InstantiatedQuestionsOut []InstantiatedQuestion
 
 type VarEntry struct {
 	Variable expression.Variable
@@ -68,13 +68,13 @@ func (params Params) ToMap() (expression.Vars, error) {
 
 // InstantiateQuestions loads and instantiates the given questions,
 // also returning the paramerters used to do so.
-func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOut, error) {
+func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiatedQuestionsOut, error) {
 	questions, err := ed.SelectQuestions(db, ids...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	out := make(InstantiateQuestionsOut, len(ids))
+	out := make(InstantiatedQuestionsOut, len(ids))
 	for index, id := range ids {
 		qu := questions[id]
 		instance, vars, err := qu.Page().InstantiateErr()

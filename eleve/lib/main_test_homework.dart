@@ -93,8 +93,14 @@ class _API implements HomeworkAPI {
     return [
       SheetProgression(
           1,
-          Sheet(1, "Feuille en cours", !loadNonNoted,
-              DateTime.now().add(const Duration(days: 3)), false, 0, true, 1),
+          Sheet(
+              1,
+              "Feuille en cours",
+              !loadNonNoted,
+              DateTime.now().add(const Duration(days: 3)),
+              false,
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(
                 1,
@@ -121,8 +127,14 @@ class _API implements HomeworkAPI {
           ]),
       SheetProgression(
           3,
-          Sheet(3, "Autre feuille en cours", !loadNonNoted,
-              DateTime.now().add(const Duration(days: 4)), true, 0, true, 1),
+          Sheet(
+              3,
+              "Autre feuille en cours",
+              !loadNonNoted,
+              DateTime.now().add(const Duration(days: 4)),
+              true,
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(1, "Ex 1", "Nombres complexes", false,
                 ProgressionExt([], 0), 5, 6),
@@ -137,9 +149,8 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               true,
-              0,
-              true,
-              1),
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(
                 1,
@@ -160,9 +171,8 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
-              0,
-              true,
-              1),
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(
                 1,
@@ -185,9 +195,8 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
-              0,
-              true,
-              1),
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
@@ -202,9 +211,8 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
-              0,
-              true,
-              1),
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
@@ -219,9 +227,8 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
-              0,
-              true,
-              1),
+              QuestionRepeat.unlimited,
+              0),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),

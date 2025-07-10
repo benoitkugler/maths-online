@@ -24,7 +24,7 @@ func checkExpressionSyntax(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type InstantiateQuestionsOut = tasks.InstantiateQuestionsOut
+type InstantiateQuestionsOut = tasks.InstantiatedQuestionsOut
 
 // standalone endpoint to check if an answer is correct
 func instantiateQuestions(db ed.DB, c echo.Context) error {

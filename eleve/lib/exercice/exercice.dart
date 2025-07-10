@@ -8,6 +8,7 @@ import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
 
@@ -57,6 +58,8 @@ class ExerciceController {
   /// the progression state.
   StudentWork exeAndProg;
 
+  final QuestionRepeat questionRepeat;
+
   /// [questionIndex] is the current question, or null for the summary
   int? questionIndex;
 
@@ -70,7 +73,8 @@ class ExerciceController {
   /// and is filled by the widget using the controller
   void Function()? onValid;
 
-  ExerciceController(this.exeAndProg, this.questionIndex) : _questions = [] {
+  ExerciceController(this.exeAndProg, this.questionRepeat, this.questionIndex)
+      : _questions = [] {
     _questions = _createControllers();
     _refreshStates();
   }
@@ -107,19 +111,19 @@ class ExerciceController {
     if (onValid != null) onValid!();
   }
 
-  /// [showFeedback] set the given feedback (for many questions)
+  /// [showFeedback] set the given feedback (for the current question)
   /// and set the state to displayingFeedback
-  void showFeedback(Map<int, QuestionAnswersOut> feedbacks) {
+  void showFeedback(QuestionAnswersOut feedback) {
+    final index = questionIndex;
+    if (index == null) return;
     status = ExerciceStatus.displayingFeedback;
-    for (var question in feedbacks.entries) {
-      final index = question.key;
-      final feedback = question.value.results;
-      _questions[index].setFeedback(feedback);
-    }
-    for (var question in _questions) {
-      question.state.buttonEnabled = true;
-      question.state.buttonLabel = "Essayer à nouveau...";
-    }
+    _questions[index].setFeedback(feedback.results);
+
+    final isOneTry = questionRepeat == QuestionRepeat.oneTry;
+    _questions[index].state.buttonEnabled = !isOneTry;
+    _questions[index].state.buttonLabel =
+        isOneTry ? "Réponse incorrecte" : "Essayer à nouveau...";
+    _questions[index].disableAllFields();
     _refreshStates();
   }
 
@@ -159,6 +163,13 @@ class ExerciceController {
         return QuestionStatus.checked;
       }
 
+      final alreadyTried =
+          exP.progression.getQuestion(questionIndex).isNotEmpty;
+      if (questionRepeat == QuestionRepeat.oneTry && alreadyTried) {
+        // here we now the status is failed
+        return QuestionStatus.incorrectAndLocked;
+      }
+
       if (exP.exercice.flow == Flow.sequencial &&
           exP.progression.nextQuestion < questionIndex) {
         return QuestionStatus.locked;
@@ -182,6 +193,16 @@ class ExerciceController {
 
   bool isExerciceOver() => exeAndProg.progression.nextQuestion == -1;
 
+  // assume a valid index
+  void goToQuestion(int? newIndex) {
+    questionIndex = newIndex;
+    // update the status
+    if (newIndex != null &&
+        questionStates[newIndex] == QuestionStatus.incorrectAndLocked) {
+      showFeedback(QuestionAnswersOut({}, {}));
+    }
+  }
+
   bool get goToPreviousEnabled => questionIndex != null;
 
   bool get goToNextEnabled {
@@ -195,7 +216,7 @@ class ExerciceController {
     }
     switch (exeAndProg.exercice.flow) {
       case Flow
-            .sequencial: // do not show locked questions when exercice is not over
+          .sequencial: // do not show locked questions when exercice is not over
         return currentIndex == null ||
             (isExerciceOver() && hasNextQuestion) ||
             currentIndex < exeAndProg.progression.nextQuestion;
@@ -249,6 +270,9 @@ class ExerciceW extends StatefulWidget {
   /// optional, if given and reached, shows a dialog
   final DateTime? deadline;
 
+  /// zero for no limit
+  final int questionTimeLimit;
+
   const ExerciceW(
     this.api,
     this.controller, {
@@ -258,6 +282,7 @@ class ExerciceW extends StatefulWidget {
     this.instantShowCorrection = false,
     this.noticeSandbox = false,
     this.deadline,
+    this.questionTimeLimit = 0,
   }) : super(key: key);
 
   @override
@@ -341,7 +366,9 @@ class _ExerciceWState extends State<ExerciceW> {
                 (index) => setState(() {
                       ct.questionIndex = index;
                     }),
-                noticeSandbox)
+                noticeSandbox,
+                widget.controller.questionRepeat,
+                widget.questionTimeLimit)
             : QuestionW(
                 widget.controller._questions[widget.controller.questionIndex!],
                 Colors.purpleAccent,
@@ -431,7 +458,7 @@ class _ExerciceWState extends State<ExerciceW> {
     if (!isCorrect) {
       // show errors and ask for retry
       setState(() {
-        ct.showFeedback({index: resp.result});
+        ct.showFeedback(resp.result);
       });
     } else {
       // update the menu status
@@ -521,7 +548,7 @@ class _ExerciceWState extends State<ExerciceW> {
         ? null
         : widget.controller.questionIndex! - 1;
     setState(() {
-      widget.controller.questionIndex = newIndex;
+      widget.controller.goToQuestion(newIndex);
     });
   }
 
@@ -533,7 +560,7 @@ class _ExerciceWState extends State<ExerciceW> {
         ? 0
         : widget.controller.questionIndex! + 1;
     setState(() {
-      widget.controller.questionIndex = newIndex;
+      widget.controller.goToQuestion(newIndex);
     });
   }
 }

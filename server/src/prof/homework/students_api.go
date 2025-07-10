@@ -121,11 +121,13 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 		out = append(out, SheetProgression{
 			IdTravail: travail.Id,
 			Sheet: Sheet{
-				Id:            sheet.Id,
-				Title:         sheet.Title,
-				Deadline:      deadline,
-				Noted:         travail.Noted,
-				IgnoreForMark: exp.IgnoreForMark,
+				sheet.Id,
+				sheet.Title,
+				travail.Noted,
+				deadline,
+				exp.IgnoreForMark,
+				travail.QuestionRepeat,
+				travail.QuestionTimeLimit,
 			},
 			Tasks: taskList,
 		})

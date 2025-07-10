@@ -10,6 +10,7 @@ import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -239,7 +240,7 @@ class _TrivialLast extends StatelessWidget {
 
 class _DecrassageAPI implements DecrassageAPI {
   @override
-  Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
+  Future<InstantiatedQuestionsOut> loadQuestions(List<int> ids) async {
     await Future<void>.delayed(const Duration(seconds: 1));
     return [
       InstantiatedQuestion(1, qu1, DifficultyTag.diff1, []),
@@ -364,8 +365,8 @@ class _ExerciceSequential extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(
-        _ExerciceSequentialAPI(), ExerciceController(workSequencial, null));
+    return ExerciceW(_ExerciceSequentialAPI(),
+        ExerciceController(workSequencial, QuestionRepeat.unlimited, null));
   }
 }
 
@@ -379,7 +380,8 @@ class _LoopbackExerciceSequential extends StatefulWidget {
 
 class _LoopbackExerciceSequentialState
     extends State<_LoopbackExerciceSequential> {
-  ExerciceController ct = ExerciceController(workSequencial, null);
+  ExerciceController ct =
+      ExerciceController(workSequencial, QuestionRepeat.unlimited, null);
 
   @override
   Widget build(BuildContext context) {
@@ -422,8 +424,8 @@ class _ExerciceParallel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(
-        _ExerciceParallelAPI(), ExerciceController(workParallel, null));
+    return ExerciceW(_ExerciceParallelAPI(),
+        ExerciceController(workParallel, QuestionRepeat.unlimited, null));
   }
 }
 
@@ -436,7 +438,8 @@ class _LoopbackExerciceParallel extends StatefulWidget {
 }
 
 class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
-  ExerciceController ct = ExerciceController(workParallel, null);
+  ExerciceController ct =
+      ExerciceController(workParallel, QuestionRepeat.unlimited, null);
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,7 @@ import 'package:eleve/shared/title.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -47,10 +48,16 @@ class ExerciceHome extends StatelessWidget {
   final StudentWork data;
   final List<QuestionStatus> states;
   final void Function(int index) onSelectQuestion;
+
   final bool noticeSandbox;
 
-  const ExerciceHome(
-      this.data, this.states, this.onSelectQuestion, this.noticeSandbox,
+  final QuestionRepeat questionRepeat;
+
+  /// zero for no limit
+  final int questionTimeLimit;
+
+  const ExerciceHome(this.data, this.states, this.onSelectQuestion,
+      this.noticeSandbox, this.questionRepeat, this.questionTimeLimit,
       {Key? key})
       : super(key: key);
 
@@ -62,6 +69,16 @@ class ExerciceHome extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 10),
           child: ColoredTitle(data.exercice.title, Colors.purple),
         ),
+        if (questionRepeat == QuestionRepeat.oneTry)
+          ListTile(
+              title: Text("Un seul essai par question !"),
+              trailing: Badge.count(count: 1)),
+        if (questionTimeLimit != 0)
+          ListTile(
+            title:
+                Text("Temps limité à $questionTimeLimit sec. par question !"),
+            trailing: const Icon(Icons.timer),
+          ),
         if (noticeSandbox)
           const Card(
             margin: EdgeInsets.only(bottom: 10),
@@ -157,6 +174,9 @@ class _QuestionList extends StatelessWidget {
     if (states[questionIndex] == QuestionStatus.checked) {
       return true;
     }
+    if (states[questionIndex] == QuestionStatus.incorrectAndLocked) {
+      return false;
+    }
 
     switch (data.exercice.flow) {
       case Flow.sequencial:
@@ -194,16 +214,13 @@ class _QuestionList extends StatelessWidget {
   }
 }
 
-enum QuestionStatus { locked, checked, toDo, incorrect }
+enum QuestionStatus { locked, checked, toDo, incorrect, incorrectAndLocked }
 
 extension _Icon on QuestionStatus {
   Icon get icon {
     switch (this) {
       case QuestionStatus.locked:
-        return const Icon(
-          IconData(0xf889, fontFamily: 'MaterialIcons'),
-          color: Colors.grey,
-        );
+        return const Icon(Icons.lock, color: Colors.grey);
       case QuestionStatus.checked:
         return const Icon(IconData(0xe156, fontFamily: 'MaterialIcons'),
             color: Colors.green);
@@ -215,6 +232,8 @@ extension _Icon on QuestionStatus {
       case QuestionStatus.incorrect:
         return const Icon(IconData(0xf647, fontFamily: 'MaterialIcons'),
             color: Colors.red);
+      case QuestionStatus.incorrectAndLocked:
+        return const Icon(Icons.lock, color: Colors.red);
     }
   }
 }

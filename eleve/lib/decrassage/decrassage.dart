@@ -12,7 +12,7 @@ import 'package:http/http.dart' as http;
 /// [DecrassageAPI] provides the logic to load a list
 /// of questions
 abstract class DecrassageAPI {
-  Future<InstantiateQuestionsOut> loadQuestions(List<int> ids);
+  Future<InstantiatedQuestionsOut> loadQuestions(List<int> ids);
   Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer);
 }
 
@@ -23,7 +23,7 @@ class ServerDecrassageAPI implements DecrassageAPI {
   const ServerDecrassageAPI(this.buildMode);
 
   @override
-  Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
+  Future<InstantiatedQuestionsOut> loadQuestions(List<int> ids) async {
     final uri = buildMode.serverURL("/api/questions/instantiate");
     final resp = await http.post(uri, body: jsonEncode(ids), headers: {
       'Content-type': 'application/json',
@@ -72,7 +72,7 @@ class Decrassage extends StatefulWidget {
 }
 
 class _DecrassageState extends State<Decrassage> {
-  InstantiateQuestionsOut questions = [];
+  InstantiatedQuestionsOut questions = [];
 
   DecrassageQuestionController? ct; // null when loading
 

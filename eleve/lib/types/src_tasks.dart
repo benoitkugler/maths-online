@@ -127,17 +127,6 @@ Map<String, dynamic> evaluateWorkOutToJson(EvaluateWorkOut item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/server/src/tasks.InstantiateQuestionsOut
-typedef InstantiateQuestionsOut = List<InstantiatedQuestion>;
-
-InstantiateQuestionsOut instantiateQuestionsOutFromJson(dynamic json) {
-  return listInstantiatedQuestionFromJson(json);
-}
-
-dynamic instantiateQuestionsOutToJson(InstantiateQuestionsOut item) {
-  return listInstantiatedQuestionToJson(item);
-}
-
 // github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedBeltQuestion
 class InstantiatedBeltQuestion {
   final IdBeltquestion id;
@@ -199,6 +188,17 @@ Map<String, dynamic> instantiatedQuestionToJson(InstantiatedQuestion item) {
     "Difficulty": difficultyTagToJson(item.difficulty),
     "Params": paramsToJson(item.params)
   };
+}
+
+// github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedQuestionsOut
+typedef InstantiatedQuestionsOut = List<InstantiatedQuestion>;
+
+InstantiatedQuestionsOut instantiatedQuestionsOutFromJson(dynamic json) {
+  return listInstantiatedQuestionFromJson(json);
+}
+
+dynamic instantiatedQuestionsOutToJson(InstantiatedQuestionsOut item) {
+  return listInstantiatedQuestionToJson(item);
 }
 
 // github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedWork

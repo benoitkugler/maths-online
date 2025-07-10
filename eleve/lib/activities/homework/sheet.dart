@@ -103,8 +103,7 @@ class _SheetWState extends State<SheetW> {
   }
 
   /// if [sandbox] is true, the progression is not updated on the client
-  void _startExercice(
-      TaskProgressionHeader task, bool sandbox, DateTime? deadline) async {
+  void _startExercice(TaskProgressionHeader task, bool sandbox) async {
     showDialog<void>(
         barrierDismissible: false,
         context: context,
@@ -127,11 +126,11 @@ class _SheetWState extends State<SheetW> {
     if (!mounted) return;
     Navigator.of(context).pop(); // remove the dialog
 
+    // actually launch the exercice
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
-    final exController = ExerciceController(studentEx, null);
-
-    // actually launch the exercice
+    final exController =
+        ExerciceController(studentEx, widget.sheet.sheet.questionRepeat, null);
 
     // TODO: for now we always show a correction (when available)
     // we might want a setting to let the teacher choose to display it or not
@@ -141,7 +140,10 @@ class _SheetWState extends State<SheetW> {
               exController,
               showCorrectionButtonOnFail: true,
               noticeSandbox: sandbox,
-              deadline: deadline,
+              deadline: (hasNotation && !sandbox)
+                  ? widget.sheet.sheet.deadline
+                  : null,
+              questionTimeLimit: widget.sheet.sheet.questionTimeLimit,
             )));
     if (!mounted) return;
 
@@ -183,14 +185,15 @@ class _SheetWState extends State<SheetW> {
         hasProgression: false,
         progression: const ProgressionExt([], 0),
         mark: 0);
-    _startExercice(task, true, null);
+    _startExercice(task, true);
   }
+
+  bool get hasNotation => widget.sheet.sheet.noted;
+  bool get isExpired =>
+      hasNotation && widget.sheet.sheet.deadline.isBefore(DateTime.now());
 
   @override
   Widget build(BuildContext context) {
-    final hasNotation = widget.sheet.sheet.noted;
-    final deadline = hasNotation ? widget.sheet.sheet.deadline : null;
-    final isExpired = deadline?.isBefore(DateTime.now()) ?? false;
     return Scaffold(
       appBar: AppBar(title: const Text("Contenu de la feuille")),
       body: Padding(
@@ -206,12 +209,14 @@ class _SheetWState extends State<SheetW> {
             ),
             if (hasNotation) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
-                    DeadlineCard(isExpired: isExpired, deadline: deadline!),
+                    DeadlineCard(
+                        isExpired: isExpired,
+                        deadline: widget.sheet.sheet.deadline),
                   ],
                 ),
               ),
@@ -229,7 +234,7 @@ class _SheetWState extends State<SheetW> {
                 child: _TaskList(
               widget.sheet.tasks,
               hasNotation,
-              (ex) => _startExercice(ex, isExpired, deadline),
+              (ex) => _startExercice(ex, isExpired),
               hasNotation ? _sandboxTask : _resetTask,
             )),
           ],

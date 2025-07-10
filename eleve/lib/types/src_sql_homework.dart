@@ -8,5 +8,32 @@ typedef IdSheet = int;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
 typedef IdTravail = int;
 
+// github.com/benoitkugler/maths-online/server/src/sql/homework.QuestionRepeat
+enum QuestionRepeat { unlimited, oneTry }
+
+extension _QuestionRepeatExt on QuestionRepeat {
+  static QuestionRepeat fromValue(int i) {
+    return QuestionRepeat.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+String questionRepeatLabel(QuestionRepeat v) {
+  switch (v) {
+    case QuestionRepeat.unlimited:
+      return "Illimité";
+    case QuestionRepeat.oneTry:
+      return "Un seul";
+  }
+}
+
+QuestionRepeat questionRepeatFromJson(dynamic json) =>
+    _QuestionRepeatExt.fromValue(json as int);
+
+dynamic questionRepeatToJson(QuestionRepeat item) => item.toValue();
+
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Time
 typedef Time = DateTime;
