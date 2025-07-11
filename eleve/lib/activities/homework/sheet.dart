@@ -129,8 +129,11 @@ class _SheetWState extends State<SheetW> {
     // actually launch the exercice
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
-    final exController =
-        ExerciceController(studentEx, widget.sheet.sheet.questionRepeat, null);
+    final exController = ExerciceController(
+        studentEx,
+        widget.sheet.sheet.questionRepeat,
+        widget.sheet.sheet.questionTimeLimit,
+        null);
 
     // TODO: for now we always show a correction (when available)
     // we might want a setting to let the teacher choose to display it or not
@@ -143,7 +146,6 @@ class _SheetWState extends State<SheetW> {
               deadline: (hasNotation && !sandbox)
                   ? widget.sheet.sheet.deadline
                   : null,
-              questionTimeLimit: widget.sheet.sheet.questionTimeLimit,
             )));
     if (!mounted) return;
 

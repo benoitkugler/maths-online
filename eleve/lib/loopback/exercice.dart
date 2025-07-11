@@ -16,6 +16,7 @@ class LoopbackExerciceController implements LoopbackController {
             StudentWork(
                 data.exercice, data.progression.tryStartFirstQuestion()),
             QuestionRepeat.unlimited,
+            0,
             data.progression.startQuestion),
         instantShowCorrection = data.showCorrection;
 }

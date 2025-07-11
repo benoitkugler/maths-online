@@ -24,8 +24,11 @@ abstract class ExerciceAPI {
 class _ExerciceQuestionController extends BaseQuestionController {
   void Function() onClick;
 
-  _ExerciceQuestionController(Question question, this.onClick)
-      : super(question);
+  _ExerciceQuestionController(
+      Question question, this.onClick, Duration? timeout)
+      : super(question) {
+    state.timeout = timeout;
+  }
 
   void markDone() {
     state.buttonLabel = "Question terminée";
@@ -59,6 +62,7 @@ class ExerciceController {
   StudentWork exeAndProg;
 
   final QuestionRepeat questionRepeat;
+  final int questionTimeLimit;
 
   /// [questionIndex] is the current question, or null for the summary
   int? questionIndex;
@@ -73,7 +77,8 @@ class ExerciceController {
   /// and is filled by the widget using the controller
   void Function()? onValid;
 
-  ExerciceController(this.exeAndProg, this.questionRepeat, this.questionIndex)
+  ExerciceController(this.exeAndProg, this.questionRepeat,
+      this.questionTimeLimit, this.questionIndex)
       : _questions = [] {
     _questions = _createControllers();
     _refreshStates();
@@ -92,7 +97,12 @@ class ExerciceController {
 
   List<_ExerciceQuestionController> _createControllers() {
     return exeAndProg.exercice.questions
-        .map((qu) => _ExerciceQuestionController(qu.question, _onQuestionValid))
+        .map((qu) => _ExerciceQuestionController(
+            qu.question,
+            _onQuestionValid,
+            questionTimeLimit == 0
+                ? null
+                : Duration(seconds: questionTimeLimit)))
         .toList();
   }
 
@@ -270,9 +280,6 @@ class ExerciceW extends StatefulWidget {
   /// optional, if given and reached, shows a dialog
   final DateTime? deadline;
 
-  /// zero for no limit
-  final int questionTimeLimit;
-
   const ExerciceW(
     this.api,
     this.controller, {
@@ -282,7 +289,6 @@ class ExerciceW extends StatefulWidget {
     this.instantShowCorrection = false,
     this.noticeSandbox = false,
     this.deadline,
-    this.questionTimeLimit = 0,
   }) : super(key: key);
 
   @override
@@ -368,7 +374,7 @@ class _ExerciceWState extends State<ExerciceW> {
                     }),
                 noticeSandbox,
                 widget.controller.questionRepeat,
-                widget.questionTimeLimit)
+                widget.controller.questionTimeLimit)
             : QuestionW(
                 widget.controller._questions[widget.controller.questionIndex!],
                 Colors.purpleAccent,
