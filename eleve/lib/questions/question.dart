@@ -25,76 +25,12 @@ import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
-/// [BaseQuestionController] provides methods used by the controller for a whole
-/// question (internally, it is composed of multiple controllers, one for each field)
-abstract class BaseQuestionController extends ChangeNotifier {
-  final QuestionState state;
+/// [QuestionListController] provides methods to
+/// display a list of questions and maintain their internal state.
+class QuestionListController {}
 
-  /// [onPrimaryButtonClick] is called when the main button
-  /// is clicked, and must update [state] accordingly.
-  void onPrimaryButtonClick();
-
-  /// [onFieldChange] is called when one field is updated
-  /// by the user.
-  /// The default implementation enables the primary button
-  /// if all the fields are valid and [notifyListeners].
-  void onFieldChange() {
-    state.buttonEnabled =
-        state.fields.values.every((field) => field.hasValidData());
-    notifyListeners();
-  }
-
-  /// [answers] wraps all the fields answers
-  QuestionAnswersIn answers() {
-    return QuestionAnswersIn(
-        state.fields.map((key, ct) => MapEntry(key, ct.getData())));
-  }
-
-  Map<int, bool> feedback() {
-    return state.fields.map((key, ct) => MapEntry(key, ct.hasError));
-  }
-
-  /// [setAnswers] updates the fields with the given answers,
-  /// removing any existing feedback.
-  void setAnswers(Map<int, Answer> answers) {
-    state.fields.forEach((fieldID, field) {
-      field.setData(answers[fieldID]!);
-    });
-    setFeedback(null);
-  }
-
-  /// If [feedback] is not null, [setFeedback] marks the fields with a false value
-  /// as error, and disable all fields
-  /// If is is null, it removes error indicator and enable them again.
-  void setFeedback(Map<int, bool>? feedback) {
-    state.fields.forEach((fieldID, field) {
-      field.setError(feedback == null ? false : !(feedback[fieldID] ?? false));
-    });
-    setFieldsEnabled(feedback == null);
-  }
-
-  /// [setFieldsEnabled] set the enabled property for all the question fields
-  void setFieldsEnabled(bool enabled) {
-    state.fields.forEach((fieldID, field) {
-      field.setEnabled(enabled);
-    });
-  }
-
-  /// [disableAllFields] disable all the question fields
-  void disableAllFields() {
-    setFieldsEnabled(false);
-  }
-
-  /// Walks throught the question content and creates the field controllers,
-  /// later used when building widgets.
-  ///
-  /// [api] is used to validate expression syntax
-  BaseQuestionController(Question question)
-      : state = QuestionState(question: question) {
-    state.fields = _createFieldControllers(question, onFieldChange);
-  }
-}
-
+/// Walks throught the question content and creates the field controllers,
+/// later used when building widgets.
 Map<int, FieldController> _createFieldControllers(
     Question question, void Function() onChange) {
   final fields = <int, FieldController>{};
@@ -134,30 +70,81 @@ Map<int, FieldController> _createFieldControllers(
   return fields;
 }
 
-/// [QuestionState] defines the parameters
-/// of a question widget.
-/// It is obtained via a [BaseQuestionController].
-class QuestionState {
-  final Question question;
+typedef QuestionAnswers = Map<int, Answer>;
+typedef QuestionFeedback = Map<int, bool>;
 
-  /// associated to [question]
+/// [QuestionController] defines the parameters
+/// of a question widget.
+/// It provides convenience methods to control the state
+/// of each question internal controllers.
+class QuestionController extends ChangeNotifier {
+  /// associated to the question ennonce
   Map<int, FieldController> fields = {};
 
   String buttonLabel = "Valider";
   bool buttonEnabled = false;
 
-  /// [timeout] is the duration for the question
+  /// [timeout] is the duration for the question,
+  /// displaying a timeout bar. It does not trigger any
+  /// action when done.
   /// It may be set to [null] to hide the timeout bar.
   Duration? timeout;
 
   /// If not null, [footerQuote] is displayed at the bottom of the screen.
-  /// An empty QuoteData may be provided to occupy the space but hide
+  /// An empty [QuoteData] may be provided to occupy the space but hide
   /// the text.
   QuoteData? footerQuote;
 
-  QuestionState({
-    required this.question,
-  });
+  QuestionController();
+
+  factory QuestionController.fromQuestion(Question question) {
+    final out = QuestionController();
+    out.fields = _createFieldControllers(question, out._onFieldChange);
+    return out;
+  }
+
+  /// [_onFieldChange] is called when one field is updated
+  /// by the user.
+  /// It enables the primary button
+  /// if all the fields are valid.
+  void _onFieldChange() {
+    buttonEnabled = fields.values.every((field) => field.hasValidData());
+    notifyListeners();
+  }
+
+  /// [answers] wraps all the fields answers,
+  /// assuming all fields are valid.
+  QuestionAnswersIn answers() {
+    return QuestionAnswersIn(
+        fields.map((key, ct) => MapEntry(key, ct.getData())));
+  }
+
+  QuestionFeedback feedback() {
+    return fields.map((key, ct) => MapEntry(key, ct.hasError));
+  }
+
+  /// [setAnswers] updates the fields with the given answers,
+  /// removing any existing feedback.
+  void setAnswers(QuestionAnswers answers) {
+    fields.forEach((key, field) => field.setData(answers[key]!));
+    setFeedback(null);
+  }
+
+  /// If [feedback] is not null, [setFeedback] marks the fields with a false value
+  /// as error, and disable all fields
+  /// If is is null, it removes error indicator and enable them again.
+  void setFeedback(QuestionFeedback? feedback) {
+    fields.forEach((key, field) =>
+        field.setError(feedback == null ? false : !(feedback[key] ?? false)));
+    setFieldsEnabled(feedback == null);
+  }
+
+  /// [setFieldsEnabled] set the enabled property for all the question fields
+  void setFieldsEnabled(bool enabled) {
+    for (var field in fields.values) {
+      field.setEnabled(enabled);
+    }
+  }
 }
 
 WidgetSpan _inlineMath(String content, double fontSize) {
@@ -508,35 +495,32 @@ class _ListRows extends StatelessWidget {
 
   final Widget? bottom;
 
-  const _ListRows(this.content, this.fields, this.color, this.bottom,
-      {Key? key})
-      : super(key: key);
+  const _ListRows(this.content, this.fields, this.color, this.bottom);
 
   @override
   Widget build(BuildContext context) {
     final rows = _FieldsBuilder.build(content, fields, color);
     return ListWithZoomables([
-      ...rows.rows
-          .map(
-            (e) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0), child: e),
-          )
-          .toList(),
+      ...rows.rows.map(
+        (e) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0), child: e),
+      ),
       const SizedBox(height: 10.0),
       if (bottom != null) bottom!
     ], rows.zoomableKeys, shrinkWrap: true);
   }
 }
 
-/// [CorrectionW] displays the correction of a question
-class CorrectionW extends StatelessWidget {
+/// [CorrectionView] displays the correction of a question
+class CorrectionView extends StatelessWidget {
   final Enonce correction;
   final Color color;
 
   /// If not null, [footerQuote] is displayed at the bottom of the screen.
   final QuoteData? footerQuote;
 
-  const CorrectionW(this.correction, this.color, this.footerQuote, {super.key});
+  const CorrectionView(this.correction, this.color, this.footerQuote,
+      {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -567,31 +551,34 @@ class CorrectionW extends StatelessWidget {
   }
 }
 
-/// [QuestionW] is the widget used to display a question
-/// The interactivity is handled by the [controller] field.
-class QuestionW extends StatefulWidget {
-  final BaseQuestionController controller;
+/// [QuestionView] is the widget used to display a question.
+class QuestionView extends StatefulWidget {
+  final Question question;
+  final QuestionController controller;
+
+  /// [onButtonClick] is called when clicking on
+  /// the primary button.
+  final void Function() onButtonClick;
 
   final Color color;
 
   /// [title] is the title of the question
   final String title;
 
-  final void Function()? onButtonClick;
-
-  const QuestionW(
+  const QuestionView(
+    this.question,
     this.controller,
-    this.color, {
-    Key? key,
-    this.title = "Question",
     this.onButtonClick,
-  }) : super(key: key);
+    this.color, {
+    super.key,
+    this.title = "Question",
+  });
 
   @override
-  State<QuestionW> createState() => _QuestionWState();
+  State<QuestionView> createState() => _QuestionViewState();
 }
 
-class _QuestionWState extends State<QuestionW> {
+class _QuestionViewState extends State<QuestionView> {
   @override
   void initState() {
     _initController();
@@ -600,7 +587,7 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   @override
-  void didUpdateWidget(QuestionW oldWidget) {
+  void didUpdateWidget(QuestionView oldWidget) {
     _initController();
 
     super.didUpdateWidget(oldWidget);
@@ -621,19 +608,8 @@ class _QuestionWState extends State<QuestionW> {
     if (mounted) setState(() {});
   }
 
-  void onButtonClick() {
-    final cb = widget.onButtonClick;
-    if (cb != null) {
-      cb();
-    } else {
-      widget.controller.onPrimaryButtonClick();
-      setState(() {});
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final state = widget.controller.state;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: Column(
@@ -643,31 +619,32 @@ class _QuestionWState extends State<QuestionW> {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ColoredTitle(widget.title, widget.color),
           ),
-          if (state.timeout != null) ...[
-            TimeoutBar(state.timeout!, widget.color),
+          if (widget.controller.timeout != null) ...[
+            TimeoutBar(widget.controller.timeout!, widget.color),
             const SizedBox(height: 10.0),
           ],
           Expanded(
               child: _ListRows(
-            widget.controller.state.question.enonce,
-            widget.controller.state.fields,
+            widget.question.enonce,
+            widget.controller.fields,
             widget.color,
             ElevatedButton(
-              onPressed: state.buttonEnabled ? onButtonClick : null,
+              onPressed:
+                  widget.controller.buttonEnabled ? widget.onButtonClick : null,
               style: ElevatedButton.styleFrom(backgroundColor: widget.color),
               child: Text(
-                state.buttonLabel,
+                widget.controller.buttonLabel,
                 style: const TextStyle(fontSize: 18),
               ),
             ),
           )),
-          if (state.footerQuote != null)
+          if (widget.controller.footerQuote != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: AnimatedOpacity(
                   duration: const Duration(seconds: 2),
-                  opacity: state.footerQuote!.isEmpty ? 0 : 1,
-                  child: Quote(state.footerQuote!)),
+                  opacity: widget.controller.footerQuote!.isEmpty ? 0 : 1,
+                  child: Quote(widget.controller.footerQuote!)),
             ),
         ],
       ),

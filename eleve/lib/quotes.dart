@@ -28,7 +28,7 @@ final _quotes = [
     "Coluche",
   ),
   const QuoteData(
-    "Un cœur prompt à la colère est en grand danger",
+    "Un cœur prompt à la colère est en grand danger.",
     "Ne t'énerve pas si vite !",
     "Ménandre",
   ),

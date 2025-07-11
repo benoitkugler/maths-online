@@ -157,9 +157,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   void _onServerDone() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.error,

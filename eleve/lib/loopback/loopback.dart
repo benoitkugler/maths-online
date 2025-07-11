@@ -17,6 +17,8 @@ import 'package:eleve/types/src_tasks.dart';
 import 'package:eleve/types/src_prof_preview.dart';
 import 'package:flutter/material.dart';
 
+abstract class LoopbackController {}
+
 /// [EditorLoopback] switch between pause, question or exercice mode according
 /// to the [event] parameter.
 class EditorLoopback extends StatefulWidget {
@@ -52,7 +54,7 @@ class _EditorLoopbackState extends State<EditorLoopback> {
     if (event is LoopbackPaused) {
       controller = null;
     } else if (event is LoopbackShowQuestion) {
-      controller = LoopackQuestionController(event, evaluateQuestionAnswer);
+      controller = LoopackQuestionController(event);
     } else if (event is LoopbackShowExercice) {
       controller = LoopbackExerciceController(event);
     } else if (event is LoopbackShowCeinture) {
@@ -99,9 +101,7 @@ class _EditorLoopbackState extends State<EditorLoopback> {
     final ct = controller as LoopackQuestionController;
     try {
       final res = await widget.api.evaluateQuestionAnswer(data, ct.data);
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       final snack = LoopbackQuestionW.serverValidation(
           res.answers, _showQuestionCorrection);
       ScaffoldMessenger.of(context).showSnackBar(snack);
@@ -142,7 +142,7 @@ class _EditorLoopbackState extends State<EditorLoopback> {
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (context) => Scaffold(
               appBar: AppBar(),
-              body: CorrectionW(controller.data.question.correction,
+              body: CorrectionView(controller.data.question.correction,
                   randColor(), pickQuote()),
             )));
   }
@@ -200,7 +200,8 @@ class _EditorLoopbackState extends State<EditorLoopback> {
   Widget build(BuildContext context) {
     final controller = this.controller;
     if (controller is LoopackQuestionController) {
-      return LoopbackQuestionW(controller, _showCorrectAnswer);
+      return LoopbackQuestionW(
+          controller, evaluateQuestionAnswer, _showCorrectAnswer);
     } else if (controller is LoopbackExerciceController) {
       return ExerciceW(widget.api, controller.controller,
           onShowCorrectAnswer: _showCorrectAnswer,

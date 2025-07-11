@@ -1,48 +1,40 @@
 import 'dart:math';
 
+import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_preview.dart';
 import 'package:flutter/material.dart';
 
-abstract class LoopbackController {}
-
-class LoopackQuestionController extends BaseQuestionController
-    implements LoopbackController {
-  final void Function(QuestionAnswersIn) onValid;
-
+class LoopackQuestionController implements LoopbackController {
   final LoopbackShowQuestion data;
-  LoopackQuestionController(this.data, this.onValid) : super(data.question);
+  final QuestionController controller;
 
-  @override
-  void onPrimaryButtonClick() {
-    state.buttonEnabled = false;
-    state.buttonLabel = "Correction...";
-    onValid(answers());
+  LoopackQuestionController(this.data)
+      : controller = QuestionController.fromQuestion(data.question);
+
+  void setAnswers(QuestionAnswers answers) {
+    controller.setAnswers(answers); // this trigger onFieldChange
+    controller.buttonEnabled = true;
+    controller.buttonLabel = "Valider";
   }
 
-  @override
-  void setAnswers(Map<int, Answer> answers) {
-    super.setAnswers(answers); // this trigger onFieldChange
-    state.buttonEnabled = true;
-    state.buttonLabel = "Valider";
-  }
-
-  @override
-  void setFeedback(Map<int, bool>? feedback) {
-    super.setFeedback(feedback);
-    state.buttonEnabled = true;
-    state.buttonLabel = "Valider";
-    setFieldsEnabled(true);
+  void setFeedback(QuestionFeedback feedback) {
+    controller.setFeedback(feedback);
+    controller.buttonEnabled = true;
+    controller.buttonLabel = "Valider";
+    controller.setFieldsEnabled(true); // reactivate button for convenience
   }
 }
 
 class LoopbackQuestionW extends StatefulWidget {
   final LoopackQuestionController controller;
 
+  final void Function(QuestionAnswersIn) onValid;
   final void Function() loadCorrectAnswer;
 
-  const LoopbackQuestionW(this.controller, this.loadCorrectAnswer, {super.key});
+  const LoopbackQuestionW(this.controller, this.onValid, this.loadCorrectAnswer,
+      {super.key});
 
   @override
   State<LoopbackQuestionW> createState() => _LoopbackQuestionWState();
@@ -67,6 +59,14 @@ class LoopbackQuestionW extends StatefulWidget {
 }
 
 class _LoopbackQuestionWState extends State<LoopbackQuestionW> {
+  void onValid() {
+    setState(() {
+      widget.controller.controller.buttonEnabled = false;
+      widget.controller.controller.buttonLabel = "Correction...";
+    });
+    widget.onValid(widget.controller.controller.answers());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,9 +77,11 @@ class _LoopbackQuestionWState extends State<LoopbackQuestionW> {
         ]),
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: QuestionW(
-            widget.controller,
-            randColor(),
+          child: QuestionView(
+            widget.controller.data.question,
+            widget.controller.controller,
+            onValid,
+            Colors.yellow.shade700,
           ),
         ));
   }

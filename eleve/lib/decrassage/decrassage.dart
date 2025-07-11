@@ -43,29 +43,11 @@ class ServerDecrassageAPI implements DecrassageAPI {
   }
 }
 
-class DecrassageQuestionController extends BaseQuestionController {
-  final int questionIndex;
-  final void Function(QuestionAnswersIn) onValid;
-
-  DecrassageQuestionController(
-      this.questionIndex, Question question, this.onValid)
-      : super(question) {
-    state.footerQuote = pickQuote();
-  }
-
-  @override
-  void onPrimaryButtonClick() {
-    state.buttonEnabled = false;
-    state.buttonLabel = "Correction...";
-    onValid(answers());
-  }
-}
-
 class Decrassage extends StatefulWidget {
   final DecrassageAPI api;
   final List<int> idQuestions;
 
-  const Decrassage(this.api, this.idQuestions, {Key? key}) : super(key: key);
+  const Decrassage(this.api, this.idQuestions, {super.key});
 
   @override
   _DecrassageState createState() => _DecrassageState();
@@ -74,7 +56,8 @@ class Decrassage extends StatefulWidget {
 class _DecrassageState extends State<Decrassage> {
   InstantiatedQuestionsOut questions = [];
 
-  DecrassageQuestionController? ct; // null when loading
+  int questionIndex = 0;
+  QuestionController? ct; // null when loading
 
   @override
   void initState() {
@@ -87,7 +70,8 @@ class _DecrassageState extends State<Decrassage> {
       final res = await widget.api.loadQuestions(widget.idQuestions);
       setState(() {
         questions = res;
-        ct = controllerForIndex(0);
+        questionIndex = 0;
+        ct = buildController();
       });
     } catch (e) {
       _showError(e);
@@ -98,21 +82,32 @@ class _DecrassageState extends State<Decrassage> {
     showError("Une erreur est survenue", error, context);
   }
 
-  DecrassageQuestionController controllerForIndex(int questionIndex) {
-    return DecrassageQuestionController(
-        questionIndex, questions[questionIndex].question, _evaluateQuestion);
+  // for the current question
+  QuestionController buildController() {
+    final out =
+        QuestionController.fromQuestion(questions[questionIndex].question);
+    out.footerQuote = pickQuote();
+    return out;
   }
 
-  void _selectQuestion(int questionIndex) {
+  void _selectQuestion(int newIndex) {
     setState(() {
-      ct = controllerForIndex(questionIndex);
+      questionIndex = newIndex;
+      ct = buildController();
     });
   }
 
-  void _evaluateQuestion(QuestionAnswersIn data) async {
-    final qc = ct!;
+  void _evaluateQuestion() async {
+    if (ct == null) return;
+    final data = ct!.answers();
+    setState(() {
+      ct!.setFieldsEnabled(false);
+      ct!.buttonEnabled = false;
+      ct!.buttonLabel = "Correction...";
+    });
+
     final QuestionAnswersOut answerResult;
-    final questionOrigin = questions[qc.questionIndex];
+    final questionOrigin = questions[questionIndex];
     try {
       final args = EvaluateQuestionIn(
           AnswerP(questionOrigin.params, data), questionOrigin.id);
@@ -121,6 +116,7 @@ class _DecrassageState extends State<Decrassage> {
       _showError(e);
       return;
     }
+    if (!mounted) return;
 
     final isValid = answerResult.results.values.every((element) => element);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -135,16 +131,17 @@ class _DecrassageState extends State<Decrassage> {
               onPressed: () {
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 setState(() {
-                  qc.setAnswers(answerResult.expectedAnswers);
+                  ct?.setAnswers(answerResult.expectedAnswers);
                 });
               }),
     ));
 
     if (isValid) {
-      if (qc.questionIndex < questions.length - 1) {
+      if (questionIndex < questions.length - 1) {
         // go to the next question
         setState(() {
-          ct = controllerForIndex(ct!.questionIndex + 1);
+          questionIndex += 1;
+          ct = buildController();
         });
       } else {
         // assume the student has followed the order
@@ -195,10 +192,12 @@ class _DecrassageState extends State<Decrassage> {
                     ],
                   ),
                 )
-              : QuestionW(
+              : QuestionView(
+                  questions[questionIndex].question,
                   ct!,
-                  Colors.pink,
-                  title: "Question ${ct!.questionIndex + 1}",
+                  _evaluateQuestion,
+                  Colors.yellow,
+                  title: "Question ${questionIndex + 1}",
                 )),
     );
   }

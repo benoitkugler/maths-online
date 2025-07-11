@@ -4,6 +4,7 @@ import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
+import 'package:eleve/questions/question.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_preview.dart';
 import 'package:eleve/types/src_maths_questions.dart' as server_questions;
@@ -86,7 +87,8 @@ Question numberQuestion(String title, {bool withCorrection = true}) {
   return Question(
       [
         TextBlock([T(title)], false, false, false),
-        const NumberFieldBlock(0, 10)
+        const NumberFieldBlock(0, 10),
+        const NumberFieldBlock(1, 20),
       ],
       withCorrection
           ? [
@@ -136,6 +138,9 @@ class _QuestionTestApp extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                  onPressed: () => showSingleQuestion(context),
+                  child: const Text("Single question")),
+              ElevatedButton(
                   onPressed: () => showTrivialInGame(context),
                   child: const Text("Trivial: InGame")),
               ElevatedButton(
@@ -147,21 +152,26 @@ class _QuestionTestApp extends StatelessWidget {
               ElevatedButton(
                   onPressed: () => showLoopackQuestion(context),
                   child: const Text("Loopack: Question")),
-              ElevatedButton(
-                  onPressed: () => showExerciceSequencial(context),
-                  child: const Text("Homework: Sequencial")),
-              ElevatedButton(
-                  onPressed: () => showExerciceParallel(context),
-                  child: const Text("Homework: Parallel")),
-              ElevatedButton(
-                  onPressed: () => showLoopackExerciceSequencial(context),
-                  child: const Text("Loopack: Exercice Sequencial")),
-              ElevatedButton(
-                  onPressed: () => showLoopackExerciceParallel(context),
-                  child: const Text("Loopack: Exercice Parallel")),
+              // ElevatedButton(
+              //     onPressed: () => showExerciceSequencial(context),
+              //     child: const Text("Homework: Sequencial")),
+              // ElevatedButton(
+              //     onPressed: () => showExerciceParallel(context),
+              //     child: const Text("Homework: Parallel")),
+              // ElevatedButton(
+              //     onPressed: () => showLoopackExerciceSequencial(context),
+              //     child: const Text("Loopack: Exercice Sequencial")),
+              // ElevatedButton(
+              //     onPressed: () => showLoopackExerciceParallel(context),
+              //     child: const Text("Loopack: Exercice Parallel")),
             ],
           ),
         ));
+  }
+
+  void showSingleQuestion(BuildContext context) async {
+    await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (context) => const _SingleQuestion()));
   }
 
   void showTrivialInGame(BuildContext context) async {
@@ -206,6 +216,51 @@ class _QuestionTestApp extends StatelessWidget {
   }
 }
 
+class _SingleQuestion extends StatefulWidget {
+  const _SingleQuestion();
+
+  @override
+  State<_SingleQuestion> createState() => _SingleQuestionState();
+}
+
+class _SingleQuestionState extends State<_SingleQuestion> {
+  final question = numberQuestion("Test");
+  late final QuestionController controller;
+  @override
+  void initState() {
+    controller = QuestionController.fromQuestion(question);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          TextButton(
+              onPressed: () {
+                setState(() {
+                  controller.buttonLabel = "berk";
+                  controller.setFeedback({0: true, 1: false});
+                });
+              },
+              child: const Text("error")),
+          TextButton(
+              onPressed: () {
+                setState(() {
+                  controller.buttonLabel = "à nouveau";
+                  controller
+                      .setAnswers({0: NumberAnswer(10), 1: NumberAnswer(20)});
+                });
+              },
+              child: const Text("answser")),
+        ],
+      ),
+      body: QuestionView(question, controller, () {}, Colors.blueAccent),
+    );
+  }
+}
+
 class _TrivialInGame extends StatelessWidget {
   const _TrivialInGame();
 
@@ -216,10 +271,12 @@ class _TrivialInGame extends StatelessWidget {
         (a) => onValid(a, context));
   }
 
-  void onValid(QuestionAnswersIn answers, BuildContext context) {
-    showDialog<void>(
+  void onValid(QuestionAnswersIn answers, BuildContext context) async {
+    await showDialog<void>(
         context: context,
-        builder: (context) => Dialog(child: Text("$answers")));
+        builder: (context) => Dialog(child: Text("Sending $answers")));
+
+    Navigator.of(context).pop();
   }
 }
 
@@ -285,15 +342,15 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   @override
   void initState() {
     controller = LoopackQuestionController(
-        LoopbackShowQuestion(questionComplexe, [], false,
-            const server_questions.QuestionPage(null, null, null)),
-        onValid);
+      LoopbackShowQuestion(questionComplexe, [], false,
+          const server_questions.QuestionPage(null, null, null)),
+    );
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LoopbackQuestionW(controller, loadCorrectAnswers);
+    return LoopbackQuestionW(controller, onValid, loadCorrectAnswers);
   }
 
   void loadCorrectAnswers() {
@@ -366,7 +423,7 @@ class _ExerciceSequential extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExerciceW(_ExerciceSequentialAPI(),
-        ExerciceController(workSequencial, QuestionRepeat.unlimited, null));
+        ExerciceController(workSequencial, QuestionRepeat.unlimited, 0, null));
   }
 }
 
@@ -381,7 +438,7 @@ class _LoopbackExerciceSequential extends StatefulWidget {
 class _LoopbackExerciceSequentialState
     extends State<_LoopbackExerciceSequential> {
   ExerciceController ct =
-      ExerciceController(workSequencial, QuestionRepeat.unlimited, null);
+      ExerciceController(workSequencial, QuestionRepeat.unlimited, 0, null);
 
   @override
   Widget build(BuildContext context) {
@@ -425,7 +482,7 @@ class _ExerciceParallel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExerciceW(_ExerciceParallelAPI(),
-        ExerciceController(workParallel, QuestionRepeat.unlimited, null));
+        ExerciceController(workParallel, QuestionRepeat.unlimited, 0, null));
   }
 }
 
@@ -439,7 +496,7 @@ class _LoopbackExerciceParallel extends StatefulWidget {
 
 class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
   ExerciceController ct =
-      ExerciceController(workParallel, QuestionRepeat.unlimited, null);
+      ExerciceController(workParallel, QuestionRepeat.unlimited, 0, null);
 
   @override
   Widget build(BuildContext context) {

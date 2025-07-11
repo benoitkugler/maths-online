@@ -86,13 +86,12 @@ class SeanceController {
   var _state = _State.answering;
   final PageController _pageC;
 
-  final List<_QuestionController> _controllers;
+  final List<QuestionController> _controllers;
 
   SeanceController(this.questions,
       {int initialPage = 0, this.showCorrection = false})
       : _pageC = PageController(initialPage: initialPage),
-        _controllers = List.generate(questions.length,
-            (index) => _QuestionController(questions[index].question));
+        _controllers = questions.map(_buildQuestionController).toList();
 
   /// currentQuestion returns the question currently visible.
   int get currentQuestion => _pageC.hasClients ? _pageC.page?.round() ?? 0 : 0;
@@ -109,7 +108,7 @@ class SeanceController {
   List<int> notAnswered() {
     final out = <int>[];
     for (var i = 0; i < _controllers.length; i++) {
-      if (!_controllers[i].state.buttonEnabled) {
+      if (!_controllers[i].buttonEnabled) {
         out.add(i);
       }
     }
@@ -122,8 +121,8 @@ class SeanceController {
     for (var i = 0; i < res.length; i++) {
       final answer = res[i];
       _controllers[i].setFeedback(answer.results);
-      _controllers[i].state.buttonEnabled = true;
-      _controllers[i].state.buttonLabel = "Essayer à nouveau...";
+      _controllers[i].buttonEnabled = true;
+      _controllers[i].buttonLabel = "Essayer à nouveau...";
     }
   }
 
@@ -131,8 +130,8 @@ class SeanceController {
   void setQuestionAnswers(Answers answers) {
     _state = _State.answering;
     _controllers[currentQuestion].setAnswers(answers);
-    _controllers[currentQuestion].state.buttonEnabled = true;
-    _controllers[currentQuestion].state.buttonLabel = "Valider";
+    _controllers[currentQuestion].buttonEnabled = true;
+    _controllers[currentQuestion].buttonLabel = "Valider";
   }
 }
 
@@ -184,11 +183,12 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
         controller: c._pageC,
         children: List.generate(
             c._controllers.length,
-            (index) => QuestionW(
+            (index) => QuestionView(
+                  c.questions[index].question,
                   c._controllers[index],
+                  _onValidQuestion,
                   Colors.teal,
                   title: "Question ${index + 1}/${c._controllers.length}",
-                  onButtonClick: _onValidQuestion,
                 )).toList());
   }
 
@@ -197,7 +197,7 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
         appBar: AppBar(),
-        body: CorrectionW(c.questions[c.currentQuestion].question.correction,
+        body: CorrectionView(c.questions[c.currentQuestion].question.correction,
             Colors.greenAccent, pickQuote()),
       ),
     ));
@@ -222,7 +222,7 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
       // update button label for the last question
       if (notAnswered.length == 1) {
         setState(() {
-          c._controllers[goTo].state.buttonLabel = "Soumettre !";
+          c._controllers[goTo].buttonLabel = "Soumettre !";
         });
       }
     }
@@ -262,13 +262,10 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
   }
 }
 
-class _QuestionController extends BaseQuestionController {
-  _QuestionController(super.question) {
-    state.buttonLabel = "Continuer";
-  }
-
-  @override
-  void onPrimaryButtonClick() {}
+QuestionController _buildQuestionController(InstantiatedBeltQuestion question) {
+  final out = QuestionController.fromQuestion(question.question);
+  out.buttonLabel = "Continuer";
+  return out;
 }
 
 extension on EvaluateAnswersOut {
@@ -277,7 +274,7 @@ extension on EvaluateAnswersOut {
 
 class _ResultsPage extends StatelessWidget {
   final List<QuestionAnswersOut> resultats;
-  const _ResultsPage(this.resultats, {super.key});
+  const _ResultsPage(this.resultats);
 
   @override
   Widget build(BuildContext context) {

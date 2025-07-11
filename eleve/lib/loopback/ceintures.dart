@@ -1,5 +1,5 @@
 import 'package:eleve/activities/ceintures/seance.dart';
-import 'package:eleve/loopback/question.dart';
+import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_preview.dart';
 import 'package:flutter/material.dart';

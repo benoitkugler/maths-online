@@ -7,8 +7,7 @@ abstract class FieldController {
   bool _hasError = false;
 
   /// [hasError] may be set to true to indicate
-  /// that the answer does not follow the correct syntax
-  /// or is incorrect.
+  /// that the answer is incorrect.
   bool get hasError => _hasError;
 
   /// [setError] sets the error state.

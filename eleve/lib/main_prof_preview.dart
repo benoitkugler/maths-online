@@ -8,7 +8,6 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +28,7 @@ void main() {
 class MonitorApp extends StatelessWidget {
   final BuildMode buildMode;
 
-  const MonitorApp(this.buildMode, {Key? key}) : super(key: key);
+  const MonitorApp(this.buildMode, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +47,7 @@ class MonitorApp extends StatelessWidget {
 class _Monitor extends StatefulWidget {
   final BuildMode buildMode;
 
-  const _Monitor(this.buildMode, {Key? key}) : super(key: key);
+  const _Monitor(this.buildMode);
 
   @override
   State<_Monitor> createState() => _MonitorState();
@@ -98,20 +97,11 @@ class _MonitorState extends State<_Monitor> {
       ),
       body: content == null
           ? const Center(child: Text("Chargement..."))
-          : QuestionW(
-              _QuestionController(
-                content.question,
-              ),
+          : QuestionView(
+              content.question,
+              QuestionController.fromQuestion(content.question),
+              () {},
               content.categorie.color),
     );
   }
-}
-
-class _QuestionController extends BaseQuestionController {
-  _QuestionController(Question question) : super(question) {
-    state.buttonEnabled = false;
-  }
-
-  @override
-  void onPrimaryButtonClick() {}
 }

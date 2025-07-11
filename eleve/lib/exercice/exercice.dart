@@ -522,7 +522,7 @@ class _ExerciceWState extends State<ExerciceW> {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
         appBar: AppBar(),
-        body: CorrectionW(widget.controller.currentCorrection,
+        body: CorrectionView(widget.controller.currentCorrection,
             Colors.greenAccent, pickQuote()),
       ),
     ));
