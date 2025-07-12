@@ -5,8 +5,9 @@ const Color darkBlue = Color(0xFF104986);
 
 final theme = ThemeData.dark().copyWith(
   scaffoldBackgroundColor: darkBlue,
-  cardTheme:
-      ThemeData.dark().cardTheme.copyWith(color: darkBlue.withOpacity(0.7)),
+  cardTheme: ThemeData.dark()
+      .cardTheme
+      .copyWith(color: darkBlue.withValues(alpha: 0.7)),
 );
 
 const localizations = [

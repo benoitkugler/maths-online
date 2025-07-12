@@ -1,5 +1,5 @@
 import 'package:eleve/activities/ceintures/api.dart';
-import 'package:eleve/exercice/home.dart';
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';

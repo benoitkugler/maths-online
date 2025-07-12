@@ -1,6 +1,5 @@
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/exercice/exercice.dart';
-import 'package:eleve/exercice/home.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/types/src.dart';
@@ -87,7 +86,7 @@ class SheetW extends StatefulWidget {
   final HomeworkAPI api;
   final SheetProgression sheet;
 
-  const SheetW(this.api, this.sheet, {Key? key}) : super(key: key);
+  const SheetW(this.api, this.sheet, {super.key});
 
   @override
   State<SheetW> createState() => _SheetWState();
@@ -130,15 +129,15 @@ class _SheetWState extends State<SheetW> {
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
     final exController = ExerciceController(
-        studentEx,
-        widget.sheet.sheet.questionRepeat,
-        widget.sheet.sheet.questionTimeLimit,
-        null);
+      studentEx,
+      widget.sheet.sheet.questionRepeat,
+      widget.sheet.sheet.questionTimeLimit,
+    );
 
     // TODO: for now we always show a correction (when available)
     // we might want a setting to let the teacher choose to display it or not
     await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => ExerciceW(
+        builder: (context) => ExerciceStartRoute(
               exeAPI,
               exController,
               showCorrectionButtonOnFail: true,
@@ -252,9 +251,7 @@ class _TaskList extends StatelessWidget {
   final void Function(TaskProgressionHeader) onStart;
   final void Function(TaskProgressionHeader) onReset;
 
-  const _TaskList(this.tasks, this.hasNotation, this.onStart, this.onReset,
-      {Key? key})
-      : super(key: key);
+  const _TaskList(this.tasks, this.hasNotation, this.onStart, this.onReset);
 
   @override
   Widget build(BuildContext context) {
@@ -332,14 +329,14 @@ extension IconE on ExerciceCompletion {
   Icon get icon {
     switch (this) {
       case ExerciceCompletion.notStarted:
-        return const Icon(assignementIcon);
+        return const Icon(Icons.assessment);
       case ExerciceCompletion.started:
         return const Icon(
             IconData(0xf587,
                 fontFamily: 'MaterialIcons', matchTextDirection: true),
             color: Colors.orange);
       case ExerciceCompletion.completed:
-        return const Icon(completedIcon, color: Colors.green);
+        return const Icon(Icons.done, color: Colors.green);
     }
   }
 }

@@ -219,7 +219,7 @@ class _PositionnedTextW extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(4)),
             border: Border.all(width: 1.0, color: Colors.white),
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
           padding: const EdgeInsets.all(1),
           child:
@@ -358,8 +358,9 @@ class _GridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // minor grid
     final minorPaint = Paint()
-      ..color =
-          isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
+      ..color = isHighlighted
+          ? Colors.deepOrange
+          : Colors.grey.withValues(alpha: 0.7);
     for (var x in metrics._buildXTicks().visual) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), minorPaint);
     }
@@ -370,8 +371,9 @@ class _GridPainter extends CustomPainter {
     // ticks
     final majorGridPaint = Paint()
       ..strokeWidth = 1.5
-      ..color =
-          isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
+      ..color = isHighlighted
+          ? Colors.deepOrange
+          : Colors.grey.withValues(alpha: 0.7);
     final shortTickPaint = Paint()..strokeWidth = 1;
     final visualOrigin = metrics.logicalIntToVisual(const IntCoord(0, 0));
     for (var xTick in metrics._buildXTicks(logicalStep: 5)) {
@@ -718,7 +720,7 @@ class DrawingsPainter extends CustomPainterText {
       fontSize: 14,
       fontWeight: weight,
       color: color,
-      backgroundColor: Colors.white.withOpacity(0.5),
+      backgroundColor: Colors.white.withValues(alpha: 0.5),
     );
 
     final pt = TextPainter(
@@ -860,7 +862,7 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
               width: radius * zoomFactor,
               height: radius * zoomFactor,
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.8), shape: BoxShape.circle),
+                  color: color.withValues(alpha: 0.8), shape: BoxShape.circle),
             ),
           ),
           child: Container(
@@ -872,7 +874,8 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
                 width: radius,
                 height: radius,
                 decoration: BoxDecoration(
-                    color: color.withOpacity(0.8), shape: BoxShape.circle),
+                    color: color.withValues(alpha: 0.8),
+                    shape: BoxShape.circle),
               ),
             ),
           ),

@@ -20,7 +20,7 @@ class TreeController extends FieldController {
 
   TreeShape? selectedShape;
   // setup when the shape is chosen
-  _NodeController? controllers;
+  _NodeController? _controllers;
 
   TreeController(this.data, void Function() onChange) : super(onChange);
 
@@ -31,36 +31,36 @@ class TreeController extends FieldController {
   void setShape(TreeShape? shape) {
     selectedShape = shape;
     if (shape != null) {
-      controllers = _NodeController.editableFromShape(
+      _controllers = _NodeController.editableFromShape(
           onChange, shape, true, data.eventsProposals, isEnabled);
     }
   }
 
   @override
   bool hasValidData() {
-    if (controllers == null) {
+    if (_controllers == null) {
       return false;
     }
-    return controllers!.hasValidData();
+    return _controllers!.hasValidData();
   }
 
   @override
   Answer getData() {
-    return TreeAnswer(controllers!.getData());
+    return TreeAnswer(_controllers!.getData());
   }
 
   @override
   void setData(Answer answer) {
     final tree = (answer as TreeAnswer).root;
     setShape(shape(tree));
-    controllers!.setData(tree);
+    _controllers!.setData(tree);
   }
 
   @override
   void setEnabled(bool enabled) {
     // also disable children controllers
     super.setEnabled(enabled);
-    controllers?.setEnabled(enabled);
+    _controllers?.setEnabled(enabled);
   }
 }
 
@@ -166,7 +166,7 @@ class TreeFieldW extends StatefulWidget {
   final Color color;
   final TreeController controller;
 
-  const TreeFieldW(this.color, this.controller, {Key? key}) : super(key: key);
+  const TreeFieldW(this.color, this.controller, {super.key});
 
   @override
   _TreeFieldWState createState() => _TreeFieldWState();
@@ -214,7 +214,7 @@ class _TreeFieldWState extends State<TreeFieldW> {
             ),
           )
         : _OneTree(false, ct.hasError ? Colors.red : widget.color,
-            _showShapeSelection, null, ct.controllers!);
+            _showShapeSelection, null, ct._controllers!);
   }
 }
 
@@ -227,8 +227,7 @@ class _TreeView extends StatefulWidget {
   final void Function()? onTap;
 
   const _TreeView(
-      {super.key,
-      required this.color,
+      {required this.color,
       required this.nbLevels,
       required this.isSelected,
       required this.backButton,
@@ -271,7 +270,7 @@ class _TreeViewState extends State<_TreeView> {
                         border: Border.all(color: widget.color),
                         borderRadius: BorderRadius.circular(5),
                         color: widget.isSelected
-                            ? Colors.white.withOpacity(0.3)
+                            ? Colors.white.withValues(alpha: 0.3)
                             : null),
                     child: widget.root),
                 if (widget.backButton != null) widget.backButton!
@@ -292,9 +291,7 @@ class _OneTree extends StatelessWidget {
   final _NodeController controller;
 
   const _OneTree(
-      this.isSelected, this.color, this.onBack, this.onTap, this.controller,
-      {Key? key})
-      : super(key: key);
+      this.isSelected, this.color, this.onBack, this.onTap, this.controller);
 
   @override
   Widget build(BuildContext context) {
@@ -331,9 +328,7 @@ class _ShapeSelection extends StatelessWidget {
   final void Function(int) onSelect;
 
   const _ShapeSelection(
-      this.color, this.proposals, this.selected, this.onSelect,
-      {Key? key})
-      : super(key: key);
+      this.color, this.proposals, this.selected, this.onSelect);
 
   @override
   Widget build(BuildContext context) {
@@ -360,7 +355,7 @@ class _NodeEditable extends StatefulWidget implements _NodeWidget {
   final Color color;
 
   final _NodeController data;
-  const _NodeEditable(this.color, this.data, {Key? key}) : super(key: key);
+  const _NodeEditable(this.color, this.data);
 
   @override
   _NodeEditableState createState() => _NodeEditableState();
@@ -441,8 +436,7 @@ class _NodeLayout extends StatelessWidget {
   final List<_NodeWidget> children;
 
   const _NodeLayout(
-      {super.key,
-      required this.color,
+      {required this.color,
       required this.isRoot,
       required this.onTapEdge,
       required this.edges,
@@ -590,8 +584,7 @@ class _NodeStatic extends StatelessWidget implements _NodeWidget {
   final bool isRoot;
   final TreeNodeAnswer node;
 
-  const _NodeStatic(this.eventProposals, this.color, this.isRoot, this.node,
-      {super.key});
+  const _NodeStatic(this.eventProposals, this.color, this.isRoot, this.node);
 
   @override
   Widget build(BuildContext context) {

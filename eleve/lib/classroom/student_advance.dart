@@ -20,7 +20,7 @@ class AdvanceSummary extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-            border: Border.all(color: Colors.lightBlue.withOpacity(0.5)),
+            border: Border.all(color: Colors.lightBlue.withValues(alpha: 0.5)),
             borderRadius: BorderRadius.circular(4)),
         child: Column(
           children: [
@@ -32,7 +32,7 @@ class AdvanceSummary extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(color: color, spreadRadius: 2, blurRadius: 2)
                       ],
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: color)),
                   child: Row(
@@ -102,7 +102,7 @@ class _RankBar extends StatelessWidget {
   final int end;
 
   // assume start <= current <= end
-  const _RankBar(this.start, this.current, this.end, {super.key});
+  const _RankBar(this.start, this.current, this.end);
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +127,7 @@ class _RankBar extends StatelessWidget {
 class _EventsDetailsView extends StatelessWidget {
   final StudentAdvance advance;
 
-  const _EventsDetailsView(this.advance, {super.key});
+  const _EventsDetailsView(this.advance);
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +146,7 @@ class _EventsDetailsView extends StatelessWidget {
 class _EventOccurences extends StatelessWidget {
   final EventK event;
   final int occurences;
-  const _EventOccurences(this.event, this.occurences, {super.key});
+  const _EventOccurences(this.event, this.occurences);
 
   @override
   Widget build(BuildContext context) {

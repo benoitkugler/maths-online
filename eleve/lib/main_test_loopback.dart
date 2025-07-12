@@ -46,7 +46,7 @@ Question numberQuestion(String title) {
 const origin = server_questions.QuestionPage(null, null, null);
 
 class _LoopbackTestApp extends StatelessWidget {
-  const _LoopbackTestApp({Key? key}) : super(key: key);
+  const _LoopbackTestApp();
 
   @override
   Widget build(BuildContext context) {

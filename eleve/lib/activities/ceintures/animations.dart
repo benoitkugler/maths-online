@@ -59,8 +59,7 @@ class _UnlockSnapshot extends StatelessWidget {
   final Animation<double> particleAnimation;
   final Animation<double> opacityAnimation;
 
-  _UnlockSnapshot(this.color, this.title, this.particles, this.controller,
-      {super.key})
+  _UnlockSnapshot(this.color, this.title, this.particles, this.controller)
       : riseAnimation = Tween<double>(begin: 150, end: 0).animate(
           CurvedAnimation(
               parent: controller,
@@ -160,7 +159,7 @@ class _Painter extends CustomPainter {
       ..color = color;
     final border = Paint()
       ..style = PaintingStyle.stroke
-      ..color = Colors.white.withOpacity(0.6);
+      ..color = Colors.white.withValues(alpha: 0.6);
     for (var particle in particles) {
       final particulePosition = middle +
           Offset(cos(particle.angularPosition), sin(particle.angularPosition)) *

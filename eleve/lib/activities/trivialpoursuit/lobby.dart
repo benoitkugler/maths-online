@@ -79,8 +79,9 @@ class PlayerCard extends StatelessWidget {
                 color: isCurrentPlayer ? Colors.yellow : Colors.white,
                 blurRadius: 5)
           ],
-          color:
-              isCurrentPlayer ? Colors.yellow : Colors.white.withOpacity(0.8),
+          color: isCurrentPlayer
+              ? Colors.yellow
+              : Colors.white.withValues(alpha: 0.8),
           borderRadius: const BorderRadius.all(Radius.circular(12))),
       child: Card(
         child: Padding(

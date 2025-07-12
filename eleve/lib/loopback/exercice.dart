@@ -16,15 +16,15 @@ class LoopbackExerciceController implements LoopbackController {
             StudentWork(
                 data.exercice, data.progression.tryStartFirstQuestion()),
             QuestionRepeat.unlimited,
-            0,
-            data.progression.startQuestion),
+            0),
         instantShowCorrection = data.showCorrection;
+
+  // if positive, start at the given question, not in the summary
+  int? get initialQuestion =>
+      data.progression.nextQuestion >= 0 ? data.progression.nextQuestion : null;
 }
 
-extension _AdjustStart on ProgressionExt {
-  // if positive, start at the given question, not in the summary
-  int? get startQuestion => nextQuestion >= 0 ? nextQuestion : null;
-
+extension on ProgressionExt {
   // if at summary, set nextQuestion to 0, so that is it enabled
   ProgressionExt tryStartFirstQuestion() {
     return ProgressionExt(questions, nextQuestion < 0 ? 0 : nextQuestion);

@@ -83,7 +83,7 @@ class TrivialSettings {
 
 class _CodeTile extends StatelessWidget {
   final String code;
-  const _CodeTile(this.code, {super.key});
+  const _CodeTile(this.code);
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +146,7 @@ class _SelfaccessList extends StatefulWidget {
   final TrivialSettings settings;
   final void Function(String gameCode, String gameMeta) saveMeta;
 
-  const _SelfaccessList(this.settings, this.saveMeta, {super.key});
+  const _SelfaccessList(this.settings, this.saveMeta);
 
   @override
   State<_SelfaccessList> createState() => __SelfaccessListState();
@@ -177,6 +177,7 @@ class __SelfaccessListState extends State<_SelfaccessList> {
         trivials = data.trivials;
       });
     } catch (e) {
+      if (!mounted) return;
       showError("Erreur", e, context);
     }
   }
@@ -198,6 +199,7 @@ class __SelfaccessListState extends State<_SelfaccessList> {
       final body = checkServerError(resp.body);
       data = launchSelfaccessOutFromJson(body);
     } catch (e) {
+      if (!mounted) return;
       showError("Erreur", e, context);
 
       launching = false;
@@ -249,7 +251,7 @@ class _GameLaunchedScreen extends StatelessWidget {
   final String gameCode;
   final void Function() onJoin;
 
-  const _GameLaunchedScreen(this.gameCode, this.onJoin, {super.key});
+  const _GameLaunchedScreen(this.gameCode, this.onJoin);
 
   @override
   Widget build(BuildContext context) {
@@ -265,6 +267,7 @@ class _GameLaunchedScreen extends StatelessWidget {
             ElevatedButton.icon(
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: gameCode));
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       backgroundColor: Colors.lightGreen,
                       content: Text("Code copié dans le presse-papier.")));
@@ -287,7 +290,7 @@ class _GameLaunchedScreen extends StatelessWidget {
 class _TrivialRow extends StatelessWidget {
   final Trivial trivial;
   final void Function() onTap;
-  const _TrivialRow(this.trivial, this.onTap, {super.key});
+  const _TrivialRow(this.trivial, this.onTap);
 
   @override
   Widget build(BuildContext context) {
@@ -325,7 +328,7 @@ class _Loggin extends StatefulWidget {
   final TrivialSettings settings;
   final void Function(String gameCode, String gameMeta) saveMeta;
 
-  const _Loggin(this.settings, this.saveMeta, {Key? key}) : super(key: key);
+  const _Loggin(this.settings, this.saveMeta);
 
   @override
   _LogginState createState() => _LogginState();

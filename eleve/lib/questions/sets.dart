@@ -293,7 +293,7 @@ extension on SetOp {
 class _Control extends StatelessWidget {
   final void Function() onTap;
   final String latex;
-  const _Control(this.onTap, this.latex, {super.key});
+  const _Control(this.onTap, this.latex);
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +324,7 @@ class _NodeW extends StatelessWidget {
   final void Function(_Node) onTap;
 
   const _NodeW(this.parenthesisHint, this.node, this.sets, this.cursor,
-      {required this.onTap, this.isRoot = false, super.key});
+      {required this.onTap, this.isRoot = false});
 
   Widget kid() {
     final sp = node.explicitParenthesis
@@ -362,7 +362,7 @@ class _NodeW extends StatelessWidget {
           decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(4)),
               color: isCursor
-                  ? Colors.white.withOpacity(0.2)
+                  ? Colors.white.withValues(alpha: 0.2)
                   : Colors.transparent),
           child: kid(),
         ),
@@ -384,7 +384,7 @@ class _UniOrInt extends StatelessWidget {
 
   const _UniOrInt(
       this.operator, this.showParenthesis, this.args, this.sets, this.cursor,
-      {required this.onTap, super.key});
+      {required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -422,8 +422,7 @@ class _ComplementW extends StatelessWidget {
 
   final void Function(_Node) onTap;
 
-  const _ComplementW(this.arg, this.sets, this.cursor,
-      {required this.onTap, super.key});
+  const _ComplementW(this.arg, this.sets, this.cursor, {required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -440,7 +439,7 @@ class _LeafW extends StatelessWidget {
   final Set leaf;
   final List<_IndexedSet> sets;
 
-  const _LeafW(this.leaf, this.sets, {super.key});
+  const _LeafW(this.leaf, this.sets);
 
   @override
   Widget build(BuildContext context) {

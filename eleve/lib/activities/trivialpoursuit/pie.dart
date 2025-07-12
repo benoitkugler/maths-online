@@ -91,7 +91,7 @@ class _PieBackgroundPainter extends CustomPainter {
           true,
           Paint()
             ..style = PaintingStyle.stroke
-            ..color = Colors.black.withOpacity(0.5)
+            ..color = Colors.black.withValues(alpha: 0.5)
             ..strokeWidth = 1);
     }
 
@@ -149,7 +149,7 @@ class _PiePartPainter extends CustomPainter {
         true,
         Paint()
           ..style = PaintingStyle.stroke
-          ..color = Colors.black.withOpacity(0.5)
+          ..color = Colors.black.withValues(alpha: 0.5)
           ..strokeWidth = 1);
     canvas.drawArc(
         arcRect,

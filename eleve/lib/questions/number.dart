@@ -15,6 +15,9 @@ class NumberController extends FieldController {
   String get text => textController.text.trim().replaceAll(",", ".");
 
   @override
+  String toString() => text;
+
+  @override
   bool hasValidData() {
     if (text.isEmpty) {
       return false;

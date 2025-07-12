@@ -19,8 +19,7 @@ class Board extends StatelessWidget {
   final int pawnTile;
 
   const Board(this.sideLength, this.onTap, this.highlights, this.pawnTile,
-      {Key? key})
-      : super(key: key);
+      {super.key});
 
   static const innerRingRadius = 34;
   static const outerRingRadius = innerRingRadius + 14;
@@ -126,7 +125,7 @@ class Board extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
         BoxShadow(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             blurRadius: 5,
             spreadRadius: 2)
       ]),
@@ -172,7 +171,7 @@ class _TileConfig {
 class _RegularTile extends StatelessWidget {
   final _TileConfig tile;
 
-  const _RegularTile(this.tile, {Key? key}) : super(key: key);
+  const _RegularTile(this.tile);
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +188,7 @@ class _RegularTile extends StatelessWidget {
 class _HightightedTile extends StatelessWidget {
   final _TileConfig tile;
 
-  const _HightightedTile(this.tile, {Key? key}) : super(key: key);
+  const _HightightedTile(this.tile);
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +211,7 @@ class _HightightedTile extends StatelessWidget {
 class _AnimatedGlow extends StatefulWidget {
   final _TileConfig tile;
 
-  const _AnimatedGlow(this.tile, {Key? key}) : super(key: key);
+  const _AnimatedGlow(this.tile);
 
   @override
   __AnimatedGlowState createState() => __AnimatedGlowState();
@@ -320,7 +319,7 @@ class _TilePainter extends CustomPainter {
   Paint _fillStyle() {
     return Paint()
       ..style = PaintingStyle.fill
-      ..color = isHighlighted ? darkened : desc.color.withOpacity(0.6);
+      ..color = isHighlighted ? darkened : desc.color.withValues(alpha: 0.6);
   }
 
   @override

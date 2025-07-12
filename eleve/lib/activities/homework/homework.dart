@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:eleve/activities/homework/sheet.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercice/home.dart';
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/animated_logo.dart';
 import 'package:eleve/shared/errors.dart';
@@ -146,7 +146,7 @@ class _HomeworkW extends StatefulWidget {
   final bool isNotNoted;
 
   /// Creates a new [_HomeworkW] widget
-  const _HomeworkW(this.api, this.isNotNoted, {Key? key}) : super(key: key);
+  const _HomeworkW(this.api, this.isNotNoted);
 
   @override
   State<_HomeworkW> createState() => _HomeworkWState();
@@ -195,7 +195,7 @@ class _HomeworkWState extends State<_HomeworkW> {
 }
 
 class _Loading extends StatelessWidget {
-  const _Loading({Key? key}) : super(key: key);
+  const _Loading();
 
   @override
   Widget build(BuildContext context) {
@@ -214,9 +214,7 @@ class _SheetListView extends StatefulWidget {
   final bool isNotNoted;
   final Sheets initialSheets;
 
-  const _SheetListView(this.api, this.isNotNoted, this.initialSheets,
-      {Key? key})
-      : super(key: key);
+  const _SheetListView(this.api, this.isNotNoted, this.initialSheets);
 
   @override
   State<_SheetListView> createState() => _SheetListViewState();
@@ -319,7 +317,7 @@ class _NotedSheetList extends StatelessWidget {
   final Sheets sheets;
   final void Function(SheetProgression) onTap;
 
-  const _NotedSheetList(this.sheets, this.onTap, {super.key});
+  const _NotedSheetList(this.sheets, this.onTap);
 
   // assume a one at a time sheet to do and emphasize it
   int? _selectMainSheetID() {
@@ -357,7 +355,7 @@ class _FreeSheetList extends StatefulWidget {
   final Sheets sheets;
   final void Function(SheetProgression) onTap;
 
-  const _FreeSheetList(this.sheets, this.onTap, {super.key});
+  const _FreeSheetList(this.sheets, this.onTap);
 
   List<MapEntry<String, List<SheetProgression>>> get _groups {
     final tmp = <String, List<SheetProgression>>{};
@@ -428,7 +426,7 @@ class __FreeSheetListState extends State<_FreeSheetList> {
     return SingleChildScrollView(
       child: ExpansionPanelList(
           expansionCallback: (panelIndex, isExpanded) => _expand(panelIndex),
-          dividerColor: Colors.lightBlue.withOpacity(0.8),
+          dividerColor: Colors.lightBlue.withValues(alpha: 0.8),
           expandedHeaderPadding: const EdgeInsets.all(6),
           children: List.generate(widget._groups.length, (index) {
             final group = widget._groups[index];
@@ -489,8 +487,7 @@ final sheetExpiredColor = Colors.red.shade300;
 class _SheetSummary extends StatelessWidget {
   final SheetProgression sheet;
   final SheetStatus status;
-  const _SheetSummary(this.sheet, {this.status = SheetStatus.normal, Key? key})
-      : super(key: key);
+  const _SheetSummary(this.sheet, {this.status = SheetStatus.normal});
 
   @override
   Widget build(BuildContext context) {
@@ -592,7 +589,7 @@ class DeadlineCard extends StatelessWidget {
 class HomeworkActivityIcon extends StatelessWidget {
   final void Function() onTap;
 
-  const HomeworkActivityIcon(this.onTap, {Key? key}) : super(key: key);
+  const HomeworkActivityIcon(this.onTap, {super.key});
 
   @override
   Widget build(BuildContext context) {

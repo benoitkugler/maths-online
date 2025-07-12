@@ -202,8 +202,8 @@ class _AnswerRow extends StatelessWidget {
                 minHeight: minHeight,
               ),
               color: candidateData.isEmpty
-                  ? color.withOpacity(0.5)
-                  : color.withOpacity(0.9),
+                  ? color.withValues(alpha: 0.5)
+                  : color.withValues(alpha: 0.9),
               child: Center(
                 child: answers.isEmpty
                     ? const Text("Glisser les symboles...",

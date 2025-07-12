@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:eleve/activities/ceintures/seance.dart';
-import 'package:eleve/exercice/home.dart';
 import 'package:eleve/loopback/ceintures.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
@@ -156,7 +155,7 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       originPage = controller.data.origin;
       originParams = controller.data.params;
     } else if (controller is LoopbackExerciceController) {
-      final index = controller.controller.questionIndex!;
+      final index = controller.controller.questionIndex;
       originPage = controller.data.origin[index];
       originParams =
           controller.controller.exeAndProg.exercice.questions[index].params;
@@ -203,7 +202,8 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       return LoopbackQuestionW(
           controller, evaluateQuestionAnswer, _showCorrectAnswer);
     } else if (controller is LoopbackExerciceController) {
-      return ExerciceW(widget.api, controller.controller,
+      return ExerciceStartRoute(widget.api, controller.controller,
+          initialQuestion: controller.initialQuestion,
           onShowCorrectAnswer: _showCorrectAnswer,
           showCorrectionButtonOnFail: true,
           instantShowCorrection: controller.instantShowCorrection);

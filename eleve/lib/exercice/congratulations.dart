@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Congrats extends StatefulWidget {
-  const Congrats({Key? key}) : super(key: key);
+  const Congrats({super.key});
 
   @override
   State<Congrats> createState() => _CongratsState();
@@ -30,15 +30,15 @@ class _CongratsState extends State<Congrats> {
     return Card(
       elevation: 8,
       shadowColor: Colors.white,
-      color: Colors.lightGreen.shade200,
+      color: Colors.lightGreen.shade500,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Exercice terminé. \n\nBravo !",
-              style: TextStyle(fontSize: 24, color: Colors.green.shade700),
+              "Exercice terminé. \nBravo !",
+              style: TextStyle(fontSize: 24),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -50,6 +50,12 @@ class _CongratsState extends State<Congrats> {
                 width: 120,
               ),
             ),
+            const SizedBox(height: 20),
+            OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style:
+                    OutlinedButton.styleFrom(foregroundColor: Colors.black54),
+                child: const Text("Retour au sommaire"))
           ],
         ),
       ),
@@ -80,7 +86,7 @@ class CorrectAnswerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.lightGreen.shade400,
+      backgroundColor: Colors.lightGreen.shade500,
       title: Text(pickCongratulationMessage()),
       content: const Text("Ta réponse est correcte, bravo !"),
       actions: [

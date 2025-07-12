@@ -25,10 +25,6 @@ import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
-/// [QuestionListController] provides methods to
-/// display a list of questions and maintain their internal state.
-class QuestionListController {}
-
 /// Walks throught the question content and creates the field controllers,
 /// later used when building widgets.
 Map<int, FieldController> _createFieldControllers(
@@ -76,7 +72,7 @@ typedef QuestionFeedback = Map<int, bool>;
 /// [QuestionController] defines the parameters
 /// of a question widget.
 /// It provides convenience methods to control the state
-/// of each question internal controllers.
+/// of each question-internal controllers.
 class QuestionController extends ChangeNotifier {
   /// associated to the question ennonce
   Map<int, FieldController> fields = {};

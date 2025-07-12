@@ -56,8 +56,7 @@ class TrivialPoursuitController extends StatefulWidget {
 
   const TrivialPoursuitController(
       this.buildMode, this.gameMeta, this.isSelfLaunched,
-      {Key? key})
-      : super(key: key);
+      {super.key});
 
   @override
   _TrivialPoursuitControllerState createState() =>
@@ -600,9 +599,7 @@ class _GameStarted extends StatelessWidget {
       this.diceDisabled,
       this.onTapTile,
       this.availableTiles,
-      this.pawnTile,
-      {Key? key})
-      : super(key: key);
+      this.pawnTile);
 
   Text _ruleRow(String content, double fontSize) {
     return Text(content, style: TextStyle(fontSize: fontSize, height: 2));
@@ -698,7 +695,8 @@ class _GameStarted extends StatelessWidget {
               image: const AssetImage("assets/images/grey-wood.png"),
               fit: BoxFit.cover,
               colorFilter: ColorFilter.mode(
-                  const Color.fromARGB(255, 57, 115, 119).withOpacity(0.6),
+                  const Color.fromARGB(255, 57, 115, 119)
+                      .withValues(alpha: 0.6),
                   BlendMode.srcATop)),
         ),
         child: Column(
@@ -753,7 +751,7 @@ class _GameStarted extends StatelessWidget {
 class TrivialActivityIcon extends StatelessWidget {
   final void Function() onTap;
 
-  const TrivialActivityIcon(this.onTap, {Key? key}) : super(key: key);
+  const TrivialActivityIcon(this.onTap, {super.key});
 
   @override
   Widget build(BuildContext context) {

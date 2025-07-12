@@ -116,14 +116,14 @@ final quI2bis = InstantiatedQuestion(
 final quI3bis = InstantiatedQuestion(
     3, numberQuestion("Variante 3"), DifficultyTag.diff2, []);
 
-const qu1Answer = {0: NumberAnswer(0)};
-const qu2Answer = {0: NumberAnswer(1)};
-const qu3Answer = {0: NumberAnswer(2)};
+const qu1Answer = {0: NumberAnswer(0), 1: NumberAnswer(0)};
+const qu2Answer = {0: NumberAnswer(1), 1: NumberAnswer(1)};
+const qu3Answer = {0: NumberAnswer(2), 1: NumberAnswer(2)};
 
 /// a dev widget testing the behavior of the question/exercice
 /// widgets for each context
 class _QuestionTestApp extends StatelessWidget {
-  const _QuestionTestApp({Key? key}) : super(key: key);
+  const _QuestionTestApp();
 
   @override
   Widget build(BuildContext context) {
@@ -152,18 +152,18 @@ class _QuestionTestApp extends StatelessWidget {
               ElevatedButton(
                   onPressed: () => showLoopackQuestion(context),
                   child: const Text("Loopack: Question")),
-              // ElevatedButton(
-              //     onPressed: () => showExerciceSequencial(context),
-              //     child: const Text("Homework: Sequencial")),
-              // ElevatedButton(
-              //     onPressed: () => showExerciceParallel(context),
-              //     child: const Text("Homework: Parallel")),
-              // ElevatedButton(
-              //     onPressed: () => showLoopackExerciceSequencial(context),
-              //     child: const Text("Loopack: Exercice Sequencial")),
-              // ElevatedButton(
-              //     onPressed: () => showLoopackExerciceParallel(context),
-              //     child: const Text("Loopack: Exercice Parallel")),
+              ElevatedButton(
+                  onPressed: () => showExerciceSequencial(context),
+                  child: const Text("Homework: Sequencial")),
+              ElevatedButton(
+                  onPressed: () => showExerciceParallel(context),
+                  child: const Text("Homework: Parallel")),
+              ElevatedButton(
+                  onPressed: () => showLoopackExerciceSequencial(context),
+                  child: const Text("Loopack: Exercice Sequencial")),
+              ElevatedButton(
+                  onPressed: () => showLoopackExerciceParallel(context),
+                  child: const Text("Loopack: Exercice Parallel")),
             ],
           ),
         ));
@@ -275,7 +275,7 @@ class _TrivialInGame extends StatelessWidget {
     await showDialog<void>(
         context: context,
         builder: (context) => Dialog(child: Text("Sending $answers")));
-
+    if (!context.mounted) return;
     Navigator.of(context).pop();
   }
 }
@@ -362,6 +362,7 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   // micmic an http call
   void onValid(QuestionAnswersIn a) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
 
     const rep = {0: true, 1: false, 2: true, 3: true};
 
@@ -422,8 +423,8 @@ class _ExerciceSequential extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceSequentialAPI(),
-        ExerciceController(workSequencial, QuestionRepeat.unlimited, 0, null));
+    return ExerciceStartRoute(_ExerciceSequentialAPI(),
+        ExerciceController(workSequencial, QuestionRepeat.unlimited, 0));
   }
 }
 
@@ -438,18 +439,18 @@ class _LoopbackExerciceSequential extends StatefulWidget {
 class _LoopbackExerciceSequentialState
     extends State<_LoopbackExerciceSequential> {
   ExerciceController ct =
-      ExerciceController(workSequencial, QuestionRepeat.unlimited, 0, null);
+      ExerciceController(workSequencial, QuestionRepeat.unlimited, 0);
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceSequentialAPI(), ct,
-        onShowCorrectAnswer: onShowCorrectAnswer);
+    return ExerciceStartRoute(_ExerciceSequentialAPI(), ct,
+        initialQuestion: 1, onShowCorrectAnswer: onShowCorrectAnswer);
   }
 
   void onShowCorrectAnswer() async {
     // mimic server send and receive
     await Future<void>.delayed(const Duration(milliseconds: 200));
-    final ans = {0: qu1Answer, 1: qu2Answer, 2: qu3Answer}[ct.questionIndex!]!;
+    final ans = {0: qu1Answer, 1: qu2Answer, 2: qu3Answer}[ct.questionIndex]!;
     setState(() {
       ct.setQuestionAnswers(ans);
     });
@@ -481,8 +482,8 @@ class _ExerciceParallel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceParallelAPI(),
-        ExerciceController(workParallel, QuestionRepeat.unlimited, 0, null));
+    return ExerciceStartRoute(_ExerciceParallelAPI(),
+        ExerciceController(workParallel, QuestionRepeat.unlimited, 0));
   }
 }
 
@@ -496,11 +497,11 @@ class _LoopbackExerciceParallel extends StatefulWidget {
 
 class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
   ExerciceController ct =
-      ExerciceController(workParallel, QuestionRepeat.unlimited, 0, null);
+      ExerciceController(workParallel, QuestionRepeat.unlimited, 0);
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(
+    return ExerciceStartRoute(
       _ExerciceParallelAPI(),
       ct,
       onShowCorrectAnswer: onShowCorrectAnswer,
@@ -510,7 +511,7 @@ class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
   void onShowCorrectAnswer() async {
     // mimic server send and receive
     await Future<void>.delayed(const Duration(milliseconds: 200));
-    final ans = {0: qu1Answer, 1: qu2Answer, 2: qu3Answer}[ct.questionIndex!]!;
+    final ans = {0: qu1Answer, 1: qu2Answer, 2: qu3Answer}[ct.questionIndex]!;
     setState(() {
       ct.setQuestionAnswers(ans);
     });
