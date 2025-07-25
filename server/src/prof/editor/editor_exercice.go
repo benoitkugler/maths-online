@@ -148,7 +148,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
-		fromQuestions := ed.IdExerciceSet{}
+		fromQuestions := utils.Set[ed.IdExercice]{}
 		for _, question := range questions {
 			if !question.NeedExercice.Valid {
 				continue // ignore standalone questions
@@ -162,7 +162,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
-		idGroups := ed.IdExercicegroupSet{}
+		idGroups := utils.Set[ed.IdExercicegroup]{}
 		for _, exercice := range exercices {
 			if fromQuestions.Has(exercice.Id) || exercice.Parameters.HasTODO() {
 				idGroups.Add(exercice.IdGroup)
@@ -528,11 +528,11 @@ func (ct *Controller) createExercicegroup(userID uID) (ExercicegroupExt, error) 
 
 	// add the favorite matiere as tag
 	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
-	err = ed.InsertExercicegroupTag(tx, ed.ExercicegroupTag{
+	err = ed.ExercicegroupTag{
 		Tag:             ts.Tag,
 		Section:         ts.Section,
 		IdExercicegroup: group.Id,
-	})
+	}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExercicegroupExt{}, utils.SQLError(err)

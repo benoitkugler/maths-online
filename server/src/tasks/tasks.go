@@ -92,7 +92,7 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 	}
 
 	// fetch the associated exerciceIDs or monoquestionIDs
-	exerciceIDs, monoquestionIDs, randomMonoquestionIDs := make(ed.IdExerciceSet), make(ta.IdMonoquestionSet), make(ta.IdRandomMonoquestionSet)
+	exerciceIDs, monoquestionIDs, randomMonoquestionIDs := make(utils.Set[ed.IdExercice]), make(utils.Set[ta.IdMonoquestion]), make(utils.Set[ta.IdRandomMonoquestion])
 	for _, task := range out.Tasks {
 		if task.IdExercice.Valid {
 			exerciceIDs.Add(task.IdExercice.ID)
@@ -143,7 +143,7 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		return out, utils.SQLError(err)
 	}
 
-	questiongroupsId := make(ed.IdQuestiongroupSet) // select the groups required
+	questiongroupsId := make(utils.Set[ed.IdQuestiongroup]) // select the groups required
 	for _, qu := range out.questions {
 		if qu.IdGroup.Valid {
 			questiongroupsId.Add(qu.IdGroup.ID)

@@ -476,7 +476,7 @@ func (r *Room) decrassage() (ids map[serial][]editor.IdQuestion) {
 	const nbMax = 3
 	ids = make(map[serial][]editor.IdQuestion)
 	for _, player := range r.players {
-		quIds := editor.NewIdQuestionSetFrom(player.advance.review.MarkedQuestions)
+		quIds := utils.NewSet(player.advance.review.MarkedQuestions...)
 
 		// add from the failed questions
 		for _, question := range player.advance.review.QuestionHistory {

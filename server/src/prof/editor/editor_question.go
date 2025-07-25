@@ -137,11 +137,11 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 
 	// add the favorite matiere as tag
 	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
-	err = ed.InsertQuestiongroupTag(tx, ed.QuestiongroupTag{
+	err = ed.QuestiongroupTag{
 		Tag:             ts.Tag,
 		Section:         ts.Section,
 		IdQuestiongroup: group.Id,
-	})
+	}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return QuestiongroupExt{}, utils.SQLError(err)
@@ -743,7 +743,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
-		ids := ed.IdQuestiongroupSet{}
+		ids := utils.Set[ed.IdQuestiongroup]{}
 		for _, question := range questions {
 			if question.NeedExercice.Valid {
 				continue // ignore exercices

@@ -88,7 +88,7 @@ func (sel questionSelector) search(query tc.CategoriesQuestions, userID uID) (ou
 			return out, nil
 		}
 
-		idGroups := ed.NewIdQuestiongroupSetFrom(filterTags(cat, sel.tags))
+		idGroups := utils.NewSet(filterTags(cat, sel.tags)...)
 
 		groups := make(ed.Questiongroups, len(idGroups)) // select the groups
 		for id := range idGroups {
@@ -236,8 +236,8 @@ func CommonTags(tags [][]ed.TagSection) ed.Tags {
 
 // returns the union of all the question groups in the pool,
 // that is, question matching at least one criteria
-func allQuestions(pool tv.QuestionPool) ed.IdQuestionSet {
-	crible := make(ed.IdQuestionSet)
+func allQuestions(pool tv.QuestionPool) utils.Set[ed.IdQuestion] {
+	crible := make(utils.Set[ed.IdQuestion])
 
 	for _, cat := range pool {
 		for _, question := range cat.Questions {

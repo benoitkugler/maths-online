@@ -77,7 +77,7 @@ func (ct *Controller) createEvolution(args CreateEvolutionIn) (out CreateEvoluti
 			return out, fmt.Errorf("Erreur interne: %s", err)
 		}
 		idStudent := teacher.IdStudent(id_)
-		err = ce.InsertBeltevolution(ct.db, ce.Beltevolution{IdStudent: idStudent, Level: args.Level})
+		err = ce.Beltevolution{IdStudent: idStudent, Level: args.Level}.Insert(ct.db)
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
@@ -283,7 +283,7 @@ func (ct *Controller) setEvolution(tokens StudentTokens, adv ce.Advance, stats c
 			return utils.SQLError(err)
 		}
 
-		err = ce.InsertBeltevolution(tx, ev)
+		err = ev.Insert(tx)
 		if err != nil {
 			_ = tx.Rollback()
 			return utils.SQLError(err)

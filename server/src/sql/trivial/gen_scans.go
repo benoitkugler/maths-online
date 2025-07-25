@@ -13,15 +13,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -41,7 +41,7 @@ func ScanSelfaccessTrivial(row *sql.Row) (SelfaccessTrivial, error) {
 
 // SelectAll returns all the items in the selfaccess_trivials table.
 func SelectAllSelfaccessTrivials(db DB) (SelfaccessTrivials, error) {
-	rows, err := db.Query("SELECT * FROM selfaccess_trivials")
+	rows, err := db.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials")
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func ScanSelfaccessTrivials(rs *sql.Rows) (SelfaccessTrivials, error) {
 	return structs, nil
 }
 
-func InsertSelfaccessTrivial(db DB, item SelfaccessTrivial) error {
+func (item SelfaccessTrivial) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO selfaccess_trivials (
 			idclassroom, idtrivial, idteacher
 			) VALUES (
@@ -149,7 +149,7 @@ func (items SelfaccessTrivials) IdClassrooms() []teacher.IdClassroom {
 }
 
 func SelectSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdClassroom) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms_))
+	rows, err := tx.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func SelectSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdCl
 }
 
 func DeleteSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdClassroom) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idclassroom = ANY($1) RETURNING *", teacher.IdClassroomArrayToPQ(idClassrooms_))
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idclassroom = ANY($1) RETURNING idclassroom, idtrivial, idteacher", teacher.IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (items SelfaccessTrivials) IdTrivials() []IdTrivial {
 }
 
 func SelectSelfaccessTrivialsByIdTrivials(tx DB, idTrivials_ ...IdTrivial) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idtrivial = ANY($1)", IdTrivialArrayToPQ(idTrivials_))
+	rows, err := tx.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials WHERE idtrivial = ANY($1)", IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func SelectSelfaccessTrivialsByIdTrivials(tx DB, idTrivials_ ...IdTrivial) (Self
 }
 
 func DeleteSelfaccessTrivialsByIdTrivials(tx DB, idTrivials_ ...IdTrivial) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idtrivial = ANY($1) RETURNING *", IdTrivialArrayToPQ(idTrivials_))
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idtrivial = ANY($1) RETURNING idclassroom, idtrivial, idteacher", IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (items SelfaccessTrivials) IdTeachers() []teacher.IdTeacher {
 }
 
 func SelectSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func SelectSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeache
 }
 
 func DeleteSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idteacher = ANY($1) RETURNING *", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idteacher = ANY($1) RETURNING idclassroom, idtrivial, idteacher", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func DeleteSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeache
 
 // SelectSelfaccessTrivialsByIdTrivialAndIdTeacher selects the items matching the given fields.
 func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2", idTrivial, idTeacher)
+	rows, err := tx.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2", idTrivial, idTeacher)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +248,7 @@ func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial,
 // DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher deletes the item matching the given fields, returning
 // the deleted items.
 func DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2 RETURNING *", idTrivial, idTeacher)
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2 RETURNING idclassroom, idtrivial, idteacher", idTrivial, idTeacher)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func ScanTrivial(row *sql.Row) (Trivial, error) { return scanOneTrivial(row) }
 
 // SelectAll returns all the items in the trivials table.
 func SelectAllTrivials(db DB) (Trivials, error) {
-	rows, err := db.Query("SELECT * FROM trivials")
+	rows, err := db.Query("SELECT id, questions, questiontimeout, showdecrassage, public, idteacher, name FROM trivials")
 	if err != nil {
 		return nil, err
 	}
@@ -282,13 +282,13 @@ func SelectAllTrivials(db DB) (Trivials, error) {
 
 // SelectTrivial returns the entry matching 'id'.
 func SelectTrivial(tx DB, id IdTrivial) (Trivial, error) {
-	row := tx.QueryRow("SELECT * FROM trivials WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, questions, questiontimeout, showdecrassage, public, idteacher, name FROM trivials WHERE id = $1", id)
 	return ScanTrivial(row)
 }
 
 // SelectTrivials returns the entry matching the given 'ids'.
 func SelectTrivials(tx DB, ids ...IdTrivial) (Trivials, error) {
-	rows, err := tx.Query("SELECT * FROM trivials WHERE id = ANY($1)", IdTrivialArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, questions, questiontimeout, showdecrassage, public, idteacher, name FROM trivials WHERE id = ANY($1)", IdTrivialArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +336,7 @@ func (item Trivial) Insert(tx DB) (out Trivial, err error) {
 		questions, questiontimeout, showdecrassage, public, idteacher, name
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
-		) RETURNING *;
+		) RETURNING id, questions, questiontimeout, showdecrassage, public, idteacher, name;
 		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name)
 	return ScanTrivial(row)
 }
@@ -347,14 +347,14 @@ func (item Trivial) Update(tx DB) (out Trivial, err error) {
 		questions, questiontimeout, showdecrassage, public, idteacher, name
 		) = (
 		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING *;
+		) WHERE id = $7 RETURNING id, questions, questiontimeout, showdecrassage, public, idteacher, name;
 		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name, item.Id)
 	return ScanTrivial(row)
 }
 
 // Deletes the Trivial and returns the item
 func DeleteTrivialById(tx DB, id IdTrivial) (Trivial, error) {
-	row := tx.QueryRow("DELETE FROM trivials WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM trivials WHERE id = $1 RETURNING id, questions, questiontimeout, showdecrassage, public, idteacher, name;", id)
 	return ScanTrivial(row)
 }
 
@@ -393,7 +393,7 @@ func (items Trivials) IdTeachers() []teacher.IdTeacher {
 }
 
 func SelectTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Trivials, error) {
-	rows, err := tx.Query("SELECT * FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("SELECT id, questions, questiontimeout, showdecrassage, public, idteacher, name FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +408,7 @@ func DeleteTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdTr
 	return ScanIdTrivialArray(rows)
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -419,7 +419,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -454,27 +454,5 @@ func ScanIdTrivialArray(rs *sql.Rows) ([]IdTrivial, error) {
 	return ints, nil
 }
 
-type IdTrivialSet map[IdTrivial]bool
-
-func NewIdTrivialSetFrom(ids []IdTrivial) IdTrivialSet {
-	out := make(IdTrivialSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdTrivialSet) Add(id IdTrivial) { s[id] = true }
-
-func (s IdTrivialSet) Has(id IdTrivial) bool { return s[id] }
-
-func (s IdTrivialSet) Keys() []IdTrivial {
-	out := make([]IdTrivial, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func (s *CategoriesQuestions) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *CategoriesQuestions) Scan(src any) error          { return loadJSON(s, src) }
 func (s CategoriesQuestions) Value() (driver.Value, error) { return dumpJSON(s) }

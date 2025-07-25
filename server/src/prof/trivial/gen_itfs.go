@@ -41,7 +41,7 @@ func (out *GroupsStrategyWrapper) UnmarshalJSON(src []byte) error {
 
 func (item GroupsStrategyWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper

@@ -69,7 +69,7 @@ type Target interface {
 	WithIdReview(IdReview) Target
 
 	// Insert inserts the target in the proper table
-	Insert(tx *sql.Tx) error
+	Insert(db DB) error
 
 	// Errors should not be wrapped
 	Load(db DB) (TargetHeader, error)
@@ -89,11 +89,6 @@ func (tr ReviewQuestion) WithIdReview(r IdReview) Target { tr.IdReview = r; retu
 func (tr ReviewExercice) WithIdReview(r IdReview) Target { tr.IdReview = r; return tr }
 func (tr ReviewTrivial) WithIdReview(r IdReview) Target  { tr.IdReview = r; return tr }
 func (tr ReviewSheet) WithIdReview(r IdReview) Target    { tr.IdReview = r; return tr }
-
-func (tr ReviewQuestion) Insert(tx *sql.Tx) error { return InsertManyReviewQuestions(tx, tr) }
-func (tr ReviewExercice) Insert(tx *sql.Tx) error { return InsertManyReviewExercices(tx, tr) }
-func (tr ReviewTrivial) Insert(tx *sql.Tx) error  { return InsertManyReviewTrivials(tx, tr) }
-func (tr ReviewSheet) Insert(tx *sql.Tx) error    { return InsertManyReviewSheets(tx, tr) }
 
 func (tr ReviewQuestion) Load(db DB) (TargetHeader, error) {
 	item, err := ed.SelectQuestiongroup(db, tr.IdQuestion)

@@ -7,21 +7,22 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/lib/pq"
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -40,7 +41,7 @@ func ScanBeltevolution(row *sql.Row) (Beltevolution, error) { return scanOneBelt
 
 // SelectAll returns all the items in the beltevolutions table.
 func SelectAllBeltevolutions(db DB) (Beltevolutions, error) {
-	rows, err := db.Query("SELECT * FROM beltevolutions")
+	rows, err := db.Query("SELECT idstudent, level, advance, stats FROM beltevolutions")
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +75,7 @@ func ScanBeltevolutions(rs *sql.Rows) (Beltevolutions, error) {
 	return structs, nil
 }
 
-func InsertBeltevolution(db DB, item Beltevolution) error {
+func (item Beltevolution) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO beltevolutions (
 			idstudent, level, advance, stats
 			) VALUES (
@@ -150,7 +151,7 @@ func (items Beltevolutions) IdStudents() []teacher.IdStudent {
 
 // SelectBeltevolutionByIdStudent return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectBeltevolutionByIdStudent(tx DB, idStudent teacher.IdStudent) (item Beltevolution, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM beltevolutions WHERE idstudent = $1", idStudent)
+	row := tx.QueryRow("SELECT idstudent, level, advance, stats FROM beltevolutions WHERE idstudent = $1", idStudent)
 	item, err = ScanBeltevolution(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -159,7 +160,7 @@ func SelectBeltevolutionByIdStudent(tx DB, idStudent teacher.IdStudent) (item Be
 }
 
 func SelectBeltevolutionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Beltevolutions, error) {
-	rows, err := tx.Query("SELECT * FROM beltevolutions WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("SELECT idstudent, level, advance, stats FROM beltevolutions WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +168,7 @@ func SelectBeltevolutionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (
 }
 
 func DeleteBeltevolutionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Beltevolutions, error) {
-	rows, err := tx.Query("DELETE FROM beltevolutions WHERE idstudent = ANY($1) RETURNING *", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("DELETE FROM beltevolutions WHERE idstudent = ANY($1) RETURNING idstudent, level, advance, stats", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func ScanBeltquestion(row *sql.Row) (Beltquestion, error) { return scanOneBeltqu
 
 // SelectAll returns all the items in the beltquestions table.
 func SelectAllBeltquestions(db DB) (Beltquestions, error) {
-	rows, err := db.Query("SELECT * FROM beltquestions")
+	rows, err := db.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions")
 	if err != nil {
 		return nil, err
 	}
@@ -202,13 +203,13 @@ func SelectAllBeltquestions(db DB) (Beltquestions, error) {
 
 // SelectBeltquestion returns the entry matching 'id'.
 func SelectBeltquestion(tx DB, id IdBeltquestion) (Beltquestion, error) {
-	row := tx.QueryRow("SELECT * FROM beltquestions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions WHERE id = $1", id)
 	return ScanBeltquestion(row)
 }
 
 // SelectBeltquestions returns the entry matching the given 'ids'.
 func SelectBeltquestions(tx DB, ids ...IdBeltquestion) (Beltquestions, error) {
-	rows, err := tx.Query("SELECT * FROM beltquestions WHERE id = ANY($1)", IdBeltquestionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions WHERE id = ANY($1)", IdBeltquestionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +257,7 @@ func (item Beltquestion) Insert(tx DB) (out Beltquestion, err error) {
 		domain, rank, parameters, enonce, correction, repeat, title
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
-		) RETURNING *;
+		) RETURNING id, domain, rank, parameters, enonce, correction, repeat, title;
 		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Title)
 	return ScanBeltquestion(row)
 }
@@ -267,14 +268,14 @@ func (item Beltquestion) Update(tx DB) (out Beltquestion, err error) {
 		domain, rank, parameters, enonce, correction, repeat, title
 		) = (
 		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING *;
+		) WHERE id = $8 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title;
 		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Title, item.Id)
 	return ScanBeltquestion(row)
 }
 
 // Deletes the Beltquestion and returns the item
 func DeleteBeltquestionById(tx DB, id IdBeltquestion) (Beltquestion, error) {
-	row := tx.QueryRow("DELETE FROM beltquestions WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM beltquestions WHERE id = $1 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title;", id)
 	return ScanBeltquestion(row)
 }
 
@@ -289,7 +290,7 @@ func DeleteBeltquestionsByIDs(tx DB, ids ...IdBeltquestion) ([]IdBeltquestion, e
 
 // SelectBeltquestionsByDomainAndRank selects the items matching the given fields.
 func SelectBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item Beltquestions, err error) {
-	rows, err := tx.Query("SELECT * FROM beltquestions WHERE Domain = $1 AND Rank = $2", domain, rank)
+	rows, err := tx.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions WHERE Domain = $1 AND Rank = $2", domain, rank)
 	if err != nil {
 		return nil, err
 	}
@@ -299,14 +300,14 @@ func SelectBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item B
 // DeleteBeltquestionsByDomainAndRank deletes the item matching the given fields, returning
 // the deleted items.
 func DeleteBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item Beltquestions, err error) {
-	rows, err := tx.Query("DELETE FROM beltquestions WHERE Domain = $1 AND Rank = $2 RETURNING *", domain, rank)
+	rows, err := tx.Query("DELETE FROM beltquestions WHERE Domain = $1 AND Rank = $2 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title", domain, rank)
 	if err != nil {
 		return nil, err
 	}
 	return ScanBeltquestions(rows)
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -317,12 +318,36 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
 	}
 	return driver.Value(string(b)), nil
+}
+
+func (s *Advance) Scan(src any) error {
+	var tmp pq.Int32Array
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	if len(tmp) != 12 {
+		return fmt.Errorf("unexpected length %d", len(tmp))
+	}
+
+	for i, v := range tmp {
+		(*s)[i] = Rank(v)
+	}
+	return nil
+
+}
+func (s Advance) Value() (driver.Value, error) {
+	tmp := make(pq.Int32Array, len(s))
+	for i, v := range s {
+		tmp[i] = int32(v)
+	}
+	return tmp.Value()
 }
 
 func IdBeltquestionArrayToPQ(ids []IdBeltquestion) pq.Int64Array {
@@ -352,30 +377,5 @@ func ScanIdBeltquestionArray(rs *sql.Rows) ([]IdBeltquestion, error) {
 	return ints, nil
 }
 
-type IdBeltquestionSet map[IdBeltquestion]bool
-
-func NewIdBeltquestionSetFrom(ids []IdBeltquestion) IdBeltquestionSet {
-	out := make(IdBeltquestionSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdBeltquestionSet) Add(id IdBeltquestion) { s[id] = true }
-
-func (s IdBeltquestionSet) Has(id IdBeltquestion) bool { return s[id] }
-
-func (s IdBeltquestionSet) Keys() []IdBeltquestion {
-	out := make([]IdBeltquestion, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func (s *Advance) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s Advance) Value() (driver.Value, error) { return dumpJSON(s) }
-
-func (s *Stats) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Stats) Scan(src any) error          { return loadJSON(s, src) }
 func (s Stats) Value() (driver.Value, error) { return dumpJSON(s) }

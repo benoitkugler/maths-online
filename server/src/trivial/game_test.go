@@ -9,6 +9,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
@@ -609,8 +610,8 @@ func TestGameEnd(t *testing.T) {
 		t.Fatal(gameEnd.Winners)
 	}
 
-	decrP1 := editor.NewIdQuestionSetFrom(gameEnd.QuestionDecrassageIds["p1"])
-	decrP2 := editor.NewIdQuestionSetFrom(gameEnd.QuestionDecrassageIds["p2"])
+	decrP1 := utils.NewSet(gameEnd.QuestionDecrassageIds["p1"]...)
+	decrP2 := utils.NewSet(gameEnd.QuestionDecrassageIds["p2"]...)
 
 	if !decrP2.Has(questionID) {
 		t.Fatal(decrP2)

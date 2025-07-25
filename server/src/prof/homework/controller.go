@@ -1242,7 +1242,7 @@ func (ct *Controller) missingTasksHint(id ho.IdSheet, userID uID) (MissingTasksH
 	if err != nil {
 		return MissingTasksHint{}, err
 	}
-	byIndex, idExercices, idQuestions := map[ed.TagIndex]bool{}, ed.IdExercicegroupSet{}, ed.IdQuestiongroupSet{}
+	byIndex, idExercices, idQuestions := map[ed.TagIndex]bool{}, utils.Set[ed.IdExercicegroup]{}, utils.Set[ed.IdQuestiongroup]{}
 	for _, task := range sheet.Tasks {
 		index := task.Tags.BySection().TagIndex
 		byIndex[index] = true

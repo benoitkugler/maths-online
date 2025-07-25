@@ -47,7 +47,7 @@ func randContact() Contact {
 }
 
 func randDate() Date {
-	return Date(randtTime())
+	return Date(randtDate())
 }
 
 func randIdClassroom() IdClassroom {
@@ -137,6 +137,10 @@ func randstring() string {
 		b[i] = letterRunes2[rand.Intn(maxLength)]
 	}
 	return string(b)
+}
+
+func randtDate() time.Time {
+	return time.Unix(int64(rand.Int31()), 5)
 }
 
 func randtTime() time.Time {

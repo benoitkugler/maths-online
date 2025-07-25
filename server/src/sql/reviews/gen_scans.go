@@ -16,15 +16,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -41,7 +41,7 @@ func ScanReview(row *sql.Row) (Review, error) { return scanOneReview(row) }
 
 // SelectAll returns all the items in the reviews table.
 func SelectAllReviews(db DB) (Reviews, error) {
-	rows, err := db.Query("SELECT * FROM reviews")
+	rows, err := db.Query("SELECT id, kind FROM reviews")
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +50,13 @@ func SelectAllReviews(db DB) (Reviews, error) {
 
 // SelectReview returns the entry matching 'id'.
 func SelectReview(tx DB, id IdReview) (Review, error) {
-	row := tx.QueryRow("SELECT * FROM reviews WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, kind FROM reviews WHERE id = $1", id)
 	return ScanReview(row)
 }
 
 // SelectReviews returns the entry matching the given 'ids'.
 func SelectReviews(tx DB, ids ...IdReview) (Reviews, error) {
-	rows, err := tx.Query("SELECT * FROM reviews WHERE id = ANY($1)", IdReviewArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, kind FROM reviews WHERE id = ANY($1)", IdReviewArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (item Review) Insert(tx DB) (out Review, err error) {
 		kind
 		) VALUES (
 		$1
-		) RETURNING *;
+		) RETURNING id, kind;
 		`, item.Kind)
 	return ScanReview(row)
 }
@@ -115,14 +115,14 @@ func (item Review) Update(tx DB) (out Review, err error) {
 		kind
 		) = (
 		$1
-		) WHERE id = $2 RETURNING *;
+		) WHERE id = $2 RETURNING id, kind;
 		`, item.Kind, item.Id)
 	return ScanReview(row)
 }
 
 // Deletes the Review and returns the item
 func DeleteReviewById(tx DB, id IdReview) (Review, error) {
-	row := tx.QueryRow("DELETE FROM reviews WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM reviews WHERE id = $1 RETURNING id, kind;", id)
 	return ScanReview(row)
 }
 
@@ -149,7 +149,7 @@ func ScanReviewExercice(row *sql.Row) (ReviewExercice, error) { return scanOneRe
 
 // SelectAll returns all the items in the review_exercices table.
 func SelectAllReviewExercices(db DB) (ReviewExercices, error) {
-	rows, err := db.Query("SELECT * FROM review_exercices")
+	rows, err := db.Query("SELECT idreview, idexercice, kind FROM review_exercices")
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func ScanReviewExercices(rs *sql.Rows) (ReviewExercices, error) {
 	return structs, nil
 }
 
-func InsertReviewExercice(db DB, item ReviewExercice) error {
+func (item ReviewExercice) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO review_exercices (
 			idreview, idexercice, kind
 			) VALUES (
@@ -258,7 +258,7 @@ func (items ReviewExercices) IdReviews() []IdReview {
 
 // SelectReviewExerciceByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewExerciceByIdReview(tx DB, idReview IdReview) (item ReviewExercice, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_exercices WHERE idreview = $1", idReview)
+	row := tx.QueryRow("SELECT idreview, idexercice, kind FROM review_exercices WHERE idreview = $1", idReview)
 	item, err = ScanReviewExercice(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -267,7 +267,7 @@ func SelectReviewExerciceByIdReview(tx DB, idReview IdReview) (item ReviewExerci
 }
 
 func SelectReviewExercicesByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewExercices, error) {
-	rows, err := tx.Query("SELECT * FROM review_exercices WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("SELECT idreview, idexercice, kind FROM review_exercices WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,7 @@ func SelectReviewExercicesByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewExer
 }
 
 func DeleteReviewExercicesByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewExercices, error) {
-	rows, err := tx.Query("DELETE FROM review_exercices WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("DELETE FROM review_exercices WHERE idreview = ANY($1) RETURNING idreview, idexercice, kind", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (items ReviewExercices) IdExercices() []editor.IdExercicegroup {
 
 // SelectReviewExerciceByIdExercice return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewExerciceByIdExercice(tx DB, idExercice editor.IdExercicegroup) (item ReviewExercice, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_exercices WHERE idexercice = $1", idExercice)
+	row := tx.QueryRow("SELECT idreview, idexercice, kind FROM review_exercices WHERE idexercice = $1", idExercice)
 	item, err = ScanReviewExercice(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -313,7 +313,7 @@ func SelectReviewExerciceByIdExercice(tx DB, idExercice editor.IdExercicegroup) 
 }
 
 func SelectReviewExercicesByIdExercices(tx DB, idExercices_ ...editor.IdExercicegroup) (ReviewExercices, error) {
-	rows, err := tx.Query("SELECT * FROM review_exercices WHERE idexercice = ANY($1)", editor.IdExercicegroupArrayToPQ(idExercices_))
+	rows, err := tx.Query("SELECT idreview, idexercice, kind FROM review_exercices WHERE idexercice = ANY($1)", editor.IdExercicegroupArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +321,7 @@ func SelectReviewExercicesByIdExercices(tx DB, idExercices_ ...editor.IdExercice
 }
 
 func DeleteReviewExercicesByIdExercices(tx DB, idExercices_ ...editor.IdExercicegroup) (ReviewExercices, error) {
-	rows, err := tx.Query("DELETE FROM review_exercices WHERE idexercice = ANY($1) RETURNING *", editor.IdExercicegroupArrayToPQ(idExercices_))
+	rows, err := tx.Query("DELETE FROM review_exercices WHERE idexercice = ANY($1) RETURNING idreview, idexercice, kind", editor.IdExercicegroupArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func ScanReviewParticipation(row *sql.Row) (ReviewParticipation, error) {
 
 // SelectAll returns all the items in the review_participations table.
 func SelectAllReviewParticipations(db DB) (ReviewParticipations, error) {
-	rows, err := db.Query("SELECT * FROM review_participations")
+	rows, err := db.Query("SELECT idreview, idteacher, approval, comments FROM review_participations")
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +379,7 @@ func ScanReviewParticipations(rs *sql.Rows) (ReviewParticipations, error) {
 	return structs, nil
 }
 
-func InsertReviewParticipation(db DB, item ReviewParticipation) error {
+func (item ReviewParticipation) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO review_participations (
 			idreview, idteacher, approval, comments
 			) VALUES (
@@ -454,7 +454,7 @@ func (items ReviewParticipations) IdReviews() []IdReview {
 }
 
 func SelectReviewParticipationsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewParticipations, error) {
-	rows, err := tx.Query("SELECT * FROM review_participations WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("SELECT idreview, idteacher, approval, comments FROM review_participations WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +462,7 @@ func SelectReviewParticipationsByIdReviews(tx DB, idReviews_ ...IdReview) (Revie
 }
 
 func DeleteReviewParticipationsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewParticipations, error) {
-	rows, err := tx.Query("DELETE FROM review_participations WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("DELETE FROM review_participations WHERE idreview = ANY($1) RETURNING idreview, idteacher, approval, comments", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -490,7 +490,7 @@ func (items ReviewParticipations) IdTeachers() []teacher.IdTeacher {
 }
 
 func SelectReviewParticipationsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (ReviewParticipations, error) {
-	rows, err := tx.Query("SELECT * FROM review_participations WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("SELECT idreview, idteacher, approval, comments FROM review_participations WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +498,7 @@ func SelectReviewParticipationsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeac
 }
 
 func DeleteReviewParticipationsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (ReviewParticipations, error) {
-	rows, err := tx.Query("DELETE FROM review_participations WHERE idteacher = ANY($1) RETURNING *", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("DELETE FROM review_participations WHERE idteacher = ANY($1) RETURNING idreview, idteacher, approval, comments", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -507,7 +507,7 @@ func DeleteReviewParticipationsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeac
 
 // SelectReviewParticipationByIdReviewAndIdTeacher return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewParticipationByIdReviewAndIdTeacher(tx DB, idReview IdReview, idTeacher teacher.IdTeacher) (item ReviewParticipation, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_participations WHERE IdReview = $1 AND IdTeacher = $2", idReview, idTeacher)
+	row := tx.QueryRow("SELECT idreview, idteacher, approval, comments FROM review_participations WHERE IdReview = $1 AND IdTeacher = $2", idReview, idTeacher)
 	item, err = ScanReviewParticipation(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -529,7 +529,7 @@ func ScanReviewQuestion(row *sql.Row) (ReviewQuestion, error) { return scanOneRe
 
 // SelectAll returns all the items in the review_questions table.
 func SelectAllReviewQuestions(db DB) (ReviewQuestions, error) {
-	rows, err := db.Query("SELECT * FROM review_questions")
+	rows, err := db.Query("SELECT idreview, idquestion, kind FROM review_questions")
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +563,7 @@ func ScanReviewQuestions(rs *sql.Rows) (ReviewQuestions, error) {
 	return structs, nil
 }
 
-func InsertReviewQuestion(db DB, item ReviewQuestion) error {
+func (item ReviewQuestion) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO review_questions (
 			idreview, idquestion, kind
 			) VALUES (
@@ -638,7 +638,7 @@ func (items ReviewQuestions) IdReviews() []IdReview {
 
 // SelectReviewQuestionByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewQuestionByIdReview(tx DB, idReview IdReview) (item ReviewQuestion, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_questions WHERE idreview = $1", idReview)
+	row := tx.QueryRow("SELECT idreview, idquestion, kind FROM review_questions WHERE idreview = $1", idReview)
 	item, err = ScanReviewQuestion(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -647,7 +647,7 @@ func SelectReviewQuestionByIdReview(tx DB, idReview IdReview) (item ReviewQuesti
 }
 
 func SelectReviewQuestionsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM review_questions WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("SELECT idreview, idquestion, kind FROM review_questions WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +655,7 @@ func SelectReviewQuestionsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewQues
 }
 
 func DeleteReviewQuestionsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewQuestions, error) {
-	rows, err := tx.Query("DELETE FROM review_questions WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("DELETE FROM review_questions WHERE idreview = ANY($1) RETURNING idreview, idquestion, kind", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -684,7 +684,7 @@ func (items ReviewQuestions) IdQuestions() []editor.IdQuestiongroup {
 
 // SelectReviewQuestionByIdQuestion return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewQuestionByIdQuestion(tx DB, idQuestion editor.IdQuestiongroup) (item ReviewQuestion, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_questions WHERE idquestion = $1", idQuestion)
+	row := tx.QueryRow("SELECT idreview, idquestion, kind FROM review_questions WHERE idquestion = $1", idQuestion)
 	item, err = ScanReviewQuestion(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -693,7 +693,7 @@ func SelectReviewQuestionByIdQuestion(tx DB, idQuestion editor.IdQuestiongroup) 
 }
 
 func SelectReviewQuestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestiongroup) (ReviewQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM review_questions WHERE idquestion = ANY($1)", editor.IdQuestiongroupArrayToPQ(idQuestions_))
+	rows, err := tx.Query("SELECT idreview, idquestion, kind FROM review_questions WHERE idquestion = ANY($1)", editor.IdQuestiongroupArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -701,7 +701,7 @@ func SelectReviewQuestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestion
 }
 
 func DeleteReviewQuestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestiongroup) (ReviewQuestions, error) {
-	rows, err := tx.Query("DELETE FROM review_questions WHERE idquestion = ANY($1) RETURNING *", editor.IdQuestiongroupArrayToPQ(idQuestions_))
+	rows, err := tx.Query("DELETE FROM review_questions WHERE idquestion = ANY($1) RETURNING idreview, idquestion, kind", editor.IdQuestiongroupArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -722,7 +722,7 @@ func ScanReviewSheet(row *sql.Row) (ReviewSheet, error) { return scanOneReviewSh
 
 // SelectAll returns all the items in the review_sheets table.
 func SelectAllReviewSheets(db DB) (ReviewSheets, error) {
-	rows, err := db.Query("SELECT * FROM review_sheets")
+	rows, err := db.Query("SELECT idreview, idsheet, kind FROM review_sheets")
 	if err != nil {
 		return nil, err
 	}
@@ -756,7 +756,7 @@ func ScanReviewSheets(rs *sql.Rows) (ReviewSheets, error) {
 	return structs, nil
 }
 
-func InsertReviewSheet(db DB, item ReviewSheet) error {
+func (item ReviewSheet) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO review_sheets (
 			idreview, idsheet, kind
 			) VALUES (
@@ -831,7 +831,7 @@ func (items ReviewSheets) IdReviews() []IdReview {
 
 // SelectReviewSheetByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewSheetByIdReview(tx DB, idReview IdReview) (item ReviewSheet, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_sheets WHERE idreview = $1", idReview)
+	row := tx.QueryRow("SELECT idreview, idsheet, kind FROM review_sheets WHERE idreview = $1", idReview)
 	item, err = ScanReviewSheet(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -840,7 +840,7 @@ func SelectReviewSheetByIdReview(tx DB, idReview IdReview) (item ReviewSheet, fo
 }
 
 func SelectReviewSheetsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewSheets, error) {
-	rows, err := tx.Query("SELECT * FROM review_sheets WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("SELECT idreview, idsheet, kind FROM review_sheets WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -848,7 +848,7 @@ func SelectReviewSheetsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewSheets,
 }
 
 func DeleteReviewSheetsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewSheets, error) {
-	rows, err := tx.Query("DELETE FROM review_sheets WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("DELETE FROM review_sheets WHERE idreview = ANY($1) RETURNING idreview, idsheet, kind", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -877,7 +877,7 @@ func (items ReviewSheets) IdSheets() []homework.IdSheet {
 
 // SelectReviewSheetByIdSheet return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewSheetByIdSheet(tx DB, idSheet homework.IdSheet) (item ReviewSheet, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_sheets WHERE idsheet = $1", idSheet)
+	row := tx.QueryRow("SELECT idreview, idsheet, kind FROM review_sheets WHERE idsheet = $1", idSheet)
 	item, err = ScanReviewSheet(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -886,7 +886,7 @@ func SelectReviewSheetByIdSheet(tx DB, idSheet homework.IdSheet) (item ReviewShe
 }
 
 func SelectReviewSheetsByIdSheets(tx DB, idSheets_ ...homework.IdSheet) (ReviewSheets, error) {
-	rows, err := tx.Query("SELECT * FROM review_sheets WHERE idsheet = ANY($1)", homework.IdSheetArrayToPQ(idSheets_))
+	rows, err := tx.Query("SELECT idreview, idsheet, kind FROM review_sheets WHERE idsheet = ANY($1)", homework.IdSheetArrayToPQ(idSheets_))
 	if err != nil {
 		return nil, err
 	}
@@ -894,7 +894,7 @@ func SelectReviewSheetsByIdSheets(tx DB, idSheets_ ...homework.IdSheet) (ReviewS
 }
 
 func DeleteReviewSheetsByIdSheets(tx DB, idSheets_ ...homework.IdSheet) (ReviewSheets, error) {
-	rows, err := tx.Query("DELETE FROM review_sheets WHERE idsheet = ANY($1) RETURNING *", homework.IdSheetArrayToPQ(idSheets_))
+	rows, err := tx.Query("DELETE FROM review_sheets WHERE idsheet = ANY($1) RETURNING idreview, idsheet, kind", homework.IdSheetArrayToPQ(idSheets_))
 	if err != nil {
 		return nil, err
 	}
@@ -915,7 +915,7 @@ func ScanReviewTrivial(row *sql.Row) (ReviewTrivial, error) { return scanOneRevi
 
 // SelectAll returns all the items in the review_trivials table.
 func SelectAllReviewTrivials(db DB) (ReviewTrivials, error) {
-	rows, err := db.Query("SELECT * FROM review_trivials")
+	rows, err := db.Query("SELECT idreview, idtrivial, kind FROM review_trivials")
 	if err != nil {
 		return nil, err
 	}
@@ -949,7 +949,7 @@ func ScanReviewTrivials(rs *sql.Rows) (ReviewTrivials, error) {
 	return structs, nil
 }
 
-func InsertReviewTrivial(db DB, item ReviewTrivial) error {
+func (item ReviewTrivial) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO review_trivials (
 			idreview, idtrivial, kind
 			) VALUES (
@@ -1024,7 +1024,7 @@ func (items ReviewTrivials) IdReviews() []IdReview {
 
 // SelectReviewTrivialByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewTrivialByIdReview(tx DB, idReview IdReview) (item ReviewTrivial, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_trivials WHERE idreview = $1", idReview)
+	row := tx.QueryRow("SELECT idreview, idtrivial, kind FROM review_trivials WHERE idreview = $1", idReview)
 	item, err = ScanReviewTrivial(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1033,7 +1033,7 @@ func SelectReviewTrivialByIdReview(tx DB, idReview IdReview) (item ReviewTrivial
 }
 
 func SelectReviewTrivialsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM review_trivials WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("SELECT idreview, idtrivial, kind FROM review_trivials WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -1041,7 +1041,7 @@ func SelectReviewTrivialsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewTrivi
 }
 
 func DeleteReviewTrivialsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewTrivials, error) {
-	rows, err := tx.Query("DELETE FROM review_trivials WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
+	rows, err := tx.Query("DELETE FROM review_trivials WHERE idreview = ANY($1) RETURNING idreview, idtrivial, kind", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -1070,7 +1070,7 @@ func (items ReviewTrivials) IdTrivials() []trivial.IdTrivial {
 
 // SelectReviewTrivialByIdTrivial return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewTrivialByIdTrivial(tx DB, idTrivial trivial.IdTrivial) (item ReviewTrivial, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM review_trivials WHERE idtrivial = $1", idTrivial)
+	row := tx.QueryRow("SELECT idreview, idtrivial, kind FROM review_trivials WHERE idtrivial = $1", idTrivial)
 	item, err = ScanReviewTrivial(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1079,7 +1079,7 @@ func SelectReviewTrivialByIdTrivial(tx DB, idTrivial trivial.IdTrivial) (item Re
 }
 
 func SelectReviewTrivialsByIdTrivials(tx DB, idTrivials_ ...trivial.IdTrivial) (ReviewTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM review_trivials WHERE idtrivial = ANY($1)", trivial.IdTrivialArrayToPQ(idTrivials_))
+	rows, err := tx.Query("SELECT idreview, idtrivial, kind FROM review_trivials WHERE idtrivial = ANY($1)", trivial.IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
@@ -1087,7 +1087,7 @@ func SelectReviewTrivialsByIdTrivials(tx DB, idTrivials_ ...trivial.IdTrivial) (
 }
 
 func DeleteReviewTrivialsByIdTrivials(tx DB, idTrivials_ ...trivial.IdTrivial) (ReviewTrivials, error) {
-	rows, err := tx.Query("DELETE FROM review_trivials WHERE idtrivial = ANY($1) RETURNING *", trivial.IdTrivialArrayToPQ(idTrivials_))
+	rows, err := tx.Query("DELETE FROM review_trivials WHERE idtrivial = ANY($1) RETURNING idreview, idtrivial, kind", trivial.IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
@@ -1096,7 +1096,7 @@ func DeleteReviewTrivialsByIdTrivials(tx DB, idTrivials_ ...trivial.IdTrivial) (
 
 // SelectReviewByIdAndKind return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReviewByIdAndKind(tx DB, id IdReview, kind ReviewKind) (item Review, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM reviews WHERE Id = $1 AND Kind = $2", id, kind)
+	row := tx.QueryRow("SELECT id, kind FROM reviews WHERE Id = $1 AND Kind = $2", id, kind)
 	item, err = ScanReview(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -1104,7 +1104,7 @@ func SelectReviewByIdAndKind(tx DB, id IdReview, kind ReviewKind) (item Review, 
 	return item, true, err
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -1115,7 +1115,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -1150,27 +1150,5 @@ func ScanIdReviewArray(rs *sql.Rows) ([]IdReview, error) {
 	return ints, nil
 }
 
-type IdReviewSet map[IdReview]bool
-
-func NewIdReviewSetFrom(ids []IdReview) IdReviewSet {
-	out := make(IdReviewSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdReviewSet) Add(id IdReview) { s[id] = true }
-
-func (s IdReviewSet) Has(id IdReview) bool { return s[id] }
-
-func (s IdReviewSet) Keys() []IdReview {
-	out := make([]IdReview, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func (s *Comments) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Comments) Scan(src any) error          { return loadJSON(s, src) }
 func (s Comments) Value() (driver.Value, error) { return dumpJSON(s) }

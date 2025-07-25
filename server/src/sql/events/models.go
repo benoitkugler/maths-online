@@ -8,6 +8,19 @@ import (
 
 type Date time.Time
 
+func NewDate(year int, month time.Month, day int) Date {
+	return Date(time.Date(year, month, day, 0, 0, 0, 0, time.UTC))
+}
+
+func NewDateFrom(ti time.Time) Date {
+	return NewDate(ti.Year(), ti.Month(), ti.Day())
+}
+
+func (d Date) Time() time.Time {
+	ti := time.Time(d)
+	return time.Date(ti.Year(), ti.Month(), ti.Day(), 0, 0, 0, 0, time.UTC)
+}
+
 type Event struct {
 	IdStudent teacher.IdStudent `gomacro-sql-on-delete:"CASCADE"`
 	Event     EventK

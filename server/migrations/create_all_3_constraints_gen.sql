@@ -102,7 +102,7 @@ ALTER TABLE exercice_questions
     ADD PRIMARY KEY (IdExercice, INDEX);
 
 ALTER TABLE exercice_questions
-    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id);
+    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES questions (NeedExercice, Id);
 
 ALTER TABLE exercice_questions
     ADD UNIQUE (IdQuestion);
@@ -129,7 +129,7 @@ ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE selfaccess_trivials
-    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher) ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES classrooms (Id, IdTeacher) ON DELETE CASCADE;
 
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
@@ -328,16 +328,13 @@ ALTER TABLE beltevolutions
     ADD UNIQUE (IdStudent);
 
 ALTER TABLE beltevolutions
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE beltquestions
     ADD CHECK (Repeat > 0);
 
 ALTER TABLE beltevolutions
     ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_12_array_11_cein_Stat (Stats));
-
-ALTER TABLE beltevolutions
-    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_12_cein_Rank (Advance));
 
 ALTER TABLE beltquestions
     ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));

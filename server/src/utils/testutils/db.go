@@ -64,15 +64,13 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 	runCmd(exec.Command("createdb", name))
 
 	for _, file := range generateSQLFile {
-		file, err := filepath.Abs(file)
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = os.Stat(file)
-		if err != nil {
-			t.Fatal(err)
-		}
-		runCmd(exec.Command("bash", "-c", fmt.Sprintf("psql %s < %s", name, file)))
+		fi, err := filepath.Abs(file)
+		AssertNoErr(t, err)
+
+		_, err = os.Stat(fi)
+		AssertNoErr(t, err)
+
+		runCmd(exec.Command("bash", "-c", fmt.Sprintf("psql %s < %s", name, fi)))
 	}
 
 	logs := pass.DB{
@@ -82,12 +80,9 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 		Password: userPassword,
 	}
 	db, err := logs.ConnectPostgres()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := db.Ping(); err != nil {
-		t.Fatal(err)
-	}
+	AssertNoErr(t, err)
+
+	AssertNoErr(t, db.Ping())
 
 	t.Log("Successfully created dev DB")
 

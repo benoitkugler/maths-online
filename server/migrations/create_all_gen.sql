@@ -18,7 +18,7 @@ CREATE TABLE students (
     Id serial PRIMARY KEY,
     Name text NOT NULL,
     Surname text NOT NULL,
-    Birthday timestamp(0) with time zone NOT NULL,
+    Birthday date NOT NULL,
     IdClassroom integer NOT NULL,
     Clients jsonb NOT NULL
 );
@@ -167,7 +167,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
     IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
+    Section smallint CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -191,7 +191,7 @@ CREATE TABLE questiongroups (
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
+    Section smallint CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 -- constraints
@@ -275,7 +275,7 @@ ALTER TABLE exercice_questions
     ADD PRIMARY KEY (IdExercice, INDEX);
 
 ALTER TABLE exercice_questions
-    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id);
+    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES questions (NeedExercice, Id);
 
 ALTER TABLE exercice_questions
     ADD UNIQUE (IdQuestion);
@@ -2215,7 +2215,7 @@ ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE selfaccess_trivials
-    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher) ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES classrooms (Id, IdTeacher) ON DELETE CASCADE;
 
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
@@ -2560,7 +2560,9 @@ CREATE TABLE travails (
     IdSheet integer NOT NULL,
     Noted boolean NOT NULL,
     Deadline timestamp(0) with time zone NOT NULL,
-    ShowAfter timestamp(0) with time zone NOT NULL
+    ShowAfter timestamp(0) with time zone NOT NULL,
+    QuestionRepeat smallint CHECK (QuestionRepeat IN (0, 1)) NOT NULL,
+    QuestionTimeLimit integer NOT NULL
 );
 
 CREATE TABLE travail_exceptions (
@@ -2614,38 +2616,38 @@ ALTER TABLE travail_exceptions
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE reviews (
     Id serial PRIMARY KEY,
-    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_exercices (
     IdReview integer NOT NULL,
     IdExercice integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_participations (
     IdReview integer NOT NULL,
     IdTeacher integer NOT NULL,
-    Approval integer CHECK (Approval IN (0, 1, 2)) NOT NULL,
+    Approval smallint CHECK (Approval IN (0, 1, 2)) NOT NULL,
     Comments jsonb NOT NULL
 );
 
 CREATE TABLE review_questions (
     IdReview integer NOT NULL,
     IdQuestion integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_sheets (
     IdReview integer NOT NULL,
     IdSheet integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_trivials (
     IdReview integer NOT NULL,
     IdTrivial integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+    Kind smallint CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 -- constraints
@@ -2804,15 +2806,15 @@ ALTER TABLE review_participations
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE beltevolutions (
     IdStudent integer NOT NULL,
-    Level integer CHECK (Level IN (0, 1, 2, 3)) NOT NULL,
-    Advance jsonb NOT NULL,
+    Level smallint CHECK (Level IN (0, 1, 2, 3)) NOT NULL,
+    Advance smallint[] CHECK (array_length(Advance, 1) = 12) NOT NULL,
     Stats jsonb NOT NULL
 );
 
 CREATE TABLE beltquestions (
     Id serial PRIMARY KEY,
-    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
-    Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
+    Domain smallint CHECK (DOMAIN IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
+    Rank smallint CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
     Correction jsonb NOT NULL,
@@ -2825,7 +2827,7 @@ ALTER TABLE beltevolutions
     ADD UNIQUE (IdStudent);
 
 ALTER TABLE beltevolutions
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE beltquestions
     ADD CHECK (Repeat > 0);
@@ -2858,24 +2860,6 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_array_11_cein_Stat (value))
-        FROM
-            jsonb_array_elements(data))
-        AND jsonb_array_length(data) = 12;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_12_cein_Rank (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_cein_Rank (value))
         FROM
             jsonb_array_elements(data))
         AND jsonb_array_length(data) = 12;
@@ -3352,22 +3336,6 @@ DECLARE
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a boolean', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_cein_Rank (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a cein_Rank', data;
     END IF;
     RETURN is_valid;
 END;
@@ -4818,9 +4786,6 @@ IMMUTABLE;
 
 ALTER TABLE beltevolutions
     ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_12_array_11_cein_Stat (Stats));
-
-ALTER TABLE beltevolutions
-    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_12_cein_Rank (Advance));
 
 ALTER TABLE beltquestions
     ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));

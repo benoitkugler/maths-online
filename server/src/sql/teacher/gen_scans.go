@@ -13,15 +13,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -40,7 +40,7 @@ func ScanClassroom(row *sql.Row) (Classroom, error) { return scanOneClassroom(ro
 
 // SelectAll returns all the items in the classrooms table.
 func SelectAllClassrooms(db DB) (Classrooms, error) {
-	rows, err := db.Query("SELECT * FROM classrooms")
+	rows, err := db.Query("SELECT id, idteacher, name, maxrankthreshold FROM classrooms")
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +49,13 @@ func SelectAllClassrooms(db DB) (Classrooms, error) {
 
 // SelectClassroom returns the entry matching 'id'.
 func SelectClassroom(tx DB, id IdClassroom) (Classroom, error) {
-	row := tx.QueryRow("SELECT * FROM classrooms WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idteacher, name, maxrankthreshold FROM classrooms WHERE id = $1", id)
 	return ScanClassroom(row)
 }
 
 // SelectClassrooms returns the entry matching the given 'ids'.
 func SelectClassrooms(tx DB, ids ...IdClassroom) (Classrooms, error) {
-	rows, err := tx.Query("SELECT * FROM classrooms WHERE id = ANY($1)", IdClassroomArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idteacher, name, maxrankthreshold FROM classrooms WHERE id = ANY($1)", IdClassroomArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (item Classroom) Insert(tx DB) (out Classroom, err error) {
 		idteacher, name, maxrankthreshold
 		) VALUES (
 		$1, $2, $3
-		) RETURNING *;
+		) RETURNING id, idteacher, name, maxrankthreshold;
 		`, item.IdTeacher, item.Name, item.MaxRankThreshold)
 	return ScanClassroom(row)
 }
@@ -114,14 +114,14 @@ func (item Classroom) Update(tx DB) (out Classroom, err error) {
 		idteacher, name, maxrankthreshold
 		) = (
 		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
+		) WHERE id = $4 RETURNING id, idteacher, name, maxrankthreshold;
 		`, item.IdTeacher, item.Name, item.MaxRankThreshold, item.Id)
 	return ScanClassroom(row)
 }
 
 // Deletes the Classroom and returns the item
 func DeleteClassroomById(tx DB, id IdClassroom) (Classroom, error) {
-	row := tx.QueryRow("DELETE FROM classrooms WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM classrooms WHERE id = $1 RETURNING id, idteacher, name, maxrankthreshold;", id)
 	return ScanClassroom(row)
 }
 
@@ -160,7 +160,7 @@ func (items Classrooms) IdTeachers() []IdTeacher {
 }
 
 func SelectClassroomsByIdTeachers(tx DB, idTeachers_ ...IdTeacher) (Classrooms, error) {
-	rows, err := tx.Query("SELECT * FROM classrooms WHERE idteacher = ANY($1)", IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("SELECT id, idteacher, name, maxrankthreshold FROM classrooms WHERE idteacher = ANY($1)", IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func ScanClassroomCode(row *sql.Row) (ClassroomCode, error) { return scanOneClas
 
 // SelectAll returns all the items in the classroom_codes table.
 func SelectAllClassroomCodes(db DB) (ClassroomCodes, error) {
-	rows, err := db.Query("SELECT * FROM classroom_codes")
+	rows, err := db.Query("SELECT idclassroom, code, expiresat FROM classroom_codes")
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func ScanClassroomCodes(rs *sql.Rows) (ClassroomCodes, error) {
 	return structs, nil
 }
 
-func InsertClassroomCode(db DB, item ClassroomCode) error {
+func (item ClassroomCode) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO classroom_codes (
 			idclassroom, code, expiresat
 			) VALUES (
@@ -297,7 +297,7 @@ func (items ClassroomCodes) IdClassrooms() []IdClassroom {
 }
 
 func SelectClassroomCodesByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (ClassroomCodes, error) {
-	rows, err := tx.Query("SELECT * FROM classroom_codes WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms_))
+	rows, err := tx.Query("SELECT idclassroom, code, expiresat FROM classroom_codes WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,7 @@ func SelectClassroomCodesByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (Cl
 }
 
 func DeleteClassroomCodesByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (ClassroomCodes, error) {
-	rows, err := tx.Query("DELETE FROM classroom_codes WHERE idclassroom = ANY($1) RETURNING *", IdClassroomArrayToPQ(idClassrooms_))
+	rows, err := tx.Query("DELETE FROM classroom_codes WHERE idclassroom = ANY($1) RETURNING idclassroom, code, expiresat", IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func DeleteClassroomCodesByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (Cl
 
 // SelectClassroomCodeByCode return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectClassroomCodeByCode(tx DB, code string) (item ClassroomCode, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM classroom_codes WHERE Code = $1", code)
+	row := tx.QueryRow("SELECT idclassroom, code, expiresat FROM classroom_codes WHERE Code = $1", code)
 	item, err = ScanClassroomCode(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -324,7 +324,7 @@ func SelectClassroomCodeByCode(tx DB, code string) (item ClassroomCode, found bo
 
 // SelectClassroomByIdAndIdTeacher return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectClassroomByIdAndIdTeacher(tx DB, id IdClassroom, idTeacher IdTeacher) (item Classroom, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM classrooms WHERE Id = $1 AND IdTeacher = $2", id, idTeacher)
+	row := tx.QueryRow("SELECT id, idteacher, name, maxrankthreshold FROM classrooms WHERE Id = $1 AND IdTeacher = $2", id, idTeacher)
 	item, err = ScanClassroom(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -349,7 +349,7 @@ func ScanStudent(row *sql.Row) (Student, error) { return scanOneStudent(row) }
 
 // SelectAll returns all the items in the students table.
 func SelectAllStudents(db DB) (Students, error) {
-	rows, err := db.Query("SELECT * FROM students")
+	rows, err := db.Query("SELECT id, name, surname, birthday, idclassroom, clients FROM students")
 	if err != nil {
 		return nil, err
 	}
@@ -358,13 +358,13 @@ func SelectAllStudents(db DB) (Students, error) {
 
 // SelectStudent returns the entry matching 'id'.
 func SelectStudent(tx DB, id IdStudent) (Student, error) {
-	row := tx.QueryRow("SELECT * FROM students WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, name, surname, birthday, idclassroom, clients FROM students WHERE id = $1", id)
 	return ScanStudent(row)
 }
 
 // SelectStudents returns the entry matching the given 'ids'.
 func SelectStudents(tx DB, ids ...IdStudent) (Students, error) {
-	rows, err := tx.Query("SELECT * FROM students WHERE id = ANY($1)", IdStudentArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, name, surname, birthday, idclassroom, clients FROM students WHERE id = ANY($1)", IdStudentArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -412,7 +412,7 @@ func (item Student) Insert(tx DB) (out Student, err error) {
 		name, surname, birthday, idclassroom, clients
 		) VALUES (
 		$1, $2, $3, $4, $5
-		) RETURNING *;
+		) RETURNING id, name, surname, birthday, idclassroom, clients;
 		`, item.Name, item.Surname, item.Birthday, item.IdClassroom, item.Clients)
 	return ScanStudent(row)
 }
@@ -423,14 +423,14 @@ func (item Student) Update(tx DB) (out Student, err error) {
 		name, surname, birthday, idclassroom, clients
 		) = (
 		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
+		) WHERE id = $6 RETURNING id, name, surname, birthday, idclassroom, clients;
 		`, item.Name, item.Surname, item.Birthday, item.IdClassroom, item.Clients, item.Id)
 	return ScanStudent(row)
 }
 
 // Deletes the Student and returns the item
 func DeleteStudentById(tx DB, id IdStudent) (Student, error) {
-	row := tx.QueryRow("DELETE FROM students WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM students WHERE id = $1 RETURNING id, name, surname, birthday, idclassroom, clients;", id)
 	return ScanStudent(row)
 }
 
@@ -469,7 +469,7 @@ func (items Students) IdClassrooms() []IdClassroom {
 }
 
 func SelectStudentsByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (Students, error) {
-	rows, err := tx.Query("SELECT * FROM students WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms_))
+	rows, err := tx.Query("SELECT id, name, surname, birthday, idclassroom, clients FROM students WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -502,7 +502,7 @@ func ScanTeacher(row *sql.Row) (Teacher, error) { return scanOneTeacher(row) }
 
 // SelectAll returns all the items in the teachers table.
 func SelectAllTeachers(db DB) (Teachers, error) {
-	rows, err := db.Query("SELECT * FROM teachers")
+	rows, err := db.Query("SELECT id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere FROM teachers")
 	if err != nil {
 		return nil, err
 	}
@@ -511,13 +511,13 @@ func SelectAllTeachers(db DB) (Teachers, error) {
 
 // SelectTeacher returns the entry matching 'id'.
 func SelectTeacher(tx DB, id IdTeacher) (Teacher, error) {
-	row := tx.QueryRow("SELECT * FROM teachers WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere FROM teachers WHERE id = $1", id)
 	return ScanTeacher(row)
 }
 
 // SelectTeachers returns the entry matching the given 'ids'.
 func SelectTeachers(tx DB, ids ...IdTeacher) (Teachers, error) {
-	rows, err := tx.Query("SELECT * FROM teachers WHERE id = ANY($1)", IdTeacherArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere FROM teachers WHERE id = ANY($1)", IdTeacherArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -565,7 +565,7 @@ func (item Teacher) Insert(tx DB) (out Teacher, err error) {
 		mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
-		) RETURNING *;
+		) RETURNING id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere;
 		`, item.Mail, item.PasswordCrypted, item.IsAdmin, item.HasSimplifiedEditor, item.Contact, item.FavoriteMatiere)
 	return ScanTeacher(row)
 }
@@ -576,14 +576,14 @@ func (item Teacher) Update(tx DB) (out Teacher, err error) {
 		mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere
 		) = (
 		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING *;
+		) WHERE id = $7 RETURNING id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere;
 		`, item.Mail, item.PasswordCrypted, item.IsAdmin, item.HasSimplifiedEditor, item.Contact, item.FavoriteMatiere, item.Id)
 	return ScanTeacher(row)
 }
 
 // Deletes the Teacher and returns the item
 func DeleteTeacherById(tx DB, id IdTeacher) (Teacher, error) {
-	row := tx.QueryRow("DELETE FROM teachers WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM teachers WHERE id = $1 RETURNING id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere;", id)
 	return ScanTeacher(row)
 }
 
@@ -598,7 +598,7 @@ func DeleteTeachersByIDs(tx DB, ids ...IdTeacher) ([]IdTeacher, error) {
 
 // SelectTeacherByMail return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectTeacherByMail(tx DB, mail string) (item Teacher, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM teachers WHERE Mail = $1", mail)
+	row := tx.QueryRow("SELECT id, mail, passwordcrypted, isadmin, hassimplifiededitor, contact, favoritematiere FROM teachers WHERE Mail = $1", mail)
 	item, err = ScanTeacher(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -606,7 +606,7 @@ func SelectTeacherByMail(tx DB, mail string) (item Teacher, found bool, err erro
 	return item, true, err
 }
 
-func loadJSON(out interface{}, src interface{}) error {
+func loadJSON(out any, src any) error {
 	if src == nil {
 		return nil //zero value out
 	}
@@ -617,7 +617,7 @@ func loadJSON(out interface{}, src interface{}) error {
 	return json.Unmarshal(bs, out)
 }
 
-func dumpJSON(s interface{}) (driver.Value, error) {
+func dumpJSON(s any) (driver.Value, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -625,21 +625,21 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 	return driver.Value(string(b)), nil
 }
 
-func (s *Date) Scan(src interface{}) error {
+func (s *Date) Scan(src any) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
 		return err
 	}
-	*s = Date(tmp.Time)
+	*s = NewDateFrom(tmp.Time)
 	return nil
 }
 
 func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
+	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
 }
 
-func (s *Time) Scan(src interface{}) error {
+func (s *Time) Scan(src any) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
@@ -680,28 +680,6 @@ func ScanIdClassroomArray(rs *sql.Rows) ([]IdClassroom, error) {
 	return ints, nil
 }
 
-type IdClassroomSet map[IdClassroom]bool
-
-func NewIdClassroomSetFrom(ids []IdClassroom) IdClassroomSet {
-	out := make(IdClassroomSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdClassroomSet) Add(id IdClassroom) { s[id] = true }
-
-func (s IdClassroomSet) Has(id IdClassroom) bool { return s[id] }
-
-func (s IdClassroomSet) Keys() []IdClassroom {
-	out := make([]IdClassroom, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdStudentArrayToPQ(ids []IdStudent) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -727,28 +705,6 @@ func ScanIdStudentArray(rs *sql.Rows) ([]IdStudent, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdStudentSet map[IdStudent]bool
-
-func NewIdStudentSetFrom(ids []IdStudent) IdStudentSet {
-	out := make(IdStudentSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdStudentSet) Add(id IdStudent) { s[id] = true }
-
-func (s IdStudentSet) Has(id IdStudent) bool { return s[id] }
-
-func (s IdStudentSet) Keys() []IdStudent {
-	out := make([]IdStudent, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func IdTeacherArrayToPQ(ids []IdTeacher) pq.Int64Array {
@@ -778,30 +734,8 @@ func ScanIdTeacherArray(rs *sql.Rows) ([]IdTeacher, error) {
 	return ints, nil
 }
 
-type IdTeacherSet map[IdTeacher]bool
-
-func NewIdTeacherSetFrom(ids []IdTeacher) IdTeacherSet {
-	out := make(IdTeacherSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdTeacherSet) Add(id IdTeacher) { s[id] = true }
-
-func (s IdTeacherSet) Has(id IdTeacher) bool { return s[id] }
-
-func (s IdTeacherSet) Keys() []IdTeacher {
-	out := make([]IdTeacher, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func (s *Clients) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Clients) Scan(src any) error          { return loadJSON(s, src) }
 func (s Clients) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func (s *Contact) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s *Contact) Scan(src any) error          { return loadJSON(s, src) }
 func (s Contact) Value() (driver.Value, error) { return dumpJSON(s) }

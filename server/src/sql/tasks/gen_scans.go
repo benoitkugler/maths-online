@@ -5,8 +5,6 @@ package tasks
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
-	"errors"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -14,15 +12,15 @@ import (
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -41,7 +39,7 @@ func ScanMonoquestion(row *sql.Row) (Monoquestion, error) { return scanOneMonoqu
 
 // SelectAll returns all the items in the monoquestions table.
 func SelectAllMonoquestions(db DB) (Monoquestions, error) {
-	rows, err := db.Query("SELECT * FROM monoquestions")
+	rows, err := db.Query("SELECT id, idquestion, nbrepeat, bareme FROM monoquestions")
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +48,13 @@ func SelectAllMonoquestions(db DB) (Monoquestions, error) {
 
 // SelectMonoquestion returns the entry matching 'id'.
 func SelectMonoquestion(tx DB, id IdMonoquestion) (Monoquestion, error) {
-	row := tx.QueryRow("SELECT * FROM monoquestions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idquestion, nbrepeat, bareme FROM monoquestions WHERE id = $1", id)
 	return ScanMonoquestion(row)
 }
 
 // SelectMonoquestions returns the entry matching the given 'ids'.
 func SelectMonoquestions(tx DB, ids ...IdMonoquestion) (Monoquestions, error) {
-	rows, err := tx.Query("SELECT * FROM monoquestions WHERE id = ANY($1)", IdMonoquestionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idquestion, nbrepeat, bareme FROM monoquestions WHERE id = ANY($1)", IdMonoquestionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +102,7 @@ func (item Monoquestion) Insert(tx DB) (out Monoquestion, err error) {
 		idquestion, nbrepeat, bareme
 		) VALUES (
 		$1, $2, $3
-		) RETURNING *;
+		) RETURNING id, idquestion, nbrepeat, bareme;
 		`, item.IdQuestion, item.NbRepeat, item.Bareme)
 	return ScanMonoquestion(row)
 }
@@ -115,14 +113,14 @@ func (item Monoquestion) Update(tx DB) (out Monoquestion, err error) {
 		idquestion, nbrepeat, bareme
 		) = (
 		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
+		) WHERE id = $4 RETURNING id, idquestion, nbrepeat, bareme;
 		`, item.IdQuestion, item.NbRepeat, item.Bareme, item.Id)
 	return ScanMonoquestion(row)
 }
 
 // Deletes the Monoquestion and returns the item
 func DeleteMonoquestionById(tx DB, id IdMonoquestion) (Monoquestion, error) {
-	row := tx.QueryRow("DELETE FROM monoquestions WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM monoquestions WHERE id = $1 RETURNING id, idquestion, nbrepeat, bareme;", id)
 	return ScanMonoquestion(row)
 }
 
@@ -161,7 +159,7 @@ func (items Monoquestions) IdQuestions() []editor.IdQuestion {
 }
 
 func SelectMonoquestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestion) (Monoquestions, error) {
-	rows, err := tx.Query("SELECT * FROM monoquestions WHERE idquestion = ANY($1)", editor.IdQuestionArrayToPQ(idQuestions_))
+	rows, err := tx.Query("SELECT id, idquestion, nbrepeat, bareme FROM monoquestions WHERE idquestion = ANY($1)", editor.IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +189,7 @@ func ScanProgression(row *sql.Row) (Progression, error) { return scanOneProgress
 
 // SelectAll returns all the items in the progressions table.
 func SelectAllProgressions(db DB) (Progressions, error) {
-	rows, err := db.Query("SELECT * FROM progressions")
+	rows, err := db.Query("SELECT idstudent, idtask, index, history FROM progressions")
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +223,7 @@ func ScanProgressions(rs *sql.Rows) (Progressions, error) {
 	return structs, nil
 }
 
-func InsertProgression(db DB, item Progression) error {
+func (item Progression) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO progressions (
 			idstudent, idtask, index, history
 			) VALUES (
@@ -300,7 +298,7 @@ func (items Progressions) IdStudents() []teacher.IdStudent {
 }
 
 func SelectProgressionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Progressions, error) {
-	rows, err := tx.Query("SELECT * FROM progressions WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("SELECT idstudent, idtask, index, history FROM progressions WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +306,7 @@ func SelectProgressionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Pr
 }
 
 func DeleteProgressionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Progressions, error) {
-	rows, err := tx.Query("DELETE FROM progressions WHERE idstudent = ANY($1) RETURNING *", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("DELETE FROM progressions WHERE idstudent = ANY($1) RETURNING idstudent, idtask, index, history", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +334,7 @@ func (items Progressions) IdTasks() []IdTask {
 }
 
 func SelectProgressionsByIdTasks(tx DB, idTasks_ ...IdTask) (Progressions, error) {
-	rows, err := tx.Query("SELECT * FROM progressions WHERE idtask = ANY($1)", IdTaskArrayToPQ(idTasks_))
+	rows, err := tx.Query("SELECT idstudent, idtask, index, history FROM progressions WHERE idtask = ANY($1)", IdTaskArrayToPQ(idTasks_))
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +342,7 @@ func SelectProgressionsByIdTasks(tx DB, idTasks_ ...IdTask) (Progressions, error
 }
 
 func DeleteProgressionsByIdTasks(tx DB, idTasks_ ...IdTask) (Progressions, error) {
-	rows, err := tx.Query("DELETE FROM progressions WHERE idtask = ANY($1) RETURNING *", IdTaskArrayToPQ(idTasks_))
+	rows, err := tx.Query("DELETE FROM progressions WHERE idtask = ANY($1) RETURNING idstudent, idtask, index, history", IdTaskArrayToPQ(idTasks_))
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +351,7 @@ func DeleteProgressionsByIdTasks(tx DB, idTasks_ ...IdTask) (Progressions, error
 
 // SelectProgressionsByIdStudentAndIdTask selects the items matching the given fields.
 func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item Progressions, err error) {
-	rows, err := tx.Query("SELECT * FROM progressions WHERE IdStudent = $1 AND IdTask = $2", idStudent, idTask)
+	rows, err := tx.Query("SELECT idstudent, idtask, index, history FROM progressions WHERE IdStudent = $1 AND IdTask = $2", idStudent, idTask)
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +361,7 @@ func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, 
 // DeleteProgressionsByIdStudentAndIdTask deletes the item matching the given fields, returning
 // the deleted items.
 func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item Progressions, err error) {
-	rows, err := tx.Query("DELETE FROM progressions WHERE IdStudent = $1 AND IdTask = $2 RETURNING *", idStudent, idTask)
+	rows, err := tx.Query("DELETE FROM progressions WHERE IdStudent = $1 AND IdTask = $2 RETURNING idstudent, idtask, index, history", idStudent, idTask)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +370,7 @@ func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, 
 
 // SelectProgressionByIdStudentAndIdTaskAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectProgressionByIdStudentAndIdTaskAndIndex(tx DB, idStudent teacher.IdStudent, idTask IdTask, index int16) (item Progression, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM progressions WHERE IdStudent = $1 AND IdTask = $2 AND Index = $3", idStudent, idTask, index)
+	row := tx.QueryRow("SELECT idstudent, idtask, index, history FROM progressions WHERE IdStudent = $1 AND IdTask = $2 AND Index = $3", idStudent, idTask, index)
 	item, err = ScanProgression(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -398,7 +396,7 @@ func ScanRandomMonoquestion(row *sql.Row) (RandomMonoquestion, error) {
 
 // SelectAll returns all the items in the random_monoquestions table.
 func SelectAllRandomMonoquestions(db DB) (RandomMonoquestions, error) {
-	rows, err := db.Query("SELECT * FROM random_monoquestions")
+	rows, err := db.Query("SELECT id, idquestiongroup, nbrepeat, bareme, difficulty FROM random_monoquestions")
 	if err != nil {
 		return nil, err
 	}
@@ -407,13 +405,13 @@ func SelectAllRandomMonoquestions(db DB) (RandomMonoquestions, error) {
 
 // SelectRandomMonoquestion returns the entry matching 'id'.
 func SelectRandomMonoquestion(tx DB, id IdRandomMonoquestion) (RandomMonoquestion, error) {
-	row := tx.QueryRow("SELECT * FROM random_monoquestions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idquestiongroup, nbrepeat, bareme, difficulty FROM random_monoquestions WHERE id = $1", id)
 	return ScanRandomMonoquestion(row)
 }
 
 // SelectRandomMonoquestions returns the entry matching the given 'ids'.
 func SelectRandomMonoquestions(tx DB, ids ...IdRandomMonoquestion) (RandomMonoquestions, error) {
-	rows, err := tx.Query("SELECT * FROM random_monoquestions WHERE id = ANY($1)", IdRandomMonoquestionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idquestiongroup, nbrepeat, bareme, difficulty FROM random_monoquestions WHERE id = ANY($1)", IdRandomMonoquestionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +459,7 @@ func (item RandomMonoquestion) Insert(tx DB) (out RandomMonoquestion, err error)
 		idquestiongroup, nbrepeat, bareme, difficulty
 		) VALUES (
 		$1, $2, $3, $4
-		) RETURNING *;
+		) RETURNING id, idquestiongroup, nbrepeat, bareme, difficulty;
 		`, item.IdQuestiongroup, item.NbRepeat, item.Bareme, item.Difficulty)
 	return ScanRandomMonoquestion(row)
 }
@@ -472,14 +470,14 @@ func (item RandomMonoquestion) Update(tx DB) (out RandomMonoquestion, err error)
 		idquestiongroup, nbrepeat, bareme, difficulty
 		) = (
 		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
+		) WHERE id = $5 RETURNING id, idquestiongroup, nbrepeat, bareme, difficulty;
 		`, item.IdQuestiongroup, item.NbRepeat, item.Bareme, item.Difficulty, item.Id)
 	return ScanRandomMonoquestion(row)
 }
 
 // Deletes the RandomMonoquestion and returns the item
 func DeleteRandomMonoquestionById(tx DB, id IdRandomMonoquestion) (RandomMonoquestion, error) {
-	row := tx.QueryRow("DELETE FROM random_monoquestions WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM random_monoquestions WHERE id = $1 RETURNING id, idquestiongroup, nbrepeat, bareme, difficulty;", id)
 	return ScanRandomMonoquestion(row)
 }
 
@@ -518,7 +516,7 @@ func (items RandomMonoquestions) IdQuestiongroups() []editor.IdQuestiongroup {
 }
 
 func SelectRandomMonoquestionsByIdQuestiongroups(tx DB, idQuestiongroups_ ...editor.IdQuestiongroup) (RandomMonoquestions, error) {
-	rows, err := tx.Query("SELECT * FROM random_monoquestions WHERE idquestiongroup = ANY($1)", editor.IdQuestiongroupArrayToPQ(idQuestiongroups_))
+	rows, err := tx.Query("SELECT id, idquestiongroup, nbrepeat, bareme, difficulty FROM random_monoquestions WHERE idquestiongroup = ANY($1)", editor.IdQuestiongroupArrayToPQ(idQuestiongroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +548,7 @@ func ScanRandomMonoquestionVariant(row *sql.Row) (RandomMonoquestionVariant, err
 
 // SelectAll returns all the items in the random_monoquestion_variants table.
 func SelectAllRandomMonoquestionVariants(db DB) (RandomMonoquestionVariants, error) {
-	rows, err := db.Query("SELECT * FROM random_monoquestion_variants")
+	rows, err := db.Query("SELECT idstudent, idrandommonoquestion, index, idquestion FROM random_monoquestion_variants")
 	if err != nil {
 		return nil, err
 	}
@@ -584,7 +582,7 @@ func ScanRandomMonoquestionVariants(rs *sql.Rows) (RandomMonoquestionVariants, e
 	return structs, nil
 }
 
-func InsertRandomMonoquestionVariant(db DB, item RandomMonoquestionVariant) error {
+func (item RandomMonoquestionVariant) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO random_monoquestion_variants (
 			idstudent, idrandommonoquestion, index, idquestion
 			) VALUES (
@@ -659,7 +657,7 @@ func (items RandomMonoquestionVariants) IdStudents() []teacher.IdStudent {
 }
 
 func SelectRandomMonoquestionVariantsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (RandomMonoquestionVariants, error) {
-	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("SELECT idstudent, idrandommonoquestion, index, idquestion FROM random_monoquestion_variants WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -667,7 +665,7 @@ func SelectRandomMonoquestionVariantsByIdStudents(tx DB, idStudents_ ...teacher.
 }
 
 func DeleteRandomMonoquestionVariantsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (RandomMonoquestionVariants, error) {
-	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE idstudent = ANY($1) RETURNING *", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE idstudent = ANY($1) RETURNING idstudent, idrandommonoquestion, index, idquestion", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -695,7 +693,7 @@ func (items RandomMonoquestionVariants) IdRandomMonoquestions() []IdRandomMonoqu
 }
 
 func SelectRandomMonoquestionVariantsByIdRandomMonoquestions(tx DB, idRandomMonoquestions_ ...IdRandomMonoquestion) (RandomMonoquestionVariants, error) {
-	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE idrandommonoquestion = ANY($1)", IdRandomMonoquestionArrayToPQ(idRandomMonoquestions_))
+	rows, err := tx.Query("SELECT idstudent, idrandommonoquestion, index, idquestion FROM random_monoquestion_variants WHERE idrandommonoquestion = ANY($1)", IdRandomMonoquestionArrayToPQ(idRandomMonoquestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -703,7 +701,7 @@ func SelectRandomMonoquestionVariantsByIdRandomMonoquestions(tx DB, idRandomMono
 }
 
 func DeleteRandomMonoquestionVariantsByIdRandomMonoquestions(tx DB, idRandomMonoquestions_ ...IdRandomMonoquestion) (RandomMonoquestionVariants, error) {
-	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE idrandommonoquestion = ANY($1) RETURNING *", IdRandomMonoquestionArrayToPQ(idRandomMonoquestions_))
+	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE idrandommonoquestion = ANY($1) RETURNING idstudent, idrandommonoquestion, index, idquestion", IdRandomMonoquestionArrayToPQ(idRandomMonoquestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -731,7 +729,7 @@ func (items RandomMonoquestionVariants) IdQuestions() []editor.IdQuestion {
 }
 
 func SelectRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestion) (RandomMonoquestionVariants, error) {
-	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE idquestion = ANY($1)", editor.IdQuestionArrayToPQ(idQuestions_))
+	rows, err := tx.Query("SELECT idstudent, idrandommonoquestion, index, idquestion FROM random_monoquestion_variants WHERE idquestion = ANY($1)", editor.IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -739,7 +737,7 @@ func SelectRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions_ ...editor
 }
 
 func DeleteRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestion) (RandomMonoquestionVariants, error) {
-	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE idquestion = ANY($1) RETURNING *", editor.IdQuestionArrayToPQ(idQuestions_))
+	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE idquestion = ANY($1) RETURNING idstudent, idrandommonoquestion, index, idquestion", editor.IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -748,7 +746,7 @@ func DeleteRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions_ ...editor
 
 // SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion selects the items matching the given fields.
 func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item RandomMonoquestionVariants, err error) {
-	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2", idStudent, idRandomMonoquestion)
+	rows, err := tx.Query("SELECT idstudent, idrandommonoquestion, index, idquestion FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2", idStudent, idRandomMonoquestion)
 	if err != nil {
 		return nil, err
 	}
@@ -758,7 +756,7 @@ func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, i
 // DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion deletes the item matching the given fields, returning
 // the deleted items.
 func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item RandomMonoquestionVariants, err error) {
-	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 RETURNING *", idStudent, idRandomMonoquestion)
+	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 RETURNING idstudent, idrandommonoquestion, index, idquestion", idStudent, idRandomMonoquestion)
 	if err != nil {
 		return nil, err
 	}
@@ -767,7 +765,7 @@ func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, i
 
 // SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion, index int16) (item RandomMonoquestionVariant, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 AND Index = $3", idStudent, idRandomMonoquestion, index)
+	row := tx.QueryRow("SELECT idstudent, idrandommonoquestion, index, idquestion FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 AND Index = $3", idStudent, idRandomMonoquestion, index)
 	item, err = ScanRandomMonoquestionVariant(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -790,7 +788,7 @@ func ScanTask(row *sql.Row) (Task, error) { return scanOneTask(row) }
 
 // SelectAll returns all the items in the tasks table.
 func SelectAllTasks(db DB) (Tasks, error) {
-	rows, err := db.Query("SELECT * FROM tasks")
+	rows, err := db.Query("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks")
 	if err != nil {
 		return nil, err
 	}
@@ -799,13 +797,13 @@ func SelectAllTasks(db DB) (Tasks, error) {
 
 // SelectTask returns the entry matching 'id'.
 func SelectTask(tx DB, id IdTask) (Task, error) {
-	row := tx.QueryRow("SELECT * FROM tasks WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks WHERE id = $1", id)
 	return ScanTask(row)
 }
 
 // SelectTasks returns the entry matching the given 'ids'.
 func SelectTasks(tx DB, ids ...IdTask) (Tasks, error) {
-	rows, err := tx.Query("SELECT * FROM tasks WHERE id = ANY($1)", IdTaskArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks WHERE id = ANY($1)", IdTaskArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -853,7 +851,7 @@ func (item Task) Insert(tx DB) (out Task, err error) {
 		idexercice, idmonoquestion, idrandommonoquestion
 		) VALUES (
 		$1, $2, $3
-		) RETURNING *;
+		) RETURNING id, idexercice, idmonoquestion, idrandommonoquestion;
 		`, item.IdExercice, item.IdMonoquestion, item.IdRandomMonoquestion)
 	return ScanTask(row)
 }
@@ -864,14 +862,14 @@ func (item Task) Update(tx DB) (out Task, err error) {
 		idexercice, idmonoquestion, idrandommonoquestion
 		) = (
 		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
+		) WHERE id = $4 RETURNING id, idexercice, idmonoquestion, idrandommonoquestion;
 		`, item.IdExercice, item.IdMonoquestion, item.IdRandomMonoquestion, item.Id)
 	return ScanTask(row)
 }
 
 // Deletes the Task and returns the item
 func DeleteTaskById(tx DB, id IdTask) (Task, error) {
-	row := tx.QueryRow("DELETE FROM tasks WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM tasks WHERE id = $1 RETURNING id, idexercice, idmonoquestion, idrandommonoquestion;", id)
 	return ScanTask(row)
 }
 
@@ -885,7 +883,7 @@ func DeleteTasksByIDs(tx DB, ids ...IdTask) ([]IdTask, error) {
 }
 
 func SelectTasksByIdExercices(tx DB, idExercices_ ...editor.IdExercice) (Tasks, error) {
-	rows, err := tx.Query("SELECT * FROM tasks WHERE idexercice = ANY($1)", editor.IdExerciceArrayToPQ(idExercices_))
+	rows, err := tx.Query("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks WHERE idexercice = ANY($1)", editor.IdExerciceArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -901,7 +899,7 @@ func DeleteTasksByIdExercices(tx DB, idExercices_ ...editor.IdExercice) ([]IdTas
 }
 
 func SelectTasksByIdMonoquestions(tx DB, idMonoquestions_ ...IdMonoquestion) (Tasks, error) {
-	rows, err := tx.Query("SELECT * FROM tasks WHERE idmonoquestion = ANY($1)", IdMonoquestionArrayToPQ(idMonoquestions_))
+	rows, err := tx.Query("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks WHERE idmonoquestion = ANY($1)", IdMonoquestionArrayToPQ(idMonoquestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -917,7 +915,7 @@ func DeleteTasksByIdMonoquestions(tx DB, idMonoquestions_ ...IdMonoquestion) ([]
 }
 
 func SelectTasksByIdRandomMonoquestions(tx DB, idRandomMonoquestions_ ...IdRandomMonoquestion) (Tasks, error) {
-	rows, err := tx.Query("SELECT * FROM tasks WHERE idrandommonoquestion = ANY($1)", IdRandomMonoquestionArrayToPQ(idRandomMonoquestions_))
+	rows, err := tx.Query("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks WHERE idrandommonoquestion = ANY($1)", IdRandomMonoquestionArrayToPQ(idRandomMonoquestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -934,7 +932,7 @@ func DeleteTasksByIdRandomMonoquestions(tx DB, idRandomMonoquestions_ ...IdRando
 
 // SelectTaskByIdAndIdExercice return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectTaskByIdAndIdExercice(tx DB, id IdTask, idExercice editor.OptionalIdExercice) (item Task, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM tasks WHERE Id = $1 AND IdExercice = $2", id, idExercice)
+	row := tx.QueryRow("SELECT id, idexercice, idmonoquestion, idrandommonoquestion FROM tasks WHERE Id = $1 AND IdExercice = $2", id, idExercice)
 	item, err = ScanTask(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -942,26 +940,7 @@ func SelectTaskByIdAndIdExercice(tx DB, id IdTask, idExercice editor.OptionalIdE
 	return item, true, err
 }
 
-func loadJSON(out interface{}, src interface{}) error {
-	if src == nil {
-		return nil //zero value out
-	}
-	bs, ok := src.([]byte)
-	if !ok {
-		return errors.New("not a []byte")
-	}
-	return json.Unmarshal(bs, out)
-}
-
-func dumpJSON(s interface{}) (driver.Value, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return driver.Value(string(b)), nil
-}
-
-func (s *QuestionHistory) Scan(src interface{}) error {
+func (s *QuestionHistory) Scan(src any) error {
 	return (*pq.BoolArray)(s).Scan(src)
 }
 func (s QuestionHistory) Value() (driver.Value, error) {
@@ -995,28 +974,6 @@ func ScanIdMonoquestionArray(rs *sql.Rows) ([]IdMonoquestion, error) {
 	return ints, nil
 }
 
-type IdMonoquestionSet map[IdMonoquestion]bool
-
-func NewIdMonoquestionSetFrom(ids []IdMonoquestion) IdMonoquestionSet {
-	out := make(IdMonoquestionSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdMonoquestionSet) Add(id IdMonoquestion) { s[id] = true }
-
-func (s IdMonoquestionSet) Has(id IdMonoquestion) bool { return s[id] }
-
-func (s IdMonoquestionSet) Keys() []IdMonoquestion {
-	out := make([]IdMonoquestion, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdRandomMonoquestionArrayToPQ(ids []IdRandomMonoquestion) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -1042,28 +999,6 @@ func ScanIdRandomMonoquestionArray(rs *sql.Rows) ([]IdRandomMonoquestion, error)
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdRandomMonoquestionSet map[IdRandomMonoquestion]bool
-
-func NewIdRandomMonoquestionSetFrom(ids []IdRandomMonoquestion) IdRandomMonoquestionSet {
-	out := make(IdRandomMonoquestionSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdRandomMonoquestionSet) Add(id IdRandomMonoquestion) { s[id] = true }
-
-func (s IdRandomMonoquestionSet) Has(id IdRandomMonoquestion) bool { return s[id] }
-
-func (s IdRandomMonoquestionSet) Keys() []IdRandomMonoquestion {
-	out := make([]IdRandomMonoquestion, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func IdTaskArrayToPQ(ids []IdTask) pq.Int64Array {
@@ -1093,29 +1028,7 @@ func ScanIdTaskArray(rs *sql.Rows) ([]IdTask, error) {
 	return ints, nil
 }
 
-type IdTaskSet map[IdTask]bool
-
-func NewIdTaskSetFrom(ids []IdTask) IdTaskSet {
-	out := make(IdTaskSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdTaskSet) Add(id IdTask) { s[id] = true }
-
-func (s IdTaskSet) Has(id IdTask) bool { return s[id] }
-
-func (s IdTaskSet) Keys() []IdTask {
-	out := make([]IdTask, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func (s *OptionalIdMonoquestion) Scan(src interface{}) error {
+func (s *OptionalIdMonoquestion) Scan(src any) error {
 	var tmp sql.NullInt64
 	err := tmp.Scan(src)
 	if err != nil {
@@ -1134,7 +1047,7 @@ func (s OptionalIdMonoquestion) Value() (driver.Value, error) {
 		Valid: s.Valid}.Value()
 }
 
-func (s *OptionalIdRandomMonoquestion) Scan(src interface{}) error {
+func (s *OptionalIdRandomMonoquestion) Scan(src any) error {
 	var tmp sql.NullInt64
 	err := tmp.Scan(src)
 	if err != nil {

@@ -195,3 +195,27 @@ func RemoveAccents(s string) string {
 	}
 	return output
 }
+
+type Set[T comparable] map[T]struct{}
+
+func NewSet[T comparable](values ...T) Set[T] {
+	out := make(Set[T], len(values))
+	for _, v := range values {
+		out.Add(v)
+	}
+	return out
+}
+
+func (s Set[T]) Has(key T) bool { _, ok := s[key]; return ok }
+
+func (s Set[T]) Add(key T) { s[key] = struct{}{} }
+
+func (s Set[T]) Delete(key T) { delete(s, key) }
+
+func (s Set[T]) Keys() []T {
+	out := make([]T, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}

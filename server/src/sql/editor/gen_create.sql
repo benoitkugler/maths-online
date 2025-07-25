@@ -24,7 +24,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
     IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
+    Section smallint CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -48,7 +48,7 @@ CREATE TABLE questiongroups (
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
+    Section smallint CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 -- constraints
@@ -132,7 +132,7 @@ ALTER TABLE exercice_questions
     ADD PRIMARY KEY (IdExercice, INDEX);
 
 ALTER TABLE exercice_questions
-    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id);
+    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES questions (NeedExercice, Id);
 
 ALTER TABLE exercice_questions
     ADD UNIQUE (IdQuestion);

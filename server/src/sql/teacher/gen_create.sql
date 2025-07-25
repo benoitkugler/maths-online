@@ -16,7 +16,7 @@ CREATE TABLE students (
     Id serial PRIMARY KEY,
     Name text NOT NULL,
     Surname text NOT NULL,
-    Birthday timestamp(0) with time zone NOT NULL,
+    Birthday date NOT NULL,
     IdClassroom integer NOT NULL,
     Clients jsonb NOT NULL
 );

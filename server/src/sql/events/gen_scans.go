@@ -5,22 +5,21 @@ package events
 import (
 	"database/sql"
 	"database/sql/driver"
-	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/lib/pq"
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -38,7 +37,7 @@ func ScanEvent(row *sql.Row) (Event, error) { return scanOneEvent(row) }
 
 // SelectAll returns all the items in the events table.
 func SelectAllEvents(db DB) (Events, error) {
-	rows, err := db.Query("SELECT * FROM events")
+	rows, err := db.Query("SELECT idstudent, event, date FROM events")
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +71,7 @@ func ScanEvents(rs *sql.Rows) (Events, error) {
 	return structs, nil
 }
 
-func InsertEvent(db DB, item Event) error {
+func (item Event) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO events (
 			idstudent, event, date
 			) VALUES (
@@ -146,7 +145,7 @@ func (items Events) IdStudents() []teacher.IdStudent {
 }
 
 func SelectEventsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Events, error) {
-	rows, err := tx.Query("SELECT * FROM events WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("SELECT idstudent, event, date FROM events WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
@@ -154,23 +153,23 @@ func SelectEventsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Events, 
 }
 
 func DeleteEventsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Events, error) {
-	rows, err := tx.Query("DELETE FROM events WHERE idstudent = ANY($1) RETURNING *", teacher.IdStudentArrayToPQ(idStudents_))
+	rows, err := tx.Query("DELETE FROM events WHERE idstudent = ANY($1) RETURNING idstudent, event, date", teacher.IdStudentArrayToPQ(idStudents_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanEvents(rows)
 }
 
-func (s *Date) Scan(src interface{}) error {
+func (s *Date) Scan(src any) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)
 	if err != nil {
 		return err
 	}
-	*s = Date(tmp.Time)
+	*s = NewDateFrom(tmp.Time)
 	return nil
 }
 
 func (s Date) Value() (driver.Value, error) {
-	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
+	return pq.NullTime{Time: s.Time(), Valid: true}.Value()
 }

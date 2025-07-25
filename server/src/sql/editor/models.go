@@ -107,7 +107,7 @@ type Exercice struct {
 // ExerciceQuestion models an ordered list of questions.
 // All link items should be updated at once to preserve `Index` invariants
 // gomacro:SQL ADD PRIMARY KEY (IdExercice, Index)
-// gomacro:SQL ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id)
+// gomacro:SQL ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Question (NeedExercice, Id)
 // gomacro:SQL ADD UNIQUE (IdQuestion)
 type ExerciceQuestion struct {
 	IdExercice IdExercice `json:"id_exercice" gomacro-sql-on-delete:"CASCADE"`

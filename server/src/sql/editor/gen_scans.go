@@ -5,23 +5,21 @@ package editor
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
-	"errors"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/lib/pq"
 )
 
 type scanner interface {
-	Scan(...interface{}) error
+	Scan(...any) error
 }
 
 // DB groups transaction like objects, and
 // is implemented by *sql.DB and *sql.Tx
 type DB interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Prepare(query string) (*sql.Stmt, error)
 }
 
@@ -41,7 +39,7 @@ func ScanExercice(row *sql.Row) (Exercice, error) { return scanOneExercice(row) 
 
 // SelectAll returns all the items in the exercices table.
 func SelectAllExercices(db DB) (Exercices, error) {
-	rows, err := db.Query("SELECT * FROM exercices")
+	rows, err := db.Query("SELECT id, idgroup, subtitle, parameters, difficulty FROM exercices")
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +48,13 @@ func SelectAllExercices(db DB) (Exercices, error) {
 
 // SelectExercice returns the entry matching 'id'.
 func SelectExercice(tx DB, id IdExercice) (Exercice, error) {
-	row := tx.QueryRow("SELECT * FROM exercices WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, idgroup, subtitle, parameters, difficulty FROM exercices WHERE id = $1", id)
 	return ScanExercice(row)
 }
 
 // SelectExercices returns the entry matching the given 'ids'.
 func SelectExercices(tx DB, ids ...IdExercice) (Exercices, error) {
-	rows, err := tx.Query("SELECT * FROM exercices WHERE id = ANY($1)", IdExerciceArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, idgroup, subtitle, parameters, difficulty FROM exercices WHERE id = ANY($1)", IdExerciceArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +102,7 @@ func (item Exercice) Insert(tx DB) (out Exercice, err error) {
 		idgroup, subtitle, parameters, difficulty
 		) VALUES (
 		$1, $2, $3, $4
-		) RETURNING *;
+		) RETURNING id, idgroup, subtitle, parameters, difficulty;
 		`, item.IdGroup, item.Subtitle, item.Parameters, item.Difficulty)
 	return ScanExercice(row)
 }
@@ -115,14 +113,14 @@ func (item Exercice) Update(tx DB) (out Exercice, err error) {
 		idgroup, subtitle, parameters, difficulty
 		) = (
 		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
+		) WHERE id = $5 RETURNING id, idgroup, subtitle, parameters, difficulty;
 		`, item.IdGroup, item.Subtitle, item.Parameters, item.Difficulty, item.Id)
 	return ScanExercice(row)
 }
 
 // Deletes the Exercice and returns the item
 func DeleteExerciceById(tx DB, id IdExercice) (Exercice, error) {
-	row := tx.QueryRow("DELETE FROM exercices WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM exercices WHERE id = $1 RETURNING id, idgroup, subtitle, parameters, difficulty;", id)
 	return ScanExercice(row)
 }
 
@@ -161,7 +159,7 @@ func (items Exercices) IdGroups() []IdExercicegroup {
 }
 
 func SelectExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) (Exercices, error) {
-	rows, err := tx.Query("SELECT * FROM exercices WHERE idgroup = ANY($1)", IdExercicegroupArrayToPQ(idGroups_))
+	rows, err := tx.Query("SELECT id, idgroup, subtitle, parameters, difficulty FROM exercices WHERE idgroup = ANY($1)", IdExercicegroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +191,7 @@ func ScanExerciceQuestion(row *sql.Row) (ExerciceQuestion, error) {
 
 // SelectAll returns all the items in the exercice_questions table.
 func SelectAllExerciceQuestions(db DB) (ExerciceQuestions, error) {
-	rows, err := db.Query("SELECT * FROM exercice_questions")
+	rows, err := db.Query("SELECT idexercice, idquestion, bareme, index FROM exercice_questions")
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +225,7 @@ func ScanExerciceQuestions(rs *sql.Rows) (ExerciceQuestions, error) {
 	return structs, nil
 }
 
-func InsertExerciceQuestion(db DB, item ExerciceQuestion) error {
+func (item ExerciceQuestion) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO exercice_questions (
 			idexercice, idquestion, bareme, index
 			) VALUES (
@@ -302,7 +300,7 @@ func (items ExerciceQuestions) IdExercices() []IdExercice {
 }
 
 func SelectExerciceQuestionsByIdExercices(tx DB, idExercices_ ...IdExercice) (ExerciceQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE idexercice = ANY($1)", IdExerciceArrayToPQ(idExercices_))
+	rows, err := tx.Query("SELECT idexercice, idquestion, bareme, index FROM exercice_questions WHERE idexercice = ANY($1)", IdExerciceArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +308,7 @@ func SelectExerciceQuestionsByIdExercices(tx DB, idExercices_ ...IdExercice) (Ex
 }
 
 func DeleteExerciceQuestionsByIdExercices(tx DB, idExercices_ ...IdExercice) (ExerciceQuestions, error) {
-	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idexercice = ANY($1) RETURNING *", IdExerciceArrayToPQ(idExercices_))
+	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idexercice = ANY($1) RETURNING idexercice, idquestion, bareme, index", IdExerciceArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +337,7 @@ func (items ExerciceQuestions) IdQuestions() []IdQuestion {
 
 // SelectExerciceQuestionByIdQuestion return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectExerciceQuestionByIdQuestion(tx DB, idQuestion IdQuestion) (item ExerciceQuestion, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM exercice_questions WHERE idquestion = $1", idQuestion)
+	row := tx.QueryRow("SELECT idexercice, idquestion, bareme, index FROM exercice_questions WHERE idquestion = $1", idQuestion)
 	item, err = ScanExerciceQuestion(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -348,7 +346,7 @@ func SelectExerciceQuestionByIdQuestion(tx DB, idQuestion IdQuestion) (item Exer
 }
 
 func SelectExerciceQuestionsByIdQuestions(tx DB, idQuestions_ ...IdQuestion) (ExerciceQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE idquestion = ANY($1)", IdQuestionArrayToPQ(idQuestions_))
+	rows, err := tx.Query("SELECT idexercice, idquestion, bareme, index FROM exercice_questions WHERE idquestion = ANY($1)", IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +354,7 @@ func SelectExerciceQuestionsByIdQuestions(tx DB, idQuestions_ ...IdQuestion) (Ex
 }
 
 func DeleteExerciceQuestionsByIdQuestions(tx DB, idQuestions_ ...IdQuestion) (ExerciceQuestions, error) {
-	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idquestion = ANY($1) RETURNING *", IdQuestionArrayToPQ(idQuestions_))
+	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idquestion = ANY($1) RETURNING idexercice, idquestion, bareme, index", IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +363,7 @@ func DeleteExerciceQuestionsByIdQuestions(tx DB, idQuestions_ ...IdQuestion) (Ex
 
 // SelectExerciceQuestionByIdExerciceAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectExerciceQuestionByIdExerciceAndIndex(tx DB, idExercice IdExercice, index int) (item ExerciceQuestion, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM exercice_questions WHERE IdExercice = $1 AND Index = $2", idExercice, index)
+	row := tx.QueryRow("SELECT idexercice, idquestion, bareme, index FROM exercice_questions WHERE IdExercice = $1 AND Index = $2", idExercice, index)
 	item, err = ScanExerciceQuestion(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -388,7 +386,7 @@ func ScanExercicegroup(row *sql.Row) (Exercicegroup, error) { return scanOneExer
 
 // SelectAll returns all the items in the exercicegroups table.
 func SelectAllExercicegroups(db DB) (Exercicegroups, error) {
-	rows, err := db.Query("SELECT * FROM exercicegroups")
+	rows, err := db.Query("SELECT id, title, public, idteacher FROM exercicegroups")
 	if err != nil {
 		return nil, err
 	}
@@ -397,13 +395,13 @@ func SelectAllExercicegroups(db DB) (Exercicegroups, error) {
 
 // SelectExercicegroup returns the entry matching 'id'.
 func SelectExercicegroup(tx DB, id IdExercicegroup) (Exercicegroup, error) {
-	row := tx.QueryRow("SELECT * FROM exercicegroups WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, title, public, idteacher FROM exercicegroups WHERE id = $1", id)
 	return ScanExercicegroup(row)
 }
 
 // SelectExercicegroups returns the entry matching the given 'ids'.
 func SelectExercicegroups(tx DB, ids ...IdExercicegroup) (Exercicegroups, error) {
-	rows, err := tx.Query("SELECT * FROM exercicegroups WHERE id = ANY($1)", IdExercicegroupArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, title, public, idteacher FROM exercicegroups WHERE id = ANY($1)", IdExercicegroupArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +449,7 @@ func (item Exercicegroup) Insert(tx DB) (out Exercicegroup, err error) {
 		title, public, idteacher
 		) VALUES (
 		$1, $2, $3
-		) RETURNING *;
+		) RETURNING id, title, public, idteacher;
 		`, item.Title, item.Public, item.IdTeacher)
 	return ScanExercicegroup(row)
 }
@@ -462,14 +460,14 @@ func (item Exercicegroup) Update(tx DB) (out Exercicegroup, err error) {
 		title, public, idteacher
 		) = (
 		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
+		) WHERE id = $4 RETURNING id, title, public, idteacher;
 		`, item.Title, item.Public, item.IdTeacher, item.Id)
 	return ScanExercicegroup(row)
 }
 
 // Deletes the Exercicegroup and returns the item
 func DeleteExercicegroupById(tx DB, id IdExercicegroup) (Exercicegroup, error) {
-	row := tx.QueryRow("DELETE FROM exercicegroups WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM exercicegroups WHERE id = $1 RETURNING id, title, public, idteacher;", id)
 	return ScanExercicegroup(row)
 }
 
@@ -508,7 +506,7 @@ func (items Exercicegroups) IdTeachers() []teacher.IdTeacher {
 }
 
 func SelectExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Exercicegroups, error) {
-	rows, err := tx.Query("SELECT * FROM exercicegroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("SELECT id, title, public, idteacher FROM exercicegroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +537,7 @@ func ScanExercicegroupTag(row *sql.Row) (ExercicegroupTag, error) {
 
 // SelectAll returns all the items in the exercicegroup_tags table.
 func SelectAllExercicegroupTags(db DB) (ExercicegroupTags, error) {
-	rows, err := db.Query("SELECT * FROM exercicegroup_tags")
+	rows, err := db.Query("SELECT tag, idexercicegroup, section FROM exercicegroup_tags")
 	if err != nil {
 		return nil, err
 	}
@@ -573,7 +571,7 @@ func ScanExercicegroupTags(rs *sql.Rows) (ExercicegroupTags, error) {
 	return structs, nil
 }
 
-func InsertExercicegroupTag(db DB, item ExercicegroupTag) error {
+func (item ExercicegroupTag) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO exercicegroup_tags (
 			tag, idexercicegroup, section
 			) VALUES (
@@ -647,7 +645,7 @@ func (items ExercicegroupTags) IdExercicegroups() []IdExercicegroup {
 }
 
 func SelectExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups_ ...IdExercicegroup) (ExercicegroupTags, error) {
-	rows, err := tx.Query("SELECT * FROM exercicegroup_tags WHERE idexercicegroup = ANY($1)", IdExercicegroupArrayToPQ(idExercicegroups_))
+	rows, err := tx.Query("SELECT tag, idexercicegroup, section FROM exercicegroup_tags WHERE idexercicegroup = ANY($1)", IdExercicegroupArrayToPQ(idExercicegroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +653,7 @@ func SelectExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups_ ...IdExe
 }
 
 func DeleteExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups_ ...IdExercicegroup) (ExercicegroupTags, error) {
-	rows, err := tx.Query("DELETE FROM exercicegroup_tags WHERE idexercicegroup = ANY($1) RETURNING *", IdExercicegroupArrayToPQ(idExercicegroups_))
+	rows, err := tx.Query("DELETE FROM exercicegroup_tags WHERE idexercicegroup = ANY($1) RETURNING tag, idexercicegroup, section", IdExercicegroupArrayToPQ(idExercicegroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -664,7 +662,7 @@ func DeleteExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups_ ...IdExe
 
 // SelectExercicegroupTagByIdExercicegroupAndTag return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectExercicegroupTagByIdExercicegroupAndTag(tx DB, idExercicegroup IdExercicegroup, tag string) (item ExercicegroupTag, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM exercicegroup_tags WHERE IdExercicegroup = $1 AND Tag = $2", idExercicegroup, tag)
+	row := tx.QueryRow("SELECT tag, idexercicegroup, section FROM exercicegroup_tags WHERE IdExercicegroup = $1 AND Tag = $2", idExercicegroup, tag)
 	item, err = ScanExercicegroupTag(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -691,7 +689,7 @@ func ScanQuestion(row *sql.Row) (Question, error) { return scanOneQuestion(row) 
 
 // SelectAll returns all the items in the questions table.
 func SelectAllQuestions(db DB) (Questions, error) {
-	rows, err := db.Query("SELECT * FROM questions")
+	rows, err := db.Query("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions")
 	if err != nil {
 		return nil, err
 	}
@@ -700,13 +698,13 @@ func SelectAllQuestions(db DB) (Questions, error) {
 
 // SelectQuestion returns the entry matching 'id'.
 func SelectQuestion(tx DB, id IdQuestion) (Question, error) {
-	row := tx.QueryRow("SELECT * FROM questions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions WHERE id = $1", id)
 	return ScanQuestion(row)
 }
 
 // SelectQuestions returns the entry matching the given 'ids'.
 func SelectQuestions(tx DB, ids ...IdQuestion) (Questions, error) {
-	rows, err := tx.Query("SELECT * FROM questions WHERE id = ANY($1)", IdQuestionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions WHERE id = ANY($1)", IdQuestionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -754,7 +752,7 @@ func (item Question) Insert(tx DB) (out Question, err error) {
 		subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
-		) RETURNING *;
+		) RETURNING id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction;
 		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters, item.Correction)
 	return ScanQuestion(row)
 }
@@ -765,14 +763,14 @@ func (item Question) Update(tx DB) (out Question, err error) {
 		subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction
 		) = (
 		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING *;
+		) WHERE id = $8 RETURNING id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction;
 		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters, item.Correction, item.Id)
 	return ScanQuestion(row)
 }
 
 // Deletes the Question and returns the item
 func DeleteQuestionById(tx DB, id IdQuestion) (Question, error) {
-	row := tx.QueryRow("DELETE FROM questions WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM questions WHERE id = $1 RETURNING id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction;", id)
 	return ScanQuestion(row)
 }
 
@@ -786,7 +784,7 @@ func DeleteQuestionsByIDs(tx DB, ids ...IdQuestion) ([]IdQuestion, error) {
 }
 
 func SelectQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) (Questions, error) {
-	rows, err := tx.Query("SELECT * FROM questions WHERE needexercice = ANY($1)", IdExerciceArrayToPQ(needExercices_))
+	rows, err := tx.Query("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions WHERE needexercice = ANY($1)", IdExerciceArrayToPQ(needExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -802,7 +800,7 @@ func DeleteQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) ([]IdQu
 }
 
 func SelectQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) (Questions, error) {
-	rows, err := tx.Query("SELECT * FROM questions WHERE idgroup = ANY($1)", IdQuestiongroupArrayToPQ(idGroups_))
+	rows, err := tx.Query("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions WHERE idgroup = ANY($1)", IdQuestiongroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -819,7 +817,7 @@ func DeleteQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) ([]IdQuestio
 
 // SelectQuestionByIdAndNeedExercice return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectQuestionByIdAndNeedExercice(tx DB, id IdQuestion, needExercice OptionalIdExercice) (item Question, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM questions WHERE Id = $1 AND NeedExercice = $2", id, needExercice)
+	row := tx.QueryRow("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions WHERE Id = $1 AND NeedExercice = $2", id, needExercice)
 	item, err = ScanQuestion(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
@@ -842,7 +840,7 @@ func ScanQuestiongroup(row *sql.Row) (Questiongroup, error) { return scanOneQues
 
 // SelectAll returns all the items in the questiongroups table.
 func SelectAllQuestiongroups(db DB) (Questiongroups, error) {
-	rows, err := db.Query("SELECT * FROM questiongroups")
+	rows, err := db.Query("SELECT id, title, public, idteacher FROM questiongroups")
 	if err != nil {
 		return nil, err
 	}
@@ -851,13 +849,13 @@ func SelectAllQuestiongroups(db DB) (Questiongroups, error) {
 
 // SelectQuestiongroup returns the entry matching 'id'.
 func SelectQuestiongroup(tx DB, id IdQuestiongroup) (Questiongroup, error) {
-	row := tx.QueryRow("SELECT * FROM questiongroups WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, title, public, idteacher FROM questiongroups WHERE id = $1", id)
 	return ScanQuestiongroup(row)
 }
 
 // SelectQuestiongroups returns the entry matching the given 'ids'.
 func SelectQuestiongroups(tx DB, ids ...IdQuestiongroup) (Questiongroups, error) {
-	rows, err := tx.Query("SELECT * FROM questiongroups WHERE id = ANY($1)", IdQuestiongroupArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, title, public, idteacher FROM questiongroups WHERE id = ANY($1)", IdQuestiongroupArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -905,7 +903,7 @@ func (item Questiongroup) Insert(tx DB) (out Questiongroup, err error) {
 		title, public, idteacher
 		) VALUES (
 		$1, $2, $3
-		) RETURNING *;
+		) RETURNING id, title, public, idteacher;
 		`, item.Title, item.Public, item.IdTeacher)
 	return ScanQuestiongroup(row)
 }
@@ -916,14 +914,14 @@ func (item Questiongroup) Update(tx DB) (out Questiongroup, err error) {
 		title, public, idteacher
 		) = (
 		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
+		) WHERE id = $4 RETURNING id, title, public, idteacher;
 		`, item.Title, item.Public, item.IdTeacher, item.Id)
 	return ScanQuestiongroup(row)
 }
 
 // Deletes the Questiongroup and returns the item
 func DeleteQuestiongroupById(tx DB, id IdQuestiongroup) (Questiongroup, error) {
-	row := tx.QueryRow("DELETE FROM questiongroups WHERE id = $1 RETURNING *;", id)
+	row := tx.QueryRow("DELETE FROM questiongroups WHERE id = $1 RETURNING id, title, public, idteacher;", id)
 	return ScanQuestiongroup(row)
 }
 
@@ -962,7 +960,7 @@ func (items Questiongroups) IdTeachers() []teacher.IdTeacher {
 }
 
 func SelectQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Questiongroups, error) {
-	rows, err := tx.Query("SELECT * FROM questiongroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	rows, err := tx.Query("SELECT id, title, public, idteacher FROM questiongroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -993,7 +991,7 @@ func ScanQuestiongroupTag(row *sql.Row) (QuestiongroupTag, error) {
 
 // SelectAll returns all the items in the questiongroup_tags table.
 func SelectAllQuestiongroupTags(db DB) (QuestiongroupTags, error) {
-	rows, err := db.Query("SELECT * FROM questiongroup_tags")
+	rows, err := db.Query("SELECT tag, idquestiongroup, section FROM questiongroup_tags")
 	if err != nil {
 		return nil, err
 	}
@@ -1027,7 +1025,7 @@ func ScanQuestiongroupTags(rs *sql.Rows) (QuestiongroupTags, error) {
 	return structs, nil
 }
 
-func InsertQuestiongroupTag(db DB, item QuestiongroupTag) error {
+func (item QuestiongroupTag) Insert(db DB) error {
 	_, err := db.Exec(`INSERT INTO questiongroup_tags (
 			tag, idquestiongroup, section
 			) VALUES (
@@ -1101,7 +1099,7 @@ func (items QuestiongroupTags) IdQuestiongroups() []IdQuestiongroup {
 }
 
 func SelectQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups_ ...IdQuestiongroup) (QuestiongroupTags, error) {
-	rows, err := tx.Query("SELECT * FROM questiongroup_tags WHERE idquestiongroup = ANY($1)", IdQuestiongroupArrayToPQ(idQuestiongroups_))
+	rows, err := tx.Query("SELECT tag, idquestiongroup, section FROM questiongroup_tags WHERE idquestiongroup = ANY($1)", IdQuestiongroupArrayToPQ(idQuestiongroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -1109,7 +1107,7 @@ func SelectQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups_ ...IdQue
 }
 
 func DeleteQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups_ ...IdQuestiongroup) (QuestiongroupTags, error) {
-	rows, err := tx.Query("DELETE FROM questiongroup_tags WHERE idquestiongroup = ANY($1) RETURNING *", IdQuestiongroupArrayToPQ(idQuestiongroups_))
+	rows, err := tx.Query("DELETE FROM questiongroup_tags WHERE idquestiongroup = ANY($1) RETURNING tag, idquestiongroup, section", IdQuestiongroupArrayToPQ(idQuestiongroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -1118,31 +1116,12 @@ func DeleteQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups_ ...IdQue
 
 // SelectQuestiongroupTagByIdQuestiongroupAndTag return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectQuestiongroupTagByIdQuestiongroupAndTag(tx DB, idQuestiongroup IdQuestiongroup, tag string) (item QuestiongroupTag, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM questiongroup_tags WHERE IdQuestiongroup = $1 AND Tag = $2", idQuestiongroup, tag)
+	row := tx.QueryRow("SELECT tag, idquestiongroup, section FROM questiongroup_tags WHERE IdQuestiongroup = $1 AND Tag = $2", idQuestiongroup, tag)
 	item, err = ScanQuestiongroupTag(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
 	return item, true, err
-}
-
-func loadJSON(out interface{}, src interface{}) error {
-	if src == nil {
-		return nil //zero value out
-	}
-	bs, ok := src.([]byte)
-	if !ok {
-		return errors.New("not a []byte")
-	}
-	return json.Unmarshal(bs, out)
-}
-
-func dumpJSON(s interface{}) (driver.Value, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return driver.Value(string(b)), nil
 }
 
 func IdExerciceArrayToPQ(ids []IdExercice) pq.Int64Array {
@@ -1172,28 +1151,6 @@ func ScanIdExerciceArray(rs *sql.Rows) ([]IdExercice, error) {
 	return ints, nil
 }
 
-type IdExerciceSet map[IdExercice]bool
-
-func NewIdExerciceSetFrom(ids []IdExercice) IdExerciceSet {
-	out := make(IdExerciceSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdExerciceSet) Add(id IdExercice) { s[id] = true }
-
-func (s IdExerciceSet) Has(id IdExercice) bool { return s[id] }
-
-func (s IdExerciceSet) Keys() []IdExercice {
-	out := make([]IdExercice, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdExercicegroupArrayToPQ(ids []IdExercicegroup) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -1219,28 +1176,6 @@ func ScanIdExercicegroupArray(rs *sql.Rows) ([]IdExercicegroup, error) {
 		return nil, err
 	}
 	return ints, nil
-}
-
-type IdExercicegroupSet map[IdExercicegroup]bool
-
-func NewIdExercicegroupSetFrom(ids []IdExercicegroup) IdExercicegroupSet {
-	out := make(IdExercicegroupSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdExercicegroupSet) Add(id IdExercicegroup) { s[id] = true }
-
-func (s IdExercicegroupSet) Has(id IdExercicegroup) bool { return s[id] }
-
-func (s IdExercicegroupSet) Keys() []IdExercicegroup {
-	out := make([]IdExercicegroup, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
 }
 
 func IdQuestionArrayToPQ(ids []IdQuestion) pq.Int64Array {
@@ -1270,28 +1205,6 @@ func ScanIdQuestionArray(rs *sql.Rows) ([]IdQuestion, error) {
 	return ints, nil
 }
 
-type IdQuestionSet map[IdQuestion]bool
-
-func NewIdQuestionSetFrom(ids []IdQuestion) IdQuestionSet {
-	out := make(IdQuestionSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdQuestionSet) Add(id IdQuestion) { s[id] = true }
-
-func (s IdQuestionSet) Has(id IdQuestion) bool { return s[id] }
-
-func (s IdQuestionSet) Keys() []IdQuestion {
-	out := make([]IdQuestion, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
 func IdQuestiongroupArrayToPQ(ids []IdQuestiongroup) pq.Int64Array {
 	out := make(pq.Int64Array, len(ids))
 	for i, v := range ids {
@@ -1319,29 +1232,7 @@ func ScanIdQuestiongroupArray(rs *sql.Rows) ([]IdQuestiongroup, error) {
 	return ints, nil
 }
 
-type IdQuestiongroupSet map[IdQuestiongroup]bool
-
-func NewIdQuestiongroupSetFrom(ids []IdQuestiongroup) IdQuestiongroupSet {
-	out := make(IdQuestiongroupSet, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s IdQuestiongroupSet) Add(id IdQuestiongroup) { s[id] = true }
-
-func (s IdQuestiongroupSet) Has(id IdQuestiongroup) bool { return s[id] }
-
-func (s IdQuestiongroupSet) Keys() []IdQuestiongroup {
-	out := make([]IdQuestiongroup, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func (s *OptionalIdExercice) Scan(src interface{}) error {
+func (s *OptionalIdExercice) Scan(src any) error {
 	var tmp sql.NullInt64
 	err := tmp.Scan(src)
 	if err != nil {
@@ -1360,7 +1251,7 @@ func (s OptionalIdExercice) Value() (driver.Value, error) {
 		Valid: s.Valid}.Value()
 }
 
-func (s *OptionalIdQuestiongroup) Scan(src interface{}) error {
+func (s *OptionalIdQuestiongroup) Scan(src any) error {
 	var tmp sql.NullInt64
 	err := tmp.Scan(src)
 	if err != nil {

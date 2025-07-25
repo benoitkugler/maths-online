@@ -17,7 +17,7 @@ func ValidateAllQuestions(db ed.DB) error {
 		return utils.SQLError(err)
 	}
 
-	exs := make(ed.IdExerciceSet)
+	exs := utils.Set[ed.IdExercice]{}
 	for _, question := range qus {
 		if question.NeedExercice.Valid {
 			exs.Add(question.NeedExercice.ID)

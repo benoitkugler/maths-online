@@ -2,6 +2,7 @@ package editor
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -238,4 +239,23 @@ func (tls TagListSet) List() []Tags {
 		out = append(out, sorted)
 	}
 	return out
+}
+
+func loadJSON(out interface{}, src interface{}) error {
+	if src == nil {
+		return nil // zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, out)
+}
+
+func dumpJSON(s interface{}) (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
 }
