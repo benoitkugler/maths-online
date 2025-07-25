@@ -17,7 +17,14 @@ class _TimeoutBarState extends State<TimeoutBar> {
       1 - seconds.toDouble() / widget.duration.inSeconds.toDouble();
 
   @override
+  void didUpdateWidget(covariant TimeoutBar oldWidget) {
+    seconds = 0;
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void initState() {
+    seconds = -1;
     _updateClock();
     super.initState();
   }

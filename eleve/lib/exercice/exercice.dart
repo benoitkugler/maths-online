@@ -292,7 +292,6 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
 
   void _handleInitialQuestion() {
     if (widget.initialQuestion == null || widget.controller.inQuestion) return;
-    print("handle initiatl");
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _goToQuestion(widget.initialQuestion!));
   }
@@ -313,14 +312,20 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
             child: ColoredTitle(exP.exercice.title, Colors.purple),
           ),
           if (ct.questionRepeat == QuestionRepeat.oneTry)
-            ListTile(
-                title: Text("Un seul essai par question !"),
-                trailing: Badge.count(count: 1)),
+            Card(
+              margin: EdgeInsets.all(8),
+              child: ListTile(
+                  title: Text("Un seul essai par question !"),
+                  trailing: Badge.count(count: 1)),
+            ),
           if (ct.questionTimeLimit != 0)
-            ListTile(
-              title: Text(
-                  "Temps limité à $ct.questionTimeLimit sec. par question !"),
-              trailing: const Icon(Icons.timer),
+            Card(
+              margin: EdgeInsets.all(8),
+              child: ListTile(
+                title: Text(
+                    "Temps limité à ${ct.questionTimeLimit} sec. par question !"),
+                trailing: const Icon(Icons.timer),
+              ),
             ),
           if (widget.noticeSandbox)
             const Card(
@@ -341,20 +346,26 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
   void _goToQuestion(int questionIndex) async {
     final ct = widget.controller;
     ct.setQuestionIndex(questionIndex);
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => _QuestionsRoute(
-              widget.api,
-              ct,
-              widget.showCorrectionButtonOnFail,
-              onShowCorrectAnswer: widget.onShowCorrectAnswer,
-              noticeSandbox: widget.noticeSandbox,
-              deadline: widget.deadline,
-              instantShowCorrection: widget.instantShowCorrection,
-            )));
+
+    final goToQuestion =
+        await Navigator.of(context).push(MaterialPageRoute<int?>(
+            builder: (context) => _QuestionsRoute(
+                  widget.api,
+                  ct,
+                  widget.showCorrectionButtonOnFail,
+                  onShowCorrectAnswer: widget.onShowCorrectAnswer,
+                  noticeSandbox: widget.noticeSandbox,
+                  deadline: widget.deadline,
+                  instantShowCorrection: widget.instantShowCorrection,
+                )));
     if (!mounted) return;
-    ct.setQuestionIndex(-1);
-    // controller has need updated
-    setState(() {});
+    if (goToQuestion != null) {
+      _goToQuestion(goToQuestion);
+    } else {
+      ct.setQuestionIndex(-1);
+      // controller has been updated
+      setState(() {});
+    }
   }
 }
 
@@ -399,6 +410,7 @@ class _QuestionsRoute extends StatefulWidget {
 class _QuestionsRouteState extends State<_QuestionsRoute> {
   bool noticeSandbox = false;
   Timer? deadlineTimer;
+  Timer? timeLimitTimer;
 
   // the questions to display when trying again
   // this is a temporay slice, affected to the controller on user validation
@@ -419,6 +431,7 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   @override
   void dispose() {
     deadlineTimer?.cancel();
+    timeLimitTimer?.cancel();
     super.dispose();
   }
 
@@ -435,6 +448,14 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
       }
     }
 
+    // handle time limit
+    timeLimitTimer?.cancel();
+    final timeout =
+        widget.controller._questions[widget.controller.questionIndex].timeout;
+    if (timeout != null) {
+      timeLimitTimer = Timer(timeout, _onTimeLimitReached);
+    }
+
     widget.controller.reset();
     if (widget.instantShowCorrection) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
@@ -444,6 +465,9 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   @override
   Widget build(BuildContext context) {
     final ct = widget.controller;
+    // disable exiting the question for time limited
+    // to prevent abuses
+    final canPop = ct._questions[ct.questionIndex].timeout == null;
     return Scaffold(
       appBar: AppBar(
         title: Text("Question ${ct.questionIndex + 1}"),
@@ -452,21 +476,49 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
             TextButton(
                 onPressed: widget.onShowCorrectAnswer,
                 child: const Text("Afficher la réponse")),
-          IconButton(
-              onPressed: ct.goToPreviousEnabled ? goToPrevious : null,
-              icon: const Icon(Icons.arrow_back)),
-          IconButton(
-              onPressed: ct.goToNextEnabled ? goToNext : null,
-              icon: const Icon(Icons.arrow_forward)),
+          if (widget.deadline == null) ...[
+            // disable when time limit is on
+            IconButton(
+                onPressed: ct.goToPreviousEnabled ? goToPrevious : null,
+                icon: const Icon(Icons.arrow_back)),
+            IconButton(
+                onPressed: ct.goToNextEnabled ? goToNext : null,
+                icon: const Icon(Icons.arrow_forward)),
+          ]
         ],
       ),
-      body: QuestionView(
-        ct.exeAndProg.exercice.questions[ct.questionIndex].question,
-        ct._questions[ct.questionIndex],
-        onQuestionButtonClick,
-        Colors.purpleAccent,
+      body: PopScope(
+        canPop: canPop,
+        child: QuestionView(
+          ct.exeAndProg.exercice.questions[ct.questionIndex].question,
+          ct._questions[ct.questionIndex],
+          onQuestionButtonClick,
+          Colors.purpleAccent,
+        ),
       ),
     );
+  }
+
+  void _onTimeLimitReached() async {
+    // send and empty response to the server
+    final evalFuture = _evaluate(overrideAnswsers: QuestionAnswersIn({}));
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.orange,
+        icon: const Icon(Icons.timer),
+        title: const Text("Limite dépassée"),
+        content: Text(
+            "Tu as dépassé la limite de ${widget.controller.questionTimeLimit} sec."),
+      ),
+    );
+    await evalFuture;
+    if (!mounted) return;
+
+    // go back to exercice home
+    widget.controller.resetWithNextQuestions(nextQuestions);
+    Navigator.of(context).pop();
   }
 
   void _onDeadlineReached() {
@@ -490,22 +542,7 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   }
 
   void _goToQuestion(int questionIndex) {
-    final ct = widget.controller;
-    setState(() {
-      ct.setQuestionIndex(questionIndex);
-    });
-  }
-
-  // handle the errors
-  Future<EvaluateWorkOut?> _evaluate(EvaluateWorkIn params) async {
-    try {
-      final res = await widget.api.evaluate(params);
-      return res;
-    } catch (error) {
-      if (!mounted) return null;
-      showError("Impossible d'évaluer l'exercice", error, context);
-      return null;
-    }
+    Navigator.of(context).pop(questionIndex);
   }
 
   void onExerciceOver() async {
@@ -521,7 +558,35 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     }
   }
 
-  void _onValideQuestion() async {
+  Future<EvaluateWorkOut?> _evaluate(
+      {QuestionAnswersIn? overrideAnswsers}) async {
+    final ct = widget.controller;
+    final index = ct.questionIndex;
+
+    // validate the given answer
+    final params = EvaluateWorkIn(
+      ct.exeAndProg.exercice.iD,
+      ct.exeAndProg.progression,
+      index,
+      AnswerP(ct.exeAndProg.exercice.questions[index].params,
+          overrideAnswsers ?? ct._questions[index].answers()),
+    );
+
+    final EvaluateWorkOut resp;
+    try {
+      resp = await widget.api.evaluate(params);
+    } catch (error) {
+      if (!mounted) return null;
+      showError("Impossible d'évaluer la question", error, context);
+      return null;
+    }
+
+    ct.updateProgression(resp.progression); // update the progression
+    nextQuestions = resp.newQuestions; // buffer until retry
+    return resp;
+  }
+
+  void _onValideQuestion({QuestionAnswersIn? overrideAnswsers}) async {
     final ct = widget.controller;
     final index = ct.questionIndex;
 
@@ -533,20 +598,8 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
       return;
     }
 
-    // validate the given answer
-    final resp = await _evaluate(EvaluateWorkIn(
-      ct.exeAndProg.exercice.iD,
-      ct.exeAndProg.progression,
-      index,
-      AnswerP(ct.exeAndProg.exercice.questions[index].params,
-          ct._questions[index].answers()),
-    ));
-    if (resp == null || !mounted) {
-      return;
-    }
-
-    ct.updateProgression(resp.progression); // update the progression
-    nextQuestions = resp.newQuestions; // buffer until retry
+    final resp = await _evaluate(overrideAnswsers: overrideAnswsers);
+    if (resp == null) return;
 
     if (ct.exeAndProg.progression.nextQuestion == -1) {
       onExerciceOver();
@@ -849,7 +902,7 @@ class _QuestionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final diff = _difficulties[difficultyTag] ?? "";
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2),
       child: ListTile(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(4))),
