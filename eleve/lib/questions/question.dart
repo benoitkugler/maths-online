@@ -4,6 +4,7 @@ import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/function_graph.dart';
 import 'package:eleve/questions/function_points.dart';
 import 'package:eleve/questions/geometric_construction.dart';
+import 'package:eleve/questions/image.dart';
 import 'package:eleve/questions/number.dart';
 import 'package:eleve/questions/ordered_list.dart';
 import 'package:eleve/questions/probas_tree.dart';
@@ -252,6 +253,13 @@ class _FieldsBuilder {
     rows.add(Center(child: TableW(element)));
   }
 
+  void _handleImageBlock(ImageBlock element) {
+    // start a new row
+    _flushCurrentRow();
+
+    rows.add(Center(child: ImageW(element)));
+  }
+
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = fields[element.iD] as NumberController;
     _currentRow.add(WidgetSpan(
@@ -442,6 +450,8 @@ class _FieldsBuilder {
         _handleFunctionsGraphBlock(element);
       } else if (element is TableBlock) {
         _handleTableBlock(element);
+      } else if (element is ImageBlock) {
+        _handleImageBlock(element);
 
         // editable widgets
       } else if (element is NumberFieldBlock) {

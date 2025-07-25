@@ -116,8 +116,7 @@ class TextRow extends StatelessWidget {
   final double lineHeight;
 
   const TextRow(this.content,
-      {Key? key, this.verticalPadding = 0, this.lineHeight = 1.5})
-      : super(key: key);
+      {super.key, this.verticalPadding = 0, this.lineHeight = 1.5});
 
   @override
   Widget build(BuildContext context) {
@@ -138,8 +137,7 @@ class MathTableCell extends StatelessWidget {
   final TableCellVerticalAlignment align;
   final String mathContent;
   final double? width;
-  const MathTableCell(this.align, this.mathContent, {Key? key, this.width})
-      : super(key: key);
+  const MathTableCell(this.align, this.mathContent, {super.key, this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -161,8 +159,7 @@ class MathTableCell extends StatelessWidget {
 class SubmitOnLeave extends StatelessWidget {
   final void Function() submit;
   final Widget child;
-  const SubmitOnLeave({required this.submit, required this.child, Key? key})
-      : super(key: key);
+  const SubmitOnLeave({required this.submit, required this.child, super.key});
 
   @override
   Widget build(BuildContext context) {

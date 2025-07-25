@@ -25,6 +25,7 @@ func (FigureBlock) isBlock()         {}
 func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
 func (TreeBlock) isBlock()           {}
+func (ImageBlock) isBlock()          {}
 
 func (NumberFieldBlock) isBlock()                {}
 func (ExpressionFieldBlock) isBlock()            {}
@@ -238,6 +239,10 @@ type FunctionPointsFieldBlock struct {
 type TreeBlock struct {
 	EventsProposals []TextLine
 	Root            TreeNodeAnswer
+}
+
+type ImageBlock struct {
+	URL string
 }
 
 // TreeShape defines the shape of a "regular" tree,

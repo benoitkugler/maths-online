@@ -11,8 +11,7 @@ class _Cell extends StatelessWidget {
   final TableCellVerticalAlignment align;
 
   const _Cell(this.content, this.isHeader,
-      {Key? key, this.align = TableCellVerticalAlignment.middle})
-      : super(key: key);
+      {this.align = TableCellVerticalAlignment.middle});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +32,7 @@ class _Cell extends StatelessWidget {
 class TableW extends StatelessWidget {
   final TableBlock data;
 
-  const TableW(this.data, {Key? key}) : super(key: key);
+  const TableW(this.data, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -57,15 +56,13 @@ class _Table extends StatelessWidget {
   final List<TextOrMath> verticalHeaders;
   final List<List<Widget>> values;
 
-  const _Table(this.horizontalHeaders, this.verticalHeaders, this.values,
-      {Key? key})
-      : super(key: key);
+  const _Table(this.horizontalHeaders, this.verticalHeaders, this.values);
 
   @override
   Widget build(BuildContext context) {
     final firstRow = [
       if (verticalHeaders.isNotEmpty) const SizedBox(),
-      ...horizontalHeaders.map((e) => _Cell(e, true)).toList(),
+      ...horizontalHeaders.map((e) => _Cell(e, true)),
     ];
     final hideHorizontalHeader = horizontalHeaders.every((t) => t.text.isEmpty);
     return SingleChildScrollView(
@@ -148,7 +145,7 @@ class TableFieldW extends StatefulWidget {
   final Color color;
   final TableController controller;
 
-  const TableFieldW(this.color, this.controller, {Key? key}) : super(key: key);
+  const TableFieldW(this.color, this.controller, {super.key});
 
   @override
   _TableFieldWState createState() => _TableFieldWState();
@@ -185,8 +182,8 @@ class BaseFunctionTable extends StatelessWidget {
   final List<MapEntry<String, List<Widget>>> fxRows; // (label, row) pairs
   final Color? headerColor;
 
-  const BaseFunctionTable(this.xRow, this.fxRows, {Key? key, this.headerColor})
-      : super(key: key);
+  const BaseFunctionTable(this.xRow, this.fxRows,
+      {super.key, this.headerColor});
 
   @override
   Widget build(BuildContext context) {

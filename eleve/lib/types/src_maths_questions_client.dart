@@ -203,6 +203,8 @@ Block blockFromJson(dynamic json_) {
       return functionsGraphBlockFromJson(data);
     case "GeometricConstructionFieldBlock":
       return geometricConstructionFieldBlockFromJson(data);
+    case "ImageBlock":
+      return imageBlockFromJson(data);
     case "NumberFieldBlock":
       return numberFieldBlockFromJson(data);
     case "OrderedListFieldBlock":
@@ -268,6 +270,8 @@ Map<String, dynamic> blockToJson(Block item) {
       'Kind': "GeometricConstructionFieldBlock",
       'Data': geometricConstructionFieldBlockToJson(item)
     };
+  } else if (item is ImageBlock) {
+    return {'Kind': "ImageBlock", 'Data': imageBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
     return {'Kind': "NumberFieldBlock", 'Data': numberFieldBlockToJson(item)};
   } else if (item is OrderedListFieldBlock) {
@@ -874,6 +878,27 @@ Map<String, dynamic> geometricConstructionFieldBlockToJson(
     "Field": geoFieldToJson(item.field),
     "Background": figureOrGraphToJson(item.background)
   };
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.ImageBlock
+class ImageBlock implements Block {
+  final String uRL;
+
+  const ImageBlock(this.uRL);
+
+  @override
+  String toString() {
+    return "ImageBlock($uRL)";
+  }
+}
+
+ImageBlock imageBlockFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return ImageBlock(stringFromJson(json['URL']));
+}
+
+Map<String, dynamic> imageBlockToJson(ImageBlock item) {
+  return {"URL": stringToJson(item.uRL)};
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Node

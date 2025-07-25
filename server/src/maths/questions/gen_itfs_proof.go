@@ -53,7 +53,7 @@ func (out *ProofAssertionWrapper) UnmarshalJSON(src []byte) error {
 
 func (item ProofAssertionWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper

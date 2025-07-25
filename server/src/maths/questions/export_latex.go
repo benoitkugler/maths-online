@@ -375,3 +375,4 @@ func (ti TreeFieldInstance) toLatex() string                  { return "TODO" }
 func (pi ProofFieldInstance) toLatex() string                 { return "TODO" }
 func (pi TableFieldInstance) toLatex() string                 { return "TODO" }
 func (pi SetFieldInstance) toLatex() string                   { return "TODO" }
+func (pi ImageInstance) toLatex() string                      { return "TODO" }

@@ -25,6 +25,7 @@ var (
 	_ instance = FigureInstance{}
 	_ instance = TableInstance{}
 	_ instance = FunctionsGraphInstance{}
+	_ instance = ImageInstance{}
 )
 
 // ExerciceInstance is an in memory version of an Exercice,
@@ -306,4 +307,10 @@ func (ti TreeInstance) toClient() client.Block {
 		EventsProposals: ti.EventsProposals,
 		Root:            ti.AnswerRoot.toClient(),
 	}
+}
+
+type ImageInstance ImageBlock
+
+func (img ImageInstance) toClient() client.Block {
+	return client.ImageBlock{URL: img.URL}
 }

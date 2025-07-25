@@ -116,3 +116,10 @@ func TestInstantiateTextFormula(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(blocks) == 3)
 }
+
+func TestValidateImage(t *testing.T) {
+	ok, _ := Enonce{ImageBlock{"ùmslùsmd"}}.validate(&ex.RandomParameters{})
+	tu.Assert(t, !ok)
+	ok, _ = Enonce{ImageBlock{"https://test.fr"}}.validate(&ex.RandomParameters{})
+	tu.Assert(t, ok)
+}

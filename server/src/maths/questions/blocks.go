@@ -22,6 +22,7 @@ var (
 	_ Block = FunctionsGraphBlock{}
 	_ Block = TableBlock{}
 	_ Block = TreeBlock{}
+	_ Block = ImageBlock{}
 )
 
 // Block form the actual content of a question
@@ -1215,4 +1216,19 @@ func (tf TreeBlock) setupValidator(params *ex.RandomParameters) (validator, erro
 		}
 	}
 	return treeValidator{data: tf}, nil
+}
+
+type ImageBlock struct {
+	URL string
+}
+
+func (img ImageBlock) instantiate(params ex.Vars, ID int) (instance, error) {
+	return ImageInstance(img), nil
+}
+
+func (img ImageBlock) setupValidator(*ex.RandomParameters) (validator, error) {
+	if !strings.HasPrefix(img.URL, "https://") {
+		return nil, fmt.Errorf("L'adresse %s ne contient pas le préfixe https://", img.URL)
+	}
+	return noOpValidator{}, nil
 }

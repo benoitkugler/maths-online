@@ -44,6 +44,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data GeometricConstructionFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "ImageBlock":
+		var data ImageBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "NumberFieldBlock":
 		var data NumberFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
@@ -113,7 +117,7 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 
 func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper
@@ -130,6 +134,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "FunctionsGraphBlock", Data: data}
 	case GeometricConstructionFieldBlock:
 		wr = wrapper{Kind: "GeometricConstructionFieldBlock", Data: data}
+	case ImageBlock:
+		wr = wrapper{Kind: "ImageBlock", Data: data}
 	case NumberFieldBlock:
 		wr = wrapper{Kind: "NumberFieldBlock", Data: data}
 	case OrderedListFieldBlock:
@@ -174,6 +180,7 @@ const (
 	FunctionPointsFieldBlockBlKind        = "FunctionPointsFieldBlock"
 	FunctionsGraphBlockBlKind             = "FunctionsGraphBlock"
 	GeometricConstructionFieldBlockBlKind = "GeometricConstructionFieldBlock"
+	ImageBlockBlKind                      = "ImageBlock"
 	NumberFieldBlockBlKind                = "NumberFieldBlock"
 	OrderedListFieldBlockBlKind           = "OrderedListFieldBlock"
 	ProofFieldBlockBlKind                 = "ProofFieldBlock"
@@ -242,7 +249,7 @@ func (out *FiguresOrGraphsWrapper) UnmarshalJSON(src []byte) error {
 
 func (item FiguresOrGraphsWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper
@@ -304,7 +311,7 @@ func (out *GeoFieldWrapper) UnmarshalJSON(src []byte) error {
 
 func (item GeoFieldWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper
@@ -395,7 +402,7 @@ func (out *ParameterEntryWrapper) UnmarshalJSON(src []byte) error {
 
 func (item ParameterEntryWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
-		Data interface{}
+		Data any
 		Kind string
 	}
 	var wr wrapper

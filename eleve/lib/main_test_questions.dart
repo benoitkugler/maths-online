@@ -224,7 +224,11 @@ class _SingleQuestion extends StatefulWidget {
 }
 
 class _SingleQuestionState extends State<_SingleQuestion> {
-  final question = numberQuestion("Test");
+  final question = Question([
+    TextBlock([T("sdsmldù")], false, false, false),
+    ImageBlock(
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sucrose_molecule.svg/250px-Sucrose_molecule.svg.png"),
+  ], []);
   late final QuestionController controller;
   @override
   void initState() {
