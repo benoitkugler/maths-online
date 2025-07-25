@@ -883,22 +883,23 @@ Map<String, dynamic> geometricConstructionFieldBlockToJson(
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.ImageBlock
 class ImageBlock implements Block {
   final String uRL;
+  final int scale;
 
-  const ImageBlock(this.uRL);
+  const ImageBlock(this.uRL, this.scale);
 
   @override
   String toString() {
-    return "ImageBlock($uRL)";
+    return "ImageBlock($uRL, $scale)";
   }
 }
 
 ImageBlock imageBlockFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return ImageBlock(stringFromJson(json['URL']));
+  return ImageBlock(stringFromJson(json['URL']), intFromJson(json['Scale']));
 }
 
 Map<String, dynamic> imageBlockToJson(ImageBlock item) {
-  return {"URL": stringToJson(item.uRL)};
+  return {"URL": stringToJson(item.uRL), "Scale": intToJson(item.scale)};
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Node

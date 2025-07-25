@@ -9,6 +9,7 @@ class ImageW extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.network(
       data.uRL,
+      scale: 100 / data.scale.toDouble(), // scale works a inverse
       webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
     );
   }

@@ -118,8 +118,10 @@ func TestInstantiateTextFormula(t *testing.T) {
 }
 
 func TestValidateImage(t *testing.T) {
-	ok, _ := Enonce{ImageBlock{"ùmslùsmd"}}.validate(&ex.RandomParameters{})
+	ok, _ := Enonce{ImageBlock{"ùmslùsmd", 20}}.validate(&ex.RandomParameters{})
 	tu.Assert(t, !ok)
-	ok, _ = Enonce{ImageBlock{"https://test.fr"}}.validate(&ex.RandomParameters{})
+	ok, _ = Enonce{ImageBlock{"https://test.fr", 0}}.validate(&ex.RandomParameters{})
+	tu.Assert(t, !ok)
+	ok, _ = Enonce{ImageBlock{"https://test.fr", 100}}.validate(&ex.RandomParameters{})
 	tu.Assert(t, ok)
 }

@@ -1218,9 +1218,7 @@ func (tf TreeBlock) setupValidator(params *ex.RandomParameters) (validator, erro
 	return treeValidator{data: tf}, nil
 }
 
-type ImageBlock struct {
-	URL string
-}
+type ImageBlock client.ImageBlock
 
 func (img ImageBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 	return ImageInstance(img), nil
@@ -1229,6 +1227,9 @@ func (img ImageBlock) instantiate(params ex.Vars, ID int) (instance, error) {
 func (img ImageBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	if !strings.HasPrefix(img.URL, "https://") {
 		return nil, fmt.Errorf("L'adresse %s ne contient pas le préfixe https://", img.URL)
+	}
+	if img.Scale < 1 {
+		return nil, fmt.Errorf("L'échelle (%d %%) doit être strictement positive.", img.Scale)
 	}
 	return noOpValidator{}, nil
 }

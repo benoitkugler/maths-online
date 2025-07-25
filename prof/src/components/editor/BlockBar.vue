@@ -53,6 +53,7 @@ const labels = BlockKindLabels;
 function isSimplified(k: BlockKind) {
   return (
     k == BlockKind.TextBlock ||
+    k == BlockKind.ImageBlock ||
     k == BlockKind.TableBlock ||
     k == BlockKind.OrderedListFieldBlock ||
     k == BlockKind.RadioFieldBlock ||

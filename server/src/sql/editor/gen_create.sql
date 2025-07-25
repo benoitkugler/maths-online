@@ -706,6 +706,8 @@ BEGIN
         RETURN gomacro_validate_json_ques_FunctionsGraphBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'GeometricConstructionFieldBlock' THEN
         RETURN gomacro_validate_json_ques_GeometricConstructionFieldBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ImageBlock' THEN
+        RETURN gomacro_validate_json_ques_ImageBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'NumberFieldBlock' THEN
         RETURN gomacro_validate_json_ques_NumberFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'OrderedListFieldBlock' THEN
@@ -1166,6 +1168,28 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_ques_GeoField (data -> 'Field')
         AND gomacro_validate_json_ques_FiguresOrGraphs (data -> 'Background');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_ImageBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('URL', 'Scale'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'URL')
+        AND gomacro_validate_json_number (data -> 'Scale');
     RETURN is_valid;
 END;
 $$

@@ -355,6 +355,7 @@ func randque_Block() questions.Block {
 		randque_FunctionPointsFieldBlock(),
 		randque_FunctionsGraphBlock(),
 		randque_GeometricConstructionFieldBlock(),
+		randque_ImageBlock(),
 		randque_NumberFieldBlock(),
 		randque_OrderedListFieldBlock(),
 		randque_ProofFieldBlock(),
@@ -371,7 +372,7 @@ func randque_Block() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(21)
+	i := rand.Intn(22)
 	return choix[i]
 }
 
@@ -551,6 +552,14 @@ func randque_GeometricConstructionFieldBlock() questions.GeometricConstructionFi
 	var s questions.GeometricConstructionFieldBlock
 	s.Field = randque_GeoField()
 	s.Background = randque_FiguresOrGraphs()
+
+	return s
+}
+
+func randque_ImageBlock() questions.ImageBlock {
+	var s questions.ImageBlock
+	s.URL = randstring()
+	s.Scale = randint()
 
 	return s
 }

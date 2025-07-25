@@ -120,7 +120,10 @@ const colorClass = computed(() => {
 });
 
 const showLaTeXDoc = computed(() => {
-  return BlockKind.NumberFieldBlock != props.kind;
+  return (
+    BlockKind.NumberFieldBlock != props.kind &&
+    BlockKind.ImageBlock != props.kind
+  );
 });
 
 function onDragStart(payload: DragEvent) {

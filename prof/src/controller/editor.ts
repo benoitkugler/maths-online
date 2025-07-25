@@ -49,6 +49,7 @@ import {
   IdExercice,
   IdQuestion,
   IdReview,
+  ImageBlock,
 } from "./api_gen";
 import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
@@ -63,6 +64,7 @@ export const colorByKind: { [key in TextKind]: string } = {
 
 export const sortedBlockKindLabels = [
   [BlockKind.TextBlock, { label: "Texte", isAnswerField: false }],
+  [BlockKind.ImageBlock, { label: "Image", isAnswerField: false }],
   [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
   [
     BlockKind.FigureBlock,
@@ -157,35 +159,6 @@ export const sortedBlockKindLabels = [
 export const BlockKindLabels: {
   [T in BlockKind]: { label: string; isAnswerField: boolean };
 } = Object.fromEntries(sortedBlockKindLabels);
-
-interface BlockKindTypes {
-  [BlockKind.FigureBlock]: FigureBlock;
-  [BlockKind.FormulaBlock]: FormulaBlock;
-  [BlockKind.ExpressionFieldBlock]: ExpressionFieldBlock;
-  [BlockKind.FunctionsGraphBlock]: FunctionsGraphBlock;
-  [BlockKind.NumberFieldBlock]: NumberFieldBlock;
-  [BlockKind.RadioFieldBlock]: RadioFieldBlock;
-  [BlockKind.SignTableBlock]: SignTableBlock;
-  [BlockKind.TableBlock]: TableBlock;
-  [BlockKind.TextBlock]: TextBlock;
-  [BlockKind.VariationTableBlock]: VariationTableBlock;
-  [BlockKind.OrderedListFieldBlock]: OrderedListFieldBlock;
-  [BlockKind.GeometricConstructionFieldBlock]: GeometricConstructionFieldBlock;
-  [BlockKind.VariationTableFieldBlock]: VariationTableFieldBlock;
-  [BlockKind.SignTableFieldBlock]: SignTableFieldBlock;
-  [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
-  [BlockKind.TreeBlock]: TreeBlock;
-  [BlockKind.TreeFieldBlock]: TreeFieldBlock;
-  [BlockKind.TableFieldBlock]: TableFieldBlock;
-  [BlockKind.VectorFieldBlock]: VectorFieldBlock;
-  [BlockKind.ProofFieldBlock]: ProofFieldBlock;
-  [BlockKind.SetFieldBlock]: SetFieldBlock;
-}
-
-export interface TypedBlock<K extends BlockKind> {
-  Kind: K;
-  Data: BlockKindTypes[K];
-}
 
 export const xRune = "x".codePointAt(0)! as Int;
 export const yRune = "y".codePointAt(0)! as Int;
@@ -284,7 +257,7 @@ function newTree() {
 export function newBlock(kind: BlockKind): Block {
   switch (kind) {
     case BlockKind.TextBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Parts: "",
@@ -293,19 +266,17 @@ export function newBlock(kind: BlockKind): Block {
           Smaller: false,
         },
       };
-      return out;
     }
     case BlockKind.FormulaBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Parts: "",
         },
       };
-      return out;
     }
     case BlockKind.FigureBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           ShowGrid: true,
@@ -324,10 +295,9 @@ export function newBlock(kind: BlockKind): Block {
           },
         },
       };
-      return out;
     }
     case BlockKind.FunctionsGraphBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           FunctionExprs: [
@@ -359,10 +329,9 @@ export function newBlock(kind: BlockKind): Block {
           Points: [],
         },
       };
-      return out;
     }
     case BlockKind.VariationTableBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Label: "f(x)",
@@ -370,17 +339,15 @@ export function newBlock(kind: BlockKind): Block {
           Fxs: ["-3", "2", "-1"],
         },
       };
-      return out;
     }
     case BlockKind.SignTableBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: copy(signTableExample),
       };
-      return out;
     }
     case BlockKind.TableBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           VerticalHeaders: [
@@ -403,19 +370,17 @@ export function newBlock(kind: BlockKind): Block {
           ],
         },
       };
-      return out;
     }
     case BlockKind.NumberFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Expression: "1",
         },
       };
-      return out;
     }
     case BlockKind.ExpressionFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Label: "",
@@ -424,10 +389,9 @@ export function newBlock(kind: BlockKind): Block {
           ShowFractionHelp: false,
         },
       };
-      return out;
     }
     case BlockKind.RadioFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: "1",
@@ -435,10 +399,9 @@ export function newBlock(kind: BlockKind): Block {
           AsDropDown: false,
         },
       };
-      return out;
     }
     case BlockKind.OrderedListFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: ["$\\{$", "-12", ";", "30", "$\\}$"],
@@ -446,10 +409,9 @@ export function newBlock(kind: BlockKind): Block {
           Label: "x \\in ",
         },
       };
-      return out;
     }
     case BlockKind.GeometricConstructionFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Field: {
@@ -482,10 +444,9 @@ export function newBlock(kind: BlockKind): Block {
           },
         },
       };
-      return out;
     }
     case BlockKind.VariationTableFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: {
@@ -495,19 +456,17 @@ export function newBlock(kind: BlockKind): Block {
           },
         },
       };
-      return out;
     }
     case BlockKind.SignTableFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: copy(signTableExample),
         },
       };
-      return out;
     }
     case BlockKind.FunctionPointsFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           IsDiscrete: false,
@@ -517,24 +476,21 @@ export function newBlock(kind: BlockKind): Block {
           XGrid: ["-4", "-2", "0", "2", "4"],
         },
       };
-      return out;
     }
     case BlockKind.TreeFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: { Answer: newTree() },
       };
-      return out;
     }
     case BlockKind.TreeBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: newTree(),
       };
-      return out;
     }
     case BlockKind.TableFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           VerticalHeaders: [
@@ -551,10 +507,9 @@ export function newBlock(kind: BlockKind): Block {
           ],
         },
       };
-      return out;
     }
     case BlockKind.VectorFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: {
@@ -565,10 +520,9 @@ export function newBlock(kind: BlockKind): Block {
           DisplayColumn: true,
         },
       };
-      return out;
     }
     case BlockKind.ProofFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: {
@@ -595,20 +549,25 @@ export function newBlock(kind: BlockKind): Block {
           },
         },
       };
-      return out;
     }
     case BlockKind.SetFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
+      return {
         Kind: kind,
         Data: {
           Answer: "¬A ∩ B ",
           AdditionalSets: ["C"],
         },
       };
-      return out;
     }
-    default:
-      throw "Unexpected Kind";
+    case BlockKind.ImageBlock: {
+      return {
+        Kind: kind,
+        Data: {
+          URL: "https://isyro.fr/static/prof/logo.png",
+          Scale: 100 as Int,
+        },
+      };
+    }
   }
 }
 

@@ -13,6 +13,7 @@ export const BlockKind = {
   FunctionPointsFieldBlock: "FunctionPointsFieldBlock",
   FunctionsGraphBlock: "FunctionsGraphBlock",
   GeometricConstructionFieldBlock: "GeometricConstructionFieldBlock",
+  ImageBlock: "ImageBlock",
   NumberFieldBlock: "NumberFieldBlock",
   OrderedListFieldBlock: "OrderedListFieldBlock",
   ProofFieldBlock: "ProofFieldBlock",
@@ -42,6 +43,7 @@ export type Block =
       Kind: "GeometricConstructionFieldBlock";
       Data: GeometricConstructionFieldBlock;
     }
+  | { Kind: "ImageBlock"; Data: ImageBlock }
   | { Kind: "NumberFieldBlock"; Data: NumberFieldBlock }
   | { Kind: "OrderedListFieldBlock"; Data: OrderedListFieldBlock }
   | { Kind: "ProofFieldBlock"; Data: ProofFieldBlock }
@@ -205,6 +207,11 @@ export type GeoField =
 export interface GeometricConstructionFieldBlock {
   Field: GeoField;
   Background: FiguresOrGraphs;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ImageBlock
+export interface ImageBlock {
+  URL: string;
+  Scale: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.In
 export type In = string;

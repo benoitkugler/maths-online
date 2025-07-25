@@ -242,7 +242,8 @@ type TreeBlock struct {
 }
 
 type ImageBlock struct {
-	URL string
+	URL   string
+	Scale int // in percent
 }
 
 // TreeShape defines the shape of a "regular" tree,

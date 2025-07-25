@@ -227,7 +227,8 @@ class _SingleQuestionState extends State<_SingleQuestion> {
   final question = Question([
     TextBlock([T("sdsmldù")], false, false, false),
     ImageBlock(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sucrose_molecule.svg/250px-Sucrose_molecule.svg.png"),
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sucrose_molecule.svg/250px-Sucrose_molecule.svg.png",
+        200),
   ], []);
   late final QuestionController controller;
   @override
