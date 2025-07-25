@@ -15,7 +15,7 @@ String _pickVariant() {
 
 class _Text extends StatelessWidget {
   final String text;
-  const _Text(this.text, {Key? key}) : super(key: key);
+  const _Text(this.text);
 
   static List<_TextRun> split(String text, {String separator = "_"}) {
     var isSpecial = true;
@@ -38,13 +38,7 @@ class _Text extends StatelessWidget {
                             e.isSpecial ? FontWeight.bold : FontWeight.normal),
                   ))
               .toList()),
-      style: const TextStyle(fontSize: 22, shadows: [
-        Shadow(
-          color: Colors.lightBlueAccent,
-          offset: Offset(0, 1),
-          blurRadius: 6,
-        ),
-      ]),
+      style: const TextStyle(fontSize: 22),
     );
   }
 }
@@ -57,7 +51,7 @@ class _TextRun {
 
 class ActivityStart extends StatelessWidget {
   final void Function() onContinue;
-  const ActivityStart(this.onContinue, {Key? key}) : super(key: key);
+  const ActivityStart(this.onContinue, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -85,8 +79,7 @@ class ActivityStart extends StatelessWidget {
               onPressed: onContinue,
               style: ElevatedButton.styleFrom(
                   elevation: 4,
-                  shadowColor: Colors.white,
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.green.shade700,
                   padding: const EdgeInsets.all(16)),
               child: const Text(
                 "J'ai mon matériel !",
