@@ -311,6 +311,4 @@ func (ti TreeInstance) toClient() client.Block {
 
 type ImageInstance ImageBlock
 
-func (img ImageInstance) toClient() client.Block {
-	return client.ImageBlock{URL: img.URL}
-}
+func (img ImageInstance) toClient() client.Block { return client.ImageBlock(img) }
