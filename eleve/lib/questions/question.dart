@@ -571,14 +571,11 @@ class QuestionView extends StatefulWidget {
   /// [title] is the title of the question
   final String title;
 
+  final Widget? leadingButton;
+
   const QuestionView(
-    this.question,
-    this.controller,
-    this.onButtonClick,
-    this.color, {
-    super.key,
-    this.title = "Question",
-  });
+      this.question, this.controller, this.onButtonClick, this.color,
+      {super.key, this.title = "Question", this.leadingButton});
 
   @override
   State<QuestionView> createState() => _QuestionViewState();
@@ -631,19 +628,27 @@ class _QuestionViewState extends State<QuestionView> {
           ],
           Expanded(
               child: _ListRows(
-            widget.question.enonce,
-            widget.controller.fields,
-            widget.color,
-            ElevatedButton(
-              onPressed:
-                  widget.controller.buttonEnabled ? widget.onButtonClick : null,
-              style: ElevatedButton.styleFrom(backgroundColor: widget.color),
-              child: Text(
-                widget.controller.buttonLabel,
-                style: const TextStyle(fontSize: 18),
-              ),
-            ),
-          )),
+                  widget.question.enonce,
+                  widget.controller.fields,
+                  widget.color,
+                  Row(
+                    children: [
+                      if (widget.leadingButton != null) widget.leadingButton!,
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: widget.controller.buttonEnabled
+                              ? widget.onButtonClick
+                              : null,
+                          style: OutlinedButton.styleFrom(
+                              foregroundColor: widget.color),
+                          child: Text(
+                            widget.controller.buttonLabel,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ))),
           if (widget.controller.footerQuote != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),

@@ -58,6 +58,41 @@ Map<String, dynamic> createEvolutionOutToJson(CreateEvolutionOut item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.EvaluateAnswerTrainingIn
+class EvaluateAnswerTrainingIn {
+  final StudentTokens tokens;
+  final Stage stage;
+  final IdBeltquestion question;
+  final AnswerP answer;
+
+  const EvaluateAnswerTrainingIn(
+      this.tokens, this.stage, this.question, this.answer);
+
+  @override
+  String toString() {
+    return "EvaluateAnswerTrainingIn($tokens, $stage, $question, $answer)";
+  }
+}
+
+EvaluateAnswerTrainingIn evaluateAnswerTrainingInFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return EvaluateAnswerTrainingIn(
+      studentTokensFromJson(json['Tokens']),
+      stageFromJson(json['Stage']),
+      intFromJson(json['Question']),
+      answerPFromJson(json['Answer']));
+}
+
+Map<String, dynamic> evaluateAnswerTrainingInToJson(
+    EvaluateAnswerTrainingIn item) {
+  return {
+    "Tokens": studentTokensToJson(item.tokens),
+    "Stage": stageToJson(item.stage),
+    "Question": intToJson(item.question),
+    "Answer": answerPToJson(item.answer)
+  };
+}
+
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.EvaluateAnswersIn
 class EvaluateAnswersIn {
   final StudentTokens tokens;
@@ -142,6 +177,31 @@ Map<String, dynamic> getEvolutionOutToJson(GetEvolutionOut item) {
     "Has": boolToJson(item.has),
     "Evolution": studentEvolutionToJson(item.evolution)
   };
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.InstantiateTrainingQuestionIn
+class InstantiateTrainingQuestionIn {
+  final StudentTokens tokens;
+  final IdBeltquestion id;
+
+  const InstantiateTrainingQuestionIn(this.tokens, this.id);
+
+  @override
+  String toString() {
+    return "InstantiateTrainingQuestionIn($tokens, $id)";
+  }
+}
+
+InstantiateTrainingQuestionIn instantiateTrainingQuestionInFromJson(
+    dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return InstantiateTrainingQuestionIn(
+      studentTokensFromJson(json['Tokens']), intFromJson(json['Id']));
+}
+
+Map<String, dynamic> instantiateTrainingQuestionInToJson(
+    InstantiateTrainingQuestionIn item) {
+  return {"Tokens": studentTokensToJson(item.tokens), "Id": intToJson(item.id)};
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite

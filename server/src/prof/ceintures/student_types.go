@@ -57,11 +57,23 @@ type SelectQuestionsOut struct {
 type EvaluateAnswersIn struct {
 	Tokens    StudentTokens
 	Stage     Stage
-	Questions []ce.IdBeltquestion // as send by the server; the Question field is ignored
-	Answers   []tasks.AnswerP
+	Questions []ce.IdBeltquestion
+	Answers   []tasks.AnswerP // for each [Questions]
 }
 
 type EvaluateAnswersOut struct {
 	Answers   []client.QuestionAnswersOut
 	Evolution StudentEvolution // updated evolution
+}
+
+type InstantiateTrainingQuestionIn struct {
+	Tokens StudentTokens
+	Id     ce.IdBeltquestion
+}
+
+type EvaluateAnswerTrainingIn struct {
+	Tokens   StudentTokens
+	Stage    Stage
+	Question ce.IdBeltquestion
+	Answer   tasks.AnswerP
 }

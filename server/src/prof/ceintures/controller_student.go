@@ -226,7 +226,7 @@ func (ct *Controller) evaluateAnswers(args EvaluateAnswersIn) (EvaluateAnswersOu
 	// We should check that the questions are correct,
 	// but we "trust" the client for now
 
-	res, err := tasks.EvaluateBelt(ct.db, args.Questions, args.Answers)
+	res, err := tasks.EvaluateBelts(ct.db, args.Questions, args.Answers)
 	if err != nil {
 		return EvaluateAnswersOut{}, err
 	}
@@ -301,4 +301,42 @@ func (ct *Controller) setEvolution(tokens StudentTokens, adv ce.Advance, stats c
 	}
 
 	return nil
+}
+
+// training mode
+
+func (ct *Controller) CeinturesInstantiateTraining(c echo.Context) error {
+	var args InstantiateTrainingQuestionIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := ct.instantiateOneQuestion(args.Id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) instantiateOneQuestion(id ce.IdBeltquestion) (tasks.InstantiatedBeltQuestion, error) {
+	qu, err := ce.SelectBeltquestion(ct.db, id)
+	if err != nil {
+		return tasks.InstantiatedBeltQuestion{}, utils.SQLError(err)
+	}
+	l, err := instantiateQuestions([]ce.Beltquestion{qu})
+	if err != nil {
+		return tasks.InstantiatedBeltQuestion{}, err
+	}
+	return l[0], nil
+}
+
+func (ct *Controller) CeinturesEvaluateTraining(c echo.Context) error {
+	var args EvaluateAnswerTrainingIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	out, err := tasks.EvaluateBelt(ct.db, args.Question, args.Answer)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
 }

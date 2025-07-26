@@ -31,6 +31,7 @@ class Seance extends StatefulWidget {
 
 class SeanceState extends State<Seance> {
   late Future<SelectQuestionsOut> loader;
+  // SeanceController? controller;
 
   @override
   void initState() {
@@ -53,10 +54,11 @@ class SeanceState extends State<Seance> {
                 : data == null
                     ? const Center(child: CircularProgressIndicator())
                     : CeinturesQuestionsW(
-                        SeanceController(data.questions),
-                        _evaluate,
-                        _reset,
-                      );
+                        SeanceController(data.questions), _evaluate, _reset, (
+                        api: widget.api,
+                        tokens: widget.tokens,
+                        stage: widget.stage
+                      ));
           }),
     );
   }
@@ -126,6 +128,11 @@ class SeanceController {
     }
   }
 
+  // only makes sense when displaying feedback
+  bool hasError(int index) {
+    return _controllers[index].feedback().values.any((b) => b);
+  }
+
   /// setQuestionAnswers show the answers for the current question
   void setQuestionAnswers(Answers answers) {
     _state = _State.answering;
@@ -135,6 +142,12 @@ class SeanceController {
   }
 }
 
+typedef TrainingMeta = ({
+  CeinturesTrainingAPI api,
+  StudentTokens tokens,
+  Stage stage
+});
+
 class CeinturesQuestionsW extends StatefulWidget {
   final SeanceController controller;
   final Future<List<QuestionAnswersOut>> Function(SeanceAnswers)
@@ -142,7 +155,10 @@ class CeinturesQuestionsW extends StatefulWidget {
 
   final void Function() onReset;
 
-  const CeinturesQuestionsW(this.controller, this.evaluateAnswers, this.onReset,
+  final TrainingMeta? trainingMeta;
+
+  const CeinturesQuestionsW(
+      this.controller, this.evaluateAnswers, this.onReset, this.trainingMeta,
       {super.key});
 
   @override
@@ -189,6 +205,18 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
                   _onValidQuestion,
                   Colors.teal,
                   title: "Question ${index + 1}/${c._controllers.length}",
+                  leadingButton:
+                      c._state == _State.displayingFeedback && c.hasError(index)
+                          ? Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: OutlinedButton(
+                                onPressed: () => _startTraining(index),
+                                style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.yellow),
+                                child: const Text("S'entrainer"),
+                              ),
+                            )
+                          : null,
                 )).toList());
   }
 
@@ -249,16 +277,31 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
     });
 
     // display a recap of errors
-    final goTo = await Navigator.of(context).push(MaterialPageRoute<int>(
+    final goTo =
+        await Navigator.of(context).push(MaterialPageRoute<_ResultAction>(
       builder: (context) => _ResultsPage(res),
     ));
     if (goTo == null) return;
 
     // if asked, go to a question
-    setState(() {
-      widget.controller._pageC.animateToPage(goTo,
-          duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
-    });
+    if (goTo.startTraining) {
+      _startTraining(goTo.index);
+    } else {
+      setState(() {
+        widget.controller._pageC.animateToPage(goTo.index,
+            duration: const Duration(milliseconds: 750),
+            curve: Curves.easeInOut);
+      });
+    }
+  }
+
+  void _startTraining(int questionIndex) {
+    if (widget.trainingMeta == null) return;
+
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => _TrainingView(
+          widget.trainingMeta!, widget.controller.questions[questionIndex].id),
+    ));
   }
 }
 
@@ -272,6 +315,10 @@ extension on EvaluateAnswersOut {
   bool get success => answers.every((element) => element.isCorrect);
 }
 
+typedef _ResultAction = ({int index, bool startTraining});
+
+// displays a summary of errors and
+// propose the training mode
 class _ResultsPage extends StatelessWidget {
   final List<QuestionAnswersOut> resultats;
   const _ResultsPage(this.resultats);
@@ -297,12 +344,23 @@ class _ResultsPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                   title: Text("Question ${index + 1}"),
-                  trailing: Icon(
+                  leading: Icon(
                     ok ? Icons.check : Icons.clear,
                     color: ok ? Colors.green : Colors.red,
                     size: 32,
                   ),
-                  onTap: () => Navigator.of(context).pop(index),
+                  trailing: ok
+                      ? null
+                      : OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.yellow),
+                          child: const Text("S'entrainer"),
+                          onPressed: () => Navigator.of(context)
+                              .pop<_ResultAction>(
+                                  (index: index, startTraining: true)),
+                        ),
+                  onTap: () => Navigator.of(context)
+                      .pop<_ResultAction>((index: index, startTraining: false)),
                 );
               })),
             ),
@@ -311,5 +369,93 @@ class _ResultsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _TrainingView extends StatefulWidget {
+  final TrainingMeta trainingMeta;
+  final IdBeltquestion idQuestion;
+
+  const _TrainingView(this.trainingMeta, this.idQuestion);
+
+  @override
+  State<_TrainingView> createState() => __TrainingViewState();
+}
+
+class __TrainingViewState extends State<_TrainingView> {
+  InstantiatedBeltQuestion? question;
+  QuestionController? controller;
+  _State state = _State.answering;
+
+  @override
+  void didUpdateWidget(covariant _TrainingView oldWidget) {
+    _loadQuestion();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void initState() {
+    _loadQuestion();
+    super.initState();
+  }
+
+  void _loadQuestion() async {
+    final res = await widget.trainingMeta.api.instantiateTraining(
+        InstantiateTrainingQuestionIn(
+            widget.trainingMeta.tokens, widget.idQuestion));
+    setState(() {
+      state = _State.answering;
+      question = res;
+      controller = QuestionController.fromQuestion(res.question);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final question = this.question;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Entraînement"),
+      ),
+      body: question == null
+          ? CircularProgressIndicator()
+          : QuestionView(
+              question.question, controller!, _onButtonClick, Colors.yellow),
+    );
+  }
+
+  void _onButtonClick() async {
+    switch (state) {
+      case _State.answering:
+        _evaluate();
+      case _State.displayingFeedback:
+        _loadQuestion();
+    }
+  }
+
+  void _evaluate() async {
+    if (question == null || controller == null) return;
+
+    final result = await widget.trainingMeta.api.evaluateTraining(
+        EvaluateAnswerTrainingIn(
+            widget.trainingMeta.tokens,
+            widget.trainingMeta.stage,
+            widget.idQuestion,
+            AnswerP(question!.params, controller!.answers())));
+    if (!mounted) return;
+
+    setState(() {
+      state = _State.displayingFeedback;
+      controller?.buttonLabel = "Recommencer";
+      controller?.buttonEnabled = true;
+      controller?.setFeedback(result.isCorrect ? null : result.results);
+    });
+
+    if (result.isCorrect) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text("Bonne réponse !"),
+        backgroundColor: Colors.lightGreen,
+      ));
+    }
   }
 }

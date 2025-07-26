@@ -344,6 +344,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.PUT("/api/student/ceintures", ce.CeinturesCreateEvolution)
 	e.POST("/api/student/ceintures/stage", ce.CeinturesSelectQuestions)
 	e.PUT("/api/student/ceintures/stage", ce.CeinturesEvaluateAnswers)
+	e.PUT("/api/student/ceintures/training", ce.CeinturesInstantiateTraining)
+	e.POST("/api/student/ceintures/training", ce.CeinturesEvaluateTraining)
 
 	// trivial monitor
 	e.GET("/api/trivial/monitor", tvc.GetTrivialsMetrics)

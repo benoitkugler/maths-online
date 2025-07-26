@@ -334,7 +334,7 @@ func (ct *Controller) LoopbackEvaluateCeinture(c echo.Context) error {
 		return err
 	}
 
-	res, err := tasks.EvaluateBelt(ct.db, args.Questions, args.Answers)
+	res, err := tasks.EvaluateBelts(ct.db, args.Questions, args.Answers)
 	if err != nil {
 		return err
 	}

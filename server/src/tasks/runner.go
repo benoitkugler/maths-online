@@ -678,7 +678,17 @@ type InstantiatedBeltQuestion struct {
 
 type BeltResult []client.QuestionAnswersOut
 
-func EvaluateBelt(db ce.DB, questions []ce.IdBeltquestion, answers []AnswerP) (BeltResult, error) {
+// EvaluateBelt is a convenience wrapper for evaluating only one question,
+// used in training mode.
+func EvaluateBelt(db ce.DB, question ce.IdBeltquestion, answer AnswerP) (client.QuestionAnswersOut, error) {
+	res, err := EvaluateBelts(db, []ce.IdBeltquestion{question}, []AnswerP{answer})
+	if err != nil {
+		return client.QuestionAnswersOut{}, err
+	}
+	return res[0], err
+}
+
+func EvaluateBelts(db ce.DB, questions []ce.IdBeltquestion, answers []AnswerP) (BeltResult, error) {
 	if len(questions) != len(answers) {
 		return nil, fmt.Errorf("internal error: length mistmatch")
 	}
