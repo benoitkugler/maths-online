@@ -640,10 +640,12 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 		expr.normalizeExp()
 
 		expr.expandPow()
+
 		expr.enforcePlus()
 		expr.enforceMult()
 		expr.expandMult()
 		expr.sortPlusAndMultOperands()
+
 		expr.groupAdditions()
 		expr.simplify0And1()
 		expr.simplifyNumbers()
@@ -661,7 +663,9 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
 		expr.normalizeNegativeNumbers()
 		expr.extractNegativeInMults()
-		expr.simplifyNumbers()
+		expr.contractPlusMinus()
+		expr.contractMinusMinus()
+		expr.simplify0And1()
 
 		if expr.equals(ref) {
 			break

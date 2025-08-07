@@ -125,3 +125,41 @@ func TestValidateImage(t *testing.T) {
 	ok, _ = Enonce{ImageBlock{"https://test.fr", 100}}.validate(&ex.RandomParameters{})
 	tu.Assert(t, ok)
 }
+
+func TestIssue373(t *testing.T) {
+	jsonInputEnonce := `[
+	{"Data": {"Bold": false, "Parts": "Dériver la fonction $&t&$ définie et dérivable sur $\\R$ par :", "Italic": false, "Smaller": false}, "Kind": "TextBlock"}, 
+	{"Data": {"Parts": "&t&(x)=&f_1*e^f_2&"}, "Kind": "FormulaBlock"}, 
+	{"Data": {"Label": "", "Expression": "f_3*e^f_2", "ComparisonLevel": 2, "ShowFractionHelp": false}, "Kind": "ExpressionFieldBlock"} 
+	]`
+	jsonInputParameters := `[{"Data": {"variable": {"Name": 119, "Indice": ""}, "expression": "randint(1;3)"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 116, "Indice": ""}, "expression": "choiceFrom(f;g;h;w)"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 84, "Indice": ""}, "expression": "choiceFrom(F;G;H;w)"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 97, "Indice": ""}, "expression": "0"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 98, "Indice": ""}, "expression": "1"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 109, "Indice": ""}, "expression": "-1"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 112, "Indice": ""}, "expression": "0"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 102, "Indice": "1"}, "expression": "a*x+b"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 102, "Indice": "2"}, "expression": "m*x+p"}, "Kind": "Rp"}, {"Data": {"variable": {"Name": 102, "Indice": "3"}, "expression": "m*f_1"}, "Kind": "Rp"}]`
+
+	var enonce Enonce
+	err := json.Unmarshal([]byte(jsonInputEnonce), &enonce)
+	tu.AssertNoErr(t, err)
+
+	var parameters Parameters
+	err = json.Unmarshal([]byte(jsonInputParameters), &parameters)
+	tu.AssertNoErr(t, err)
+
+	vars, err := parameters.ToMap().Instantiate()
+	tu.AssertNoErr(t, err)
+
+	instance, err := enonce.InstantiateWith(vars)
+	tu.AssertNoErr(t, err)
+
+	out := instance.EvaluateAnswer(client.QuestionAnswersIn{
+		Data: client.Answers{0: client.ExpressionAnswer{Expression: "-e^(-x)"}},
+	})
+	tu.Assert(t, out.IsCorrect())
+
+	out = instance.EvaluateAnswer(client.QuestionAnswersIn{
+		Data: client.Answers{0: client.ExpressionAnswer{Expression: "(-1)e^(-x)"}},
+	})
+	tu.Assert(t, out.IsCorrect())
+
+	out = instance.EvaluateAnswer(client.QuestionAnswersIn{
+		Data: client.Answers{0: client.ExpressionAnswer{Expression: "(-1)e^(-1x)"}},
+	})
+	tu.Assert(t, out.IsCorrect())
+}

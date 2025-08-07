@@ -8,7 +8,7 @@ import (
 )
 
 func generateLatex(t *testing.T, lines []string, outFile string) {
-	tu.GenerateLatex(t, strings.Join(lines, "\n"), outFile)
+	tu.GenerateLatex(t, "", strings.Join(lines, "\n"), outFile)
 }
 
 func TestExpression_String(t *testing.T) {

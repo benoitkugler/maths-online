@@ -301,6 +301,9 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{`(4x-5)^2`, "(5-4x)^2", SimpleSubstitutions, true},
 		// https://github.com/benoitkugler/maths-online/issues/373
 		{`-e^(-x) `, "(-1)e^(-1x)", SimpleSubstitutions, true},
+		{`-e ^ (-x)`, "(-1)e^(-x)", SimpleSubstitutions, true},
+		{`-e ^ (-x)`, "(-1)e^(-x)", ExpandedSubstitutions, true},
+		{`-e ^ (-x)`, "(-1)e^(-1x)", ExpandedSubstitutions, true},
 		{`-e^-x `, "(-1)e^(-1x)", SimpleSubstitutions, true},
 		{`-e^-x `, "(-1)e^-1x", SimpleSubstitutions, false},
 	}
