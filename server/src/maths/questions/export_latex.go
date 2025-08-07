@@ -57,7 +57,8 @@ const latexHeader = `
 % ------------------- HEADER END ---------------------------- %
 `
 
-func (qu EnonceInstance) toLatex(standalone bool) string {
+// If [standalone] is true, it includes a latex header
+func (qu EnonceInstance) ToLatex(standalone bool) string {
 	chunks := make([]string, len(qu))
 	// we add an extra new line between two text blocks
 	isPreviousText := false
@@ -86,20 +87,20 @@ func (qu EnonceInstance) toLatex(standalone bool) string {
 	return code
 }
 
-func (qu EnonceInstance) ToLatex() string {
-	return qu.toLatex(true)
+func InstancesToLatex(questions []EnonceInstance) string {
+	return latexHeader + instancesToLatex(questions)
 }
 
-func InstancesToLatex(questions []EnonceInstance) string {
+func instancesToLatex(questions []EnonceInstance) string {
 	latexCodes := make([]string, len(questions))
 	for i, qu := range questions {
-		latexCodes[i] = `\item ` + qu.toLatex(false)
+		latexCodes[i] = `\item ` + qu.ToLatex(false)
 	}
-	return fmt.Sprintf(`%s 
-	
+	return fmt.Sprintf(`
+
 	\begin{enumerate}
 	%s
-	\end{enumerate}`, latexHeader, strings.Join(latexCodes, "\n"))
+	\end{enumerate}`, strings.Join(latexCodes, "\n"))
 }
 
 func textOrMathToLatex(c client.TextOrMath) string {

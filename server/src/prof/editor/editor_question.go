@@ -1058,6 +1058,6 @@ func exportQuestionLatex(question questions.QuestionPage) (ExportQuestionLatexOu
 
 	return ExportQuestionLatexOut{
 		IsValid: true,
-		Latex:   instance.Enonce.ToLatex(),
+		Latex:   instance.Enonce.ToLatex(true),
 	}, nil
 }

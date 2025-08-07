@@ -107,12 +107,12 @@ func TestExportLatex(t *testing.T) {
 	qu, err := enonce.InstantiateWith(nil)
 	tu.AssertNoErr(t, err)
 
-	latexQu := qu.ToLatex()
+	latexQu := qu.ToLatex(false)
 
-	tu.GenerateLatex(t, latexQu, "export-question.pdf")
+	tu.GenerateLatex(t, latexHeader, latexQu, "export-question.pdf")
 
 	ques := []EnonceInstance{qu, qu, qu}
 
-	latexEx := InstancesToLatex(ques)
-	tu.GenerateLatex(t, latexEx, "export-exercice.pdf")
+	latexEx := instancesToLatex(ques)
+	tu.GenerateLatex(t, latexHeader, latexEx, "export-exercice.pdf")
 }

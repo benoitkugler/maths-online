@@ -55,7 +55,7 @@ func ReadEnv(filename string) map[string]string {
 
 // GenerateLatex create a document, fill it with [body]
 // and compile the latex code to create [outFile]
-func GenerateLatex(t *testing.T, body string, outFile string) {
+func GenerateLatex(t *testing.T, def, body string, outFile string) {
 	code := fmt.Sprintf(`
 		\documentclass{article}
 
@@ -68,10 +68,12 @@ func GenerateLatex(t *testing.T, body string, outFile string) {
 		\usepackage{tikz}
 		\usepackage{environ}
 		
+		%s 
+
 		\begin{document}
 		%s
 		\end{document}
-	`, body)
+	`, def, body)
 
 	dir := filepath.Join(os.TempDir(), "go-latex")
 

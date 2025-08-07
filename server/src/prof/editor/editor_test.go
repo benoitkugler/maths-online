@@ -201,7 +201,7 @@ func TestExportLatex(t *testing.T) {
 	tu.Assert(t, out1.IsValid)
 	tu.Assert(t, len(out1.Latex) > 0)
 
-	tu.GenerateLatex(t, out1.Latex, "question-test.pdf")
+	tu.GenerateLatex(t, "", out1.Latex, "question-test.pdf")
 
 	ex := ExportExerciceLatexIn{Parameters: nil, Questions: []questions.QuestionPage{page, page, page}}
 	out2, err := exportExerciceLatex(ex)
@@ -210,5 +210,5 @@ func TestExportLatex(t *testing.T) {
 	tu.Assert(t, out2.IsValid)
 	tu.Assert(t, len(out2.Latex) > 0)
 
-	tu.GenerateLatex(t, out2.Latex, "exercice-test.pdf")
+	tu.GenerateLatex(t, "", out2.Latex, "exercice-test.pdf")
 }
