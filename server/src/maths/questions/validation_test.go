@@ -59,10 +59,12 @@ func Test_variationTableValidator_validate(t *testing.T) {
 			xs:  mustParseMany(tt.xs),
 			fxs: nil, // ignored here
 		}
-
 		testAllValid(t, []Rp{tt.parameter}, v, tt.allValid)
-
 	}
+
+	testAllValid(t, nil, variationTableValidator{
+		fxs: mustParseMany([]string{"8", "inf", "-inf"}),
+	}, true)
 }
 
 func Test_figureValidator_validate(t *testing.T) {

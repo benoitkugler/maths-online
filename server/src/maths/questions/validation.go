@@ -195,7 +195,7 @@ func (v variationTableValidator) validate(vars expression.Vars) error {
 	}
 
 	for _, c := range v.fxs {
-		err := c.IsValidNumber(vars, false, true)
+		err := c.IsValidNumber(vars, false, false)
 		if err != nil {
 			return err
 		}
