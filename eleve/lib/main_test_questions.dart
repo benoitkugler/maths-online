@@ -229,6 +229,8 @@ class _SingleQuestionState extends State<_SingleQuestion> {
     ImageBlock(
         "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sucrose_molecule.svg/250px-Sucrose_molecule.svg.png",
         200),
+    FormulaBlock("kslmd + dmld + sdmsd + sdlsd *555 + 66 + 66 6 +99"),
+    VariationTableFieldBlock("f(x)", [1, 2], 1)
   ], []);
   late final QuestionController controller;
   @override
