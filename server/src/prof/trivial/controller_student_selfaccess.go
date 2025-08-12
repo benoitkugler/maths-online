@@ -3,6 +3,7 @@ package trivial
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"time"
 
@@ -43,7 +44,7 @@ func (ct *Controller) TrivialGetSelfaccess(c echo.Context) error {
 
 func (ct *Controller) selfaccess(id trivial.IdTrivial, userID uID) (TrivialSelfaccess, error) {
 	// load all classrooms for the user
-	cls_, err := teacher.SelectClassroomsByIdTeachers(ct.db, userID)
+	cls_, err := teacher.SelectClassroomsByIdTeacher(ct.db, userID)
 	if err != nil {
 		return TrivialSelfaccess{}, utils.SQLError(err)
 	}
@@ -174,28 +175,28 @@ func (ct *Controller) StudentLaunchSelfaccess(c echo.Context) error {
 }
 
 func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent teacher.IdStudent) (LaunchSelfaccessOut, error) {
-	student, err := teacher.SelectStudent(ct.db, idStudent)
-	if err != nil {
-		return LaunchSelfaccessOut{}, utils.SQLError(err)
-	}
-	classroom, err := teacher.SelectClassroom(ct.db, student.IdClassroom)
-	if err != nil {
-		return LaunchSelfaccessOut{}, utils.SQLError(err)
-	}
-
 	config, err := trivial.SelectTrivial(ct.db, idTrivial)
 	if err != nil {
 		return LaunchSelfaccessOut{}, utils.SQLError(err)
 	}
 
-	userID := classroom.IdTeacher
+	// check access
+	student, err := teacher.SelectStudent(ct.db, idStudent)
+	if err != nil {
+		return LaunchSelfaccessOut{}, utils.SQLError(err)
+	}
+	teachers, err := teacher.SelectTeacherClassroomsByIdClassrooms(ct.db, student.IdClassroom)
+	if err != nil {
+		return LaunchSelfaccessOut{}, utils.SQLError(err)
+	}
+
 	// admin config may be launched, since it is a readonly operation
-	if config.IdTeacher != userID && config.IdTeacher != ct.admin.Id {
+	if !slices.Contains(teachers.IdTeachers(), config.IdTeacher) && config.IdTeacher != ct.admin.Id {
 		return LaunchSelfaccessOut{}, errAccessForbidden
 	}
 
 	// select the questions
-	questionPool, err := selectQuestions(ct.db, config.Questions, userID, true)
+	questionPool, err := selectQuestions(ct.db, config.Questions, config.IdTeacher, true)
 	if err != nil {
 		return LaunchSelfaccessOut{}, err
 	}

@@ -80,12 +80,8 @@ func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
 }
 
 func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksOut, error) {
-	classroom, err := tc.SelectClassroom(ct.db, args.IdClassroom)
-	if err != nil {
-		return HomeworkMarksOut{}, utils.SQLError(err)
-	}
-	if classroom.IdTeacher != userID {
-		return HomeworkMarksOut{}, errAccessForbidden
+	if err := ct.checkClassroomOwner(userID, args.IdClassroom); err != nil {
+		return HomeworkMarksOut{}, err
 	}
 
 	// returns the students for one classroom,
@@ -130,7 +126,7 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 	}
 
 	for idTravail, travail := range travaux {
-		if travail.IdClassroom != classroom.Id {
+		if travail.IdClassroom != args.IdClassroom {
 			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
 		}
 

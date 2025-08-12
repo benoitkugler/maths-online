@@ -62,7 +62,7 @@ type Homeworks struct {
 
 func (ct *Controller) getSheets(userID uID, matiere teacher.MatiereTag) (out Homeworks, err error) {
 	// load the classrooms
-	classrooms, err := teacher.SelectClassroomsByIdTeachers(ct.db, userID)
+	classrooms, err := teacher.SelectClassroomsByIdTeacher(ct.db, userID)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -144,6 +144,17 @@ func (ct *Controller) createSheet(userID uID) (SheetExt, error) {
 	return out, nil
 }
 
+func (ct *Controller) checkClassroomOwner(idTeacher teacher.IdTeacher, idClassroom teacher.IdClassroom) error {
+	_, found, err := teacher.SelectTeacherClassroomByIdTeacherAndIdClassroom(ct.db, idTeacher, idClassroom)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if !found {
+		return errAccessForbidden
+	}
+	return nil
+}
+
 type CreateTravailWithIn struct {
 	IdSheet     ho.IdSheet
 	IdClassroom teacher.IdClassroom
@@ -168,13 +179,8 @@ func (ct *Controller) HomeworkCreateTravailWith(c echo.Context) error {
 }
 
 func (ct *Controller) assignSheetTo(args CreateTravailWithIn, userID uID) (ho.Travail, error) {
-	// check classroom owner
-	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
-	if err != nil {
-		return ho.Travail{}, utils.SQLError(err)
-	}
-	if classroom.IdTeacher != userID {
-		return ho.Travail{}, errAccessForbidden
+	if err := ct.checkClassroomOwner(userID, args.IdClassroom); err != nil {
+		return ho.Travail{}, err
 	}
 
 	tr := ho.Travail{
@@ -184,7 +190,7 @@ func (ct *Controller) assignSheetTo(args CreateTravailWithIn, userID uID) (ho.Tr
 		ShowAfter:   ho.Time(time.Now().Round(10 * time.Minute)),
 		Deadline:    ho.Time(time.Now().Add(time.Hour * 7 * 14).Round(time.Hour)), // one week
 	}
-	tr, err = tr.Insert(ct.db)
+	tr, err := tr.Insert(ct.db)
 	if err != nil {
 		return ho.Travail{}, utils.SQLError(err)
 	}
@@ -215,13 +221,8 @@ type CreateTravailOut struct {
 }
 
 func (ct *Controller) createTravail(idClassroom teacher.IdClassroom, userID uID) (CreateTravailOut, error) {
-	// check classroom owner
-	classroom, err := teacher.SelectClassroom(ct.db, idClassroom)
-	if err != nil {
-		return CreateTravailOut{}, utils.SQLError(err)
-	}
-	if classroom.IdTeacher != userID {
-		return CreateTravailOut{}, errAccessForbidden
+	if err := ct.checkClassroomOwner(userID, idClassroom); err != nil {
+		return CreateTravailOut{}, err
 	}
 
 	user, err := teacher.SelectTeacher(ct.db, userID)
@@ -292,17 +293,9 @@ func (ct *Controller) checkTravailOwner(idTravail ho.IdTravail, userID uID) (ho.
 		return travail, utils.SQLError(err)
 	}
 
-	classroom, err := teacher.SelectClassroom(ct.db, travail.IdClassroom)
-	if err != nil {
-		return travail, utils.SQLError(err)
-	}
+	err = ct.checkClassroomOwner(userID, travail.IdClassroom)
 
-	// check if the travail is owned by the user
-	if classroom.IdTeacher != userID {
-		return travail, errAccessForbidden
-	}
-
-	return travail, nil
+	return travail, err
 }
 
 func (ct *Controller) HomeworkUpdateSheet(c echo.Context) error {
@@ -1048,13 +1041,8 @@ type CopyTravailToOut struct {
 }
 
 func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (CopyTravailToOut, error) {
-	cl, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
-	if err != nil {
-		return CopyTravailToOut{}, utils.SQLError(err)
-	}
-
-	if cl.IdTeacher != userID {
-		return CopyTravailToOut{}, errAccessForbidden
+	if err := ct.checkClassroomOwner(userID, args.IdClassroom); err != nil {
+		return CopyTravailToOut{}, err
 	}
 
 	travail, err := ho.SelectTravail(ct.db, args.IdTravail)

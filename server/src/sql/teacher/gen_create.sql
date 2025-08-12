@@ -1,7 +1,6 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
-    IdTeacher integer NOT NULL,
     Name text NOT NULL,
     MaxRankThreshold integer NOT NULL
 );
@@ -31,15 +30,23 @@ CREATE TABLE teachers (
     FavoriteMatiere text CHECK (FavoriteMatiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
+CREATE TABLE teacher_classrooms (
+    IdTeacher integer NOT NULL,
+    IdClassroom integer NOT NULL
+);
+
 -- constraints
 ALTER TABLE teachers
     ADD UNIQUE (Mail);
 
-ALTER TABLE classrooms
-    ADD UNIQUE (Id, IdTeacher);
+ALTER TABLE teacher_classrooms
+    ADD UNIQUE (IdTeacher, IdClassroom);
 
-ALTER TABLE classrooms
-    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+ALTER TABLE teacher_classrooms
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE teacher_classrooms
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
 
 ALTER TABLE classroom_codes
     ADD UNIQUE (Code);

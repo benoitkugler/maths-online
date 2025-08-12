@@ -688,8 +688,8 @@ func TestPseudos(t *testing.T) {
 		"3": {pl: Player{"3", "Ben", "", 0}},
 		"4": {pl: Player{"4", "George", "Kugler", 0}},
 	}}
-	tu.Assert(t, r.serialToPseudo("1") == "Ben K.")
-	tu.Assert(t, r.serialToPseudo("2") == "Ben S.")
+	tu.Assert(t, r.serialToPseudo("1") == "Ben Kug.")
+	tu.Assert(t, r.serialToPseudo("2") == "Ben Sym.")
 	tu.Assert(t, r.serialToPseudo("3") == "Ben 3.")
 	tu.Assert(t, r.serialToPseudo("4") == "George")
 }

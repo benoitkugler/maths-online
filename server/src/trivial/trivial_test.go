@@ -41,8 +41,8 @@ func TestSummary(t *testing.T) {
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
 
-	if sum := r.Summary(); len(sum.Successes) != 2 || sum.PlayerTurn != nil {
-		t.Fatal(sum)
+	if summary := r.Summary(); len(summary.Successes) != 2 || summary.PlayerTurn != nil {
+		t.Fatal(summary)
 	}
 
 	r.mustJoin(t, "p3") // trigger a game start

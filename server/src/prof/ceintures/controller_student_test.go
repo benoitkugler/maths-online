@@ -17,8 +17,9 @@ func TestGetEvolution(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/ceintures/gen_create.sql")
 	defer db.Remove()
 
+	cl, _ := teacher.Classroom{}.Insert(db)
 	tc, _ := teacher.Teacher{FavoriteMatiere: teacher.Francais}.Insert(db)
-	cl, _ := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	_ = teacher.TeacherClassroom{IdTeacher: tc.Id, IdClassroom: cl.Id}.Insert(db)
 	student, err := teacher.Student{IdClassroom: cl.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
@@ -54,7 +55,7 @@ func TestGetEvolution(t *testing.T) {
 	tu.Assert(t, len(get.Pending) != 0)
 	tu.Assert(t, get.SuggestionIndex != -1)
 
-	l, err := ct.getStudentsAdvance(cl.Id, cl.IdTeacher)
+	l, err := ct.getStudentsAdvance(cl.Id, tc.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l) == 1)
 }

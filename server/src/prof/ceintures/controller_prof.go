@@ -71,7 +71,7 @@ func (ct *Controller) getScheme(userID uID) (GetSchemeOut, error) {
 	// for now, there is only one scheme
 	out := GetSchemeOut{Scheme: mathScheme, IsAdmin: userID == ct.admin.Id}
 
-	classrooms, err := teacher.SelectClassroomsByIdTeachers(ct.db, userID)
+	classrooms, err := teacher.SelectClassroomsByIdTeacher(ct.db, userID)
 	for _, cl := range classrooms {
 		out.Classrooms = append(out.Classrooms, cl)
 	}
@@ -421,16 +421,16 @@ type studentAdvance struct {
 	Advance ce.Beltevolution
 }
 
-func (ct *Controller) getStudentsAdvance(id teacher.IdClassroom, user uID) ([]studentAdvance, error) {
-	classroom, err := teacher.SelectClassroom(ct.db, id)
+func (ct *Controller) getStudentsAdvance(idClassroom teacher.IdClassroom, user uID) ([]studentAdvance, error) {
+	_, found, err := teacher.SelectTeacherClassroomByIdTeacherAndIdClassroom(ct.db, user, idClassroom)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	if classroom.IdTeacher != user {
+	if !found {
 		return nil, errAccess
 	}
 
-	students, err := teacher.SelectStudentsByIdClassrooms(ct.db, id)
+	students, err := teacher.SelectStudentsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

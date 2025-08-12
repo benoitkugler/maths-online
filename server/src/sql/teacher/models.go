@@ -1,6 +1,8 @@
 // Package teacher provides the data structures related to teacher and student accounts.
 package teacher
 
+//go:generate ../../../../../gomacro/cmd/gomacro models.go sql:gen_create.sql go/sqlcrud:gen_scans.go go/randdata:gen_randdata_test.go
+
 type (
 	IdTeacher   int64
 	IdClassroom int64
@@ -19,13 +21,29 @@ type Teacher struct {
 	FavoriteMatiere     MatiereTag
 }
 
-// Classroom is one group of student controlled by a teacher
-// gomacro:SQL ADD UNIQUE(Id, IdTeacher)
+// Classroom is one group of student controlled by one or many teachers
 type Classroom struct {
 	Id               IdClassroom `json:"id"`
-	IdTeacher        IdTeacher   `json:"id_teacher" gomacro-sql-on-delete:"CASCADE"`
 	Name             string      `json:"name"`
 	MaxRankThreshold int         // for the last guilde, default to 40000
+}
+
+// TeacherClassroom is a link table describing
+// the owners of a classroom.
+//
+// gomacro:SQL ADD UNIQUE(IdTeacher, IdClassroom)
+type TeacherClassroom struct {
+	IdTeacher   IdTeacher
+	IdClassroom IdClassroom
+}
+
+// SelectClassroomsByIdTeacher does NOT wrap the error.
+func SelectClassroomsByIdTeacher(db DB, id IdTeacher) (Classrooms, error) {
+	links, err := SelectTeacherClassroomsByIdTeachers(db, id)
+	if err != nil {
+		return nil, err
+	}
+	return SelectClassrooms(db, links.IdClassrooms()...)
 }
 
 // ClassroomCode is a time limited, user friendly, code to access one class

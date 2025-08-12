@@ -1,16 +1,19 @@
 package teacher
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
+	"github.com/benoitkugler/maths-online/server/src/mailer"
 	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
@@ -24,17 +27,23 @@ type ClassroomExt struct {
 	Classroom tc.Classroom
 
 	NbStudents int
+	SharedWith []string // other teachers mails, may be empty
 }
 
-func (ct *Controller) checkAcces(userID tc.IdTeacher, classroomID tc.IdClassroom) (tc.Classroom, error) {
+func (ct *Controller) checkAcces(userID tc.IdTeacher, idClassroom tc.IdClassroom) (tc.Classroom, error) {
 	// check the access
-	classroom, err := tc.SelectClassroom(ct.db, classroomID)
+
+	_, found, err := tc.SelectTeacherClassroomByIdTeacherAndIdClassroom(ct.db, userID, idClassroom)
 	if err != nil {
 		return tc.Classroom{}, utils.SQLError(err)
 	}
+	if !found {
+		return tc.Classroom{}, errAccessForbidden
+	}
 
-	if classroom.IdTeacher != userID {
-		return tc.Classroom{}, accessForbidden
+	classroom, err := tc.SelectClassroom(ct.db, idClassroom)
+	if err != nil {
+		return tc.Classroom{}, utils.SQLError(err)
 	}
 
 	return classroom, nil
@@ -57,40 +66,80 @@ func (ct *Controller) checkStudentOwnership(userID tc.IdTeacher, studentID tc.Id
 func (ct *Controller) TeacherGetClassrooms(c echo.Context) error {
 	userID := JWTTeacher(c)
 
-	classrooms, err := tc.SelectClassroomsByIdTeachers(ct.db, userID)
+	out, err := ct.getClassrooms(userID)
 	if err != nil {
-		return utils.SQLError(err)
+		return err
 	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getClassrooms(userID tc.IdTeacher) ([]ClassroomExt, error) {
+	classrooms, err := tc.SelectClassroomsByIdTeacher(ct.db, userID)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	links, err := tc.SelectTeacherClassroomsByIdClassrooms(ct.db, classrooms.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	teachers, err := tc.SelectTeachers(ct.db, links.IdTeachers()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	byClassrooms := links.ByIdClassroom()
 
 	students, err := tc.SelectStudentsByIdClassrooms(ct.db, classrooms.IDs()...)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 	dict := students.ByIdClassroom()
 
 	out := make([]ClassroomExt, 0, len(classrooms))
 	for _, cl := range classrooms {
-		out = append(out, ClassroomExt{Classroom: cl, NbStudents: len(dict[cl.Id])})
+		item := ClassroomExt{Classroom: cl, NbStudents: len(dict[cl.Id])}
+		for _, link := range byClassrooms[cl.Id] {
+			if link.IdTeacher == userID { // do not show ourself as co-teacher
+				continue
+			}
+			teacher := teachers[link.IdTeacher]
+			item.SharedWith = append(item.SharedWith, teacher.Mail)
+		}
+		slices.Sort(item.SharedWith)
+
+		out = append(out, item)
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Classroom.Id < out[j].Classroom.Id })
 
-	return c.JSON(200, out)
+	return out, nil
 }
 
 func (ct *Controller) TeacherCreateClassroom(c echo.Context) error {
 	userID := JWTTeacher(c)
 
-	_, err := tc.Classroom{
-		IdTeacher:        userID,
-		Name:             "Nouvelle classe",
-		MaxRankThreshold: 40_000,
-	}.Insert(ct.db)
+	_, err := ct.createClassroom(userID)
 	if err != nil {
 		return err
 	}
 
 	return c.NoContent(200)
+}
+
+func (ct *Controller) createClassroom(userID tc.IdTeacher) (out tc.Classroom, err error) {
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		out, err = tc.Classroom{
+			Name:             "Nouvelle classe",
+			MaxRankThreshold: 40_000,
+		}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		err = tc.TeacherClassroom{IdTeacher: userID, IdClassroom: out.Id}.Insert(tx)
+		return err
+	})
+	return
 }
 
 func (ct *Controller) TeacherUpdateClassroom(c echo.Context) error {
@@ -146,29 +195,101 @@ func (ct *Controller) deleteClassroom(idClassroom tc.IdClassroom, userID tc.IdTe
 		return err
 	}
 
-	tx, err := ct.db.Begin()
+	// only permit removal if the teacher is the only owner of the classroom,
+	// otherwise, just remove the ownership.
+	links, err := tc.SelectTeacherClassroomsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	if len(links) == 1 { // only one teacher : full deletion
+		err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+			_, err = tc.DeleteStudentsByIdClassrooms(tx, idClassroom)
+			if err != nil {
+				return err
+			}
 
-	_, err = tc.DeleteStudentsByIdClassrooms(tx, idClassroom)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
+			err = tc.TeacherClassroom{IdTeacher: userID, IdClassroom: idClassroom}.Delete(tx)
+			if err != nil {
+				return err
+			}
 
-	_, err = tc.DeleteClassroomById(tx, idClassroom)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return utils.SQLError(err)
+			_, err = tc.DeleteClassroomById(tx, idClassroom)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	} else { // many teachers : remove the link
+		err = tc.TeacherClassroom{IdTeacher: userID, IdClassroom: idClassroom}.Delete(ct.db)
+		if err != nil {
+			return utils.SQLError(err)
+		}
 	}
 
 	return nil
+}
+
+type InviteTeacherIn struct {
+	IdClassroom  tc.IdClassroom
+	MailToInvite string
+}
+
+func (ct *Controller) TeacherInviteTeacherToClassroom(c echo.Context) error {
+	userID := JWTTeacher(c)
+
+	var args InviteTeacherIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+	err := ct.inviteTeacher(args, userID)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) inviteTeacher(args InviteTeacherIn, userID tc.IdTeacher) error {
+	clasroom, err := ct.checkAcces(userID, args.IdClassroom)
+	if err != nil {
+		return err
+	}
+	teacherOwner, err := tc.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// find the Isyro account
+	toInvite, found, err := tc.SelectTeacherByMail(ct.db, args.MailToInvite)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if !found {
+		return fmt.Errorf("Le mail %s ne correspond pas à un compte Isyro.", args.MailToInvite)
+	}
+	// add to classroom and send a notification
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		err = tc.TeacherClassroom{IdTeacher: toInvite.Id, IdClassroom: args.IdClassroom}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		mailHTML := fmt.Sprintf(`
+		Bonjour %s, <br/><br/>
+
+		%s (%s) t'a ajouté comme enseignant sur la classe %s. <br/><br/>
+
+		Bonne création pédagogique ! <br/><br/>
+
+		L'équipe Isyro 
+		`, toInvite.Contact.Name, teacherOwner.Contact.Name, teacherOwner.Mail, clasroom.Name)
+		err = mailer.SendMail(ct.smtp, []string{toInvite.Mail}, "[Isyro] - Partage d'une classe", mailHTML)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {

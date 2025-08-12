@@ -3,6 +3,7 @@ package teacher
 import (
 	"database/sql"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -49,7 +50,12 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 		return out, utils.SQLError(err)
 	}
 
-	teacher, err := tc.SelectTeacher(ct.db, classroom.IdTeacher)
+	links, err := tc.SelectTeacherClassroomsByIdClassrooms(ct.db, classroom.Id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	teachers, err := tc.SelectTeachers(ct.db, links.IdTeachers()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -60,10 +66,12 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 	}
 
 	// display the teacher coordinates
-	mail, url := teacher.Contact.Name, teacher.Contact.URL
-	if mail == "" {
-		mail, url = teacher.Mail, ""
+	var teachersL []TeacherContact
+	for _, teacher := range teachers {
+		teachersL = append(teachersL, newTeacherContact(teacher))
 	}
+	slices.SortFunc(teachersL, func(a, b TeacherContact) int { return strings.Compare(a.Mail, b.Mail) })
+
 	return CheckStudentClassroomOut{
 		IsOK: true,
 		Meta: StudentClassroomHeader{
@@ -71,9 +79,8 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 				Name:    student.Name,
 				Surname: student.Surname,
 			},
-			ClassroomName:     classroom.Name,
-			TeacherMail:       mail,
-			TeacherContactURL: url,
+			ClassroomName: classroom.Name,
+			Teachers:      teachersL,
 		},
 		Advance: evs.NewAdvance(events).Stats(classroom.MaxRankThreshold),
 	}, nil

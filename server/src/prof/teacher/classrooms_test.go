@@ -1,12 +1,14 @@
 package teacher
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -49,18 +51,16 @@ func Test_parsePronoteStudentList(t *testing.T) {
 }
 
 func Test_importPronoteFile(t *testing.T) {
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
+	defer db.Remove()
+
 	f, err := os.Open("students_sample.csv")
 	if err != nil {
 		t.Skipf("Sample not available: %s", err)
 	}
 
-	db, err := tu.DB.ConnectPostgres()
-	if err != nil {
-		t.Skipf("DB %v not available : %s", tu.DB, err)
-	}
-
-	ct := Controller{db: db}
-	classroom, err := tc.Classroom{IdTeacher: 1}.Insert(db)
+	ct := Controller{db: db.DB}
+	classroom, err := tc.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	defer tc.DeleteClassroomById(db, classroom.Id)
@@ -78,6 +78,51 @@ func Test_importPronoteFile(t *testing.T) {
 	tc.DeleteStudentsByIdClassrooms(db, classroom.Id)
 }
 
+func TestClassroomsCRUD(t *testing.T) {
+	envs := tu.ReadEnv("../../../.env")
+	for k, v := range envs {
+		t.Setenv(k, v)
+	}
+	mailer.SetDevMail(envs["DEV_MAIL_TO"])
+	sm, err := pass.NewSMTP()
+	tu.AssertNoErr(t, err)
+
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
+	defer db.Remove()
+
+	t1, err := tc.Teacher{FavoriteMatiere: tc.Mathematiques}.Insert(db)
+	tu.AssertNoErr(t, err)
+	t2, err := tc.Teacher{FavoriteMatiere: tc.Mathematiques, Mail: "zdze@free.fr"}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, admin: tc.Teacher{Id: t1.Id}, smtp: sm}
+
+	cl1, err := ct.createClassroom(t1.Id)
+	tu.AssertNoErr(t, err)
+	cl2, err := ct.createClassroom(t1.Id)
+	tu.AssertNoErr(t, err)
+
+	err = ct.inviteTeacher(InviteTeacherIn{IdClassroom: cl1.Id, MailToInvite: t2.Mail}, t1.Id)
+	tu.AssertNoErr(t, err)
+
+	clasrooms, err := ct.getClassrooms(t1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(clasrooms) == 2)
+	tu.Assert(t, len(clasrooms[0].SharedWith) == 1 && len(clasrooms[1].SharedWith) == 0)
+
+	err = ct.deleteClassroom(cl1.Id, t1.Id)
+	tu.AssertNoErr(t, err)
+	// check no deletion
+	_, err = tc.SelectClassroom(ct.db, cl1.Id)
+	tu.AssertNoErr(t, err)
+
+	err = ct.deleteClassroom(cl2.Id, t1.Id)
+	tu.AssertNoErr(t, err)
+	// check full deletion
+	_, err = tc.SelectClassroom(ct.db, cl2.Id)
+	tu.Assert(t, err == sql.ErrNoRows)
+}
+
 func TestStudentCRUD(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
 	defer db.Remove()
@@ -86,7 +131,7 @@ func TestStudentCRUD(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB, admin: tc.Teacher{Id: teacher.Id}}
-	classroom, err := tc.Classroom{IdTeacher: teacher.Id, MaxRankThreshold: 40_000}.Insert(db)
+	classroom, err := ct.createClassroom(teacher.Id)
 	tu.AssertNoErr(t, err)
 
 	st, err := ct.addStudent(classroom.Id, teacher.Id)

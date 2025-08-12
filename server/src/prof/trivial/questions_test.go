@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"database/sql"
 	"reflect"
 	"sort"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
@@ -104,22 +106,15 @@ func TestSelectQuestions(t *testing.T) {
 
 	qu(g4.Id).Insert(db)
 
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = ed.InsertManyQuestiongroupTags(tx,
-		// categorie tags
-		ed.QuestiongroupTag{IdQuestiongroup: 1, Tag: "KEEP", Section: ed.TrivMath},
-		ed.QuestiongroupTag{IdQuestiongroup: 2, Tag: "KEEP", Section: ed.TrivMath},
-		ed.QuestiongroupTag{IdQuestiongroup: 3, Tag: "KEEP", Section: ed.TrivMath},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = tx.Commit(); err != nil {
-		t.Fatal(err)
-	}
+	err = utils.InTx(db.DB, func(tx *sql.Tx) error {
+		return ed.InsertManyQuestiongroupTags(tx,
+			// categorie tags
+			ed.QuestiongroupTag{IdQuestiongroup: 1, Tag: "KEEP", Section: ed.TrivMath},
+			ed.QuestiongroupTag{IdQuestiongroup: 2, Tag: "KEEP", Section: ed.TrivMath},
+			ed.QuestiongroupTag{IdQuestiongroup: 3, Tag: "KEEP", Section: ed.TrivMath},
+		)
+	})
+	tu.AssertNoErr(t, err)
 
 	criterion := tr.QuestionCriterion{{{Tag: "KEEP", Section: ed.TrivMath}}}
 	cats := tr.CategoriesQuestions{

@@ -163,9 +163,7 @@ func TestAdvance(t *testing.T) {
 
 	gs := newGameStore(db.DB, key, "")
 
-	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
-	tu.AssertNoErr(t, err)
-	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	cl, err := teacher.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
 	student, err := teacher.Student{IdClassroom: cl.Id}.Insert(db)
 	tu.AssertNoErr(t, err)

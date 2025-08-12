@@ -1,15 +1,18 @@
 package trivial
 
 import (
+	"database/sql"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
@@ -225,11 +228,17 @@ func TestCRUDSelfaccess(t *testing.T) {
 	tr2, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	cl1, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	cl1, err := teacher.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	cl2, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	cl2, err := teacher.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
-	cl3, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	cl3, err := teacher.Classroom{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = teacher.TeacherClassroom{IdTeacher: tc.Id, IdClassroom: cl1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = teacher.TeacherClassroom{IdTeacher: tc.Id, IdClassroom: cl2.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = teacher.TeacherClassroom{IdTeacher: tc.Id, IdClassroom: cl3.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, pass.Encrypter{}, "", tc)
@@ -260,20 +269,50 @@ func TestCRUDSelfaccess(t *testing.T) {
 }
 
 func TestStudentSelfaccess(t *testing.T) {
-	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql", "../../sql/editor/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql",
+		"../../sql/editor/gen_create.sql", "../../sql/events/gen_create.sql")
 	defer db.Remove()
 
 	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	tr1, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
+	tr1, err := tr.Trivial{
+		IdTeacher: tc.Id,
+		Questions: tr.CategoriesQuestions{
+			Tags: [5]tr.QuestionCriterion{
+				{{ed.TagSection{Tag: "KEEP", Section: ed.TrivMath}}},
+				{{ed.TagSection{Tag: "KEEP", Section: ed.TrivMath}}},
+				{{ed.TagSection{Tag: "KEEP", Section: ed.TrivMath}}},
+				{{ed.TagSection{Tag: "KEEP", Section: ed.TrivMath}}},
+				{{ed.TagSection{Tag: "KEEP", Section: ed.TrivMath}}},
+			},
+		},
+	}.Insert(db)
 	tu.AssertNoErr(t, err)
 	tr2, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 	_, err = tr.Trivial{IdTeacher: tc.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	cl1, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	g1, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	quD(0, g1.Id, ed.Diff1).Insert(db)
+	quD(0, g1.Id, ed.Diff2).Insert(db)
+	quD(0, g1.Id, ed.Diff3).Insert(db)
+	quD(0, g1.Id, ed.Diff3).Insert(db)
+
+	err = utils.InTx(db.DB, func(tx *sql.Tx) error {
+		return ed.InsertManyQuestiongroupTags(tx,
+			// categorie tags
+			ed.QuestiongroupTag{IdQuestiongroup: 1, Tag: "KEEP", Section: ed.TrivMath},
+		)
+	})
+	tu.AssertNoErr(t, err)
+
+	cl1, err := teacher.Classroom{}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = teacher.TeacherClassroom{IdTeacher: tc.Id, IdClassroom: cl1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 	st1, err := teacher.Student{IdClassroom: cl1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)

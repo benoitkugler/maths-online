@@ -16,7 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var accessForbidden = errors.New("ressource access forbidden")
+var errAccessForbidden = errors.New("ressource access forbidden")
 
 // Controller provides the route handling teacher inscription,
 // connection and settings.
@@ -74,9 +74,10 @@ func (ct *Controller) LoadDemoClassroom() (tc.Classroom, error) {
 		return tc.Classroom{}, utils.SQLError(err)
 	}
 	// sanity checks
-	if cl.IdTeacher != ct.admin.Id {
-		return tc.Classroom{}, errors.New("internal error: unexpected owner of the the demo classroom")
+	if _, err = ct.checkAcces(ct.admin.Id, cl.Id); err != nil {
+		return tc.Classroom{}, err
 	}
+
 	ct.demoClassroom = cl
 
 	return cl, nil

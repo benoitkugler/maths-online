@@ -10,7 +10,6 @@ import (
 func randClassroom() Classroom {
 	var s Classroom
 	s.Id = randIdClassroom()
-	s.IdTeacher = randIdTeacher()
 	s.Name = randstring()
 	s.MaxRankThreshold = randint()
 
@@ -107,6 +106,14 @@ func randTeacher() Teacher {
 	s.HasSimplifiedEditor = randbool()
 	s.Contact = randContact()
 	s.FavoriteMatiere = randMatiereTag()
+
+	return s
+}
+
+func randTeacherClassroom() TeacherClassroom {
+	var s TeacherClassroom
+	s.IdTeacher = randIdTeacher()
+	s.IdClassroom = randIdClassroom()
 
 	return s
 }

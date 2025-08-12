@@ -188,7 +188,7 @@ func (r *Room) playerPseudos() map[serial]string {
 				if suffix == "" {
 					suffix = string(player.ID)
 				}
-				out[player.ID] = fmt.Sprintf("%s %.1s.", player.Pseudo, suffix)
+				out[player.ID] = fmt.Sprintf("%s %.3s.", player.Pseudo, suffix)
 			}
 		}
 	}
@@ -196,7 +196,7 @@ func (r *Room) playerPseudos() map[serial]string {
 	return out
 }
 
-// serialsToPseudos convert from interal PlayedID to public pseudo
+// serialsToPseudos convert from internal PlayedID to public pseudo
 func (r *Room) serialsToPseudos(players []serial) []string {
 	dict := r.playerPseudos()
 	out := make([]string, len(players))

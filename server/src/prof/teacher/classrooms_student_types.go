@@ -51,8 +51,21 @@ type StudentClient struct {
 }
 
 type StudentClassroomHeader struct {
-	Student           StudentClient
-	ClassroomName     string
-	TeacherMail       string // or contact, to be displayed
-	TeacherContactURL string // optional, display a link if provided
+	Student       StudentClient
+	ClassroomName string
+	Teachers      []TeacherContact // attached to the classroom, not empty
+}
+
+type TeacherContact struct {
+	Mail       string // or contact, to be displayed
+	ContactURL string // optional, display a link if provided
+}
+
+// display the teacher coordinates
+func newTeacherContact(t tc.Teacher) TeacherContact {
+	mail, url := t.Contact.Name, t.Contact.URL
+	if mail == "" {
+		mail, url = t.Mail, ""
+	}
+	return TeacherContact{mail, url}
 }

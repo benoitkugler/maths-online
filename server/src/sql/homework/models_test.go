@@ -16,7 +16,7 @@ func Test(t *testing.T) {
 	teacher, err := tc.Teacher{FavoriteMatiere: tc.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	cl, err := tc.Classroom{IdTeacher: teacher.Id}.Insert(db)
+	cl, err := tc.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	student, err := tc.Student{IdClassroom: cl.Id}.Insert(db)

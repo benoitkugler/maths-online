@@ -27,8 +27,7 @@ func TestSQLTime(t *testing.T) {
 	db := tu.NewTestDB(t, "gen_create.sql")
 	defer db.Remove()
 
-	teacher, _ := Teacher{FavoriteMatiere: Mathematiques}.Insert(db)
-	classromm, _ := Classroom{IdTeacher: teacher.Id}.Insert(db)
+	classromm, _ := Classroom{}.Insert(db)
 
 	st, err := Student{Birthday: Date(time.Now()), IdClassroom: classromm.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -60,12 +59,14 @@ func testTeacher(t *testing.T, db *sql.DB) {
 }
 
 func testClassroom(t *testing.T, db *sql.DB) {
-	tc, err := randTeacher().Insert(db)
+	classroom := randClassroom()
+	classroom, err := classroom.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	classroom := randClassroom()
-	classroom.IdTeacher = tc.Id
-	classroom, err = classroom.Insert(db)
+	tc, err := randTeacher().Insert(db)
+	tu.AssertNoErr(t, err)
+	link := TeacherClassroom{IdTeacher: tc.Id, IdClassroom: classroom.Id}
+	err = link.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	classrooms, err := SelectAllClassrooms(db)
@@ -75,17 +76,16 @@ func testClassroom(t *testing.T, db *sql.DB) {
 		t.Fatal(err)
 	}
 
+	err = link.Delete(db)
+	tu.AssertNoErr(t, err)
+
 	_, err = DeleteClassroomById(db, classroom.Id)
 	tu.AssertNoErr(t, err)
 }
 
 func testStudent(t *testing.T, db *sql.DB) {
-	tc, err := randTeacher().Insert(db)
-	tu.AssertNoErr(t, err)
-
 	classroom := randClassroom()
-	classroom.IdTeacher = tc.Id
-	classroom, err = classroom.Insert(db)
+	classroom, err := classroom.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	student := randStudent()
@@ -105,12 +105,8 @@ func testStudent(t *testing.T, db *sql.DB) {
 }
 
 func testCodes(t *testing.T, db *sql.DB) {
-	tc, err := randTeacher().Insert(db)
-	tu.AssertNoErr(t, err)
-
 	classroom := randClassroom()
-	classroom.IdTeacher = tc.Id
-	classroom, err = classroom.Insert(db)
+	classroom, err := classroom.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	tx, err := db.Begin()

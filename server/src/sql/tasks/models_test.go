@@ -76,7 +76,7 @@ func TestResizeProgression(t *testing.T) {
 
 	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
-	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	cl, err := teacher.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
 	st, err := teacher.Student{IdClassroom: cl.Id}.Insert(db)
 	tu.AssertNoErr(t, err)

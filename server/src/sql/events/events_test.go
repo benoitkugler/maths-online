@@ -83,10 +83,7 @@ func TestSQL(t *testing.T) {
 	db := tu.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Allemand}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	cl, err := teacher.Classroom{}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	student, err := teacher.Student{IdClassroom: cl.Id}.Insert(db)

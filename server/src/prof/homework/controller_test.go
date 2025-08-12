@@ -35,7 +35,9 @@ func setupDB(t *testing.T) (db tu.TestDB, out sample) {
 	tu.AssertNoErr(t, err)
 	out.userID = teacher.IdTeacher(1)
 
-	out.class, err = teacher.Classroom{IdTeacher: out.userID, Name: "test"}.Insert(db)
+	out.class, err = teacher.Classroom{Name: "test"}.Insert(db)
+	tu.AssertNoErr(t, err)
+	err = teacher.TeacherClassroom{IdTeacher: out.userID, IdClassroom: out.class.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	group, err := editor.Exercicegroup{IdTeacher: out.userID}.Insert(db)
