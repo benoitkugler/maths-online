@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:eleve/questions/dropdown.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
@@ -582,6 +584,9 @@ class QuestionView extends StatefulWidget {
 }
 
 class _QuestionViewState extends State<QuestionView> {
+  TimeoutBarController? _timeoutBarController;
+  Timer? _timeoutTicker;
+
   @override
   void initState() {
     _initController();
@@ -599,12 +604,38 @@ class _QuestionViewState extends State<QuestionView> {
   @override
   void dispose() {
     widget.controller.removeListener(_onControllerChange);
+    // cancel the next timer
+    _timeoutBarController = null;
+    _timeoutTicker?.cancel();
     super.dispose();
   }
 
   void _initController() {
     widget.controller.removeListener(_onControllerChange);
     widget.controller.addListener(_onControllerChange);
+
+    if (widget.controller.timeout != null) {
+      // check if we alreay have a timeout
+      if (_timeoutBarController != null) return;
+
+      _timeoutBarController =
+          TimeoutBarController(widget.controller.timeout!.inSeconds);
+      _timeoutTicker =
+          Timer.periodic(const Duration(seconds: 1), (_) => _updateTimeout());
+    }
+  }
+
+  void _updateTimeout() {
+    final ct = _timeoutBarController;
+    final ti = _timeoutTicker;
+    if (ct == null || ti == null) return;
+    if (ct.seconds >= ct.totalDuration) {
+      ti.cancel();
+      return;
+    }
+    setState(() {
+      ct.seconds += 1;
+    });
   }
 
   void _onControllerChange() {
@@ -618,12 +649,14 @@ class _QuestionViewState extends State<QuestionView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // title
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ColoredTitle(widget.title, widget.color),
           ),
-          if (widget.controller.timeout != null) ...[
-            TimeoutBar(widget.controller.timeout!, widget.color),
+          // chrono bar
+          if (_timeoutBarController != null) ...[
+            TimeoutBar(_timeoutBarController!, widget.color),
             const SizedBox(height: 10.0),
           ],
           Expanded(
