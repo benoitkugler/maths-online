@@ -130,10 +130,8 @@ class _LoadedProfile extends StatelessWidget {
               Text("${meta.student.surname} ${meta.student.name}",
                   style: detailsStyle)),
           _FormRow("Classe", Text(meta.classroomName, style: detailsStyle)),
-          _FormRow(
-              "Contact",
-              hyperlink(meta.teacherMail, meta.teacherContactURL,
-                  style: detailsStyle)),
+          ...meta.teachers.map((t) => _FormRow(
+              "Contact", hyperlink(t.mail, t.contactURL, style: detailsStyle))),
         ],
       ),
     );

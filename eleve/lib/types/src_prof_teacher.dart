@@ -119,15 +119,13 @@ Map<String, dynamic> checkStudentClassroomOutToJson(
 class StudentClassroomHeader {
   final StudentClient student;
   final String classroomName;
-  final String teacherMail;
-  final String teacherContactURL;
+  final List<TeacherContact> teachers;
 
-  const StudentClassroomHeader(this.student, this.classroomName,
-      this.teacherMail, this.teacherContactURL);
+  const StudentClassroomHeader(this.student, this.classroomName, this.teachers);
 
   @override
   String toString() {
-    return "StudentClassroomHeader($student, $classroomName, $teacherMail, $teacherContactURL)";
+    return "StudentClassroomHeader($student, $classroomName, $teachers)";
   }
 }
 
@@ -136,16 +134,14 @@ StudentClassroomHeader studentClassroomHeaderFromJson(dynamic json_) {
   return StudentClassroomHeader(
       studentClientFromJson(json['Student']),
       stringFromJson(json['ClassroomName']),
-      stringFromJson(json['TeacherMail']),
-      stringFromJson(json['TeacherContactURL']));
+      listTeacherContactFromJson(json['Teachers']));
 }
 
 Map<String, dynamic> studentClassroomHeaderToJson(StudentClassroomHeader item) {
   return {
     "Student": studentClientToJson(item.student),
     "ClassroomName": stringToJson(item.classroomName),
-    "TeacherMail": stringToJson(item.teacherMail),
-    "TeacherContactURL": stringToJson(item.teacherContactURL)
+    "Teachers": listTeacherContactToJson(item.teachers)
   };
 }
 
@@ -220,6 +216,32 @@ Map<String, dynamic> studentHeaderToJson(StudentHeader item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.TeacherContact
+class TeacherContact {
+  final String mail;
+  final String contactURL;
+
+  const TeacherContact(this.mail, this.contactURL);
+
+  @override
+  String toString() {
+    return "TeacherContact($mail, $contactURL)";
+  }
+}
+
+TeacherContact teacherContactFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return TeacherContact(
+      stringFromJson(json['Mail']), stringFromJson(json['ContactURL']));
+}
+
+Map<String, dynamic> teacherContactToJson(TeacherContact item) {
+  return {
+    "Mail": stringToJson(item.mail),
+    "ContactURL": stringToJson(item.contactURL)
+  };
+}
+
 List<StudentHeader> listStudentHeaderFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -229,4 +251,15 @@ List<StudentHeader> listStudentHeaderFromJson(dynamic json) {
 
 List<dynamic> listStudentHeaderToJson(List<StudentHeader> item) {
   return item.map(studentHeaderToJson).toList();
+}
+
+List<TeacherContact> listTeacherContactFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(teacherContactFromJson).toList();
+}
+
+List<dynamic> listTeacherContactToJson(List<TeacherContact> item) {
+  return item.map(teacherContactToJson).toList();
 }

@@ -24,10 +24,10 @@ class AdvanceSummary extends StatelessWidget {
             borderRadius: BorderRadius.circular(4)),
         child: Column(
           children: [
-            rankIcon(advance.rank),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(color: color, spreadRadius: 2, blurRadius: 2)
@@ -36,7 +36,7 @@ class AdvanceSummary extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: color)),
                   child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(_rankLabels[advance.rank],
                             style: Theme.of(context).textTheme.titleMedium),
@@ -53,6 +53,7 @@ class AdvanceSummary extends StatelessWidget {
                             )),
                       ])),
             ),
+            rankIcon(advance.rank),
             if (advance.pointsNextRank > advance.pointsCurrentRank)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
