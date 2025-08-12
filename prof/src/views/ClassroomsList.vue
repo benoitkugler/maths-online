@@ -20,15 +20,22 @@
     @update:model-value="classroomToDelete = null"
     max-width="600px"
   >
-    <v-card title="Confirmer">
+    <v-card title="Confirmer" v-if="classroomToDelete">
       <v-card-text
         >Etes-vous certain de vouloir supprimer la classe
-        <i>{{ classroomToDelete?.name }}</i> ? <br />
-        Tous les élèves associés (et leur progression) seront supprimés.
-        <br />Cette opération est irréversible.
+        <i>{{ classroomToDelete.Classroom.name }}</i> ? <br /><br />
+
+        <div v-if="classroomToDelete.SharedWith?.length">
+          Comme cette classe est partagée, vous serez retiré de ses enseignants,
+          mais les élèves associés seront conservés.
+        </div>
+        <div v-else>
+          Tous les élèves associés (et leur progression) seront supprimés.
+          <br />Cette opération est irréversible.
+        </div>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="classroomToDelete = null" color="warning">Retour</v-btn>
+        <v-btn @click="classroomToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteClassroom" variant="outlined">
           Supprimer
@@ -88,7 +95,7 @@
 
       <v-col align-self="center" style="text-align: right" md="3" sm="6">
         <v-btn
-          class="mx-2"
+          class="mr-4"
           @click="createClassroom"
           title="Ajouter une nouvelle classe"
         >
@@ -110,8 +117,9 @@
           <classroom-card
             :classroom="classroom"
             @show-students="classroomToShow = classroom.Classroom"
-            @delete="classroomToDelete = classroom.Classroom"
+            @delete="classroomToDelete = classroom"
             @update="classroomToUpdate = copy(classroom.Classroom)"
+            @invite="(mail) => inviteTeacher(classroom.Classroom, mail)"
           ></classroom-card>
         </v-col>
       </v-row>
@@ -147,13 +155,13 @@ async function createClassroom() {
   await fetchClassrooms();
 }
 
-const classroomToDelete = ref<Classroom | null>(null);
+const classroomToDelete = ref<ClassroomExt | null>(null);
 async function deleteClassroom() {
   if (classroomToDelete.value == null) {
     return;
   }
   const res = await controller.TeacherDeleteClassroom({
-    id: classroomToDelete.value.id,
+    id: classroomToDelete.value.Classroom.id,
   });
   if (res === undefined) return;
   controller.showMessage("Classe supprimée avec succès.");
@@ -185,6 +193,16 @@ const maxRankItems = [
   { title: "25 000 : normal", value: 25_000 },
   { title: "40 000 : intense", value: 40_000 },
 ];
+
+async function inviteTeacher(classroom: Classroom, mail: string) {
+  const res = await controller.TeacherInviteTeacherToClassroom({
+    IdClassroom: classroom.id,
+    MailToInvite: mail,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Collègue ajouté avec succès.");
+  await fetchClassrooms();
+}
 </script>
 
 <style>

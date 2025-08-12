@@ -1224,10 +1224,16 @@ export interface AskInscriptionOut {
 export interface ClassroomExt {
   Classroom: Classroom;
   NbStudents: Int;
+  SharedWith: string[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
   Code: string;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.InviteTeacherIn
+export interface InviteTeacherIn {
+  IdClassroom: IdClassroom;
+  MailToInvite: string;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.LogginIn
 export interface LogginIn {
@@ -1734,7 +1740,6 @@ export interface RandomMonoquestion {
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Classroom
 export interface Classroom {
   id: IdClassroom;
-  id_teacher: IdTeacher;
   name: string;
   MaxRankThreshold: Int;
 }
@@ -2019,6 +2024,18 @@ export abstract class AbstractAPI {
         headers: this.getHeaders(),
         params: { id: String(params["id"]) },
       });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** TeacherInviteTeacherToClassroom performs the request and handles the error */
+  async TeacherInviteTeacherToClassroom(params: InviteTeacherIn) {
+    const fullUrl = this.baseURL + "/api/prof/classrooms/invite";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
       return true;
     } catch (error) {
       this.handleError(error);
