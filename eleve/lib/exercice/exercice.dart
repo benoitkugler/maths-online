@@ -81,7 +81,7 @@ class ExerciceController {
     }).toList();
   }
 
-  void onQuestionValid() {
+  void onQuestionButtonClick() {
     switch (status) {
       case ExerciceStatus.answering:
         _questions[_questionIndex].buttonEnabled = false;
@@ -110,8 +110,8 @@ class ExerciceController {
   }
 
   void reset() {
-    _refreshStates();
     status = ExerciceStatus.answering;
+    _refreshStates();
   }
 
   void resetWithNextQuestions(List<InstantiatedQuestion> nextQuestions) {
@@ -124,13 +124,23 @@ class ExerciceController {
     questionStatus = _computeQuestionStates();
     for (var index = 0; index < _questions.length; index++) {
       final qu = _questions[index];
-      if (questionStatus[index] == QuestionStatus.checked ||
-          questionStatus[index] == QuestionStatus.incorrectAndLocked) {
+      final quStatut = questionStatus[index];
+      if (quStatut.answerDisabled) {
         // mark done
-        qu.buttonLabel = "Question terminée";
+        qu.buttonLabel = quStatut == QuestionStatus.locked
+            ? "Question verrouillée"
+            : "Question terminée";
         qu.buttonEnabled = false;
         qu.footerQuote = pickQuote();
         qu.setFieldsEnabled(false);
+        qu.timeout = null;
+      } else if (status == ExerciceStatus.answering) {
+        qu.buttonEnabled = false;
+        qu.buttonLabel = "Valider";
+        qu.setFieldsEnabled(true);
+        qu.timeout = questionTimeLimit == 0
+            ? null
+            : Duration(seconds: questionTimeLimit);
       }
     }
   }
@@ -203,7 +213,7 @@ class ExerciceController {
     }
     switch (exeAndProg.exercice.flow) {
       case Flow
-          .sequencial: // do not show locked questions when exercice is not over
+            .sequencial: // do not show locked questions when exercice is not over
         return (isExerciceOver() && hasNextQuestion) ||
             currentIndex < exeAndProg.progression.nextQuestion;
       case Flow.parallel: // no restriction:
@@ -448,17 +458,21 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
       }
     }
 
-    // handle time limit
+    _initQuestionTimer();
+
+    widget.controller.reset();
+    if (widget.instantShowCorrection) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
+    }
+  }
+
+  // handle time limit, disabling it when needed
+  void _initQuestionTimer() {
     timeLimitTimer?.cancel();
     final timeout =
         widget.controller._questions[widget.controller.questionIndex].timeout;
     if (timeout != null) {
       timeLimitTimer = Timer(timeout, _onTimeLimitReached);
-    }
-
-    widget.controller.reset();
-    if (widget.instantShowCorrection) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
     }
   }
 
@@ -467,7 +481,8 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     final ct = widget.controller;
     // disable exiting the question for time limited
     // to prevent abuses
-    final canPop = ct._questions[ct.questionIndex].timeout == null;
+    final canPop = ct.status == ExerciceStatus.displayingFeedback ||
+        ct._questions[ct.questionIndex].timeout == null;
     return Scaffold(
       appBar: AppBar(
         title: Text("Question ${ct.questionIndex + 1}"),
@@ -545,7 +560,7 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     Navigator.of(context).pop(questionIndex);
   }
 
-  void onExerciceOver() async {
+  void _onExerciceOver() async {
     // exercice is over
     final goBack = await showDialog<bool>(
         context: context,
@@ -590,6 +605,9 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     final ct = widget.controller;
     final index = ct.questionIndex;
 
+    // always cancel the timeout, if any
+    timeLimitTimer?.cancel();
+
     // for sequencial exercices, if we are not at the current question, just go to it
     // and return
     if (ct.exeAndProg.exercice.flow == Flow.sequencial &&
@@ -602,14 +620,16 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     if (resp == null) return;
 
     if (ct.exeAndProg.progression.nextQuestion == -1) {
-      onExerciceOver();
+      _onExerciceOver();
       return;
     }
 
     final isCorrect = resp.result.isCorrect;
     if (!isCorrect) {
       // show errors and ask for retry
+      // and hide timebar
       setState(() {
+        ct._questions[index].timeout = null;
         ct.showFeedback(resp.result);
       });
     } else {
@@ -680,7 +700,7 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     setState(() {
-      widget.controller.onQuestionValid();
+      widget.controller.onQuestionButtonClick();
     });
     switch (widget.controller.status) {
       case ExerciceStatus.answering:
@@ -693,6 +713,7 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   void _onRetryQuestion() {
     setState(() {
       widget.controller.resetWithNextQuestions(nextQuestions);
+      _initQuestionTimer(); // after building the questions again to have the proper timeout
     });
   }
 
@@ -862,7 +883,12 @@ class _QuestionList extends StatelessWidget {
 
 enum QuestionStatus { locked, checked, toDo, incorrect, incorrectAndLocked }
 
-extension _Icon on QuestionStatus {
+extension on QuestionStatus {
+  bool get answerDisabled =>
+      this == QuestionStatus.locked ||
+      this == QuestionStatus.checked ||
+      this == QuestionStatus.incorrectAndLocked;
+
   Icon get icon {
     switch (this) {
       case QuestionStatus.locked:

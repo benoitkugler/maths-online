@@ -408,17 +408,17 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final questionIndex = params.answerIndex;
-    final answer = params.answer;
+    final answer = params.answer.answer;
     // the correct answer is the index of the question
-    final isCorrect =
-        questionIndex == (answer.answer.data[0] as NumberAnswer).value;
+    final isCorrect = (answer.data[0] is NumberAnswer) &&
+        questionIndex == (answer.data[0] as NumberAnswer).value;
     params.progression.questions[questionIndex].add(isCorrect);
+    final nextQuestion = isCorrect
+        ? (questionIndex == 2 ? -1 : questionIndex + 1)
+        : questionIndex;
+    print("nextQuestion $nextQuestion");
     return EvaluateWorkOut(
-        ProgressionExt(
-            params.progression.questions,
-            isCorrect
-                ? (questionIndex == 2 ? -1 : questionIndex + 1)
-                : questionIndex),
+        ProgressionExt(params.progression.questions, nextQuestion),
         [quI1bis, quI2bis, quI3bis],
         questionIndex,
         QuestionAnswersOut({0: isCorrect}, {}));
@@ -431,7 +431,7 @@ class _ExerciceSequential extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExerciceStartRoute(_ExerciceSequentialAPI(),
-        ExerciceController(workSequencial, QuestionRepeat.unlimited, 0));
+        ExerciceController(workSequencial, QuestionRepeat.oneTry, 10));
   }
 }
 
@@ -471,7 +471,8 @@ class _ExerciceParallelAPI implements ExerciceAPI {
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final questionIndex = params.answerIndex;
     final answer = params.answer.answer;
-    final isCorrect = questionIndex == (answer.data[0] as NumberAnswer).value;
+    final isCorrect = (answer.data[0] is NumberAnswer) &&
+        questionIndex == (answer.data[0] as NumberAnswer).value;
     params.progression.questions[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
         ProgressionExt(
@@ -490,7 +491,7 @@ class _ExerciceParallel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExerciceStartRoute(_ExerciceParallelAPI(),
-        ExerciceController(workParallel, QuestionRepeat.unlimited, 0));
+        ExerciceController(workParallel, QuestionRepeat.unlimited, 10));
   }
 }
 

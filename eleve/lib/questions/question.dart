@@ -622,6 +622,10 @@ class _QuestionViewState extends State<QuestionView> {
           TimeoutBarController(widget.controller.timeout!.inSeconds);
       _timeoutTicker =
           Timer.periodic(const Duration(seconds: 1), (_) => _updateTimeout());
+    } else {
+      _timeoutBarController = null;
+      _timeoutTicker?.cancel();
+      _timeoutTicker = null;
     }
   }
 

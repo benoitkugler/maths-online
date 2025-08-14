@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 class StaticRepere extends StatelessWidget {
   final Figure figure;
-  const StaticRepere(this.figure, {Key? key}) : super(key: key);
+  const StaticRepere(this.figure, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -140,10 +140,9 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
     this.showOrigin,
     this.layers,
     this.texts, {
-    Key? key,
+    super.key,
     Color? color,
-  })  : color = color ?? Colors.transparent,
-        super(key: key);
+  }) : color = color ?? Colors.transparent;
 
   @override
   Widget build(BuildContext context) {
@@ -203,8 +202,7 @@ class _PositionnedTextW extends StatelessWidget {
   final RepereMetrics metrics;
   final PositionnedText text;
 
-  const _PositionnedTextW(this.metrics, this.text, {Key? key})
-      : super(key: key);
+  const _PositionnedTextW(this.metrics, this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -649,7 +647,6 @@ class DrawingsPainter extends CustomPainterText {
               ..style = PaintingStyle.fill
               ..color = color);
         break;
-      default:
     }
   }
 
@@ -810,9 +807,8 @@ class GridPoint extends StatelessWidget {
   final Offset visual;
   final Color color;
 
-  const GridPoint(this.logical, this.visual, {Color? color, Key? key})
-      : color = color ?? Colors.orangeAccent,
-        super(key: key);
+  const GridPoint(this.logical, this.visual, {Color? color, super.key})
+      : color = color ?? Colors.orangeAccent;
 
   static const radius = 10.0;
 
@@ -841,9 +837,8 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
   final bool disabled;
 
   const DraggableGridPoint(this.logical, this.visual, this.id, this.zoomFactor,
-      {Key? key, Color? color, this.disabled = false})
-      : color = color ?? Colors.orange,
-        super(key: key);
+      {super.key, Color? color, this.disabled = false})
+      : color = color ?? Colors.orange;
 
   static const outerRadius = 20.0;
   static const radius = 8.0;
@@ -887,8 +882,7 @@ class GridPointHighlight extends StatelessWidget {
   final IntCoord logical;
   final Offset visual;
 
-  const GridPointHighlight(this.logical, this.visual, {Key? key})
-      : super(key: key);
+  const GridPointHighlight(this.logical, this.visual, {super.key});
 
   @override
   Widget build(BuildContext context) {
