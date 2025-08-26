@@ -39,7 +39,6 @@ import ClassroomTravaux from "./ClassroomTravaux.vue";
 import type {
   IdClassroom,
   IdSheet,
-  Int,
   Sheet,
   SheetExt,
   Travail,

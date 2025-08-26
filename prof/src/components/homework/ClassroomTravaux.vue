@@ -108,7 +108,6 @@ import type {
   Classroom,
   ClassroomTravaux,
   IdClassroom,
-  Int,
   Sheet,
   SheetExt,
   Travail,

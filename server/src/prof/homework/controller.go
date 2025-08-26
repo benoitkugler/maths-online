@@ -230,40 +230,38 @@ func (ct *Controller) createTravail(idClassroom teacher.IdClassroom, userID uID)
 		return CreateTravailOut{}, utils.SQLError(err)
 	}
 
-	tx, err := ct.db.Begin()
+	var (
+		sheet ho.Sheet
+		tr    ho.Travail
+	)
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		// create anonymous Sheet
+		sheet, err = ho.Sheet{IdTeacher: userID, Title: "Feuille d'exercices", Matiere: user.FavoriteMatiere}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		// create Travail with this sheet
+		tr = ho.Travail{
+			IdSheet:     sheet.Id,
+			IdClassroom: idClassroom,
+			Noted:       true,
+			ShowAfter:   ho.Time(time.Now().Round(10 * time.Minute)),
+			Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 7).Round(time.Hour)), // one week
+		}
+		tr, err = tr.Insert(tx)
+		if err != nil {
+			return err
+		}
+		// mark the sheet as anonymous
+		sheet.Anonymous = tr.Id.AsOptional()
+		sheet, err = sheet.Update(tx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		return CreateTravailOut{}, utils.SQLError(err)
-	}
-	// create anonymous Sheet
-	sheet, err := ho.Sheet{IdTeacher: userID, Title: "Feuille d'exercices", Matiere: user.FavoriteMatiere}.Insert(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return CreateTravailOut{}, utils.SQLError(err)
-	}
-	// create Travail with this sheet
-	tr := ho.Travail{
-		IdSheet:     sheet.Id,
-		IdClassroom: idClassroom,
-		Noted:       true,
-		ShowAfter:   ho.Time(time.Now().Round(10 * time.Minute)),
-		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 7).Round(time.Hour)), // one week
-	}
-	tr, err = tr.Insert(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return CreateTravailOut{}, utils.SQLError(err)
-	}
-	// mark the sheet as anonymous
-	sheet.Anonymous = tr.Id.AsOptional()
-	sheet, err = sheet.Update(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return CreateTravailOut{}, utils.SQLError(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return CreateTravailOut{}, utils.SQLError(err)
+		return CreateTravailOut{}, err
 	}
 
 	return CreateTravailOut{Sheet: SheetExt{Sheet: sheet, Origin: tcAPI.Origin{Visibility: tcAPI.Personnal}}, Travail: tr}, nil

@@ -199,7 +199,7 @@ import {
   IdClassroom,
   QuestionRepeatLabels,
 } from "@/controller/api_gen";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import PreviewSheet from "./PreviewSheet.vue";
 import DateTimeChip from "../DateTimeChip.vue";
 import { colorForOrigin, copy, selectItems } from "@/controller/utils";
@@ -222,6 +222,11 @@ const emit = defineEmits<{
 }>();
 
 const inner = ref(copy(props.travail));
+
+watch(
+  () => props.travail,
+  () => (inner.value = copy(props.travail))
+);
 
 const nbTasks = computed(() => props.sheet.Tasks?.length || 0);
 
