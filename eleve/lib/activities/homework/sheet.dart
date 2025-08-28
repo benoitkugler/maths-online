@@ -6,6 +6,7 @@ import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_sql_teacher.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,7 @@ extension on TaskProgressionHeader {
   TaskProgressionHeader copyWith({
     IdTask? id,
     String? title,
+    MatiereTag? matiere,
     String? chapter,
     bool? hasProgression,
     ProgressionExt? progression,
@@ -22,6 +24,7 @@ extension on TaskProgressionHeader {
     return TaskProgressionHeader(
       id ?? this.id,
       title ?? this.title,
+      matiere ?? this.matiere,
       chapter ?? this.chapter,
       hasProgression ?? this.hasProgression,
       progression ?? this.progression,

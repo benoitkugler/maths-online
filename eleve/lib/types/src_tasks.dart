@@ -280,19 +280,19 @@ Map<String, dynamic> progressionExtToJson(ProgressionExt item) {
 class TaskProgressionHeader {
   final IdTask id;
   final String title;
-  final String chapter;
   final MatiereTag matiere;
+  final String chapter;
   final bool hasProgression;
   final ProgressionExt progression;
   final int mark;
   final int bareme;
 
-  const TaskProgressionHeader(this.id, this.title, this.chapter, this.matiere,
+  const TaskProgressionHeader(this.id, this.title, this.matiere, this.chapter,
       this.hasProgression, this.progression, this.mark, this.bareme);
 
   @override
   String toString() {
-    return "TaskProgressionHeader($id, $title, $chapter, $matiere, $hasProgression, $progression, $mark, $bareme)";
+    return "TaskProgressionHeader($id, $title, $matiere, $chapter, $hasProgression, $progression, $mark, $bareme)";
   }
 }
 
@@ -301,8 +301,8 @@ TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
   return TaskProgressionHeader(
       intFromJson(json['Id']),
       stringFromJson(json['Title']),
-      stringFromJson(json['Chapter']),
       matiereTagFromJson(json['Matiere']),
+      stringFromJson(json['Chapter']),
       boolFromJson(json['HasProgression']),
       progressionExtFromJson(json['Progression']),
       intFromJson(json['Mark']),
@@ -313,8 +313,8 @@ Map<String, dynamic> taskProgressionHeaderToJson(TaskProgressionHeader item) {
   return {
     "Id": intToJson(item.id),
     "Title": stringToJson(item.title),
-    "Chapter": stringToJson(item.chapter),
     "Matiere": matiereTagToJson(item.matiere),
+    "Chapter": stringToJson(item.chapter),
     "HasProgression": boolToJson(item.hasProgression),
     "Progression": progressionExtToJson(item.progression),
     "Mark": intToJson(item.mark),

@@ -347,11 +347,10 @@ type TaskProgressionHeader struct {
 	Id    ta.IdTask
 	Title string
 
-	// The chapter of the task content,
-	// maybe empty
-	Chapter string
-
 	Matiere teacher.MatiereTag // new in version 1.9
+
+	// The chapter of the task content,	maybe empty
+	Chapter string
 
 	// HasProgression is false if [Progression] is invalid
 	HasProgression bool
