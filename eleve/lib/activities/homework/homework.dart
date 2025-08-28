@@ -12,6 +12,7 @@ import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_sql_teacher.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -276,7 +277,16 @@ class _SheetListViewState extends State<_SheetListView> {
     return true;
   }
 
-  void onSelectSheet(SheetProgression sheet) {
+  void onSelectSheet(SheetProgression sheet) async {
+    // show activity start only for math
+    if (sheet.sheet.matiere == MatiereTag.mathematiques) {
+      final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
+          builder: (context) =>
+              MathActivityStart(() => Navigator.of(context).pop(true))));
+      if (onDone == null) return;
+      if (!mounted) return;
+    }
+
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) {
       return NotificationListener<SheetMarkNotification>(
           onNotification: updateMark, child: SheetW(widget.api, sheet));
@@ -513,9 +523,18 @@ class _SheetSummary extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              sheet.sheet.title,
-              style: const TextStyle(fontSize: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  sheet.sheet.title,
+                  style: const TextStyle(fontSize: 18),
+                ),
+                Text(
+                  matiereTagLabel(sheet.sheet.matiere),
+                  style: const TextStyle(fontSize: 10),
+                )
+              ],
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),

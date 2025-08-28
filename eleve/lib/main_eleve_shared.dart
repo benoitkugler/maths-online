@@ -155,7 +155,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
   void _launchTrivialPoursuit() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
         builder: (context) =>
-            ActivityStart(() => Navigator.of(context).pop(true))));
+            MathActivityStart(() => Navigator.of(context).pop(true))));
     if (onDone == null) return;
     if (!mounted) return;
 
@@ -168,12 +168,6 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _launchHomework() async {
-    final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
-        builder: (context) =>
-            ActivityStart(() => Navigator.of(context).pop(true))));
-    if (onDone == null) return;
-    if (!mounted) return;
-
     widget.audioPlayer.run();
     final isIdentified = settings.studentID.isNotEmpty;
     await Navigator.of(context).push(MaterialPageRoute<void>(

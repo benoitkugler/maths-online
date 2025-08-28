@@ -347,7 +347,7 @@ type TaskProgressionHeader struct {
 	Id    ta.IdTask
 	Title string
 
-	Matiere teacher.MatiereTag // new in version 1.9
+	matiere teacher.MatiereTag
 
 	// The chapter of the task content,	maybe empty
 	Chapter string
@@ -395,7 +395,7 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 			Id:             task.Id,
 			Title:          work.Title(),
 			Chapter:        work.Tags().Chapter,
-			Matiere:        work.Tags().Matiere,
+			matiere:        work.Tags().Matiere,
 			HasProgression: hasProg,
 			Progression:    progression,
 			Bareme:         baremes.Total(),
@@ -404,6 +404,14 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 	}
 
 	return out, nil
+}
+
+func MatiereFromTasks(tasks []TaskProgressionHeader) teacher.MatiereTag {
+	// use the content
+	if len(tasks) != 0 {
+		return tasks[0].matiere
+	}
+	return teacher.Autre
 }
 
 // EvaluateTaskExercice calls `EvaluateExercice` and, if [registerProgression] is true, registers

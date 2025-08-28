@@ -7,6 +7,7 @@ import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_sql_teacher.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
 
@@ -99,6 +100,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().add(const Duration(days: 3)),
               false,
+              MatiereTag.mathematiques,
               QuestionRepeat.unlimited,
               0),
           [
@@ -133,6 +135,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().add(const Duration(days: 4)),
               true,
+              MatiereTag.mathematiques,
               QuestionRepeat.unlimited,
               0),
           [
@@ -149,6 +152,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               true,
+              MatiereTag.allemand,
               QuestionRepeat.unlimited,
               0),
           [
@@ -171,6 +175,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
+              MatiereTag.histoireGeo,
               QuestionRepeat.unlimited,
               0),
           [
@@ -195,6 +200,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
+              MatiereTag.histoireGeo,
               QuestionRepeat.unlimited,
               0),
           [
@@ -211,6 +217,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
+              MatiereTag.histoireGeo,
               QuestionRepeat.unlimited,
               0),
           [
@@ -227,6 +234,7 @@ class _API implements HomeworkAPI {
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
               false,
+              MatiereTag.histoireGeo,
               QuestionRepeat.unlimited,
               0),
           [

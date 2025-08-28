@@ -6,7 +6,6 @@ import 'src_maths_questions_client.dart';
 import 'src_sql_ceintures.dart';
 import 'src_sql_editor.dart';
 import 'src_sql_tasks.dart';
-import 'src_sql_teacher.dart';
 
 // github.com/benoitkugler/maths-online/server/src/tasks.AnswerP
 class AnswerP {
@@ -280,19 +279,18 @@ Map<String, dynamic> progressionExtToJson(ProgressionExt item) {
 class TaskProgressionHeader {
   final IdTask id;
   final String title;
-  final MatiereTag matiere;
   final String chapter;
   final bool hasProgression;
   final ProgressionExt progression;
   final int mark;
   final int bareme;
 
-  const TaskProgressionHeader(this.id, this.title, this.matiere, this.chapter,
+  const TaskProgressionHeader(this.id, this.title, this.chapter,
       this.hasProgression, this.progression, this.mark, this.bareme);
 
   @override
   String toString() {
-    return "TaskProgressionHeader($id, $title, $matiere, $chapter, $hasProgression, $progression, $mark, $bareme)";
+    return "TaskProgressionHeader($id, $title, $chapter, $hasProgression, $progression, $mark, $bareme)";
   }
 }
 
@@ -301,7 +299,6 @@ TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
   return TaskProgressionHeader(
       intFromJson(json['Id']),
       stringFromJson(json['Title']),
-      matiereTagFromJson(json['Matiere']),
       stringFromJson(json['Chapter']),
       boolFromJson(json['HasProgression']),
       progressionExtFromJson(json['Progression']),
@@ -313,7 +310,6 @@ Map<String, dynamic> taskProgressionHeaderToJson(TaskProgressionHeader item) {
   return {
     "Id": intToJson(item.id),
     "Title": stringToJson(item.title),
-    "Matiere": matiereTagToJson(item.matiere),
     "Chapter": stringToJson(item.chapter),
     "HasProgression": boolToJson(item.hasProgression),
     "Progression": progressionExtToJson(item.progression),

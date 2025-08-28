@@ -122,7 +122,7 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 		if sheet.Anonymous.Valid {
 			// use the content
 			if len(taskList) != 0 {
-				matiere = taskList[0].Matiere
+				matiere = taAPI.MatiereFromTasks(taskList)
 			}
 		}
 		out = append(out, SheetProgression{

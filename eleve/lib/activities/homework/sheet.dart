@@ -14,7 +14,6 @@ extension on TaskProgressionHeader {
   TaskProgressionHeader copyWith({
     IdTask? id,
     String? title,
-    MatiereTag? matiere,
     String? chapter,
     bool? hasProgression,
     ProgressionExt? progression,
@@ -24,7 +23,6 @@ extension on TaskProgressionHeader {
     return TaskProgressionHeader(
       id ?? this.id,
       title ?? this.title,
-      matiere ?? this.matiere,
       chapter ?? this.chapter,
       hasProgression ?? this.hasProgression,
       progression ?? this.progression,

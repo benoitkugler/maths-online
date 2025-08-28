@@ -49,13 +49,14 @@ class _TextRun {
   const _TextRun(this.text, this.isSpecial);
 }
 
-class ActivityStart extends StatelessWidget {
+class MathActivityStart extends StatelessWidget {
   final void Function() onContinue;
-  const ActivityStart(this.onContinue, {super.key});
+  const MathActivityStart(this.onContinue, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -82,7 +83,7 @@ class ActivityStart extends StatelessWidget {
                   backgroundColor: Colors.green.shade700,
                   padding: const EdgeInsets.all(16)),
               child: const Text(
-                "J'ai mon matériel !",
+                "Je suis prêt !",
                 style: TextStyle(fontSize: 18),
               ),
             ),
