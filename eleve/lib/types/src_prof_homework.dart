@@ -5,6 +5,7 @@ import 'src_pass.dart';
 import 'src_sql_events.dart';
 import 'src_sql_homework.dart';
 import 'src_sql_tasks.dart';
+import 'src_sql_teacher.dart';
 import 'src_tasks.dart';
 
 // github.com/benoitkugler/maths-online/server/src/prof/homework.Sheet
@@ -14,15 +15,23 @@ class Sheet {
   final bool noted;
   final Time deadline;
   final bool ignoreForMark;
+  final MatiereTag matiere;
   final QuestionRepeat questionRepeat;
   final int questionTimeLimit;
 
-  const Sheet(this.id, this.title, this.noted, this.deadline,
-      this.ignoreForMark, this.questionRepeat, this.questionTimeLimit);
+  const Sheet(
+      this.id,
+      this.title,
+      this.noted,
+      this.deadline,
+      this.ignoreForMark,
+      this.matiere,
+      this.questionRepeat,
+      this.questionTimeLimit);
 
   @override
   String toString() {
-    return "Sheet($id, $title, $noted, $deadline, $ignoreForMark, $questionRepeat, $questionTimeLimit)";
+    return "Sheet($id, $title, $noted, $deadline, $ignoreForMark, $matiere, $questionRepeat, $questionTimeLimit)";
   }
 }
 
@@ -34,6 +43,7 @@ Sheet sheetFromJson(dynamic json_) {
       boolFromJson(json['Noted']),
       dateTimeFromJson(json['Deadline']),
       boolFromJson(json['IgnoreForMark']),
+      matiereTagFromJson(json['Matiere']),
       questionRepeatFromJson(json['QuestionRepeat']),
       intFromJson(json['QuestionTimeLimit']));
 }
@@ -45,6 +55,7 @@ Map<String, dynamic> sheetToJson(Sheet item) {
     "Noted": boolToJson(item.noted),
     "Deadline": dateTimeToJson(item.deadline),
     "IgnoreForMark": boolToJson(item.ignoreForMark),
+    "Matiere": matiereTagToJson(item.matiere),
     "QuestionRepeat": questionRepeatToJson(item.questionRepeat),
     "QuestionTimeLimit": intToJson(item.questionTimeLimit)
   };

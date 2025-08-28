@@ -196,7 +196,7 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 			Exercice:     ex,
 			links:        questions,
 			QuestionsMap: contents.questions,
-			chapter:      tags.Tags().BySection().Chapter,
+			tags:         tags.Tags().BySection().TagIndex,
 		}
 	case task.IdMonoquestion.Valid:
 		monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
@@ -206,16 +206,16 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 			params:   monoquestion,
 			question: question,
 			Group:    contents.questiongroups[question.IdGroup.ID],
-			chapter:  tags.Tags().BySection().Chapter,
+			tags:     tags.Tags().BySection().TagIndex,
 		}
 	case task.IdRandomMonoquestion.Valid:
 		mono := contents.randomMonoquestions[task.IdRandomMonoquestion.ID]
 		tags := contents.QuestionTags[mono.IdQuestiongroup]
 		// for this use case, leaving [selectedQuestions] is OK
 		return RandomMonoquestionData{
-			params:  mono,
-			Group:   contents.questiongroups[mono.IdQuestiongroup],
-			chapter: tags.Tags().BySection().Chapter,
+			params: mono,
+			Group:  contents.questiongroups[mono.IdQuestiongroup],
+			tags:   tags.Tags().BySection().TagIndex,
 		}
 	default: // should not happen (enforced by SQL constraint)
 		return nil
@@ -351,6 +351,8 @@ type TaskProgressionHeader struct {
 	// maybe empty
 	Chapter string
 
+	Matiere teacher.MatiereTag // new in version 1.9
+
 	// HasProgression is false if [Progression] is invalid
 	HasProgression bool
 	// empty if HasProgression is false
@@ -391,10 +393,10 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 		progression := NewProgressionExt(progs, len(baremes))
 
 		out[task.Id] = TaskProgressionHeader{
-			Id:      task.Id,
-			Title:   work.Title(),
-			Chapter: work.Chapter(),
-
+			Id:             task.Id,
+			Title:          work.Title(),
+			Chapter:        work.Tags().Chapter,
+			Matiere:        work.Tags().Matiere,
 			HasProgression: hasProg,
 			Progression:    progression,
 			Bareme:         baremes.Total(),

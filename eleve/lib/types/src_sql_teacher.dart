@@ -13,3 +13,73 @@ typedef IdStudent = int;
 
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
 typedef IdTeacher = int;
+
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.MatiereTag
+enum MatiereTag {
+  allemand,
+  anglais,
+  autre,
+  espagnol,
+  francais,
+  histoireGeo,
+  italien,
+  mathematiques,
+  physiqueChimie,
+  sES,
+  sVT
+}
+
+extension _MatiereTagExt on MatiereTag {
+  static const _values = [
+    "ALLEMAND",
+    "ANGLAIS",
+    "AUTRE",
+    "ESPAGNOL",
+    "FRANCAIS",
+    "HISTOIRE-GEO",
+    "ITALIEN",
+    "MATHS",
+    "PHYSIQUE",
+    "SES",
+    "SVT"
+  ];
+  static MatiereTag fromValue(String s) {
+    return MatiereTag.values[_values.indexOf(s)];
+  }
+
+  String toValue() {
+    return _values[index];
+  }
+}
+
+String matiereTagLabel(MatiereTag v) {
+  switch (v) {
+    case MatiereTag.allemand:
+      return "ALLEMAND";
+    case MatiereTag.anglais:
+      return "ANGLAIS";
+    case MatiereTag.autre:
+      return "AUTRE";
+    case MatiereTag.espagnol:
+      return "ESPAGNOL";
+    case MatiereTag.francais:
+      return "FRANCAIS";
+    case MatiereTag.histoireGeo:
+      return "HISTOIRE-GEO";
+    case MatiereTag.italien:
+      return "ITALIEN";
+    case MatiereTag.mathematiques:
+      return "MATHS";
+    case MatiereTag.physiqueChimie:
+      return "PHYSIQUE";
+    case MatiereTag.sES:
+      return "SES";
+    case MatiereTag.sVT:
+      return "SVT";
+  }
+}
+
+MatiereTag matiereTagFromJson(dynamic json) =>
+    _MatiereTagExt.fromValue(json as String);
+
+dynamic matiereTagToJson(MatiereTag item) => item.toValue();

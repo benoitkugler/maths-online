@@ -41,17 +41,17 @@ type Contact struct {
 type MatiereTag string
 
 const (
-	Autre          MatiereTag = "AUTRE"
-	Mathematiques  MatiereTag = "MATHS"
-	Francais       MatiereTag = "FRANCAIS"
-	HistoireGeo    MatiereTag = "HISTOIRE-GEO"
-	Espagnol       MatiereTag = "ESPAGNOL"
-	Italien        MatiereTag = "ITALIEN"
-	Allemand       MatiereTag = "ALLEMAND"
-	Anglais        MatiereTag = "ANGLAIS"
-	SES            MatiereTag = "SES"
-	PhysiqueChimie MatiereTag = "PHYSIQUE"
-	SVT            MatiereTag = "SVT"
+	Autre          MatiereTag = "AUTRE"        // AUTRE
+	Mathematiques  MatiereTag = "MATHS"        // MATHS
+	Francais       MatiereTag = "FRANCAIS"     // FRANCAIS
+	HistoireGeo    MatiereTag = "HISTOIRE-GEO" // HISTOIRE-GEO
+	Espagnol       MatiereTag = "ESPAGNOL"     // ESPAGNOL
+	Italien        MatiereTag = "ITALIEN"      // ITALIEN
+	Allemand       MatiereTag = "ALLEMAND"     // ALLEMAND
+	Anglais        MatiereTag = "ANGLAIS"      // ANGLAIS
+	SES            MatiereTag = "SES"          // SES
+	PhysiqueChimie MatiereTag = "PHYSIQUE"     // PHYSIQUE
+	SVT            MatiereTag = "SVT"          // SVT
 )
 
 // CleanupClassroomCodes removes the expired codes.

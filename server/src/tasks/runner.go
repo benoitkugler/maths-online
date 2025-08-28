@@ -169,7 +169,7 @@ type WorkMeta interface {
 	Title() string // as presented to the student
 	flow() ed.Flow
 	Bareme() TaskBareme
-	Chapter() string
+	Tags() ed.TagIndex
 }
 
 type Work interface {
@@ -262,8 +262,8 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 // ExerciceData is an helper struct to unify question loading
 // for an exercice.
 type ExerciceData struct {
-	Group   ed.Exercicegroup // the exercice group
-	chapter string
+	Group ed.Exercicegroup // the exercice group
+	tags  ed.TagIndex
 
 	Exercice     ed.Exercice
 	links        ed.ExerciceQuestions
@@ -286,7 +286,6 @@ func NewExerciceData(db ed.DB, id ed.IdExercice) (out ExerciceData, _ error) {
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	chapter := tags.Tags().BySection().Chapter
 
 	links, err := ed.SelectExerciceQuestionsByIdExercices(db, id)
 	if err != nil {
@@ -300,31 +299,31 @@ func NewExerciceData(db ed.DB, id ed.IdExercice) (out ExerciceData, _ error) {
 		return out, utils.SQLError(err)
 	}
 	return ExerciceData{
-		Group:        group,
-		chapter:      chapter,
-		Exercice:     ex,
-		links:        links,
-		QuestionsMap: dict,
+		group,
+		tags.Tags().BySection().TagIndex,
+		ex,
+		links,
+		dict,
 	}, nil
 }
 
-func (ex ExerciceData) Title() string   { return ex.Group.Title }
-func (ExerciceData) flow() ed.Flow      { return ed.Sequencial }
-func (ex ExerciceData) Chapter() string { return ex.chapter }
+func (data ExerciceData) Title() string     { return data.Group.Title }
+func (ExerciceData) flow() ed.Flow          { return ed.Sequencial }
+func (data ExerciceData) Tags() ed.TagIndex { return data.tags }
 
-func (ex ExerciceData) Questions() []ed.Question {
-	questions := make([]ed.Question, len(ex.links))
-	for i, link := range ex.links {
-		questions[i] = ex.QuestionsMap[link.IdQuestion]
+func (data ExerciceData) Questions() []ed.Question {
+	questions := make([]ed.Question, len(data.links))
+	for i, link := range data.links {
+		questions[i] = data.QuestionsMap[link.IdQuestion]
 		// copy the exercice difficulty
-		questions[i].Difficulty = ex.Exercice.Difficulty
+		questions[i].Difficulty = data.Exercice.Difficulty
 	}
 	return questions
 }
 
-func (ex ExerciceData) Bareme() TaskBareme {
-	baremes := make([]int, len(ex.links))
-	for i, link := range ex.links {
+func (data ExerciceData) Bareme() TaskBareme {
+	baremes := make([]int, len(data.links))
+	for i, link := range data.links {
 		baremes[i] = link.Bareme
 	}
 	return baremes
@@ -361,7 +360,7 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 type MonoquestionData struct {
 	params   ta.Monoquestion
 	Group    ed.Questiongroup
-	chapter  string
+	tags     ed.TagIndex
 	question ed.Question
 }
 
@@ -386,14 +385,14 @@ func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out MonoquestionData, 
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	out.chapter = tags.Tags().BySection().Chapter
+	out.tags = tags.Tags().BySection().TagIndex
 
 	return out, nil
 }
 
-func (data MonoquestionData) Title() string   { return data.Group.Title }
-func (MonoquestionData) flow() ed.Flow        { return ed.Parallel }
-func (data MonoquestionData) Chapter() string { return data.chapter }
+func (data MonoquestionData) Title() string     { return data.Group.Title }
+func (MonoquestionData) flow() ed.Flow          { return ed.Parallel }
+func (data MonoquestionData) Tags() ed.TagIndex { return data.tags }
 
 // Questions returns the generated list of questions
 func (data MonoquestionData) Questions() []ed.Question {
@@ -432,9 +431,9 @@ func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
 }
 
 type RandomMonoquestionData struct {
-	params  ta.RandomMonoquestion
-	Group   ed.Questiongroup
-	chapter string
+	params ta.RandomMonoquestion
+	Group  ed.Questiongroup
+	tags   ed.TagIndex
 
 	// with length params.NbRepeat, or empty before
 	// instanciation
@@ -458,7 +457,7 @@ func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	out.chapter = tags.Tags().BySection().Chapter
+	out.tags = tags.Tags().BySection().TagIndex
 
 	variants, err := ta.SelectRandomMonoquestionVariantsByIdRandomMonoquestions(db, id)
 	if err != nil {
@@ -551,9 +550,9 @@ func selectVariants(nbToSelect int, among []ed.Question) []ed.Question {
 	return selected
 }
 
-func (data RandomMonoquestionData) Title() string   { return data.Group.Title }
-func (RandomMonoquestionData) flow() ed.Flow        { return ed.Parallel }
-func (data RandomMonoquestionData) Chapter() string { return data.chapter }
+func (data RandomMonoquestionData) Title() string     { return data.Group.Title }
+func (RandomMonoquestionData) flow() ed.Flow          { return ed.Parallel }
+func (data RandomMonoquestionData) Tags() ed.TagIndex { return data.tags }
 
 // Questions is only valid when the student specific variants have been loaded
 func (data RandomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }

@@ -5,6 +5,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	sql "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
 )
 
@@ -19,6 +20,8 @@ type Sheet struct {
 	Noted         bool // new in version 1.5
 	Deadline      ho.Time
 	IgnoreForMark bool // new in version 1.6.4
+
+	Matiere teacher.MatiereTag // new in version 1.9
 
 	QuestionRepeat    ho.QuestionRepeat // new in version 1.9
 	QuestionTimeLimit int               // new in version 1.9

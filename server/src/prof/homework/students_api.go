@@ -118,6 +118,13 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 			taskList[i] = progMap[exLink.IdTask]
 		}
 
+		matiere := sheet.Matiere
+		if sheet.Anonymous.Valid {
+			// use the content
+			if len(taskList) != 0 {
+				matiere = taskList[0].Matiere
+			}
+		}
 		out = append(out, SheetProgression{
 			IdTravail: travail.Id,
 			Sheet: Sheet{
@@ -126,6 +133,7 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 				travail.Noted,
 				deadline,
 				exp.IgnoreForMark,
+				matiere,
 				travail.QuestionRepeat,
 				travail.QuestionTimeLimit,
 			},
