@@ -49,6 +49,10 @@ func WebsocketError(ws *websocket.Conn, err error) {
 
 // SQLError wraps [*pq.Error] errors only
 func SQLError(err error) error {
+	if err == sql.ErrNoRows {
+		//lint:ignore ST1005 Erreur utilisateur
+		return fmt.Errorf("La requête SQL a échoué : %s", err)
+	}
 	if err, ok := err.(*pq.Error); ok {
 		//lint:ignore ST1005 Erreur utilisateur
 		return fmt.Errorf("La requête SQL a échoué : %s (table %s)", err, err.Table)

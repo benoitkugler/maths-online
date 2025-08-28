@@ -882,5 +882,6 @@ func (s *OptionalIdTravail) Scan(src any) error {
 func (s OptionalIdTravail) Value() (driver.Value, error) {
 	return sql.NullInt64{
 		Int64: int64(s.ID),
-		Valid: s.Valid}.Value()
+		Valid: s.Valid,
+	}.Value()
 }

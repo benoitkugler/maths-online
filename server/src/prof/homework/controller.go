@@ -826,57 +826,44 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 		return utils.SQLError(err)
 	}
 
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return utils.SQLError(err)
-	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		_, err = ho.DeleteSheetById(tx, idSheet)
+		if err != nil {
+			return err
+		}
 
-	_, err = ho.DeleteSheetById(tx, idSheet)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
+		_, err = tasks.DeleteTasksByIDs(tx, ts.IdTasks()...)
+		if err != nil {
+			return err
+		}
 
-	_, err = tasks.DeleteTasksByIDs(tx, ts.IdTasks()...)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
-
-	// delete the potential associated monoquestion
-	for _, removedTask := range tasksMap {
-		if id := removedTask.IdMonoquestion; id.Valid {
-			_, err = tasks.DeleteMonoquestionById(tx, id.ID)
-			if err != nil {
-				_ = tx.Rollback()
-				return utils.SQLError(err)
-			}
-		} else if id := removedTask.IdRandomMonoquestion; id.Valid {
-			_, err = tasks.DeleteRandomMonoquestionById(tx, id.ID)
-			if err != nil {
-				_ = tx.Rollback()
-				return utils.SQLError(err)
+		// delete the potential associated monoquestion
+		for _, removedTask := range tasksMap {
+			if id := removedTask.IdMonoquestion; id.Valid {
+				_, err = tasks.DeleteMonoquestionById(tx, id.ID)
+				if err != nil {
+					return err
+				}
+			} else if id := removedTask.IdRandomMonoquestion; id.Valid {
+				_, err = tasks.DeleteRandomMonoquestionById(tx, id.ID)
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func (ct *Controller) HomeworkDeleteTravail(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	idSheet, err := utils.QueryParamInt64(c, "id")
+	idTravail, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteTravail(ho.IdTravail(idSheet), userID)
+	err = ct.deleteTravail(ho.IdTravail(idTravail), userID)
 	if err != nil {
 		return err
 	}
@@ -884,12 +871,31 @@ func (ct *Controller) HomeworkDeleteTravail(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-// remove the travail entry, but not the sheet neither the progressions
+// remove the travail entry,
+// if the associated sheet is anonymous, the associated sheet and progressions are also deleted.
 func (ct *Controller) deleteTravail(id ho.IdTravail, userID uID) error {
-	_, err := ho.DeleteTravailById(ct.db, id)
+	travail, err := ho.SelectTravail(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	sheet, err := ho.SelectSheet(ct.db, travail.IdSheet)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if sheet.Anonymous.Valid { // delete everything
+		err = ct.deleteSheet(sheet.Id, userID)
+		if err != nil {
+			return err
+		}
+		// travail is deleted by cascade
+	} else {
+		_, err = ho.DeleteTravailById(ct.db, id)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+	}
+
 	return nil
 }
 

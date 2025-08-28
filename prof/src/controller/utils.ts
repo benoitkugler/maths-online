@@ -155,3 +155,9 @@ export function selectItems<T extends number | string>(
   }
   return out;
 }
+
+export function isSheetStartedByStudents(sheet: SheetExt) {
+  return (
+    (sheet.Tasks || []).filter((task) => task.NbProgressions != 0).length != 0
+  );
+}

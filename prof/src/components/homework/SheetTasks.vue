@@ -134,7 +134,7 @@
                 <span v-if="!task.NbProgressions" class="text-grey"
                   >Non démarrée</span
                 >
-                <v-chip v-else color="secondary"
+                <v-chip v-else color="secondary" variant="elevated"
                   >Démarrée par {{ task.NbProgressions }}</v-chip
                 >
               </v-col>

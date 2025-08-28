@@ -96,10 +96,39 @@
       @set-favorite="setSheetFavorite"
       @update="updateTravail"
       @copy="copyTravailTo"
-      @delete="deleteTravail"
+      @delete="
+        (tr) =>
+          (travailToDelete = {
+            travail: tr,
+            sheet: homeworks.Sheets.get(tr.IdSheet)!,
+          })
+      "
       @edit-sheet="(sh) => (sheetToUpdate = sh)"
       ref="travauxPannel"
     ></travaux-pannel>
+
+    <v-dialog
+      :model-value="travailToDelete != null"
+      @update:model-value="travailToDelete = null"
+      max-width="600px"
+    >
+      <v-card v-if="travailToDelete != null" title="Confirmer la suppression">
+        <v-card-text>
+          Confirmez-vous la suppression de cette feuille ? <br /><br />
+          <v-alert
+            v-if="showDeleteTravailWarning(travailToDelete)"
+            type="warning"
+          >
+            Attention, certains élèves ont déjà commencé cette feuille. Leur
+            progression sera perdue, et cette opération est irréversible.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="red" @click="deleteTravail">Supprimer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -128,7 +157,7 @@ import SheetDetails from "../components/homework/SheetDetails.vue";
 import SheetFolder from "@/components/homework/SheetFolder.vue";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TravauxPannel from "@/components/homework/TravauxPannel.vue";
-import type { HomeworksT } from "@/controller/utils";
+import { isSheetStartedByStudents, type HomeworksT } from "@/controller/utils";
 import ConfirmPublish from "@/components/ConfirmPublish.vue";
 
 const homeworks = ref<HomeworksT>({ Sheets: new Map(), Travaux: [] });
@@ -416,7 +445,22 @@ async function copyTravailTo(tr: Travail, idClassroom: IdClassroom) {
   cl.Travaux = (cl.Travaux || []).concat(res.Travail);
 }
 
-async function deleteTravail(tr: Travail) {
+type TravailAndSheet = { travail: Travail; sheet: SheetExt };
+
+function showDeleteTravailWarning(ts: TravailAndSheet) {
+  // only anonymous sheets are deleted
+  if (!ts.sheet.Sheet.Anonymous.Valid) return false;
+  // if there is no progression, do not show the warning
+  return isSheetStartedByStudents(ts.sheet);
+}
+
+const travailToDelete = ref<TravailAndSheet | null>(null);
+
+async function deleteTravail() {
+  const tr = travailToDelete.value?.travail;
+  if (!tr) return;
+  travailToDelete.value = null;
+
   const res = await controller.HomeworkDeleteTravail({ id: tr.Id });
   if (res === undefined) return;
   controller.showMessage("Feuille de travail supprimée avec succès.");
