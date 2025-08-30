@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import {
   GroupsStrategyKind,
+  Int,
   type GroupsStrategy,
   type GroupsStrategyAuto,
   type GroupsStrategyManual,
@@ -66,8 +67,8 @@ const emit = defineEmits<{
 }>();
 
 const launchOptions = ref<GroupsStrategy>({
-  Kind: GroupsStrategyKind.GroupsStrategyAuto,
-  Data: { Groups: [] },
+  Kind: GroupsStrategyKind.GroupsStrategyManual,
+  Data: { NbGroups: 3 as Int },
 });
 
 const isAuto = computed(
