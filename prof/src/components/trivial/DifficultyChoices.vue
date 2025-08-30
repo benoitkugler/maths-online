@@ -1,23 +1,11 @@
 <template>
   <v-card title="Ajuster les étiquettes de difficulté.">
     <v-card-text>
-      <v-checkbox
-        hide-details
-        :label="DifficultyTag.Diff1"
-        v-model="diffChoices[DifficultyTag.Diff1]"
-      >
+      <v-checkbox hide-details :label="DifficultyTag.Diff1" v-model="d1">
       </v-checkbox>
-      <v-checkbox
-        hide-details
-        :label="DifficultyTag.Diff2"
-        v-model="diffChoices[DifficultyTag.Diff2]"
-      >
+      <v-checkbox hide-details :label="DifficultyTag.Diff2" v-model="d2">
       </v-checkbox>
-      <v-checkbox
-        hide-details
-        :label="DifficultyTag.Diff3"
-        v-model="diffChoices[DifficultyTag.Diff3]"
-      >
+      <v-checkbox hide-details :label="DifficultyTag.Diff3" v-model="d3">
       </v-checkbox>
     </v-card-text>
     <v-card-actions>
@@ -42,24 +30,22 @@ const emit = defineEmits<{
 
 const props = defineProps<Props>();
 
-const diffChoices = ref<{ [key in DifficultyTag]: boolean }>(buildCrible());
+const d1 = ref(props.difficulties.includes(DifficultyTag.Diff1));
+const d2 = ref(props.difficulties.includes(DifficultyTag.Diff2));
+const d3 = ref(props.difficulties.includes(DifficultyTag.Diff3));
 
-watch(props, () => (diffChoices.value = buildCrible()));
-
-function buildCrible() {
-  return {
-    [DifficultyTag.DiffEmpty]: false, // not used
-    [DifficultyTag.Diff1]: props.difficulties.includes(DifficultyTag.Diff1),
-    [DifficultyTag.Diff2]: props.difficulties.includes(DifficultyTag.Diff2),
-    [DifficultyTag.Diff3]: props.difficulties.includes(DifficultyTag.Diff3),
-  };
-}
+watch(props, () => {
+  d1.value = props.difficulties.includes(DifficultyTag.Diff1);
+  d2.value = props.difficulties.includes(DifficultyTag.Diff2);
+  d3.value = props.difficulties.includes(DifficultyTag.Diff3);
+});
 
 function apply() {
-  const diffs = Object.entries(diffChoices)
-    .filter((e) => e[1])
-    .map((e) => e[0] as DifficultyTag);
-  emit("update:difficulties", diffs);
+  const out: DifficultyTag[] = [];
+  if (d1.value) out.push(DifficultyTag.Diff1);
+  if (d2.value) out.push(DifficultyTag.Diff2);
+  if (d3.value) out.push(DifficultyTag.Diff3);
+  emit("update:difficulties", out);
 }
 </script>
 

@@ -40,77 +40,50 @@
             Lancer
           </v-btn>
 
-          <v-tooltip text="Paramétrer l'accès libre...">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon
-                size="x-small"
-                class="ml-2"
-                @click="emit('show-selfaccess')"
-              >
-                <v-icon icon="mdi-account-multiple"></v-icon>
-              </v-btn>
-            </template>
-          </v-tooltip>
-
-          <v-btn
-            v-if="config.Origin.Visibility == Visibility.Admin"
-            class="ml-3 mr-2 my-1"
-            size="x-small"
-            icon
-            @click="emit('duplicate')"
-            title="Dupliquer et importer"
-          >
-            <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+          <v-btn icon title="Plus d'options" size="x-small" class="mx-2">
+            <v-icon>mdi-dots-vertical</v-icon>
+            <v-menu activator="parent">
+              <v-list density="compact">
+                <!-- self access -->
+                <v-list-item
+                  title="Paramétrer l'accès libre..."
+                  prepend-icon="mdi-account-multiple"
+                  @click="emit('show-selfaccess')"
+                ></v-list-item>
+                <!-- duplicate -->
+                <v-list-item
+                  v-if="config.Origin.Visibility == Visibility.Admin"
+                  title="Dupliquer et importer"
+                  prepend-icon="mdi-content-copy"
+                  @click="emit('duplicate')"
+                ></v-list-item>
+                <template v-else>
+                  <v-divider thickness="1"></v-divider>
+                  <OriginButton
+                    as-list-item
+                    :origin="config.Origin"
+                    @update-public="(b) => emit('update-public', b)"
+                    @create-review="emit('create-review')"
+                  ></OriginButton>
+                  <v-divider thickness="1"></v-divider>
+                  <v-list-item
+                    v-if="isPersonnal(config)"
+                    title=" Modifier..."
+                    prepend-icon="mdi-pencil"
+                    @click="emit('edit')"
+                  >
+                  </v-list-item>
+                  <v-list-item
+                    v-if="isPersonnal(config)"
+                    title="Supprimer"
+                    prepend-icon="mdi-delete"
+                    @click="emit('delete')"
+                  >
+                  </v-list-item>
+                </template>
+              </v-list>
+            </v-menu>
           </v-btn>
-          <v-menu offset-y close-on-content-click v-else>
-            <template v-slot:activator="{ isActive, props }">
-              <v-btn
-                icon
-                title="Plus d'options"
-                v-on="{ isActive }"
-                v-bind="props"
-                size="x-small"
-                class="ml-3 mr-2 my-1"
-              >
-                <v-icon icon="mdi-dots-vertical"></v-icon>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item>
-                <v-btn
-                  flat
-                  size="small"
-                  title="Editer"
-                  @click="emit('edit')"
-                  v-if="isPersonnal(config)"
-                >
-                  <v-icon icon="mdi-pencil" class="mr-2"></v-icon>
-                  Modifier...
-                </v-btn>
-              </v-list-item>
-              <v-list-item>
-                <v-btn
-                  v-if="isPersonnal(config)"
-                  flat
-                  size="small"
-                  @click="emit('delete')"
-                  title="Supprimer cette session"
-                >
-                  <v-icon icon="mdi-delete" color="red" class="mr-2"></v-icon>
-                  Supprimer
-                </v-btn></v-list-item
-              >
-              <v-list-item>
-                <OriginButton
-                  :origin="config.Origin"
-                  @update-public="(b) => emit('update-public', b)"
-                  @create-review="emit('create-review')"
-                ></OriginButton>
-              </v-list-item>
-            </v-list>
-          </v-menu>
         </v-col>
       </v-row>
     </v-list-item>

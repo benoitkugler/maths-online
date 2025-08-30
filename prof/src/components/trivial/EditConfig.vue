@@ -17,7 +17,7 @@
             label="Nom"
             density="compact"
             variant="outlined"
-            v-model="props.edited.Name"
+            v-model="inner.Name"
             hint="Usage interne, non visible par les élèves."
           >
           </v-text-field>
@@ -54,7 +54,7 @@
               </v-btn>
             </template>
             <DifficultyChoices
-              :difficulties="props.edited.Questions.Difficulties || []"
+              :difficulties="inner.Questions.Difficulties || []"
               @update:difficulties="onEditDifficulties"
             ></DifficultyChoices>
           </v-menu>
@@ -69,7 +69,7 @@
         ></MissingResourcesHint>
 
         <CategorieRow
-          v-for="(categorie, index) in props.edited.Questions.Tags"
+          v-for="(categorie, index) in inner.Questions.Tags"
           :key="index"
           :index="index"
         >
@@ -100,14 +100,14 @@
             type="number"
             min="1"
             suffix="sec"
-            v-model.number="props.edited.QuestionTimeout"
+            v-model.number="inner.QuestionTimeout"
           ></v-text-field>
         </v-col>
         <v-col cols="12" md="6">
           <v-checkbox
             density="compact"
             label="Afficher le décrassage en fin de partie"
-            v-model.number="props.edited.ShowDecrassage"
+            v-model.number="inner.ShowDecrassage"
           ></v-checkbox>
         </v-col>
       </v-row>
@@ -115,7 +115,7 @@
 
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="success" @click="emit('update', props.edited)">
+      <v-btn color="success" @click="emit('update', inner)">
         Enregistrer les modifications
       </v-btn>
     </v-card-actions>
@@ -133,12 +133,11 @@ import {
   type Trivial,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { ref, computed, onMounted } from "vue";
-import TagChip from "../editor/utils/TagChip.vue";
+import { ref, computed, onMounted, watch } from "vue";
 import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
 import CategorieRow from "./CategorieRow.vue";
-import type { PrefillTrivialCategorie } from "@/controller/utils";
+import { copy, type PrefillTrivialCategorie } from "@/controller/utils";
 import MissingResourcesHint from "../MissingResourcesHint.vue";
 
 interface Props {
@@ -153,8 +152,14 @@ const emit = defineEmits<{
   (e: "update", v: Trivial): void;
 }>();
 
+const inner = ref(copy(props.edited));
+watch(
+  () => props.edited,
+  () => (inner.value = copy(props.edited))
+);
+
 const lastMatiereLevelChapter = computed<PrefillTrivialCategorie>(() => {
-  const all = allTags(props.edited.Questions.Tags);
+  const all = allTags(inner.value.Questions.Tags);
   if (all.length) {
     const last = all[all.length - 1] || [];
     return {
@@ -171,7 +176,7 @@ const showDifficultyCard = ref(false);
 
 function onEditDifficulties(difficulties: DifficultyTag[]) {
   showDifficultyCard.value = false;
-  props.edited.Questions.Difficulties = difficulties;
+  inner.value.Questions.Difficulties = difficulties;
   fetchHintForMissing();
 }
 
@@ -182,7 +187,7 @@ function allTags(tags: QuestionCriterion[]) {
 }
 
 function updateCategorie(index: number, cat: QuestionCriterion) {
-  props.edited.Questions.Tags[index] = cat;
+  inner.value.Questions.Tags[index] = cat;
   fetchHintForMissing();
 }
 
@@ -190,7 +195,7 @@ onMounted(fetchHintForMissing);
 
 const hint = ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
 async function fetchHintForMissing() {
-  const criteria = props.edited.Questions;
+  const criteria = inner.value.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
   if (!criteria.Tags.every((qu) => qu?.length)) {

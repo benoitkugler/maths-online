@@ -1,5 +1,12 @@
 <template>
-  <v-btn class="mx-1" size="small" variant="flat" @click="onClick">
+  <v-list-item
+    v-if="props.asListItem"
+    prepend-icon="mdi-share-variant"
+    :title="title"
+    @click="onClick"
+  >
+  </v-list-item>
+  <v-btn v-else class="mx-1" size="small" variant="flat" @click="onClick">
     <template v-slot:prepend>
       <v-icon icon="mdi-share-variant" size="small" class="mr-4"></v-icon>
     </template>
@@ -15,6 +22,7 @@ import { useRouter } from "vue-router";
 
 interface Props {
   origin: Origin;
+  asListItem?: boolean;
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{

@@ -87,21 +87,23 @@ function addIntersection() {
   }
   newTags.push(...(props.lastMatiereLevelChapter.sublevels || []));
 
-  props.modelValue.push(newTags);
-  emit("update:model-value", props.modelValue);
+  const l = props.modelValue.concat(newTags);
+  emit("update:model-value", l);
   nextTick(() => {
     rows.value[rows.value.length - 1].startEdit();
   });
 }
 
 function updateRow(index: number, r: TagSection[]) {
-  props.modelValue[index] = r;
-  emit("update:model-value", props.modelValue);
+  const l = props.modelValue;
+  l[index] = r;
+  emit("update:model-value", l);
 }
 
 function deleteRow(index: number) {
-  props.modelValue.splice(index, 1);
-  emit("update:model-value", props.modelValue);
+  const l = props.modelValue;
+  l.splice(index, 1);
+  emit("update:model-value", l);
 }
 </script>
 
