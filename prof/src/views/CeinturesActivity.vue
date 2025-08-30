@@ -10,147 +10,159 @@
         class="mx-auto"
         type="card"
       ></v-skeleton-loader>
-      <v-row v-else-if="stageToEdit == null" justify="space-evenly">
-        <v-col cols="7" align-self="center">
-          <v-alert v-if="missingQuestions.length" icon="mdi-alert" closable>
-            <v-row>
-              <v-col align-self="center" cols="4"
-                >Certaines ceintures sont vides !</v-col
-              >
-              <v-col align-self="center" class="text-center">
-                <stage-chip
-                  v-for="(stage, index) in missingQuestions"
-                  :key="index"
-                  :stage="stage"
-                  :small="true"
-                ></stage-chip>
-              </v-col>
-            </v-row>
-          </v-alert>
-          <v-card class="overflow-x-auto">
-            <template v-slot:append>
-              <v-btn @click="showStudentsAdvance = true">
-                <v-icon>mdi-view-list</v-icon>
-                Progression élèves</v-btn
-              >
-            </template>
-            <v-card-text class="pa-1">
-              <table
-                style="table-layout: fixed; width: 200%"
-                v-if="scheme != null"
-              >
-                <tr>
-                  <th></th>
-                  <th v-for="(k, v) in DomainLabels" :key="v" class="pa-2">
-                    <v-card
-                      link
-                      @click="currentDomain = v"
-                      :color="currentDomain == v ? 'grey-lighten-3' : undefined"
-                      height="50px"
-                      ><v-card-text class="pa-1 font-weight-bold">
-                        {{ k }}
-                      </v-card-text></v-card
-                    >
-                  </th>
-                </tr>
-                <tr v-for="rank in nbRanks - 1" :key="rank">
-                  <th class="px-2">{{ RankLabels[rank as Rank] }}</th>
-
-                  <td
-                    v-for="(stage, index) in stagesFor(rank as Rank)"
+      <template v-else-if="scheme.IsAdmin">
+        <v-row v-if="stageToEdit == null" justify="space-evenly">
+          <v-col cols="7" align-self="center">
+            <v-alert v-if="missingQuestions.length" icon="mdi-alert" closable>
+              <v-row>
+                <v-col align-self="center" cols="4"
+                  >Certaines ceintures sont vides !</v-col
+                >
+                <v-col align-self="center" class="text-center">
+                  <stage-chip
+                    v-for="(stage, index) in missingQuestions"
                     :key="index"
-                    class="pa-1"
-                  >
-                    <StageHeaderCard
-                      v-if="simulateProgression == null"
-                      :stage="stage"
-                      :header="scheme.Stages[stage.Domain][stage.Rank]"
-                      @click="stageToEdit = stage"
-                    >
-                    </StageHeaderCard>
-                    <v-card
-                      v-else
-                      :color="
-                        simulateProgression[stage.Domain] >= rank
-                          ? 'green-lighten-2'
-                          : isPending(stage)
-                          ? 'blue-lighten-3'
-                          : 'grey'
-                      "
-                      @click="
-                        simulateProgression[stage.Domain] = (
-                          simulateProgression[stage.Domain] >= rank
-                            ? rank - 1
-                            : rank
-                        ) as Rank;
-                        updatePending();
-                      "
-                      :disabled="
-                        !(
-                          simulateProgression[stage.Domain] >= rank ||
-                          isPending(stage)
-                        )
-                      "
-                    >
-                      <v-card-text class="text-center pa-1">
-                        <v-icon
-                          :icon="
-                            simulateProgression[stage.Domain] >= rank
-                              ? 'mdi-check'
-                              : isPending(stage)
-                              ? 'mdi-play'
-                              : 'mdi-lock'
-                          "
-                        >
-                        </v-icon>
-                      </v-card-text>
-                    </v-card>
-                  </td>
-                </tr>
-              </table>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="5" align-self="center" v-if="currentDomain != null">
-          <v-card
-            title="Progression et prérequis"
-            :subtitle="DomainLabels[currentDomain]"
-          >
-            <template v-slot:append>
-              <v-btn
-                v-if="simulateProgression == null"
-                @click="
-                  simulateProgression = initAdvance();
-                  updatePending();
-                "
-                >Simuler...</v-btn
-              >
-              <v-btn v-else @click="simulateProgression = null">Retour</v-btn>
-            </template>
+                    :stage="stage"
+                    :small="true"
+                  ></stage-chip>
+                </v-col>
+              </v-row>
+            </v-alert>
+            <v-card class="overflow-x-auto">
+              <template v-slot:append>
+                <v-btn @click="showStudentsAdvance = true">
+                  <v-icon>mdi-view-list</v-icon>
+                  Progression élèves</v-btn
+                >
+              </template>
+              <v-card-text class="pa-1">
+                <table
+                  style="table-layout: fixed; width: 200%"
+                  v-if="scheme != null"
+                >
+                  <tr>
+                    <th></th>
+                    <th v-for="(k, v) in DomainLabels" :key="v" class="pa-2">
+                      <v-card
+                        link
+                        @click="currentDomain = v"
+                        :color="
+                          currentDomain == v ? 'grey-lighten-3' : undefined
+                        "
+                        height="50px"
+                        ><v-card-text class="pa-1 font-weight-bold">
+                          {{ k }}
+                        </v-card-text></v-card
+                      >
+                    </th>
+                  </tr>
+                  <tr v-for="rank in nbRanks - 1" :key="rank">
+                    <th class="px-2">{{ RankLabels[rank as Rank] }}</th>
 
-            <v-card-text class="overflow-y-auto" style="max-height: 72dvh">
-              <v-fade-transition hide-on-leave>
-                <domain-line
-                  :domain="currentDomain"
-                  :scheme="scheme.Scheme"
-                  :stages="scheme.Stages[currentDomain]"
-                  @go-to="(d) => (currentDomain = d)"
-                ></domain-line>
-              </v-fade-transition>
-            </v-card-text>
-          </v-card>
+                    <td
+                      v-for="(stage, index) in stagesFor(rank as Rank)"
+                      :key="index"
+                      class="pa-1"
+                    >
+                      <StageHeaderCard
+                        v-if="simulateProgression == null"
+                        :stage="stage"
+                        :header="scheme.Stages[stage.Domain][stage.Rank]"
+                        @click="stageToEdit = stage"
+                      >
+                      </StageHeaderCard>
+                      <v-card
+                        v-else
+                        :color="
+                          simulateProgression[stage.Domain] >= rank
+                            ? 'green-lighten-2'
+                            : isPending(stage)
+                            ? 'blue-lighten-3'
+                            : 'grey'
+                        "
+                        @click="
+                          simulateProgression[stage.Domain] = (
+                            simulateProgression[stage.Domain] >= rank
+                              ? rank - 1
+                              : rank
+                          ) as Rank;
+                          updatePending();
+                        "
+                        :disabled="
+                          !(
+                            simulateProgression[stage.Domain] >= rank ||
+                            isPending(stage)
+                          )
+                        "
+                      >
+                        <v-card-text class="text-center pa-1">
+                          <v-icon
+                            :icon="
+                              simulateProgression[stage.Domain] >= rank
+                                ? 'mdi-check'
+                                : isPending(stage)
+                                ? 'mdi-play'
+                                : 'mdi-lock'
+                            "
+                          >
+                          </v-icon>
+                        </v-card-text>
+                      </v-card>
+                    </td>
+                  </tr>
+                </table>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <v-col cols="5" align-self="center" v-if="currentDomain != null">
+            <v-card
+              title="Progression et prérequis"
+              :subtitle="DomainLabels[currentDomain]"
+            >
+              <template v-slot:append>
+                <v-btn
+                  v-if="simulateProgression == null"
+                  @click="
+                    simulateProgression = initAdvance();
+                    updatePending();
+                  "
+                  >Simuler...</v-btn
+                >
+                <v-btn v-else @click="simulateProgression = null">Retour</v-btn>
+              </template>
+
+              <v-card-text class="overflow-y-auto" style="max-height: 72dvh">
+                <v-fade-transition hide-on-leave>
+                  <domain-line
+                    :domain="currentDomain"
+                    :scheme="scheme.Scheme"
+                    :stages="scheme.Stages[currentDomain]"
+                    @go-to="(d) => (currentDomain = d)"
+                  ></domain-line>
+                </v-fade-transition>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        <stage-questions-editor
+          v-else
+          :stage="stageToEdit"
+          :readonly="false"
+          @back="
+            stageToEdit = null;
+            fetchScheme();
+          "
+          @go-to="(r) => (stageToEdit = { Domain: stageToEdit!.Domain, Rank: r })"
+        ></stage-questions-editor>
+      </template>
+      <v-row v-else>
+        <v-col class="text-center">
+          <v-btn @click="showStudentsAdvance = true">
+            <v-icon>mdi-view-list</v-icon>
+            Afficher la progression élève</v-btn
+          >
         </v-col>
       </v-row>
-      <stage-questions-editor
-        v-else
-        :stage="stageToEdit"
-        :readonly="false"
-        @back="
-          stageToEdit = null;
-          fetchScheme();
-        "
-        @go-to="(r) => (stageToEdit = { Domain: stageToEdit!.Domain, Rank: r })"
-      ></stage-questions-editor>
     </v-fade-transition>
   </v-container>
 </template>

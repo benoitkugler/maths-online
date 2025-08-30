@@ -2,6 +2,7 @@
   <v-avatar>
     <div :class="'bg-' + rankColors[props.rank]">
       <v-img
+        v-if="props.rank"
         :src="beltImg"
         :width="props.small ? 30 : 60"
         :height="props.small ? 25 : 50"

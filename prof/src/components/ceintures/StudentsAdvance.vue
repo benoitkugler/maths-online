@@ -1,15 +1,29 @@
 <template>
   <v-card title="Progression des élèves">
     <template v-slot:append>
-      <v-select
-        variant="outlined"
-        density="comfortable"
-        label="Classe"
-        :items="props.classrooms.map((c) => ({ title: c.name, value: c.id }))"
-        v-model="selected"
-        no-data-text="Vous n'avez aucune classe."
-        @update:model-value="fetchAdvance"
-      ></v-select>
+      <v-row>
+        <v-col>
+          <v-btn-toggle variant="outlined" v-model="mode">
+            <v-btn value="couleur">Couleur</v-btn>
+            <v-btn value="note">Note</v-btn>
+          </v-btn-toggle>
+        </v-col>
+        <v-divider vertical thickness="1"></v-divider>
+        <v-col>
+          <v-select
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            label="Classe"
+            :items="
+              props.classrooms.map((c) => ({ title: c.name, value: c.id }))
+            "
+            v-model="selected"
+            no-data-text="Vous n'avez aucune classe."
+            @update:model-value="fetchAdvance"
+          ></v-select>
+        </v-col>
+      </v-row>
     </template>
     <v-card-text>
       <v-table>
@@ -19,10 +33,20 @@
             {{ k }}
           </th>
         </tr>
-        <tr v-for="(student, i) in advances" :key="i">
-          <td>{{ student.Student.Name }} {{ student.Student.Surname }}</td>
+        <tr
+          v-for="(student, i) in advances"
+          :key="i"
+          :class="{ 'bg-grey-lighten-4': i % 2 == 0 }"
+        >
+          <td class="px-2">
+            {{ student.Student.Name }} {{ student.Student.Surname }}
+          </td>
           <td v-for="(k, v) in DomainLabels" :key="v" class="pa-2 text-center">
-            <RankIcon :rank="student.Advance.Advance[v]"></RankIcon>
+            <RankIcon
+              v-if="mode == 'couleur'"
+              :rank="student.Advance.Advance[v]"
+            ></RankIcon>
+            <span v-else>{{ (student.Advance.Advance[v] || 0) * 2 }}</span>
           </td>
         </tr>
       </v-table>
@@ -68,4 +92,6 @@ async function fetchAdvance() {
   if (res === undefined) return;
   advances.value = res || [];
 }
+
+const mode = ref<"couleur" | "note">("couleur");
 </script>
