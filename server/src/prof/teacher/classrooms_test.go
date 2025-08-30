@@ -37,24 +37,30 @@ func Test_parsePronoteName(t *testing.T) {
 }
 
 func Test_parsePronoteStudentList(t *testing.T) {
-	f, err := os.Open("students_sample.csv")
+	f, err := os.Open("students_sample_2024.csv")
 	if err != nil {
 		t.Skipf("Sample not available: %s", err)
 	}
 
 	out, err := parsePronoteStudentList(f)
 	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out) == 31)
 
-	if len(out) != 31 {
-		t.Fatal(len(out))
+	f, err = os.Open("students_sample_2025.csv")
+	if err != nil {
+		t.Skipf("Sample not available: %s", err)
 	}
+
+	out, err = parsePronoteStudentList(f)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out) == 24)
 }
 
 func Test_importPronoteFile(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
 	defer db.Remove()
 
-	f, err := os.Open("students_sample.csv")
+	f, err := os.Open("students_sample_2024.csv")
 	if err != nil {
 		t.Skipf("Sample not available: %s", err)
 	}

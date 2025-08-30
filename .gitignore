@@ -1,7 +1,7 @@
 server/main
 server/.env
 prof/src/env.ts
-server/src/prof/teacher/students_sample.csv
+server/src/prof/teacher/students_sample*
 eleve/lib/main_dev.dart
 **/node_modules/*
 **/.vscode/*
