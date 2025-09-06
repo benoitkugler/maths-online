@@ -45,7 +45,7 @@ func (ct *Controller) HomeworkGetSheets(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
 	mat_ := c.QueryParam("matiere")
-	out, err := ct.getSheets(userID, teacher.MatiereTag(mat_))
+	out, err := ct.getSheetsAndTravaux(userID, teacher.MatiereTag(mat_))
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ type Homeworks struct {
 	Travaux []ClassroomTravaux // one per classroom
 }
 
-func (ct *Controller) getSheets(userID uID, matiere teacher.MatiereTag) (out Homeworks, err error) {
+func (ct *Controller) getSheetsAndTravaux(userID uID, matiere teacher.MatiereTag) (out Homeworks, err error) {
 	// load the classrooms
 	classrooms, err := teacher.SelectClassroomsByIdTeacher(ct.db, userID)
 	if err != nil {
@@ -74,10 +74,17 @@ func (ct *Controller) getSheets(userID uID, matiere teacher.MatiereTag) (out Hom
 	}
 	sheetsDict.RestrictVisible(userID)
 
-	// .. and all the [Travail]s
+	// .. and all the potential [Travail]s
 	travauxDict, err := ho.SelectTravailsByIdClassrooms(ct.db, classrooms.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
+	}
+	// remove the ones not "owned" by the teacher or admin
+	for id, travail := range travauxDict {
+		sheet := sheetsDict[travail.IdSheet]
+		if !sheet.IsVisibleBy(userID) {
+			delete(travauxDict, id)
+		}
 	}
 
 	loader, err := newSheetsLoader(ct.db, sheetsDict.IDs())

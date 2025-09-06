@@ -75,7 +75,7 @@ func TestCRUDSheet(t *testing.T) {
 	qu := sample.question
 	ct := NewController(db.DB, teacher.Teacher{Id: userID}, pass.Encrypter{})
 
-	l, err := ct.getSheets(userID, teacher.Mathematiques)
+	l, err := ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 0)
 	tu.Assert(t, len(l.Travaux) == 1) // one per classroom
@@ -103,11 +103,11 @@ func TestCRUDSheet(t *testing.T) {
 	_, err = ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: qu.Id}, userID)
 	tu.AssertNoErr(t, err)
 
-	l, err = ct.getSheets(userID, teacher.Francais)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Francais)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 0)
 
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 1)
 	tu.Assert(t, len(l.Travaux) == 1)
@@ -116,7 +116,7 @@ func TestCRUDSheet(t *testing.T) {
 	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
 
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 1)
 
@@ -124,12 +124,12 @@ func TestCRUDSheet(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Sheet.Id != sh.Id)
 
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 2)
 
 	_, err = ct.copyTravailTo(CopyTravailIn{IdTravail: tr.Id, IdClassroom: class.Id}, userID)
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 2)
 
@@ -140,20 +140,20 @@ func TestCRUDSheet(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out2.Sheet.Sheet.Anonymous.ID == out2.Travail.Id)
 
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 2)
 
 	_, err = ct.copyTravailTo(CopyTravailIn{out2.Travail.Id, class.Id}, userID)
 	tu.AssertNoErr(t, err)
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 3) // anonymous sheet is duplicated
 
 	err = ct.deleteTravail(out2.Travail.Id, userID)
 	tu.AssertNoErr(t, err)
 
-	l, err = ct.getSheets(userID, teacher.Mathematiques)
+	l, err = ct.getSheetsAndTravaux(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 2) // anonymous sheet deleted by cascade
 }
@@ -336,4 +336,32 @@ func insertProgression(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent
 	}
 	err = tx.Commit()
 	return err
+}
+
+func TestTravauxMultiTeacher(t *testing.T) {
+	// https://github.com/benoitkugler/maths-online/issues/396
+	db, sp := setupDB(t)
+	defer db.Remove()
+
+	ct := NewController(db.DB, teacher.Teacher{Id: 10000}, pass.Encrypter{})
+
+	tc2, err := teacher.Teacher{Mail: "ze", FavoriteMatiere: teacher.Mathematiques}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = teacher.TeacherClassroom{IdTeacher: tc2.Id, IdClassroom: sp.class.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	// create travail by two teachers
+	_, err = ct.createTravail(sp.class.Id, sp.userID)
+	tu.AssertNoErr(t, err)
+	_, err = ct.createTravail(sp.class.Id, tc2.Id)
+	tu.AssertNoErr(t, err)
+
+	// check that only our own work is showed
+	out, err := ct.getSheetsAndTravaux(sp.userID, teacher.Mathematiques)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Travaux) == 1 && len(out.Travaux[0].Travaux) == 1)
+	out, err = ct.getSheetsAndTravaux(tc2.Id, teacher.Mathematiques)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Travaux) == 1 && len(out.Travaux[0].Travaux) == 1)
 }
