@@ -166,23 +166,49 @@
             @update:model-value="emit('update', inner)"
           ></v-select>
         </v-col>
-        <v-col>
-          <v-select
-            variant="outlined"
-            density="compact"
-            hide-details
-            :items="[
-              { title: '5 secondes', value: 5 },
-              { title: '10 secondes', value: 10 },
-              { title: '15 secondes', value: 15 },
-              { title: '30 secondes', value: 30 },
-              { title: '60 secondes', value: 60 },
-              { title: 'Aucune limite', value: 0 },
-            ]"
-            label="Limite de temps par question"
-            v-model="inner.QuestionTimeLimit"
-            @update:model-value="emit('update', inner)"
-          ></v-select>
+        <v-col align-self="center">
+          <v-menu :close-on-content-click="false" v-model="showEditTimeLimit">
+            <template #activator="{ props: menuProps }">
+              <v-chip
+                variant="outlined"
+                label
+                v-bind="menuProps"
+                @click="editedTimeLimit = inner.QuestionTimeLimit"
+                >Limite de temps par question :
+                {{
+                  inner.QuestionTimeLimit > 0
+                    ? `${inner.QuestionTimeLimit} secs.`
+                    : "Aucune"
+                }}</v-chip
+              >
+            </template>
+            <v-card>
+              <v-card-text>
+                <v-combobox
+                  variant="outlined"
+                  density="compact"
+                  label="Limite"
+                  v-model.number="editedTimeLimit"
+                  suffix="secondes"
+                  hint="0 pour ne pas limiter."
+                  persistent-hint
+                  :items="[5, 10, 15, 20, 30, 60, 0]"
+                ></v-combobox>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  @click="
+                    showEditTimeLimit = false;
+                    inner.QuestionTimeLimit = editedTimeLimit;
+                    emit('update', inner);
+                  "
+                  :disabled="isNaN(Number(editedTimeLimit))"
+                  >Enregistrer</v-btn
+                >
+              </v-card-actions>
+            </v-card>
+          </v-menu>
         </v-col>
       </v-row>
     </v-card-text>
@@ -198,6 +224,7 @@ import {
   type Travail,
   IdClassroom,
   QuestionRepeatLabels,
+  Int,
 } from "@/controller/api_gen";
 import { computed, ref, watch } from "vue";
 import PreviewSheet from "./PreviewSheet.vue";
@@ -248,4 +275,7 @@ const color = computed(() => {
   const end = new Date(inner.value.Deadline);
   return start <= now && now <= end ? "blue-lighten-2" : baseColor;
 });
+
+const editedTimeLimit = ref(0 as Int);
+const showEditTimeLimit = ref(false);
 </script>
