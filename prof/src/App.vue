@@ -118,7 +118,10 @@
     </v-app-bar>
 
     <v-main :class="{ 'background-logo': !isLoggedIn }">
-      <loggin-screen v-if="!isLoggedIn" @loggin="onLoggin"></loggin-screen>
+      <loggin-screen
+        v-if="!isLoggedIn && !resetPassword"
+        @loggin="onLoggin"
+      ></loggin-screen>
       <router-view v-else v-slot="{ Component }">
         <transition>
           <keep-alive>
@@ -156,10 +159,10 @@
 
 <script setup lang="ts">
 import logoSrc from "@/assets/logo.png";
-import { useRoute } from "vue-router";
-import { controller, IsDev } from "./controller/controller";
+import { useRoute, useRouter } from "vue-router";
+import { controller } from "./controller/controller";
 import LogginScreen from "./views/LogginScreen.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { computed } from "vue";
 
 const showSideBar = ref(false);
@@ -181,10 +184,23 @@ controller.showMessage = (s, color) => {
   messageColor.value = color || "success";
 };
 
-const isLoggedIn = ref(IsDev);
+const isLoggedIn = ref(false);
 
 const route = useRoute();
+const router = useRouter();
 const appBarDense = computed(() => route.name != "home");
+
+onMounted(handleQuery);
+
+const resetPassword = ref(false);
+
+async function handleQuery() {
+  await router.isReady();
+  if (route.path.includes("reset-password")) {
+    resetPassword.value = true;
+    isLoggedIn.value = false;
+  }
+}
 
 function onLoggin() {
   isLoggedIn.value = true;

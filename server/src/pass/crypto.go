@@ -126,7 +126,7 @@ func (key Encrypter) DecryptID(enc EncryptedID) (int64, error) {
 
 // EncryptJSON marshals `data`, encrypts and espace
 // using `base64.RawURLEncoding`
-func (pass Encrypter) EncryptJSON(data interface{}) (string, error) {
+func (pass Encrypter) EncryptJSON(data any) (string, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return "", err
@@ -140,7 +140,7 @@ func (pass Encrypter) EncryptJSON(data interface{}) (string, error) {
 
 // DecryptJSON performs the reverse operation of EncryptJSON,
 // storing the data into `dst`
-func (pass Encrypter) DecryptJSON(data string, dst interface{}) error {
+func (pass Encrypter) DecryptJSON(data string, dst any) error {
 	b, err := base64.RawURLEncoding.DecodeString(data)
 	if err != nil {
 		return err

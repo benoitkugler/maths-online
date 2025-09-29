@@ -15,14 +15,13 @@
   <v-dialog v-model="showResetDone" max-width="600px">
     <v-card>
       <v-card-title class="bg-info"
-        >Réinitialisation du mot de passe</v-card-title
+        >Ré-initialisation du mot de passe</v-card-title
       >
       <v-card-text>
-        Un mail contenant votre nouveau mot de passe a été envoyé à l'adresse
+        Un mail contenant un lien de ré-initialisation a été envoyé à l'adresse
         <div style="text-align: center">
           <i>{{ mail }}</i>
         </div>
-        Vous pourrez le modifier via le pannel de réglages de votre compte.
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -252,7 +251,7 @@ async function connection() {
 
 const showResetDone = ref(false);
 async function resetPassword() {
-  const res = await controller.TeacherResetPassword({ mail: mail.value });
+  const res = await controller.TeacherSendResetPassword({ mail: mail.value });
   if (res == undefined) return;
   showResetDone.value = true;
 }

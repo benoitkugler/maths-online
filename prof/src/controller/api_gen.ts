@@ -1777,17 +1777,17 @@ export const MatiereTag = {
 export type MatiereTag = (typeof MatiereTag)[keyof typeof MatiereTag];
 
 export const MatiereTagLabels: Record<MatiereTag, string> = {
-  [MatiereTag.Allemand]: "",
-  [MatiereTag.Anglais]: "",
-  [MatiereTag.Autre]: "",
-  [MatiereTag.Espagnol]: "",
-  [MatiereTag.Francais]: "",
-  [MatiereTag.HistoireGeo]: "",
-  [MatiereTag.Italien]: "",
-  [MatiereTag.Mathematiques]: "",
-  [MatiereTag.PhysiqueChimie]: "",
-  [MatiereTag.SES]: "",
-  [MatiereTag.SVT]: "",
+  [MatiereTag.Allemand]: "ALLEMAND",
+  [MatiereTag.Anglais]: "ANGLAIS",
+  [MatiereTag.Autre]: "AUTRE",
+  [MatiereTag.Espagnol]: "ESPAGNOL",
+  [MatiereTag.Francais]: "FRANCAIS",
+  [MatiereTag.HistoireGeo]: "HISTOIRE-GEO",
+  [MatiereTag.Italien]: "ITALIEN",
+  [MatiereTag.Mathematiques]: "MATHS",
+  [MatiereTag.PhysiqueChimie]: "PHYSIQUE",
+  [MatiereTag.SES]: "SES",
+  [MatiereTag.SVT]: "SVT",
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Student
@@ -1933,14 +1933,29 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** TeacherResetPassword performs the request and handles the error */
-  async TeacherResetPassword(params: { mail: string }) {
-    const fullUrl = this.baseURL + "/api/prof/reset";
+  /** TeacherSendResetPassword performs the request and handles the error */
+  async TeacherSendResetPassword(params: { mail: string }) {
+    const fullUrl = this.baseURL + "/api/prof/send-reset";
     this.startRequest();
     try {
       await Axios.get(fullUrl, {
         headers: this.getHeaders(),
         params: { mail: params["mail"] },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** TeacherResetPassword performs the request and handles the error */
+  async TeacherResetPassword(params: { seal: string; password: string }) {
+    const fullUrl = this.baseURL + "/api/prof/reset";
+    this.startRequest();
+    try {
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { seal: params["seal"], password: params["password"] },
       });
       return true;
     } catch (error) {

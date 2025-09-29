@@ -60,10 +60,12 @@ func TestResetPassword(t *testing.T) {
 	sm, err := pass.NewSMTP()
 	tu.AssertNoErr(t, err)
 
+	enc := pass.Encrypter{4, 5, 6, 7, 8, 9}
+
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql")
 	defer db.Remove()
 
-	ct := Controller{db: db.DB, host: "isyro.fr", smtp: sm}
+	ct := Controller{db: db.DB, host: "localhost:3000", smtp: sm, teacherKey: enc}
 	teach := tc.Teacher{
 		Mail:            "dummy@free.fr",
 		FavoriteMatiere: tc.Mathematiques,
@@ -71,7 +73,7 @@ func TestResetPassword(t *testing.T) {
 	teach, err = teach.Insert(ct.db)
 	tu.AssertNoErr(t, err)
 
-	err = ct.resetPassword("dummy@free.fr")
+	err = ct.sendResetPassword("dummy@free.fr")
 	tu.AssertNoErr(t, err)
 }
 

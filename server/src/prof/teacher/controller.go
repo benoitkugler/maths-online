@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/mail"
 	"strings"
+	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
@@ -233,33 +234,23 @@ func (ct *Controller) Loggin(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// TeacherResetPassword generates a new password for the given account
-// and sends it by email.
-func (ct *Controller) TeacherResetPassword(c echo.Context) error {
+// TeacherSendResetPassword sends an email with a (secure) URL
+// to reset the password.
+func (ct *Controller) TeacherSendResetPassword(c echo.Context) error {
 	mail := c.QueryParam("mail")
-	err := ct.resetPassword(mail)
+	err := ct.sendResetPassword(mail)
 	if err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
-func (ct *Controller) emailResetPassword(newPassword string) string {
-	url := utils.BuildUrl(ct.host, "prof", nil)
-	return fmt.Sprintf(`
-	Bonjour, <br/><br/>
-
-	Vous avez demandé la ré-initialisation de votre mot de passe Isyro. Votre nouveau mot de passe est : <br/>
-	<b>%s</b> <br/><br/>
-
-	Après vous être <a href="%s">connecté</a>, vous pourrez le modifier dans vos réglages.<br/><br/>
-
-	Bonne création pédagogique ! <br/><br/>
-
-	L'équipe Isyro`, newPassword, url)
+type resetPasswordArgs struct {
+	IdTeacher tc.IdTeacher
+	Emitted   time.Time
 }
 
-func (ct *Controller) resetPassword(mail string) error {
+func (ct *Controller) sendResetPassword(mail string) error {
 	row := ct.db.QueryRow("SELECT * FROM teachers WHERE mail = $1", mail)
 	teacher, err := tc.ScanTeacher(row)
 	if err == sql.ErrNoRows {
@@ -268,21 +259,62 @@ func (ct *Controller) resetPassword(mail string) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	// generate a new password
-	newPassword := utils.RandomString(true, 8)
-	teacher.PasswordCrypted = ct.teacherKey.EncryptPassword(newPassword)
-	_, err = teacher.Update(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
 
 	// send it by email
-	mailText := ct.emailResetPassword(newPassword)
+	args := resetPasswordArgs{teacher.Id, time.Now()}
+	seal, err := ct.teacherKey.EncryptJSON(args)
+	if err != nil {
+		return err
+	}
+	url := utils.BuildUrl(ct.host, "prof/reset-password", map[string]string{"seal": seal})
+	mailText := fmt.Sprintf(`
+	Bonjour, <br/><br/>
+
+	Vous avez demandé la ré-initialisation de votre mot de passe Isyro. Pour cela, veuillez suivre ce lien : <br/>
+	<a href="%s">%s</a> <br/><br/>
+
+	Vous pourrez y choisir votre nouveau mot de passe.<br/><br/>
+
+	Bonne création pédagogique ! <br/><br/>
+
+	L'équipe Isyro`, url, url)
+
 	err = mailer.SendMail(ct.smtp, []string{mail}, "Changement de mot de passe", mailText)
 	if err != nil {
 		return fmt.Errorf("Erreur interne (%s)", err)
 	}
 
+	return nil
+}
+
+func (ct *Controller) TeacherResetPassword(c echo.Context) error {
+	seal := c.QueryParam("seal")
+	password := c.QueryParam("password")
+	var args resetPasswordArgs
+	err := ct.teacherKey.DecryptJSON(seal, &args)
+	if err != nil {
+		return err
+	}
+	err = ct.resetPassword(args, password)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) resetPassword(args resetPasswordArgs, newPassword string) error {
+	if time.Since(args.Emitted) > time.Hour {
+		return errors.New("Le lien a expiré.")
+	}
+	teacher, err := tc.SelectTeacher(ct.db, args.IdTeacher)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	teacher.PasswordCrypted = ct.teacherKey.EncryptPassword(newPassword)
+	_, err = teacher.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
 	return nil
 }
 

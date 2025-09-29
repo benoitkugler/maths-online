@@ -8,6 +8,7 @@ import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import HomeViewVue from "@/views/HomeView.vue";
 import CeinturesActivityVue from "@/views/CeinturesActivity.vue";
 import { createRouter, createWebHistory } from "vue-router";
+import ResetPasswordVue from "@/views/ResetPassword.vue";
 
 const router = createRouter({
   history: createWebHistory("/prof/"),
@@ -17,12 +18,6 @@ const router = createRouter({
       name: "home",
       component: HomeViewVue,
       meta: { Label: "Accueil" },
-    },
-    {
-      path: "/settings",
-      name: "settings",
-      component: SettingsPanelVue,
-      meta: { Label: "Paramètres" },
     },
     {
       path: "/classrooms",
@@ -65,6 +60,18 @@ const router = createRouter({
       name: "reviews",
       component: ReviewListVue,
       meta: { Label: "Publications" },
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsPanelVue,
+      meta: { Label: "Paramètres" },
+    },
+    {
+      path: "/reset-password",
+      name: "resetPassword",
+      component: ResetPasswordVue,
+      meta: { Label: "Mot de passe oublié" },
     },
     // {
     //   path: '/about',
