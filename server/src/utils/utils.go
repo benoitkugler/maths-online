@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math/rand"
+	"mime"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -80,14 +82,24 @@ func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 	return nil
 }
 
-// QueryParamInt64 parse the query param `name` to an int64
+// QueryParamInt64 parse the query param `name` to an int64.
+// Deprecated: use QueryParamInt instead
 func QueryParamInt64(c echo.Context, name string) (int64, error) {
-	idS := c.QueryParam(name)
-	id, err := strconv.ParseInt(idS, 10, 64)
+	return QueryParamInt[int64](c, name)
+}
+
+// parseInt parse [v] to an int
+func parseInt[T interface{ ~int64 | int }](v string) (T, error) {
+	id, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid ID parameter %s : %s", idS, err)
+		return 0, fmt.Errorf("invalid ID parameter %s : %s", v, err)
 	}
-	return id, nil
+	return T(id), nil
+}
+
+// QueryParamInt parse the query param `name` to an int
+func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
+	return parseInt[T](c.QueryParam(name))
 }
 
 // QueryParamBool parse the query param `name` to a boolean
@@ -222,4 +234,14 @@ func (s Set[T]) Keys() []T {
 		out = append(out, k)
 	}
 	return out
+}
+
+// SetBlobHeader sets Content-Disposition and Content-Length headers
+// and returns the mime type
+func SetBlobHeader(c echo.Context, content []byte, name string) string {
+	u := url.URL{Path: name}
+	name = u.String()
+	c.Response().Header().Set("Content-Disposition", "attachment; filename="+name)
+	c.Response().Header().Set("Content-Length", strconv.Itoa(len(content)))
+	return mime.TypeByExtension(path.Ext(name))
 }

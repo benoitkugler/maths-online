@@ -21,6 +21,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	e.GET("/api/prof/send-reset", tc.TeacherSendResetPassword)
 	e.GET("/api/prof/reset", tc.TeacherResetPassword)
 
+	e.GET("/api/prof/classrooms/students-csv", tc.TeacherExportStudentsAdvance, tc.JWTMiddlewareForQuery()) // url-only
+
 	gr := e.Group("", tc.JWTMiddleware())
 
 	// settings
@@ -35,6 +37,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/classrooms/invite", tc.TeacherInviteTeacherToClassroom)
 
 	gr.GET("/api/prof/classrooms/students", tc.TeacherGetClassroomStudents)
+
 	gr.PUT("/api/prof/classrooms/students", tc.TeacherAddStudent)
 	gr.POST("/api/prof/classrooms/students", tc.TeacherUpdateStudent)
 	gr.DELETE("/api/prof/classrooms/students", tc.TeacherDeleteStudent)

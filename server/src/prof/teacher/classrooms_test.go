@@ -66,22 +66,19 @@ func Test_importPronoteFile(t *testing.T) {
 	}
 
 	ct := Controller{db: db.DB}
-	classroom, err := tc.Classroom{}.Insert(db)
+	classroom, err := tc.Classroom{Name: "TEST"}.Insert(db)
 	tu.AssertNoErr(t, err)
-
-	defer tc.DeleteClassroomById(db, classroom.Id)
 
 	err = ct.importPronoteFile(f, classroom.Id)
 	tu.AssertNoErr(t, err)
 
 	out, err := ct.getClassroomStudents(classroom)
 	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out) == 31)
 
-	if len(out) != 31 {
-		t.Fatal(len(out))
-	}
-
-	tc.DeleteStudentsByIdClassrooms(db, classroom.Id)
+	_, fn, err := ct.exportStudentsAdvance(classroom)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, fn == "Succès TEST.csv")
 }
 
 func TestClassroomsCRUD(t *testing.T) {

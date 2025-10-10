@@ -1,6 +1,7 @@
 package teacher
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -342,6 +343,56 @@ func (ct *Controller) getClassroomStudents(classroom tc.Classroom) ([]StudentExt
 	// data is sorted client side, to handle new profiles
 
 	return out, nil
+}
+
+// TeacherExportStudentsAdvance returns a .CSV file with students advance
+func (ct *Controller) TeacherExportStudentsAdvance(c echo.Context) error {
+	userID := JWTTeacher(c)
+
+	idClassroom, err := utils.QueryParamInt[tc.IdClassroom](c, "id-classroom")
+	if err != nil {
+		return err
+	}
+
+	// check the access
+	classroom, err := ct.checkAcces(userID, idClassroom)
+	if err != nil {
+		return err
+	}
+
+	file, filename, err := ct.exportStudentsAdvance(classroom)
+	if err != nil {
+		return err
+	}
+	mimeType := utils.SetBlobHeader(c, file, filename)
+	return c.Blob(200, mimeType, file)
+}
+
+func (ct *Controller) exportStudentsAdvance(classroom tc.Classroom) ([]byte, string, error) {
+	list, err := ct.getClassroomStudents(classroom)
+	if err != nil {
+		return nil, "", err
+	}
+
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+	err = w.Write([]string{"Elève", "Points de succès"})
+	if err != nil {
+		return nil, "", err
+	}
+	for _, student := range list {
+		err = w.Write([]string{fmt.Sprintf("%s %s", student.Student.Name, student.Student.Surname), strconv.Itoa(student.Success.TotalPoints)})
+		if err != nil {
+			return nil, "", err
+		}
+	}
+	w.Flush()
+	if err = w.Error(); err != nil {
+		return nil, "", err
+	}
+	content := buf.Bytes()
+	filename := fmt.Sprintf("Succès %s.csv", classroom.Name)
+	return content, filename, nil
 }
 
 // split NAME NAME Surname into NAME NAME ; Surname

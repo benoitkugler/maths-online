@@ -1963,6 +1963,15 @@ export abstract class AbstractAPI {
     }
   }
 
+  /** Returns an URL */
+  TeacherExportStudentsAdvance(id_classroom: IdClassroom, token: string) {
+    return (
+      this.baseURL +
+      "/api/prof/classrooms/students-csv" +
+      `?id-classroom=${id_classroom}&token=${token}`
+    );
+  }
+
   /** TeacherGetSettings performs the request and handles the error */
   async TeacherGetSettings() {
     const fullUrl = this.baseURL + "/api/prof/settings";

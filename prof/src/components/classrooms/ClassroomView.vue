@@ -4,108 +4,6 @@
     :title="props.classroom.name"
     subtitle="Liste des élèves"
   >
-    <v-dialog
-      :model-value="studentToDelete != null"
-      @update:model-value="studentToDelete = null"
-      :retain-focus="false"
-      max-width="800px"
-    >
-      <v-card title="Confirmer la suppression" v-if="studentToDelete != null">
-        <v-card-text>
-          Confirmez-vous la suppression du profile élève
-          <i>{{ studentToDelete.Surname }} {{ studentToDelete.Name }}</i> ?
-          <br />
-          Toute progression sera supprimée, et cette action est irréversible.
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="studentToDelete = null" color="warning">Retour</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="deleteStudent" color="red">Supprimer le profile</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog
-      :model-value="studentToUpdate != null"
-      @update:model-value="studentToUpdate = null"
-      :retain-focus="false"
-      max-width="600"
-    >
-      <v-card title="Modifier le profil" v-if="studentToUpdate != null">
-        <v-card-text>
-          <v-text-field
-            variant="outlined"
-            density="compact"
-            label="Nom"
-            v-model="studentToUpdate.Name"
-          ></v-text-field>
-          <v-text-field
-            variant="outlined"
-            density="compact"
-            label="Prénom"
-            v-model="studentToUpdate.Surname"
-          ></v-text-field>
-          <DateField
-            v-model="studentToUpdate.Birthday"
-            label="Date de naissance"
-          >
-          </DateField>
-          <v-list>
-            <v-list-subheader>
-              {{
-                studentToUpdate.Clients?.length
-                  ? "Appareils connectés"
-                  : "Aucun appareil connecté"
-              }}
-            </v-list-subheader>
-            <v-list-item
-              v-for="(client, i) in studentToUpdate.Clients"
-              :key="i"
-              :title="client.Device || 'Appareil inconnu'"
-              :subtitle="`le ${formatTime(client.Time, true)}`"
-            ></v-list-item>
-          </v-list>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="studentToUpdate = null" color="warning">Retour</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="updateStudent" color="success">Modifier</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="showUploadFile" :retain-focus="false" max-width="700px">
-      <v-card
-        title="Importer une liste"
-        subtitle="Les élèves seront ajoutés à la liste courante."
-      >
-        <v-card-text>
-          <v-file-input
-            label="Liste"
-            hint="Fichier CSV généré par Pronote."
-            v-model="uploadedFile"
-            show-size
-            :multiple="false"
-            variant="underlined"
-            persistent-hint
-          >
-          </v-file-input>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="showUploadFile = false" color="warning">Retour</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="success"
-            @click="importStudents"
-            variant="text"
-            :disabled="!uploadedFile.length"
-          >
-            Importer
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
     <template v-slot:append>
       <v-btn
         class="mx-2"
@@ -128,6 +26,19 @@
       >
         <v-icon icon="mdi-upload" color="success"></v-icon>
         Importer
+      </v-btn>
+      <v-divider vertical></v-divider>
+      <v-btn
+        class="mx-2"
+        :href="
+          controller.TeacherExportStudentsAdvance(
+            props.classroom.id,
+            controller.getToken()
+          )
+        "
+      >
+        <v-icon icon="mdi-download" color="success"></v-icon>
+        Exporter
       </v-btn>
 
       <v-btn icon flat class="mx-2" @click="emit('closed')">
@@ -245,6 +156,108 @@
         </v-list-item>
       </v-list>
     </v-card-text>
+
+    <v-dialog
+      :model-value="studentToDelete != null"
+      @update:model-value="studentToDelete = null"
+      :retain-focus="false"
+      max-width="800px"
+    >
+      <v-card title="Confirmer la suppression" v-if="studentToDelete != null">
+        <v-card-text>
+          Confirmez-vous la suppression du profile élève
+          <i>{{ studentToDelete.Surname }} {{ studentToDelete.Name }}</i> ?
+          <br />
+          Toute progression sera supprimée, et cette action est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="studentToDelete = null" color="warning">Retour</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="deleteStudent" color="red">Supprimer le profile</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="studentToUpdate != null"
+      @update:model-value="studentToUpdate = null"
+      :retain-focus="false"
+      max-width="600"
+    >
+      <v-card title="Modifier le profil" v-if="studentToUpdate != null">
+        <v-card-text>
+          <v-text-field
+            variant="outlined"
+            density="compact"
+            label="Nom"
+            v-model="studentToUpdate.Name"
+          ></v-text-field>
+          <v-text-field
+            variant="outlined"
+            density="compact"
+            label="Prénom"
+            v-model="studentToUpdate.Surname"
+          ></v-text-field>
+          <DateField
+            v-model="studentToUpdate.Birthday"
+            label="Date de naissance"
+          >
+          </DateField>
+          <v-list>
+            <v-list-subheader>
+              {{
+                studentToUpdate.Clients?.length
+                  ? "Appareils connectés"
+                  : "Aucun appareil connecté"
+              }}
+            </v-list-subheader>
+            <v-list-item
+              v-for="(client, i) in studentToUpdate.Clients"
+              :key="i"
+              :title="client.Device || 'Appareil inconnu'"
+              :subtitle="`le ${formatTime(client.Time, true)}`"
+            ></v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="studentToUpdate = null" color="warning">Retour</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="updateStudent" color="success">Modifier</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="showUploadFile" :retain-focus="false" max-width="700px">
+      <v-card
+        title="Importer une liste"
+        subtitle="Les élèves seront ajoutés à la liste courante."
+      >
+        <v-card-text>
+          <v-file-input
+            label="Liste"
+            hint="Fichier CSV généré par Pronote."
+            v-model="uploadedFile"
+            show-size
+            :multiple="false"
+            variant="underlined"
+            persistent-hint
+          >
+          </v-file-input>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="showUploadFile = false" color="warning">Retour</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="success"
+            @click="importStudents"
+            variant="text"
+            :disabled="!uploadedFile.length"
+          >
+            Importer
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -285,7 +298,7 @@ async function fetchStudents() {
   const res = await controller.TeacherGetClassroomStudents({
     "id-classroom": props.classroom.id,
   });
-  if (res == undefined) {
+  if (res === undefined) {
     return;
   }
 
