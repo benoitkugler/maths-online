@@ -156,13 +156,16 @@ class ExerciceController {
     final exP = exeAndProg;
     return List<QuestionStatus>.generate(exP.exercice.questions.length,
         (questionIndex) {
+      final isOneTry = questionRepeat == QuestionRepeat.oneTry;
       if (exP.progression.isQuestionCompleted(questionIndex)) {
-        return QuestionStatus.checked;
+        return isOneTry
+            ? QuestionStatus.corectAndLocked
+            : QuestionStatus.checked;
       }
 
       final alreadyTried =
           exP.progression.getQuestion(questionIndex).isNotEmpty;
-      if (questionRepeat == QuestionRepeat.oneTry && alreadyTried) {
+      if (isOneTry && alreadyTried) {
         // here we now the status is failed
         return QuestionStatus.incorrectAndLocked;
       }
@@ -196,7 +199,7 @@ class ExerciceController {
 
   bool get goToPreviousEnabled {
     if (_questionIndex == 0) return false;
-    if (questionStatus[_questionIndex - 1] == QuestionStatus.locked) {
+    if (questionStatus[_questionIndex - 1].hidden) {
       return false;
     }
     return true;
@@ -206,19 +209,7 @@ class ExerciceController {
     final currentIndex = _questionIndex;
     final hasNextQuestion = exeAndProg.exercice.questions.isNotEmpty &&
         currentIndex != exeAndProg.exercice.questions.length - 1;
-    // always allow to go to already done question
-    if (hasNextQuestion &&
-        questionStatus[currentIndex + 1] == QuestionStatus.checked) {
-      return true;
-    }
-    switch (exeAndProg.exercice.flow) {
-      case Flow
-            .sequencial: // do not show locked questions when exercice is not over
-        return (isExerciceOver() && hasNextQuestion) ||
-            currentIndex < exeAndProg.progression.nextQuestion;
-      case Flow.parallel: // no restriction:
-        return hasNextQuestion;
-    }
+    return hasNextQuestion && !questionStatus[currentIndex + 1].hidden;
   }
 }
 
@@ -380,8 +371,6 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
 }
 
 // display one question among the list.
-// include the list so that question may be
-// switched
 class _QuestionsRoute extends StatefulWidget {
   final ExerciceAPI api;
   final ExerciceController controller;
@@ -837,20 +826,7 @@ class _QuestionList extends StatelessWidget {
   }
 
   bool allowDoQuestion(int questionIndex) {
-    // if the question has been validated, always allow access
-    if (states[questionIndex] == QuestionStatus.checked) {
-      return true;
-    }
-    if (states[questionIndex] == QuestionStatus.incorrectAndLocked) {
-      return false;
-    }
-
-    switch (data.exercice.flow) {
-      case Flow.sequencial:
-        return data.progression.nextQuestion == questionIndex;
-      case Flow.parallel:
-        return true;
-    }
+    return !states[questionIndex].hidden;
   }
 
   @override
@@ -881,19 +857,29 @@ class _QuestionList extends StatelessWidget {
   }
 }
 
-enum QuestionStatus { locked, checked, toDo, incorrect, incorrectAndLocked }
+enum QuestionStatus {
+  locked,
+  checked,
+  toDo,
+  incorrect,
+  corectAndLocked,
+  incorrectAndLocked
+}
 
 extension on QuestionStatus {
-  bool get answerDisabled =>
+  bool get hidden =>
       this == QuestionStatus.locked ||
-      this == QuestionStatus.checked ||
+      this == QuestionStatus.corectAndLocked ||
       this == QuestionStatus.incorrectAndLocked;
+
+  bool get answerDisabled => hidden || this == QuestionStatus.checked;
 
   Icon get icon {
     switch (this) {
       case QuestionStatus.locked:
         return const Icon(Icons.lock, color: Colors.grey);
       case QuestionStatus.checked:
+      case QuestionStatus.corectAndLocked:
         return const Icon(Icons.check, color: Colors.green);
       case QuestionStatus.toDo:
         return const Icon(Icons.assignment, color: Colors.purpleAccent);

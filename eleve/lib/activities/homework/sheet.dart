@@ -6,7 +6,6 @@ import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
-import 'package:eleve/types/src_sql_teacher.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 
@@ -236,6 +235,7 @@ class _SheetWState extends State<SheetW> {
                 child: _TaskList(
               widget.sheet.tasks,
               hasNotation,
+              widget.sheet.sheet.questionRepeat,
               (ex) => _startExercice(ex, isExpired),
               hasNotation ? _sandboxTask : _resetTask,
             )),
@@ -249,56 +249,20 @@ class _SheetWState extends State<SheetW> {
 class _TaskList extends StatelessWidget {
   final List<TaskProgressionHeader> tasks;
   final bool hasNotation;
+  final QuestionRepeat questionRepeat;
   final void Function(TaskProgressionHeader) onStart;
   final void Function(TaskProgressionHeader) onReset;
 
-  const _TaskList(this.tasks, this.hasNotation, this.onStart, this.onReset);
+  const _TaskList(this.tasks, this.hasNotation, this.questionRepeat,
+      this.onStart, this.onReset);
 
   @override
   Widget build(BuildContext context) {
     final children = tasks
         .map((task) => Padding(
             padding: const EdgeInsets.all(4.0),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4.0),
-                border: Border.all(color: Colors.lightBlue),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    dense: true,
-                    onTap: () => onStart(task),
-                    leading: getCompletion(task).icon,
-                    title: Text(task.title),
-                    subtitle: task.chapter.isEmpty ? null : Text(task.chapter),
-                    trailing: Text("${task.mark} / ${task.bareme}"),
-                  ),
-                  // when the exercice is completed,
-                  // allow the student to do it again :
-                  //  - by restarting its progression for free sheets
-                  //  - in sand box mode for noted ones
-                  if (getCompletion(task) == ExerciceCompletion.completed)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0, bottom: 4),
-                          child: ElevatedButton.icon(
-                              onPressed: () => onReset(task),
-                              icon: hasNotation
-                                  ? const Icon(Icons.assignment_add)
-                                  : const Icon(Icons.refresh),
-                              label: hasNotation
-                                  ? const Text("S'entrainer encore")
-                                  : const Text("Recommencer")),
-                        )
-                      ],
-                    )
-                ],
-              ),
-            )))
+            child: _TaskTile(task, questionRepeat,
+                onStart: onStart, onReset: onReset, hasNotation: hasNotation)))
         .toList();
 
     final total = sheetMark(tasks);
@@ -311,6 +275,69 @@ class _TaskList extends StatelessWidget {
           trailing: Text("${total.mark} / ${total.bareme}"),
         )
     ]);
+  }
+}
+
+class _TaskTile extends StatelessWidget {
+  const _TaskTile(
+    this.task,
+    this.questionRepeat, {
+    required this.onStart,
+    required this.onReset,
+    required this.hasNotation,
+  });
+
+  final TaskProgressionHeader task;
+  final QuestionRepeat questionRepeat;
+  final void Function(TaskProgressionHeader p1) onStart;
+  final void Function(TaskProgressionHeader p1) onReset;
+  final bool hasNotation;
+
+  @override
+  Widget build(BuildContext context) {
+    // retry is activated when the task is completed AND for unlimited tasks
+    final enableRetry = getCompletion(task) == ExerciceCompletion.completed &&
+        questionRepeat != QuestionRepeat.oneTry;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4.0),
+        border: Border.all(color: Colors.lightBlue),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            dense: true,
+            onTap: () => onStart(task),
+            leading: getCompletion(task).icon,
+            title: Text(task.title),
+            subtitle: task.chapter.isEmpty ? null : Text(task.chapter),
+            trailing: Text("${task.mark} / ${task.bareme}"),
+          ),
+          // when the exercice is completed,
+          // allow the student to do it again :
+          //  - by restarting its progression for free sheets
+          //  - in sand box mode for noted ones
+          if (enableRetry)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0, bottom: 4),
+                  child: ElevatedButton.icon(
+                      onPressed: () => onReset(task),
+                      icon: hasNotation
+                          ? const Icon(Icons.assignment_add)
+                          : const Icon(Icons.refresh),
+                      label: hasNotation
+                          ? const Text("S'entrainer encore")
+                          : const Text("Recommencer")),
+                )
+              ],
+            )
+        ],
+      ),
+    );
   }
 }
 
