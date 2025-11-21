@@ -1,5 +1,5 @@
-import 'package:eleve/activities/homework/exercice.dart';
 import 'package:eleve/activities/homework/homework.dart';
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/types/src.dart';
@@ -46,28 +46,53 @@ class _ExerciceAPI implements ExerciceAPI {
   final IdTask idTask;
   final IdTravail idTravail;
 
+  // last state registred on the server
+  StudentEvaluateTaskOut? lastRegistredState;
+
   _ExerciceAPI(this.api, this.idTask, this.idTravail);
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final res = await api.evaluateExercice(idTask, idTravail, params);
+    if (res.wasProgressionRegistred) {
+      lastRegistredState = res;
+    }
     return res.ex;
   }
 }
 
-class ExerciceDone extends Notification {}
+class SheetMarkNotification extends Notification {
+  final IdSheet idSheet;
+  final IdTask idTask;
+  final ProgressionExt? newProgression;
+  final int newMark;
 
-class SheetHome extends StatefulWidget {
+  const SheetMarkNotification(
+      this.idSheet, this.idTask, this.newProgression, this.newMark);
+
+  /// [applyTo] updates [tasks] in place
+  void applyTo(List<TaskProgressionHeader> tasks) {
+    final index = tasks.indexWhere((element) => element.id == idTask);
+    final current = tasks[index];
+    tasks[index] = current.copyWith(
+      hasProgression: newProgression != null,
+      progression: newProgression ?? const ProgressionExt([], 0),
+      mark: newMark,
+    );
+  }
+}
+
+class SheetW extends StatefulWidget {
   final HomeworkAPI api;
   final SheetProgression sheet;
 
-  const SheetHome(this.api, this.sheet, {super.key});
+  const SheetW(this.api, this.sheet, {super.key});
 
   @override
-  State<SheetHome> createState() => _SheetHomeState();
+  State<SheetW> createState() => _SheetWState();
 }
 
-class _SheetHomeState extends State<SheetHome> {
+class _SheetWState extends State<SheetW> {
   List<TaskProgressionHeader> tasks = [];
 
   @override
@@ -79,27 +104,25 @@ class _SheetHomeState extends State<SheetHome> {
   /// if [sandbox] is true, the progression is not updated on the client
   void _startExercice(TaskProgressionHeader task, bool sandbox) async {
     showDialog<void>(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => const Dialog(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Chargement de l'exercice...",
-                style: TextStyle(fontSize: 16),
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => const Dialog(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Chargement de l'exercice...",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    CircularProgressIndicator(),
+                  ],
+                ),
               ),
-              CircularProgressIndicator(),
-            ],
-          ),
-        ),
-      ),
-    );
+            ));
     final instantiatedExercice = await widget.api.loadWork(task.id);
     if (!mounted) return;
-
     Navigator.of(context).pop(); // remove the dialog
 
     // actually launch the exercice
@@ -113,23 +136,31 @@ class _SheetHomeState extends State<SheetHome> {
 
     // TODO: for now we always show a correction (when available)
     // we might want a setting to let the teacher choose to display it or not
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (context) => ExerciceStartRoute(
-          exeAPI,
-          exController,
-          showCorrectionButtonOnFail: true,
-          noticeSandbox: sandbox,
-          deadline: (hasNotation && !sandbox)
-              ? widget.sheet.sheet.deadline
-              : null,
-        ),
-      ),
-    );
+              exeAPI,
+              exController,
+              showCorrectionButtonOnFail: true,
+              noticeSandbox: sandbox,
+              deadline: (hasNotation && !sandbox)
+                  ? widget.sheet.sheet.deadline
+                  : null,
+            )));
     if (!mounted) return;
 
-    // inform the parent widget an update is required
-    ExerciceDone().dispatch(context);
+    if (exeAPI.lastRegistredState != null && !sandbox) {
+      final state = exeAPI.lastRegistredState!;
+      final notif = SheetMarkNotification(
+          widget.sheet.sheet.id, task.id, state.ex.progression, state.mark);
+
+      // locally update the task mark
+      setState(() {
+        notif.applyTo(tasks);
+      });
+
+      // inform the top level sheet widget of the modification
+      notif.dispatch(context);
+    }
   }
 
   void _resetTask(TaskProgressionHeader task) async {
@@ -139,12 +170,8 @@ class _SheetHomeState extends State<SheetHome> {
       showError("Impossible de recommencer la tâche.", e, context);
       return;
     }
-    final notif = SheetMarkNotification(
-      widget.sheet.sheet.id,
-      task.id,
-      null,
-      0,
-    );
+    final notif =
+        SheetMarkNotification(widget.sheet.sheet.id, task.id, null, 0);
     // locally update the task mark
     setState(() {
       notif.applyTo(tasks);
@@ -156,10 +183,9 @@ class _SheetHomeState extends State<SheetHome> {
   void _sandboxTask(TaskProgressionHeader task) async {
     // reset the progression
     task = task.copyWith(
-      hasProgression: false,
-      progression: const ProgressionExt([], 0),
-      mark: 0,
-    );
+        hasProgression: false,
+        progression: const ProgressionExt([], 0),
+        mark: 0);
     _startExercice(task, true);
   }
 
@@ -179,11 +205,8 @@ class _SheetHomeState extends State<SheetHome> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Center(
-                child: ColoredTitle(
-                  widget.sheet.sheet.title,
-                  Colors.blueAccent,
-                ),
-              ),
+                  child: ColoredTitle(
+                      widget.sheet.sheet.title, Colors.blueAccent)),
             ),
             if (hasNotation) ...[
               Padding(
@@ -193,9 +216,8 @@ class _SheetHomeState extends State<SheetHome> {
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
                     DeadlineCard(
-                      isExpired: isExpired,
-                      deadline: widget.sheet.sheet.deadline,
-                    ),
+                        isExpired: isExpired,
+                        deadline: widget.sheet.sheet.deadline),
                   ],
                 ),
               ),
@@ -205,20 +227,18 @@ class _SheetHomeState extends State<SheetHome> {
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      "La progression et les notes de cette fiche sont verrouillées, car sa date de rendu est dépassée.",
-                    ),
+                        "La progression et les notes de cette fiche sont verrouillées, car sa date de rendu est dépassée."),
                   ),
-                ),
+                )
             ],
             Expanded(
-              child: _TaskList(
-                widget.sheet.tasks,
-                hasNotation,
-                widget.sheet.sheet.questionRepeat,
-                (ex) => _startExercice(ex, isExpired),
-                hasNotation ? _sandboxTask : _resetTask,
-              ),
-            ),
+                child: _TaskList(
+              widget.sheet.tasks,
+              hasNotation,
+              widget.sheet.sheet.questionRepeat,
+              (ex) => _startExercice(ex, isExpired),
+              hasNotation ? _sandboxTask : _resetTask,
+            )),
           ],
         ),
       ),
@@ -233,43 +253,28 @@ class _TaskList extends StatelessWidget {
   final void Function(TaskProgressionHeader) onStart;
   final void Function(TaskProgressionHeader) onReset;
 
-  const _TaskList(
-    this.tasks,
-    this.hasNotation,
-    this.questionRepeat,
-    this.onStart,
-    this.onReset,
-  );
+  const _TaskList(this.tasks, this.hasNotation, this.questionRepeat,
+      this.onStart, this.onReset);
 
   @override
   Widget build(BuildContext context) {
     final children = tasks
-        .map(
-          (task) => Padding(
+        .map((task) => Padding(
             padding: const EdgeInsets.all(4.0),
-            child: _TaskTile(
-              task,
-              questionRepeat,
-              onStart: onStart,
-              onReset: onReset,
-              hasNotation: hasNotation,
-            ),
-          ),
-        )
+            child: _TaskTile(task, questionRepeat,
+                onStart: onStart, onReset: onReset, hasNotation: hasNotation)))
         .toList();
 
     final total = sheetMark(tasks);
-    return ListView(
-      children: [
-        ...children,
-        if (hasNotation)
-          // add the total score of the sheet
-          ListTile(
-            title: const Text("Total"),
-            trailing: Text("${total.mark} / ${total.bareme}"),
-          ),
-      ],
-    );
+    return ListView(children: [
+      ...children,
+      if (hasNotation)
+        // add the total score of the sheet
+        ListTile(
+          title: const Text("Total"),
+          trailing: Text("${total.mark} / ${total.bareme}"),
+        )
+    ]);
   }
 }
 
@@ -291,8 +296,7 @@ class _TaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // retry is activated when the task is completed AND for unlimited tasks
-    final enableRetry =
-        getCompletion(task) == ExerciceCompletion.completed &&
+    final enableRetry = getCompletion(task) == ExerciceCompletion.completed &&
         questionRepeat != QuestionRepeat.oneTry;
     return Container(
       decoration: BoxDecoration(
@@ -321,17 +325,16 @@ class _TaskTile extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0, bottom: 4),
                   child: ElevatedButton.icon(
-                    onPressed: () => onReset(task),
-                    icon: hasNotation
-                        ? const Icon(Icons.assignment_add)
-                        : const Icon(Icons.refresh),
-                    label: hasNotation
-                        ? const Text("S'entrainer encore")
-                        : const Text("Recommencer"),
-                  ),
-                ),
+                      onPressed: () => onReset(task),
+                      icon: hasNotation
+                          ? const Icon(Icons.assignment_add)
+                          : const Icon(Icons.refresh),
+                      label: hasNotation
+                          ? const Text("S'entrainer encore")
+                          : const Text("Recommencer")),
+                )
               ],
-            ),
+            )
         ],
       ),
     );
@@ -357,13 +360,9 @@ extension IconE on ExerciceCompletion {
         return const Icon(Icons.assessment);
       case ExerciceCompletion.started:
         return const Icon(
-          IconData(
-            0xf587,
-            fontFamily: 'MaterialIcons',
-            matchTextDirection: true,
-          ),
-          color: Colors.orange,
-        );
+            IconData(0xf587,
+                fontFamily: 'MaterialIcons', matchTextDirection: true),
+            color: Colors.orange);
       case ExerciceCompletion.completed:
         return const Icon(Icons.done, color: Colors.green);
     }
