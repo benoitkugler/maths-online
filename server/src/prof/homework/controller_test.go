@@ -210,6 +210,9 @@ func TestStudentSheets(t *testing.T) {
 	tu.Assert(t, len(sheets[1].Tasks) == 1)
 	tu.Assert(t, sheets[0].Sheet.Matiere == teacher.Mathematiques)
 
+	_, err = ct.getStudentTravail(student.Id, sheets[0].IdTravail)
+	tu.AssertNoErr(t, err)
+
 	// travaux are noted by default
 	sheets, err = ct.getStudentSheets(student.Id, false)
 	tu.AssertNoErr(t, err)

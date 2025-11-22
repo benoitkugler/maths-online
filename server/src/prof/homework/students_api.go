@@ -57,51 +57,34 @@ func (ct *Controller) StudentGetFreeTravaux(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) (out StudentSheets, err error) {
-	student, err := teacher.SelectStudent(ct.db, idStudent)
+// do not perform any filtering nor sorting
+func loadSheetProgressions(db ho.DB, idStudent teacher.IdStudent, travaux ho.Travails) ([]SheetProgression, error) {
+	sheets, err := ho.SelectSheets(db, travaux.IdSheets()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	travaux, err := ho.SelectTravailsByIdClassrooms(ct.db, student.IdClassroom)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	sheets, err := ho.SelectSheets(ct.db, travaux.IdSheets()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	links1, err := ho.SelectSheetTasksByIdSheets(ct.db, sheets.IDs()...)
+	links1, err := ho.SelectSheetTasksByIdSheets(db, sheets.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	sheetToTasks := links1.ByIdSheet()
 
 	// collect the student progressions
-	progMap, err := taAPI.LoadTasksProgression(ct.db, idStudent, links1.IdTasks())
+	progMap, err := taAPI.LoadTasksProgression(db, idStudent, links1.IdTasks())
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
 	// load the potential exceptions
-	links, err := ho.SelectTravailExceptionsByIdStudents(ct.db, idStudent)
+	links, err := ho.SelectTravailExceptionsByIdStudents(db, idStudent)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	excepts := links.ByIdTravail()
 
+	out := make([]SheetProgression, 0, len(travaux))
 	for _, travail := range travaux {
-		if travail.Noted != noted { // select noted / free travaux
-			continue
-		}
-
-		// check the start field
-		if time.Now().Before(time.Time(travail.ShowAfter)) { // hide the work for now
-			continue
-		}
-
 		var exp ho.TravailException
 		if l := excepts[travail.Id]; len(l) != 0 {
 			exp = l[0] // by design there is at most 1 entry for a student and travail
@@ -140,6 +123,35 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 			Tasks: taskList,
 		})
 	}
+	return out, nil
+}
+
+func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) (StudentSheets, error) {
+	student, err := teacher.SelectStudent(ct.db, idStudent)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	travaux, err := ho.SelectTravailsByIdClassrooms(ct.db, student.IdClassroom)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	for id, travail := range travaux {
+		if travail.Noted != noted { // select noted / free travaux
+			delete(travaux, id)
+		}
+
+		// check the start field
+		if time.Now().Before(time.Time(travail.ShowAfter)) { // hide the work for now
+			delete(travaux, id)
+		}
+	}
+
+	out, err := loadSheetProgressions(ct.db, idStudent, travaux)
+	if err != nil {
+		return nil, err
+	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Sheet.Id < out[j].Sheet.Id })
 	// for noted work, show the most recent first
@@ -150,6 +162,35 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 		})
 	}
 	return out, nil
+}
+
+func (ct *Controller) StudentLoadTravail(c echo.Context) error {
+	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
+	idStudent, err := ct.studentKey.DecryptID(idCrypted)
+	if err != nil {
+		return err
+	}
+	idTravail, err := utils.QueryParamInt[ho.IdTravail](c, "idTravail")
+	if err != nil {
+		return err
+	}
+	out, err := ct.getStudentTravail(teacher.IdStudent(idStudent), idTravail)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getStudentTravail(idStudent teacher.IdStudent, idTravail ho.IdTravail) (SheetProgression, error) {
+	travail, err := ho.SelectTravail(ct.db, idTravail)
+	if err != nil {
+		return SheetProgression{}, utils.SQLError(err)
+	}
+	out, err := loadSheetProgressions(ct.db, idStudent, ho.Travails{travail.Id: travail})
+	if err != nil {
+		return SheetProgression{}, err
+	}
+	return out[0], nil
 }
 
 func (ct *Controller) StudentInstantiateTask(c echo.Context) error {
