@@ -23,6 +23,6 @@ Map<String, dynamic> questionPageToJson(QuestionPage item) {
   return {
     "enonce": item.enonce,
     "parameters": item.parameters,
-    "correction": item.correction
+    "correction": item.correction,
   };
 }

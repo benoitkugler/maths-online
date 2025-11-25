@@ -19,15 +19,18 @@ class BezierCurve {
 
 BezierCurve bezierCurveFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return BezierCurve(coordFromJson(json['P0']), coordFromJson(json['P1']),
-      coordFromJson(json['P2']));
+  return BezierCurve(
+    coordFromJson(json['P0']),
+    coordFromJson(json['P1']),
+    coordFromJson(json['P2']),
+  );
 }
 
 Map<String, dynamic> bezierCurveToJson(BezierCurve item) {
   return {
     "P0": coordToJson(item.p0),
     "P1": coordToJson(item.p1),
-    "P2": coordToJson(item.p2)
+    "P2": coordToJson(item.p2),
   };
 }
 
@@ -47,7 +50,9 @@ class FunctionDecoration {
 FunctionDecoration functionDecorationFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return FunctionDecoration(
-      stringFromJson(json['Label']), stringFromJson(json['Color']));
+    stringFromJson(json['Label']),
+    stringFromJson(json['Color']),
+  );
 }
 
 Map<String, dynamic> functionDecorationToJson(FunctionDecoration item) {
@@ -69,14 +74,16 @@ class FunctionGraph {
 
 FunctionGraph functionGraphFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return FunctionGraph(functionDecorationFromJson(json['Decoration']),
-      listBezierCurveFromJson(json['Segments']));
+  return FunctionGraph(
+    functionDecorationFromJson(json['Decoration']),
+    listBezierCurveFromJson(json['Segments']),
+  );
 }
 
 Map<String, dynamic> functionGraphToJson(FunctionGraph item) {
   return {
     "Decoration": functionDecorationToJson(item.decoration),
-    "Segments": listBezierCurveToJson(item.segments)
+    "Segments": listBezierCurveToJson(item.segments),
   };
 }
 
@@ -95,14 +102,16 @@ class SequenceGraph {
 
 SequenceGraph sequenceGraphFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return SequenceGraph(functionDecorationFromJson(json['Decoration']),
-      listCoordFromJson(json['Points']));
+  return SequenceGraph(
+    functionDecorationFromJson(json['Decoration']),
+    listCoordFromJson(json['Points']),
+  );
 }
 
 Map<String, dynamic> sequenceGraphToJson(SequenceGraph item) {
   return {
     "Decoration": functionDecorationToJson(item.decoration),
-    "Points": listCoordToJson(item.points)
+    "Points": listCoordToJson(item.points),
   };
 }
 

@@ -2,7 +2,6 @@ import 'package:eleve/activities/homework/exercice.dart';
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/title.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
@@ -15,7 +14,7 @@ extension on TaskProgressionHeader {
     String? title,
     String? chapter,
     bool? hasProgression,
-    ProgressionExt? progression,
+    Progression? progression,
     int? mark,
     int? bareme,
   }) {
@@ -55,7 +54,10 @@ class _ExerciceAPI implements ExerciceAPI {
   }
 }
 
-class ExerciceDone extends Notification {}
+class TravailUpdated extends Notification {
+  final SheetProgression sheet;
+  TravailUpdated(this.sheet);
+}
 
 class SheetHome extends StatefulWidget {
   final HomeworkAPI api;
@@ -103,10 +105,10 @@ class _SheetHomeState extends State<SheetHome> {
     Navigator.of(context).pop(); // remove the dialog
 
     // actually launch the exercice
-    final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
     final exController = ExerciceController(
-      studentEx,
+      instantiatedExercice,
+      task.progression,
       widget.sheet.sheet.questionRepeat,
       widget.sheet.sheet.questionTimeLimit,
     );
@@ -128,38 +130,37 @@ class _SheetHomeState extends State<SheetHome> {
     );
     if (!mounted) return;
 
-    // inform the parent widget an update is required
-    ExerciceDone().dispatch(context);
+    _refreshTravail();
+  }
+
+  void _refreshTravail() async {
+    try {
+      final resp = await widget.api.loadTravail(widget.sheet.idTravail);
+      if (!mounted) return;
+
+      setState(() {
+        tasks = resp.tasks;
+      });
+      TravailUpdated(resp).dispatch(context);
+    } catch (e) {
+      if (!mounted) return;
+      showError("Impossible de charger les données", e, context);
+    }
   }
 
   void _resetTask(TaskProgressionHeader task) async {
     try {
       await widget.api.resetTask(widget.sheet.idTravail, task.id);
     } catch (e) {
+      if (!mounted) return;
       showError("Impossible de recommencer la tâche.", e, context);
       return;
     }
-    final notif = SheetMarkNotification(
-      widget.sheet.sheet.id,
-      task.id,
-      null,
-      0,
-    );
-    // locally update the task mark
-    setState(() {
-      notif.applyTo(tasks);
-    });
-    // inform the top level sheet widget of the modification
-    notif.dispatch(context);
   }
 
   void _sandboxTask(TaskProgressionHeader task) async {
     // reset the progression
-    task = task.copyWith(
-      hasProgression: false,
-      progression: const ProgressionExt([], 0),
-      mark: 0,
-    );
+    task = task.copyWith(hasProgression: false, progression: [], mark: 0);
     _startExercice(task, true);
   }
 
@@ -212,7 +213,7 @@ class _SheetHomeState extends State<SheetHome> {
             ],
             Expanded(
               child: _TaskList(
-                widget.sheet.tasks,
+                tasks,
                 hasNotation,
                 widget.sheet.sheet.questionRepeat,
                 (ex) => _startExercice(ex, isExpired),

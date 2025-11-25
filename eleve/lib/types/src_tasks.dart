@@ -22,14 +22,16 @@ class AnswerP {
 
 AnswerP answerPFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return AnswerP(paramsFromJson(json['Params']),
-      questionAnswersInFromJson(json['Answer']));
+  return AnswerP(
+    paramsFromJson(json['Params']),
+    questionAnswersInFromJson(json['Answer']),
+  );
 }
 
 Map<String, dynamic> answerPToJson(AnswerP item) {
   return {
     "Params": paramsToJson(item.params),
-    "Answer": questionAnswersInToJson(item.answer)
+    "Answer": questionAnswersInToJson(item.answer),
   };
 }
 
@@ -49,25 +51,31 @@ class EvaluateQuestionIn {
 EvaluateQuestionIn evaluateQuestionInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateQuestionIn(
-      answerPFromJson(json['Answer']), intFromJson(json['IdQuestion']));
+    answerPFromJson(json['Answer']),
+    intFromJson(json['IdQuestion']),
+  );
 }
 
 Map<String, dynamic> evaluateQuestionInToJson(EvaluateQuestionIn item) {
   return {
     "Answer": answerPToJson(item.answer),
-    "IdQuestion": intToJson(item.idQuestion)
+    "IdQuestion": intToJson(item.idQuestion),
   };
 }
 
 // github.com/benoitkugler/maths-online/server/src/tasks.EvaluateWorkIn
 class EvaluateWorkIn {
   final WorkID iD;
-  final ProgressionExt progression;
+  final Progression progression;
   final int answerIndex;
   final AnswerP answer;
 
   const EvaluateWorkIn(
-      this.iD, this.progression, this.answerIndex, this.answer);
+    this.iD,
+    this.progression,
+    this.answerIndex,
+    this.answer,
+  );
 
   @override
   String toString() {
@@ -78,18 +86,19 @@ class EvaluateWorkIn {
 EvaluateWorkIn evaluateWorkInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkIn(
-      workIDFromJson(json['ID']),
-      progressionExtFromJson(json['Progression']),
-      intFromJson(json['AnswerIndex']),
-      answerPFromJson(json['Answer']));
+    workIDFromJson(json['ID']),
+    progressionFromJson(json['Progression']),
+    intFromJson(json['AnswerIndex']),
+    answerPFromJson(json['Answer']),
+  );
 }
 
 Map<String, dynamic> evaluateWorkInToJson(EvaluateWorkIn item) {
   return {
     "ID": workIDToJson(item.iD),
-    "Progression": progressionExtToJson(item.progression),
+    "Progression": progressionToJson(item.progression),
     "AnswerIndex": intToJson(item.answerIndex),
-    "Answer": answerPToJson(item.answer)
+    "Answer": answerPToJson(item.answer),
   };
 }
 
@@ -101,7 +110,11 @@ class EvaluateWorkOut {
   final QuestionAnswersOut result;
 
   const EvaluateWorkOut(
-      this.progression, this.newQuestions, this.answerIndex, this.result);
+    this.progression,
+    this.newQuestions,
+    this.answerIndex,
+    this.result,
+  );
 
   @override
   String toString() {
@@ -112,10 +125,11 @@ class EvaluateWorkOut {
 EvaluateWorkOut evaluateWorkOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkOut(
-      progressionExtFromJson(json['Progression']),
-      listInstantiatedQuestionFromJson(json['NewQuestions']),
-      intFromJson(json['AnswerIndex']),
-      questionAnswersOutFromJson(json['Result']));
+    progressionExtFromJson(json['Progression']),
+    listInstantiatedQuestionFromJson(json['NewQuestions']),
+    intFromJson(json['AnswerIndex']),
+    questionAnswersOutFromJson(json['Result']),
+  );
 }
 
 Map<String, dynamic> evaluateWorkOutToJson(EvaluateWorkOut item) {
@@ -123,7 +137,7 @@ Map<String, dynamic> evaluateWorkOutToJson(EvaluateWorkOut item) {
     "Progression": progressionExtToJson(item.progression),
     "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions),
     "AnswerIndex": intToJson(item.answerIndex),
-    "Result": questionAnswersOutToJson(item.result)
+    "Result": questionAnswersOutToJson(item.result),
   };
 }
 
@@ -143,16 +157,20 @@ class InstantiatedBeltQuestion {
 
 InstantiatedBeltQuestion instantiatedBeltQuestionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return InstantiatedBeltQuestion(intFromJson(json['Id']),
-      questionFromJson(json['Question']), paramsFromJson(json['Params']));
+  return InstantiatedBeltQuestion(
+    intFromJson(json['Id']),
+    questionFromJson(json['Question']),
+    paramsFromJson(json['Params']),
+  );
 }
 
 Map<String, dynamic> instantiatedBeltQuestionToJson(
-    InstantiatedBeltQuestion item) {
+  InstantiatedBeltQuestion item,
+) {
   return {
     "Id": intToJson(item.id),
     "Question": questionToJson(item.question),
-    "Params": paramsToJson(item.params)
+    "Params": paramsToJson(item.params),
   };
 }
 
@@ -164,7 +182,11 @@ class InstantiatedQuestion {
   final Params params;
 
   const InstantiatedQuestion(
-      this.id, this.question, this.difficulty, this.params);
+    this.id,
+    this.question,
+    this.difficulty,
+    this.params,
+  );
 
   @override
   String toString() {
@@ -175,10 +197,11 @@ class InstantiatedQuestion {
 InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return InstantiatedQuestion(
-      intFromJson(json['Id']),
-      questionFromJson(json['Question']),
-      difficultyTagFromJson(json['Difficulty']),
-      paramsFromJson(json['Params']));
+    intFromJson(json['Id']),
+    questionFromJson(json['Question']),
+    difficultyTagFromJson(json['Difficulty']),
+    paramsFromJson(json['Params']),
+  );
 }
 
 Map<String, dynamic> instantiatedQuestionToJson(InstantiatedQuestion item) {
@@ -186,7 +209,7 @@ Map<String, dynamic> instantiatedQuestionToJson(InstantiatedQuestion item) {
     "Id": intToJson(item.id),
     "Question": questionToJson(item.question),
     "Difficulty": difficultyTagToJson(item.difficulty),
-    "Params": paramsToJson(item.params)
+    "Params": paramsToJson(item.params),
   };
 }
 
@@ -210,7 +233,12 @@ class InstantiatedWork {
   final List<int> baremes;
 
   const InstantiatedWork(
-      this.iD, this.title, this.flow, this.questions, this.baremes);
+    this.iD,
+    this.title,
+    this.flow,
+    this.questions,
+    this.baremes,
+  );
 
   @override
   String toString() {
@@ -221,11 +249,12 @@ class InstantiatedWork {
 InstantiatedWork instantiatedWorkFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return InstantiatedWork(
-      workIDFromJson(json['ID']),
-      stringFromJson(json['Title']),
-      flowFromJson(json['Flow']),
-      listInstantiatedQuestionFromJson(json['Questions']),
-      listIntFromJson(json['Baremes']));
+    workIDFromJson(json['ID']),
+    stringFromJson(json['Title']),
+    flowFromJson(json['Flow']),
+    listInstantiatedQuestionFromJson(json['Questions']),
+    listIntFromJson(json['Baremes']),
+  );
 }
 
 Map<String, dynamic> instantiatedWorkToJson(InstantiatedWork item) {
@@ -234,7 +263,7 @@ Map<String, dynamic> instantiatedWorkToJson(InstantiatedWork item) {
     "Title": stringToJson(item.title),
     "Flow": flowToJson(item.flow),
     "Questions": listInstantiatedQuestionToJson(item.questions),
-    "Baremes": listIntToJson(item.baremes)
+    "Baremes": listIntToJson(item.baremes),
   };
 }
 
@@ -249,9 +278,20 @@ dynamic paramsToJson(Params item) {
   return listVarEntryToJson(item);
 }
 
+// github.com/benoitkugler/maths-online/server/src/tasks.Progression
+typedef Progression = List<QuestionHistory>;
+
+Progression progressionFromJson(dynamic json) {
+  return listQuestionHistoryFromJson(json);
+}
+
+dynamic progressionToJson(Progression item) {
+  return listQuestionHistoryToJson(item);
+}
+
 // github.com/benoitkugler/maths-online/server/src/tasks.ProgressionExt
 class ProgressionExt {
-  final List<QuestionHistory> questions;
+  final Progression questions;
   final int nextQuestion;
 
   const ProgressionExt(this.questions, this.nextQuestion);
@@ -264,14 +304,16 @@ class ProgressionExt {
 
 ProgressionExt progressionExtFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return ProgressionExt(listQuestionHistoryFromJson(json['Questions']),
-      intFromJson(json['NextQuestion']));
+  return ProgressionExt(
+    progressionFromJson(json['Questions']),
+    intFromJson(json['NextQuestion']),
+  );
 }
 
 Map<String, dynamic> progressionExtToJson(ProgressionExt item) {
   return {
-    "Questions": listQuestionHistoryToJson(item.questions),
-    "NextQuestion": intToJson(item.nextQuestion)
+    "Questions": progressionToJson(item.questions),
+    "NextQuestion": intToJson(item.nextQuestion),
   };
 }
 
@@ -281,12 +323,19 @@ class TaskProgressionHeader {
   final String title;
   final String chapter;
   final bool hasProgression;
-  final ProgressionExt progression;
+  final Progression progression;
   final int mark;
   final int bareme;
 
-  const TaskProgressionHeader(this.id, this.title, this.chapter,
-      this.hasProgression, this.progression, this.mark, this.bareme);
+  const TaskProgressionHeader(
+    this.id,
+    this.title,
+    this.chapter,
+    this.hasProgression,
+    this.progression,
+    this.mark,
+    this.bareme,
+  );
 
   @override
   String toString() {
@@ -297,13 +346,14 @@ class TaskProgressionHeader {
 TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return TaskProgressionHeader(
-      intFromJson(json['Id']),
-      stringFromJson(json['Title']),
-      stringFromJson(json['Chapter']),
-      boolFromJson(json['HasProgression']),
-      progressionExtFromJson(json['Progression']),
-      intFromJson(json['Mark']),
-      intFromJson(json['Bareme']));
+    intFromJson(json['Id']),
+    stringFromJson(json['Title']),
+    stringFromJson(json['Chapter']),
+    boolFromJson(json['HasProgression']),
+    progressionFromJson(json['Progression']),
+    intFromJson(json['Mark']),
+    intFromJson(json['Bareme']),
+  );
 }
 
 Map<String, dynamic> taskProgressionHeaderToJson(TaskProgressionHeader item) {
@@ -312,9 +362,9 @@ Map<String, dynamic> taskProgressionHeaderToJson(TaskProgressionHeader item) {
     "Title": stringToJson(item.title),
     "Chapter": stringToJson(item.chapter),
     "HasProgression": boolToJson(item.hasProgression),
-    "Progression": progressionExtToJson(item.progression),
+    "Progression": progressionToJson(item.progression),
     "Mark": intToJson(item.mark),
-    "Bareme": intToJson(item.bareme)
+    "Bareme": intToJson(item.bareme),
   };
 }
 
@@ -334,13 +384,15 @@ class VarEntry {
 VarEntry varEntryFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return VarEntry(
-      variableFromJson(json['Variable']), stringFromJson(json['Resolved']));
+    variableFromJson(json['Variable']),
+    stringFromJson(json['Resolved']),
+  );
 }
 
 Map<String, dynamic> varEntryToJson(VarEntry item) {
   return {
     "Variable": variableToJson(item.variable),
-    "Resolved": stringToJson(item.resolved)
+    "Resolved": stringToJson(item.resolved),
   };
 }
 
@@ -360,15 +412,18 @@ class WorkID {
 
 WorkID workIDFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return WorkID(intFromJson(json['ID']), workKindFromJson(json['Kind']),
-      boolFromJson(json['IsExercice']));
+  return WorkID(
+    intFromJson(json['ID']),
+    workKindFromJson(json['Kind']),
+    boolFromJson(json['IsExercice']),
+  );
 }
 
 Map<String, dynamic> workIDToJson(WorkID item) {
   return {
     "ID": intToJson(item.iD),
     "Kind": workKindToJson(item.kind),
-    "IsExercice": boolToJson(item.isExercice)
+    "IsExercice": boolToJson(item.isExercice),
   };
 }
 

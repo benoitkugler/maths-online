@@ -11,56 +11,83 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
-type ProgressionExt struct {
-	// Questions stores the progression for each question of the task.
-	Questions    []ta.QuestionHistory
-	NextQuestion int
-}
+// Progression stores the progression for each question of a given task.
+type Progression []ta.QuestionHistory
 
-func NewProgressionExt(progressions ta.Progressions, nbQuestions int) (out ProgressionExt) {
+func newProgression(progressions ta.Progressions, nbQuestions int) Progression {
 	// nbQuestions is the current number of questions in the task,
 	// but, if it as been modified after a student started it, it may be lower than
 	// the questions registrer in progressions
-	out.Questions = make([]ta.QuestionHistory, nbQuestions)
+	out := make(Progression, nbQuestions)
 	for _, link := range progressions {
 		if link.Index >= int16(nbQuestions) {
 			continue // the progression item is no more usable
 		}
-		out.Questions[link.Index] = link.History
+		out[link.Index] = link.History
 	}
-	out.inferNextQuestion()
+	return out
+}
+
+func (qh Progression) Copy() Progression {
+	return append(Progression(nil), qh...)
+}
+
+// NbTries returns the total number of tries for this progression.
+func (qh Progression) NbTries() int {
+	s := 0
+	for _, qu := range qh {
+		s += len(qu)
+	}
+	return s
+}
+
+func (qh Progression) IsComplete() bool {
+	if len(qh) == 0 {
+		return false
+	}
+	for _, question := range qh {
+		if !question.Success() {
+			return false
+		}
+	}
+	return true
+}
+
+// inferNextQuestion stores into `NextQuestion` the first question not passed by the student,
+// according to `QuestionHistory.Success`.
+// If all the questions are successul, it sets it to -1
+func (qh Progression) inferNextQuestion(isOneTry bool) int {
+	for i, question := range qh {
+		if question.Success() {
+			continue
+		} else if isOneTry && len(question) != 0 {
+			continue
+		} else {
+			return i
+		}
+	}
+	return -1
+}
+
+type ProgressionExt struct {
+	Questions    Progression
+	NextQuestion int
+}
+
+func newProgressionExt(progressions ta.Progressions, nbQuestions int, isOneTry bool) (out ProgressionExt) {
+	// nbQuestions is the current number of questions in the task,
+	// but, if it as been modified after a student started it, it may be lower than
+	// the questions registrer in progressions
+	out.Questions = newProgression(progressions, nbQuestions)
+	out.NextQuestion = out.Questions.inferNextQuestion(isOneTry)
 	return out
 }
 
 func (qh ProgressionExt) Copy() ProgressionExt {
 	return ProgressionExt{
 		NextQuestion: qh.NextQuestion,
-		Questions:    append([]ta.QuestionHistory(nil), qh.Questions...),
+		Questions:    qh.Questions.Copy(),
 	}
-}
-
-// NbTries returns the total number of tries for this progression.
-func (qh ProgressionExt) NbTries() int {
-	s := 0
-	for _, qu := range qh.Questions {
-		s += len(qu)
-	}
-	return s
-}
-
-func (qh ProgressionExt) IsComplete() bool { return qh.NextQuestion == -1 }
-
-// inferNextQuestion stores into `NextQuestion` the first question not passed by the student,
-// according to `QuestionHistory.Success`.
-// If all the questions are successul, it sets it to -1
-func (qh *ProgressionExt) inferNextQuestion() {
-	for i, question := range qh.Questions {
-		if !question.Success() {
-			qh.NextQuestion = i
-			return
-		}
-	}
-	qh.NextQuestion = -1
 }
 
 // TasksContents is an helper struct to unify tasks loading.
@@ -224,16 +251,16 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 
 // LoadProgressions load the question progression related to the tasks
 // in [contents].
-func (contents TasksContents) LoadProgressions(db ta.DB) (map[ta.IdTask]map[teacher.IdStudent]ProgressionExt, error) {
+func (contents TasksContents) LoadProgressions(db ta.DB) (map[ta.IdTask]map[teacher.IdStudent]Progression, error) {
 	tmp, err := ta.SelectProgressionsByIdTasks(db, contents.Tasks.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	byTask := tmp.ByIdTask() // (incomplete) progression of the students
 
-	out := make(map[ta.IdTask]map[teacher.IdStudent]ProgressionExt)
+	out := make(map[ta.IdTask]map[teacher.IdStudent]Progression)
 	for _, task := range contents.Tasks {
-		taskMap := make(map[teacher.IdStudent]ProgressionExt)
+		taskMap := make(map[teacher.IdStudent]Progression)
 		work := contents.GetWork(task)
 		// get the questions length
 		L := len(work.Bareme())
@@ -242,8 +269,7 @@ func (contents TasksContents) LoadProgressions(db ta.DB) (map[ta.IdTask]map[teac
 		for idStudent, progressions := range byStudent {
 			// beware that some questions may not have a link item for the student yet
 			// so that we take L as reference
-			progExt := NewProgressionExt(progressions, L)
-			taskMap[idStudent] = progExt
+			taskMap[idStudent] = newProgression(progressions, L)
 		}
 
 		out[task.Id] = taskMap
@@ -355,7 +381,7 @@ type TaskProgressionHeader struct {
 	// HasProgression is false if [Progression] is invalid
 	HasProgression bool
 	// empty if HasProgression is false
-	Progression  ProgressionExt
+	Progression  Progression
 	Mark, Bareme int // student mark / exercice total
 }
 
@@ -389,7 +415,7 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 		progs := progressionsByTask[task.Id]
 		// the progression may be empty if the student has not started it
 		hasProg := len(progs) != 0
-		progression := NewProgressionExt(progs, len(baremes))
+		progression := newProgression(progs, len(baremes))
 
 		out[task.Id] = TaskProgressionHeader{
 			Id:             task.Id,
@@ -399,7 +425,7 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 			HasProgression: hasProg,
 			Progression:    progression,
 			Bareme:         baremes.Total(),
-			Mark:           baremes.ComputeMark(progression.Questions),
+			Mark:           baremes.ComputeMark(progression),
 		}
 	}
 
@@ -418,8 +444,8 @@ func MatiereFromTasks(tasks []TaskProgressionHeader) teacher.MatiereTag {
 // the student progression, returning the updated mark.
 // If needed, a new progression item is created.
 // If [registerProgression] is false, no progression is created.
-func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn, registerProgression bool) (out EvaluateWorkOut, mark int, err error) {
-	out, err = ex.Evaluate(db, idStudent)
+func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, isOneTry bool, ex EvaluateWorkIn, registerProgression bool) (out EvaluateWorkOut, mark int, err error) {
+	out, err = ex.Evaluate(db, idStudent, isOneTry)
 	if err != nil {
 		return
 	}
@@ -464,7 +490,7 @@ func (bareme TaskBareme) Total() int {
 // ComputeMark computes the student mark.
 // An empty [progression] is supported and returns 0.
 // Otherwise, the length of [progression] must match the length of [bareme]
-func (bareme TaskBareme) ComputeMark(progression []ta.QuestionHistory) int {
+func (bareme TaskBareme) ComputeMark(progression Progression) int {
 	if len(progression) == 0 {
 		return 0
 	}

@@ -14,7 +14,7 @@ enum EventK {
   misc_SetPlaylist,
   connectStreak3,
   connectStreak7,
-  connectStreak30
+  connectStreak30,
 }
 
 extension _EventKExt on EventK {
@@ -74,13 +74,15 @@ class EventNotification {
 EventNotification eventNotificationFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EventNotification(
-      listEventKFromJson(json['Events']), intFromJson(json['Points']));
+    listEventKFromJson(json['Events']),
+    intFromJson(json['Points']),
+  );
 }
 
 Map<String, dynamic> eventNotificationToJson(EventNotification item) {
   return {
     "Events": listEventKToJson(item.events),
-    "Points": intToJson(item.points)
+    "Points": intToJson(item.points),
   };
 }
 
@@ -93,8 +95,14 @@ class StudentAdvance {
   final int pointsCurrentRank;
   final int pointsNextRank;
 
-  const StudentAdvance(this.occurences, this.totalPoints, this.flames,
-      this.rank, this.pointsCurrentRank, this.pointsNextRank);
+  const StudentAdvance(
+    this.occurences,
+    this.totalPoints,
+    this.flames,
+    this.rank,
+    this.pointsCurrentRank,
+    this.pointsNextRank,
+  );
 
   @override
   String toString() {
@@ -105,12 +113,13 @@ class StudentAdvance {
 StudentAdvance studentAdvanceFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentAdvance(
-      listIntFromJson(json['Occurences']),
-      intFromJson(json['TotalPoints']),
-      intFromJson(json['Flames']),
-      intFromJson(json['Rank']),
-      intFromJson(json['PointsCurrentRank']),
-      intFromJson(json['PointsNextRank']));
+    listIntFromJson(json['Occurences']),
+    intFromJson(json['TotalPoints']),
+    intFromJson(json['Flames']),
+    intFromJson(json['Rank']),
+    intFromJson(json['PointsCurrentRank']),
+    intFromJson(json['PointsNextRank']),
+  );
 }
 
 Map<String, dynamic> studentAdvanceToJson(StudentAdvance item) {
@@ -120,7 +129,7 @@ Map<String, dynamic> studentAdvanceToJson(StudentAdvance item) {
     "Flames": intToJson(item.flames),
     "Rank": intToJson(item.rank),
     "PointsCurrentRank": intToJson(item.pointsCurrentRank),
-    "PointsNextRank": intToJson(item.pointsNextRank)
+    "PointsNextRank": intToJson(item.pointsNextRank),
   };
 }
 

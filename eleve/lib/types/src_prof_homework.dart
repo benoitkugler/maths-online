@@ -20,14 +20,15 @@ class Sheet {
   final int questionTimeLimit;
 
   const Sheet(
-      this.id,
-      this.title,
-      this.noted,
-      this.deadline,
-      this.ignoreForMark,
-      this.matiere,
-      this.questionRepeat,
-      this.questionTimeLimit);
+    this.id,
+    this.title,
+    this.noted,
+    this.deadline,
+    this.ignoreForMark,
+    this.matiere,
+    this.questionRepeat,
+    this.questionTimeLimit,
+  );
 
   @override
   String toString() {
@@ -38,14 +39,15 @@ class Sheet {
 Sheet sheetFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Sheet(
-      intFromJson(json['Id']),
-      stringFromJson(json['Title']),
-      boolFromJson(json['Noted']),
-      dateTimeFromJson(json['Deadline']),
-      boolFromJson(json['IgnoreForMark']),
-      matiereTagFromJson(json['Matiere']),
-      questionRepeatFromJson(json['QuestionRepeat']),
-      intFromJson(json['QuestionTimeLimit']));
+    intFromJson(json['Id']),
+    stringFromJson(json['Title']),
+    boolFromJson(json['Noted']),
+    dateTimeFromJson(json['Deadline']),
+    boolFromJson(json['IgnoreForMark']),
+    matiereTagFromJson(json['Matiere']),
+    questionRepeatFromJson(json['QuestionRepeat']),
+    intFromJson(json['QuestionTimeLimit']),
+  );
 }
 
 Map<String, dynamic> sheetToJson(Sheet item) {
@@ -57,7 +59,7 @@ Map<String, dynamic> sheetToJson(Sheet item) {
     "IgnoreForMark": boolToJson(item.ignoreForMark),
     "Matiere": matiereTagToJson(item.matiere),
     "QuestionRepeat": questionRepeatToJson(item.questionRepeat),
-    "QuestionTimeLimit": intToJson(item.questionTimeLimit)
+    "QuestionTimeLimit": intToJson(item.questionTimeLimit),
   };
 }
 
@@ -78,16 +80,17 @@ class SheetProgression {
 SheetProgression sheetProgressionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return SheetProgression(
-      intFromJson(json['IdTravail']),
-      sheetFromJson(json['Sheet']),
-      listTaskProgressionHeaderFromJson(json['Tasks']));
+    intFromJson(json['IdTravail']),
+    sheetFromJson(json['Sheet']),
+    listTaskProgressionHeaderFromJson(json['Tasks']),
+  );
 }
 
 Map<String, dynamic> sheetProgressionToJson(SheetProgression item) {
   return {
     "IdTravail": intToJson(item.idTravail),
     "Sheet": sheetToJson(item.sheet),
-    "Tasks": listTaskProgressionHeaderToJson(item.tasks)
+    "Tasks": listTaskProgressionHeaderToJson(item.tasks),
   };
 }
 
@@ -99,7 +102,11 @@ class StudentEvaluateTaskIn {
   final IdTravail idTravail;
 
   const StudentEvaluateTaskIn(
-      this.studentID, this.idTask, this.ex, this.idTravail);
+    this.studentID,
+    this.idTask,
+    this.ex,
+    this.idTravail,
+  );
 
   @override
   String toString() {
@@ -110,10 +117,11 @@ class StudentEvaluateTaskIn {
 StudentEvaluateTaskIn studentEvaluateTaskInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentEvaluateTaskIn(
-      stringFromJson(json['StudentID']),
-      intFromJson(json['IdTask']),
-      evaluateWorkInFromJson(json['Ex']),
-      intFromJson(json['IdTravail']));
+    stringFromJson(json['StudentID']),
+    intFromJson(json['IdTask']),
+    evaluateWorkInFromJson(json['Ex']),
+    intFromJson(json['IdTravail']),
+  );
 }
 
 Map<String, dynamic> studentEvaluateTaskInToJson(StudentEvaluateTaskIn item) {
@@ -121,7 +129,7 @@ Map<String, dynamic> studentEvaluateTaskInToJson(StudentEvaluateTaskIn item) {
     "StudentID": stringToJson(item.studentID),
     "IdTask": intToJson(item.idTask),
     "Ex": evaluateWorkInToJson(item.ex),
-    "IdTravail": intToJson(item.idTravail)
+    "IdTravail": intToJson(item.idTravail),
   };
 }
 
@@ -133,7 +141,11 @@ class StudentEvaluateTaskOut {
   final EventNotification advance;
 
   const StudentEvaluateTaskOut(
-      this.ex, this.mark, this.wasProgressionRegistred, this.advance);
+    this.ex,
+    this.mark,
+    this.wasProgressionRegistred,
+    this.advance,
+  );
 
   @override
   String toString() {
@@ -144,10 +156,11 @@ class StudentEvaluateTaskOut {
 StudentEvaluateTaskOut studentEvaluateTaskOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentEvaluateTaskOut(
-      evaluateWorkOutFromJson(json['Ex']),
-      intFromJson(json['Mark']),
-      boolFromJson(json['WasProgressionRegistred']),
-      eventNotificationFromJson(json['Advance']));
+    evaluateWorkOutFromJson(json['Ex']),
+    intFromJson(json['Mark']),
+    boolFromJson(json['WasProgressionRegistred']),
+    eventNotificationFromJson(json['Advance']),
+  );
 }
 
 Map<String, dynamic> studentEvaluateTaskOutToJson(StudentEvaluateTaskOut item) {
@@ -155,7 +168,7 @@ Map<String, dynamic> studentEvaluateTaskOutToJson(StudentEvaluateTaskOut item) {
     "Ex": evaluateWorkOutToJson(item.ex),
     "Mark": intToJson(item.mark),
     "WasProgressionRegistred": boolToJson(item.wasProgressionRegistred),
-    "Advance": eventNotificationToJson(item.advance)
+    "Advance": eventNotificationToJson(item.advance),
   };
 }
 
@@ -175,15 +188,18 @@ class StudentResetTaskIn {
 
 StudentResetTaskIn studentResetTaskInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return StudentResetTaskIn(stringFromJson(json['StudentID']),
-      intFromJson(json['IdTravail']), intFromJson(json['IdTask']));
+  return StudentResetTaskIn(
+    stringFromJson(json['StudentID']),
+    intFromJson(json['IdTravail']),
+    intFromJson(json['IdTask']),
+  );
 }
 
 Map<String, dynamic> studentResetTaskInToJson(StudentResetTaskIn item) {
   return {
     "StudentID": stringToJson(item.studentID),
     "IdTravail": intToJson(item.idTravail),
-    "IdTask": intToJson(item.idTask)
+    "IdTask": intToJson(item.idTask),
   };
 }
 
@@ -217,6 +233,7 @@ List<TaskProgressionHeader> listTaskProgressionHeaderFromJson(dynamic json) {
 }
 
 List<dynamic> listTaskProgressionHeaderToJson(
-    List<TaskProgressionHeader> item) {
+  List<TaskProgressionHeader> item,
+) {
   return item.map(taskProgressionHeaderToJson).toList();
 }

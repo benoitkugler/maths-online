@@ -273,7 +273,7 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 		registerProgression = true
 	}
 
-	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, idStudent, args.Ex, registerProgression)
+	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, idStudent, travail.QuestionRepeat == ho.OneTry, args.Ex, registerProgression)
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
 	}
@@ -284,7 +284,7 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 		ev = events.E_All_QuestionRight
 	}
 	evL := []events.EventK{ev}
-	if ex.Progression.IsComplete() {
+	if ex.Progression.Questions.IsComplete() {
 		evL = append(evL, events.E_Homework_TaskDone)
 	}
 	// do we have finished the whole travail ?

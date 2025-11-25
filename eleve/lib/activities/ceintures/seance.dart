@@ -1,5 +1,5 @@
 import 'package:eleve/activities/ceintures/api.dart';
-import 'package:eleve/exercice/exercice.dart';
+import 'package:eleve/activities/homework/exercice.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
@@ -35,8 +35,9 @@ class SeanceState extends State<Seance> {
 
   @override
   void initState() {
-    loader = widget.api
-        .selectQuestions(SelectQuestionsIn(widget.tokens, widget.stage));
+    loader = widget.api.selectQuestions(
+      SelectQuestionsIn(widget.tokens, widget.stage),
+    );
     super.initState();
   }
 
@@ -45,34 +46,44 @@ class SeanceState extends State<Seance> {
     return Scaffold(
       appBar: AppBar(title: Text(domainLabel(widget.stage.domain))),
       body: FutureBuilder<SelectQuestionsOut>(
-          future: loader,
-          builder: (context, snapshot) {
-            final data = snapshot.data;
-            return snapshot.error != null
-                ? ErrorCard(
-                    "Impossible de charger les questions.", snapshot.error)
-                : data == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : CeinturesQuestionsW(
-                        SeanceController(data.questions), _evaluate, _reset, (
-                        api: widget.api,
-                        tokens: widget.tokens,
-                        stage: widget.stage
-                      ));
-          }),
+        future: loader,
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+          return snapshot.error != null
+              ? ErrorCard(
+                  "Impossible de charger les questions.",
+                  snapshot.error,
+                )
+              : data == null
+              ? const Center(child: CircularProgressIndicator())
+              : CeinturesQuestionsW(
+                  SeanceController(data.questions),
+                  _evaluate,
+                  _reset,
+                  (api: widget.api, tokens: widget.tokens, stage: widget.stage),
+                );
+        },
+      ),
     );
   }
 
   void _reset() async {
     setState(() {
-      loader = widget.api
-          .selectQuestions(SelectQuestionsIn(widget.tokens, widget.stage));
+      loader = widget.api.selectQuestions(
+        SelectQuestionsIn(widget.tokens, widget.stage),
+      );
     });
   }
 
   Future<List<QuestionAnswersOut>> _evaluate(SeanceAnswers answers) async {
-    final res = await widget.api.evaluateAnswers(EvaluateAnswersIn(
-        widget.tokens, widget.stage, answers.questions, answers.answers));
+    final res = await widget.api.evaluateAnswers(
+      EvaluateAnswersIn(
+        widget.tokens,
+        widget.stage,
+        answers.questions,
+        answers.answers,
+      ),
+    );
 
     // notify the parent
     widget.onValid(res.success, res.evolution);
@@ -90,21 +101,25 @@ class SeanceController {
 
   final List<QuestionController> _controllers;
 
-  SeanceController(this.questions,
-      {int initialPage = 0, this.showCorrection = false})
-      : _pageC = PageController(initialPage: initialPage),
-        _controllers = questions.map(_buildQuestionController).toList();
+  SeanceController(
+    this.questions, {
+    int initialPage = 0,
+    this.showCorrection = false,
+  }) : _pageC = PageController(initialPage: initialPage),
+       _controllers = questions.map(_buildQuestionController).toList();
 
   /// currentQuestion returns the question currently visible.
   int get currentQuestion => _pageC.hasClients ? _pageC.page?.round() ?? 0 : 0;
 
   /// [answers] returns the current answers for all the questions.
   SeanceAnswers answers() => SeanceAnswers(
-      questions.map((qu) => qu.id).toList(),
-      List.generate(
-          questions.length,
-          (index) =>
-              AnswerP(questions[index].params, _controllers[index].answers())));
+    questions.map((qu) => qu.id).toList(),
+    List.generate(
+      questions.length,
+      (index) =>
+          AnswerP(questions[index].params, _controllers[index].answers()),
+    ),
+  );
 
   /// [notAnswered] returns the indices of the question not done yet.
   List<int> notAnswered() {
@@ -145,21 +160,25 @@ class SeanceController {
 typedef TrainingMeta = ({
   CeinturesTrainingAPI api,
   StudentTokens tokens,
-  Stage stage
+  Stage stage,
 });
 
 class CeinturesQuestionsW extends StatefulWidget {
   final SeanceController controller;
   final Future<List<QuestionAnswersOut>> Function(SeanceAnswers)
-      evaluateAnswers;
+  evaluateAnswers;
 
   final void Function() onReset;
 
   final TrainingMeta? trainingMeta;
 
   const CeinturesQuestionsW(
-      this.controller, this.evaluateAnswers, this.onReset, this.trainingMeta,
-      {super.key});
+    this.controller,
+    this.evaluateAnswers,
+    this.onReset,
+    this.trainingMeta, {
+    super.key,
+  });
 
   @override
   State<CeinturesQuestionsW> createState() => _CeinturesQuestionsWState();
@@ -181,8 +200,11 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
     final c = widget.controller;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      c._pageC.animateToPage(c._pageC.initialPage,
-          duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
+      c._pageC.animateToPage(
+        c._pageC.initialPage,
+        duration: const Duration(milliseconds: 750),
+        curve: Curves.easeInOut,
+      );
     });
 
     if (c.showCorrection) {
@@ -196,39 +218,47 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
   Widget build(BuildContext context) {
     final c = widget.controller;
     return PageView(
-        controller: c._pageC,
-        children: List.generate(
-            c._controllers.length,
-            (index) => QuestionView(
-                  c.questions[index].question,
-                  c._controllers[index],
-                  _onValidQuestion,
-                  Colors.teal,
-                  title: "Question ${index + 1}/${c._controllers.length}",
-                  leadingButton:
-                      c._state == _State.displayingFeedback && c.hasError(index)
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: OutlinedButton(
-                                onPressed: () => _startTraining(index),
-                                style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.yellow),
-                                child: const Text("S'entrainer"),
-                              ),
-                            )
-                          : null,
-                )).toList());
+      controller: c._pageC,
+      children: List.generate(
+        c._controllers.length,
+        (index) => QuestionView(
+          c.questions[index].question,
+          c._controllers[index],
+          _onValidQuestion,
+          Colors.teal,
+          title: "Question ${index + 1}/${c._controllers.length}",
+          leadingButton:
+              c._state == _State.displayingFeedback && c.hasError(index)
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: OutlinedButton(
+                    onPressed: () => _startTraining(index),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.yellow,
+                    ),
+                    child: const Text("S'entrainer"),
+                  ),
+                )
+              : null,
+        ),
+      ).toList(),
+    );
   }
 
   void _showCorrection() {
     final c = widget.controller;
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (context) => Scaffold(
-        appBar: AppBar(),
-        body: CorrectionView(c.questions[c.currentQuestion].question.correction,
-            Colors.greenAccent, pickQuote()),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(),
+          body: CorrectionView(
+            c.questions[c.currentQuestion].question.correction,
+            Colors.greenAccent,
+            pickQuote(),
+          ),
+        ),
       ),
-    ));
+    );
   }
 
   void _onValidQuestion() {
@@ -245,8 +275,11 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
       _submitAnswers();
     } else {
       final goTo = notAnswered.first;
-      c._pageC.animateToPage(goTo,
-          duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
+      c._pageC.animateToPage(
+        goTo,
+        duration: const Duration(milliseconds: 750),
+        curve: Curves.easeInOut,
+      );
       // update button label for the last question
       if (notAnswered.length == 1) {
         setState(() {
@@ -277,10 +310,9 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
     });
 
     // display a recap of errors
-    final goTo =
-        await Navigator.of(context).push(MaterialPageRoute<_ResultAction>(
-      builder: (context) => _ResultsPage(res),
-    ));
+    final goTo = await Navigator.of(context).push(
+      MaterialPageRoute<_ResultAction>(builder: (context) => _ResultsPage(res)),
+    );
     if (goTo == null) return;
 
     // if asked, go to a question
@@ -288,9 +320,11 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
       _startTraining(goTo.index);
     } else {
       setState(() {
-        widget.controller._pageC.animateToPage(goTo.index,
-            duration: const Duration(milliseconds: 750),
-            curve: Curves.easeInOut);
+        widget.controller._pageC.animateToPage(
+          goTo.index,
+          duration: const Duration(milliseconds: 750),
+          curve: Curves.easeInOut,
+        );
       });
     }
   }
@@ -298,10 +332,14 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
   void _startTraining(int questionIndex) {
     if (widget.trainingMeta == null) return;
 
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (context) => _TrainingView(
-          widget.trainingMeta!, widget.controller.questions[questionIndex].id),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => _TrainingView(
+          widget.trainingMeta!,
+          widget.controller.questions[questionIndex].id,
+        ),
+      ),
+    );
   }
 }
 
@@ -326,9 +364,7 @@ class _ResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Résultats"),
-      ),
+      appBar: AppBar(title: const Text("Résultats")),
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
@@ -338,31 +374,37 @@ class _ResultsPage extends StatelessWidget {
             const SizedBox(height: 12),
             Expanded(
               child: ListView(
-                  children: List.generate(resultats.length, (index) {
-                final ok = resultats[index].isCorrect;
-                return ListTile(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  title: Text("Question ${index + 1}"),
-                  leading: Icon(
-                    ok ? Icons.check : Icons.clear,
-                    color: ok ? Colors.green : Colors.red,
-                    size: 32,
-                  ),
-                  trailing: ok
-                      ? null
-                      : OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.yellow),
-                          child: const Text("S'entrainer"),
-                          onPressed: () => Navigator.of(context)
-                              .pop<_ResultAction>(
-                                  (index: index, startTraining: true)),
-                        ),
-                  onTap: () => Navigator.of(context)
-                      .pop<_ResultAction>((index: index, startTraining: false)),
-                );
-              })),
+                children: List.generate(resultats.length, (index) {
+                  final ok = resultats[index].isCorrect;
+                  return ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    title: Text("Question ${index + 1}"),
+                    leading: Icon(
+                      ok ? Icons.check : Icons.clear,
+                      color: ok ? Colors.green : Colors.red,
+                      size: 32,
+                    ),
+                    trailing: ok
+                        ? null
+                        : OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.yellow,
+                            ),
+                            child: const Text("S'entrainer"),
+                            onPressed: () =>
+                                Navigator.of(context).pop<_ResultAction>((
+                                  index: index,
+                                  startTraining: true,
+                                )),
+                          ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pop<_ResultAction>((index: index, startTraining: false)),
+                  );
+                }),
+              ),
             ),
             Quote(pickQuote()),
           ],
@@ -401,8 +443,11 @@ class __TrainingViewState extends State<_TrainingView> {
 
   void _loadQuestion() async {
     final res = await widget.trainingMeta.api.instantiateTraining(
-        InstantiateTrainingQuestionIn(
-            widget.trainingMeta.tokens, widget.idQuestion));
+      InstantiateTrainingQuestionIn(
+        widget.trainingMeta.tokens,
+        widget.idQuestion,
+      ),
+    );
     setState(() {
       state = _State.answering;
       question = res;
@@ -414,13 +459,15 @@ class __TrainingViewState extends State<_TrainingView> {
   Widget build(BuildContext context) {
     final question = this.question;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Entraînement"),
-      ),
+      appBar: AppBar(title: const Text("Entraînement")),
       body: question == null
           ? CircularProgressIndicator()
           : QuestionView(
-              question.question, controller!, _onButtonClick, Colors.yellow),
+              question.question,
+              controller!,
+              _onButtonClick,
+              Colors.yellow,
+            ),
     );
   }
 
@@ -437,11 +484,13 @@ class __TrainingViewState extends State<_TrainingView> {
     if (question == null || controller == null) return;
 
     final result = await widget.trainingMeta.api.evaluateTraining(
-        EvaluateAnswerTrainingIn(
-            widget.trainingMeta.tokens,
-            widget.trainingMeta.stage,
-            widget.idQuestion,
-            AnswerP(question!.params, controller!.answers())));
+      EvaluateAnswerTrainingIn(
+        widget.trainingMeta.tokens,
+        widget.trainingMeta.stage,
+        widget.idQuestion,
+        AnswerP(question!.params, controller!.answers()),
+      ),
+    );
     if (!mounted) return;
 
     setState(() {
@@ -452,10 +501,12 @@ class __TrainingViewState extends State<_TrainingView> {
     });
 
     if (result.isCorrect) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text("Bonne réponse !"),
-        backgroundColor: Colors.lightGreen,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Bonne réponse !"),
+          backgroundColor: Colors.lightGreen,
+        ),
+      );
     }
   }
 }

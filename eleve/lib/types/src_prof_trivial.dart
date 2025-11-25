@@ -43,14 +43,16 @@ class LaunchSelfaccessOut {
 
 LaunchSelfaccessOut launchSelfaccessOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return LaunchSelfaccessOut(stringFromJson(json['GameID']),
-      eventNotificationFromJson(json['Notification']));
+  return LaunchSelfaccessOut(
+    stringFromJson(json['GameID']),
+    eventNotificationFromJson(json['Notification']),
+  );
 }
 
 Map<String, dynamic> launchSelfaccessOutToJson(LaunchSelfaccessOut item) {
   return {
     "GameID": stringToJson(item.gameID),
-    "Notification": eventNotificationToJson(item.notification)
+    "Notification": eventNotificationToJson(item.notification),
   };
 }
 
@@ -71,8 +73,12 @@ class QuestionContent {
 
 QuestionContent questionContentFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return QuestionContent(json['Id'], categorieFromJson(json['Categorie']),
-      questionFromJson(json['Question']), paramsFromJson(json['Params']));
+  return QuestionContent(
+    json['Id'],
+    categorieFromJson(json['Categorie']),
+    questionFromJson(json['Question']),
+    paramsFromJson(json['Params']),
+  );
 }
 
 Map<String, dynamic> questionContentToJson(QuestionContent item) {
@@ -80,7 +86,7 @@ Map<String, dynamic> questionContentToJson(QuestionContent item) {
     "Id": item.id,
     "Categorie": categorieToJson(item.categorie),
     "Question": questionToJson(item.question),
-    "Params": paramsToJson(item.params)
+    "Params": paramsToJson(item.params),
   };
 }
 

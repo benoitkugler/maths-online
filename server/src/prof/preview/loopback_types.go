@@ -29,8 +29,9 @@ type LoopbackShowQuestion struct {
 }
 
 type LoopbackShowExercice struct {
-	Exercice    tasks.InstantiatedWork `gomacro-opaque:"typescript"`
-	Progression tasks.ProgressionExt   `gomacro-opaque:"typescript"`
+	Exercice     tasks.InstantiatedWork `gomacro-opaque:"typescript"`
+	Progression  tasks.Progression      `gomacro-opaque:"typescript"`
+	NextQuestion int
 
 	// Set the initial view to display the correction,
 	// instead of the enonce.

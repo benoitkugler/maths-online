@@ -592,7 +592,7 @@ type EvaluateWorkIn struct {
 
 	// the current progression, as send by the server,
 	// to update with the given answers
-	Progression ProgressionExt
+	Progression Progression
 
 	AnswerIndex int     // new in v1.7
 	Answer      AnswerP // new in v1.7
@@ -611,7 +611,7 @@ type EvaluateWorkOut struct {
 // The given progression must either be empty or have same length
 // as the exercice.
 // [idStudent] is only used to handle RandomMonoquestions
-func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateWorkOut, error) {
+func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent, isOneTry bool) (EvaluateWorkOut, error) {
 	data, err := newWorkLoader(db, args.ID, idStudent)
 	if err != nil {
 		return EvaluateWorkOut{}, utils.SQLError(err)
@@ -620,26 +620,17 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 	qus := data.Questions()
 
 	// handle initial empty progressions
-	if len(args.Progression.Questions) == 0 {
-		args.Progression.Questions = make([]ta.QuestionHistory, len(qus))
+	if len(args.Progression) == 0 {
+		args.Progression = make([]ta.QuestionHistory, len(qus))
 	}
 
 	// enforce invariant for existing progressions
-	if L1, L2 := len(qus), len(args.Progression.Questions); L1 != L2 {
+	if L1, L2 := len(qus), len(args.Progression); L1 != L2 {
 		return EvaluateWorkOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
 	}
 
 	if args.AnswerIndex < 0 || args.AnswerIndex >= len(qus) {
 		return EvaluateWorkOut{}, fmt.Errorf("internal error: invalid answer index %d", args.AnswerIndex)
-	}
-
-	// depending on the flow, check question index
-	switch data.flow() {
-	case ed.Parallel: // all questions are accessible
-	case ed.Sequencial: // only the current question is accessible
-		if exp := args.Progression.NextQuestion; args.AnswerIndex != exp {
-			return EvaluateWorkOut{}, fmt.Errorf("internal error: expected answer for %d, got %d", exp, args.AnswerIndex)
-		}
 	}
 
 	resp, err := EvaluateQuestion(qus[args.AnswerIndex].Enonce, args.Answer)
@@ -648,9 +639,11 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 	}
 
 	updatedProgression := args.Progression.Copy()
-	l := &updatedProgression.Questions[args.AnswerIndex]
-	*l = append(*l, resp.IsCorrect())
-	updatedProgression.inferNextQuestion() // update in case of success
+	updatedProgression[args.AnswerIndex] = append(updatedProgression[args.AnswerIndex], resp.IsCorrect())
+	outP := ProgressionExt{
+		Questions:    updatedProgression,
+		NextQuestion: updatedProgression.inferNextQuestion(isOneTry),
+	}
 
 	newVersion, err := data.Instantiate()
 	if err != nil {
@@ -660,7 +653,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 	out := EvaluateWorkOut{
 		AnswerIndex:  args.AnswerIndex,
 		Result:       resp,
-		Progression:  updatedProgression,
+		Progression:  outP,
 		NewQuestions: newVersion.Questions,
 	}
 

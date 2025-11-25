@@ -26,7 +26,7 @@ enum Domain {
   equations,
   inequations,
   derivation,
-  matrices
+  matrices,
 }
 
 extension _DomainExt on Domain {
@@ -117,7 +117,7 @@ enum Rank {
   violet,
   rouge,
   marron,
-  noire
+  noire,
 }
 
 extension _RankExt on Rank {
@@ -182,7 +182,7 @@ Stat statFromJson(dynamic json_) {
 Map<String, dynamic> statToJson(Stat item) {
   return {
     "Success": intToJson(item.success),
-    "Failure": intToJson(item.failure)
+    "Failure": intToJson(item.failure),
   };
 }
 

@@ -45,17 +45,14 @@ class _CongratsState extends State<Congrats> {
             AnimatedOpacity(
               duration: const Duration(seconds: 3),
               opacity: opacity,
-              child: Image.asset(
-                "assets/images/confetti-icon.png",
-                width: 120,
-              ),
+              child: Image.asset("assets/images/confetti-icon.png", width: 120),
             ),
             const SizedBox(height: 20),
             OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style:
-                    OutlinedButton.styleFrom(foregroundColor: Colors.black54),
-                child: const Text("Retour au sommaire"))
+              onPressed: () => Navigator.of(context).pop(true),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.black54),
+              child: const Text("Retour au sommaire"),
+            ),
           ],
         ),
       ),
@@ -91,9 +88,10 @@ class CorrectAnswerDialog extends StatelessWidget {
       content: const Text("Ta réponse est correcte, bravo !"),
       actions: [
         OutlinedButton(
-            onPressed: onValid,
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.black54),
-            child: const Text("Continuer l'exercice"))
+          onPressed: onValid,
+          style: OutlinedButton.styleFrom(foregroundColor: Colors.black54),
+          child: const Text("Continuer l'exercice"),
+        ),
       ],
     );
   }

@@ -18,15 +18,18 @@ class ListNode {
 
 ListNode listNodeFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return ListNode(listListNodeFromJson(json['Args']), setOpFromJson(json['Op']),
-      intFromJson(json['Leaf']));
+  return ListNode(
+    listListNodeFromJson(json['Args']),
+    setOpFromJson(json['Op']),
+    intFromJson(json['Leaf']),
+  );
 }
 
 Map<String, dynamic> listNodeToJson(ListNode item) {
   return {
     "Args": listListNodeToJson(item.args),
     "Op": setOpToJson(item.op),
-    "Leaf": intToJson(item.leaf)
+    "Leaf": intToJson(item.leaf),
   };
 }
 

@@ -123,13 +123,15 @@ class TagSection {
 TagSection tagSectionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return TagSection(
-      stringFromJson(json['Tag']), sectionFromJson(json['Section']));
+    stringFromJson(json['Tag']),
+    sectionFromJson(json['Section']),
+  );
 }
 
 Map<String, dynamic> tagSectionToJson(TagSection item) {
   return {
     "Tag": stringToJson(item.tag),
-    "Section": sectionToJson(item.section)
+    "Section": sectionToJson(item.section),
   };
 }
 

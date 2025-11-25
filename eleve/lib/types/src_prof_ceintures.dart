@@ -22,13 +22,15 @@ class CreateEvolutionIn {
 CreateEvolutionIn createEvolutionInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return CreateEvolutionIn(
-      stringFromJson(json['ClientID']), levelFromJson(json['Level']));
+    stringFromJson(json['ClientID']),
+    levelFromJson(json['Level']),
+  );
 }
 
 Map<String, dynamic> createEvolutionInToJson(CreateEvolutionIn item) {
   return {
     "ClientID": stringToJson(item.clientID),
-    "Level": levelToJson(item.level)
+    "Level": levelToJson(item.level),
   };
 }
 
@@ -47,14 +49,16 @@ class CreateEvolutionOut {
 
 CreateEvolutionOut createEvolutionOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return CreateEvolutionOut(stringFromJson(json['AnonymousID']),
-      studentEvolutionFromJson(json['Evolution']));
+  return CreateEvolutionOut(
+    stringFromJson(json['AnonymousID']),
+    studentEvolutionFromJson(json['Evolution']),
+  );
 }
 
 Map<String, dynamic> createEvolutionOutToJson(CreateEvolutionOut item) {
   return {
     "AnonymousID": stringToJson(item.anonymousID),
-    "Evolution": studentEvolutionToJson(item.evolution)
+    "Evolution": studentEvolutionToJson(item.evolution),
   };
 }
 
@@ -66,7 +70,11 @@ class EvaluateAnswerTrainingIn {
   final AnswerP answer;
 
   const EvaluateAnswerTrainingIn(
-      this.tokens, this.stage, this.question, this.answer);
+    this.tokens,
+    this.stage,
+    this.question,
+    this.answer,
+  );
 
   @override
   String toString() {
@@ -77,19 +85,21 @@ class EvaluateAnswerTrainingIn {
 EvaluateAnswerTrainingIn evaluateAnswerTrainingInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateAnswerTrainingIn(
-      studentTokensFromJson(json['Tokens']),
-      stageFromJson(json['Stage']),
-      intFromJson(json['Question']),
-      answerPFromJson(json['Answer']));
+    studentTokensFromJson(json['Tokens']),
+    stageFromJson(json['Stage']),
+    intFromJson(json['Question']),
+    answerPFromJson(json['Answer']),
+  );
 }
 
 Map<String, dynamic> evaluateAnswerTrainingInToJson(
-    EvaluateAnswerTrainingIn item) {
+  EvaluateAnswerTrainingIn item,
+) {
   return {
     "Tokens": studentTokensToJson(item.tokens),
     "Stage": stageToJson(item.stage),
     "Question": intToJson(item.question),
-    "Answer": answerPToJson(item.answer)
+    "Answer": answerPToJson(item.answer),
   };
 }
 
@@ -101,7 +111,11 @@ class EvaluateAnswersIn {
   final List<AnswerP> answers;
 
   const EvaluateAnswersIn(
-      this.tokens, this.stage, this.questions, this.answers);
+    this.tokens,
+    this.stage,
+    this.questions,
+    this.answers,
+  );
 
   @override
   String toString() {
@@ -112,10 +126,11 @@ class EvaluateAnswersIn {
 EvaluateAnswersIn evaluateAnswersInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateAnswersIn(
-      studentTokensFromJson(json['Tokens']),
-      stageFromJson(json['Stage']),
-      listIntFromJson(json['Questions']),
-      listAnswerPFromJson(json['Answers']));
+    studentTokensFromJson(json['Tokens']),
+    stageFromJson(json['Stage']),
+    listIntFromJson(json['Questions']),
+    listAnswerPFromJson(json['Answers']),
+  );
 }
 
 Map<String, dynamic> evaluateAnswersInToJson(EvaluateAnswersIn item) {
@@ -123,7 +138,7 @@ Map<String, dynamic> evaluateAnswersInToJson(EvaluateAnswersIn item) {
     "Tokens": studentTokensToJson(item.tokens),
     "Stage": stageToJson(item.stage),
     "Questions": listIntToJson(item.questions),
-    "Answers": listAnswerPToJson(item.answers)
+    "Answers": listAnswerPToJson(item.answers),
   };
 }
 
@@ -142,14 +157,16 @@ class EvaluateAnswersOut {
 
 EvaluateAnswersOut evaluateAnswersOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return EvaluateAnswersOut(listQuestionAnswersOutFromJson(json['Answers']),
-      studentEvolutionFromJson(json['Evolution']));
+  return EvaluateAnswersOut(
+    listQuestionAnswersOutFromJson(json['Answers']),
+    studentEvolutionFromJson(json['Evolution']),
+  );
 }
 
 Map<String, dynamic> evaluateAnswersOutToJson(EvaluateAnswersOut item) {
   return {
     "Answers": listQuestionAnswersOutToJson(item.answers),
-    "Evolution": studentEvolutionToJson(item.evolution)
+    "Evolution": studentEvolutionToJson(item.evolution),
   };
 }
 
@@ -169,13 +186,15 @@ class GetEvolutionOut {
 GetEvolutionOut getEvolutionOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return GetEvolutionOut(
-      boolFromJson(json['Has']), studentEvolutionFromJson(json['Evolution']));
+    boolFromJson(json['Has']),
+    studentEvolutionFromJson(json['Evolution']),
+  );
 }
 
 Map<String, dynamic> getEvolutionOutToJson(GetEvolutionOut item) {
   return {
     "Has": boolToJson(item.has),
-    "Evolution": studentEvolutionToJson(item.evolution)
+    "Evolution": studentEvolutionToJson(item.evolution),
   };
 }
 
@@ -193,14 +212,18 @@ class InstantiateTrainingQuestionIn {
 }
 
 InstantiateTrainingQuestionIn instantiateTrainingQuestionInFromJson(
-    dynamic json_) {
+  dynamic json_,
+) {
   final json = (json_ as Map<String, dynamic>);
   return InstantiateTrainingQuestionIn(
-      studentTokensFromJson(json['Tokens']), intFromJson(json['Id']));
+    studentTokensFromJson(json['Tokens']),
+    intFromJson(json['Id']),
+  );
 }
 
 Map<String, dynamic> instantiateTrainingQuestionInToJson(
-    InstantiateTrainingQuestionIn item) {
+  InstantiateTrainingQuestionIn item,
+) {
   return {"Tokens": studentTokensToJson(item.tokens), "Id": intToJson(item.id)};
 }
 
@@ -220,7 +243,9 @@ class Prerequisite {
 Prerequisite prerequisiteFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Prerequisite(
-      stageFromJson(json['Need']), stageFromJson(json['Pending']));
+    stageFromJson(json['Need']),
+    stageFromJson(json['Pending']),
+  );
 }
 
 Map<String, dynamic> prerequisiteToJson(Prerequisite item) {
@@ -243,13 +268,15 @@ class Scheme {
 Scheme schemeFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Scheme(
-      listPrerequisiteFromJson(json['Ps']), listLevelFromJson(json['Levels']));
+    listPrerequisiteFromJson(json['Ps']),
+    listLevelFromJson(json['Levels']),
+  );
 }
 
 Map<String, dynamic> schemeToJson(Scheme item) {
   return {
     "Ps": listPrerequisiteToJson(item.ps),
-    "Levels": listLevelToJson(item.levels)
+    "Levels": listLevelToJson(item.levels),
   };
 }
 
@@ -269,13 +296,15 @@ class SelectQuestionsIn {
 SelectQuestionsIn selectQuestionsInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return SelectQuestionsIn(
-      studentTokensFromJson(json['Tokens']), stageFromJson(json['Stage']));
+    studentTokensFromJson(json['Tokens']),
+    stageFromJson(json['Stage']),
+  );
 }
 
 Map<String, dynamic> selectQuestionsInToJson(SelectQuestionsIn item) {
   return {
     "Tokens": studentTokensToJson(item.tokens),
-    "Stage": stageToJson(item.stage)
+    "Stage": stageToJson(item.stage),
   };
 }
 
@@ -294,7 +323,8 @@ class SelectQuestionsOut {
 SelectQuestionsOut selectQuestionsOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return SelectQuestionsOut(
-      listInstantiatedBeltQuestionFromJson(json['Questions']));
+    listInstantiatedBeltQuestionFromJson(json['Questions']),
+  );
 }
 
 Map<String, dynamic> selectQuestionsOutToJson(SelectQuestionsOut item) {
@@ -332,8 +362,14 @@ class StudentEvolution {
   final List<Stage> pending;
   final int suggestionIndex;
 
-  const StudentEvolution(this.scheme, this.level, this.advance, this.stats,
-      this.pending, this.suggestionIndex);
+  const StudentEvolution(
+    this.scheme,
+    this.level,
+    this.advance,
+    this.stats,
+    this.pending,
+    this.suggestionIndex,
+  );
 
   @override
   String toString() {
@@ -344,12 +380,13 @@ class StudentEvolution {
 StudentEvolution studentEvolutionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentEvolution(
-      schemeFromJson(json['Scheme']),
-      levelFromJson(json['Level']),
-      advanceFromJson(json['Advance']),
-      statsFromJson(json['Stats']),
-      listStageFromJson(json['Pending']),
-      intFromJson(json['SuggestionIndex']));
+    schemeFromJson(json['Scheme']),
+    levelFromJson(json['Level']),
+    advanceFromJson(json['Advance']),
+    statsFromJson(json['Stats']),
+    listStageFromJson(json['Pending']),
+    intFromJson(json['SuggestionIndex']),
+  );
 }
 
 Map<String, dynamic> studentEvolutionToJson(StudentEvolution item) {
@@ -359,7 +396,7 @@ Map<String, dynamic> studentEvolutionToJson(StudentEvolution item) {
     "Advance": advanceToJson(item.advance),
     "Stats": statsToJson(item.stats),
     "Pending": listStageToJson(item.pending),
-    "SuggestionIndex": intToJson(item.suggestionIndex)
+    "SuggestionIndex": intToJson(item.suggestionIndex),
   };
 }
 
@@ -379,13 +416,15 @@ class StudentTokens {
 StudentTokens studentTokensFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentTokens(
-      stringFromJson(json['AnonymousID']), stringFromJson(json['ClientID']));
+    stringFromJson(json['AnonymousID']),
+    stringFromJson(json['ClientID']),
+  );
 }
 
 Map<String, dynamic> studentTokensToJson(StudentTokens item) {
   return {
     "AnonymousID": stringToJson(item.anonymousID),
-    "ClientID": stringToJson(item.clientID)
+    "ClientID": stringToJson(item.clientID),
   };
 }
 
@@ -401,7 +440,8 @@ List<dynamic> listAnswerPToJson(List<AnswerP> item) {
 }
 
 List<InstantiatedBeltQuestion> listInstantiatedBeltQuestionFromJson(
-    dynamic json) {
+  dynamic json,
+) {
   if (json == null) {
     return [];
   }
@@ -409,7 +449,8 @@ List<InstantiatedBeltQuestion> listInstantiatedBeltQuestionFromJson(
 }
 
 List<dynamic> listInstantiatedBeltQuestionToJson(
-    List<InstantiatedBeltQuestion> item) {
+  List<InstantiatedBeltQuestion> item,
+) {
   return item.map(instantiatedBeltQuestionToJson).toList();
 }
 

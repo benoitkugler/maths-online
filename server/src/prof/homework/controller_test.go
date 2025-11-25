@@ -273,7 +273,7 @@ func TestEvaluateTask(t *testing.T) {
 	tu.Assert(t, len(out.Ex.Progression.Questions[0]) == 1)
 	taHeader := loadProgression(t, ct.db, student.Id, task.Id)
 	tu.Assert(t, taHeader.HasProgression)
-	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 1)
+	tu.Assert(t, len(taHeader.Progression[0]) == 1)
 
 	// check the events
 	evL, err := events.SelectEventsByIdStudents(ct.db, student.Id)
@@ -293,7 +293,7 @@ func TestEvaluateTask(t *testing.T) {
 			ID:          task.IdWork,
 			AnswerIndex: 0,
 			Answer:      tasks.AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
-			Progression: out.Ex.Progression,
+			Progression: out.Ex.Progression.Questions,
 		},
 		IdTravail: tr.Id,
 	}
@@ -309,7 +309,7 @@ func TestEvaluateTask(t *testing.T) {
 	// despite the runtime progression correctly updated
 	tu.Assert(t, len(out.Ex.Progression.Questions[0]) == 2)
 	taHeader = loadProgression(t, ct.db, student.Id, task.Id)
-	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 1)
+	tu.Assert(t, len(taHeader.Progression[0]) == 1)
 
 	// finally add an exception...
 	exc := ho.TravailException{IdStudent: student.Id, IdTravail: tr.Id, Deadline: sql.NullTime{Valid: true, Time: time.Now().Add(time.Minute)}}
@@ -320,7 +320,7 @@ func TestEvaluateTask(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	// the sheet is not expired for this student, check that a new progression has been added
 	taHeader = loadProgression(t, ct.db, student.Id, task.Id)
-	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 2)
+	tu.Assert(t, len(taHeader.Progression[0]) == 2)
 }
 
 func insertProgression(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, questions []ta.QuestionHistory) error {

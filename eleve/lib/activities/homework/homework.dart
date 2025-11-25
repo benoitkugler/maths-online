@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:eleve/activities/homework/exercice.dart';
 import 'package:eleve/activities/homework/sheet.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/animated_logo.dart';
 import 'package:eleve/shared/errors.dart';
@@ -25,6 +25,7 @@ extension on SheetProgression {
 
 abstract class HomeworkAPI {
   Future<Sheets> loadSheets(bool loadNonNoted);
+  Future<SheetProgression> loadTravail(IdTravail id);
   Future<InstantiatedWork> loadWork(IdTask id);
   Future<StudentEvaluateTaskOut> evaluateExercice(
     IdTask idTask,
@@ -50,6 +51,17 @@ class ServerHomeworkAPI implements HomeworkAPI {
     );
     final resp = await http.get(uri);
     return listSheetProgressionFromJson(checkServerError(resp.body));
+  }
+
+  @override
+  Future<SheetProgression> loadTravail(IdTravail idTravail) async {
+    const serverEndpoint = "/api/student/homework/sheet";
+    final uri = buildMode.serverURL(
+      serverEndpoint,
+      query: {studentIDKey: studentID, "idTravail": idTravail.toString()},
+    );
+    final resp = await http.get(uri);
+    return sheetProgressionFromJson(checkServerError(resp.body));
   }
 
   @override
@@ -310,22 +322,6 @@ class _SheetListViewState extends State<_SheetListView> {
     );
   }
 
-  bool updateMark(SheetMarkNotification notif) {
-    final index = sheets.indexWhere(
-      (element) => element.sheet.id == notif.idSheet,
-    );
-    final actual = sheets[index];
-    notif.applyTo(actual.tasks);
-    setState(() {
-      sheets[index] = SheetProgression(
-        actual.idTravail,
-        actual.sheet,
-        actual.tasks,
-      );
-    });
-    return true;
-  }
-
   void onSelectSheet(SheetProgression sheet) async {
     // show activity start only for math
     if (sheet.sheet.matiere == MatiereTag.mathematiques) {
@@ -342,8 +338,16 @@ class _SheetListViewState extends State<_SheetListView> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) {
-          return NotificationListener<ExerciceDone>(
-            onNotification: updateSheet,
+          return NotificationListener<TravailUpdated>(
+            onNotification: (notif) {
+              final index = sheets.indexWhere(
+                (s) => s.idTravail == notif.sheet.idTravail,
+              );
+              setState(() {
+                sheets[index] = notif.sheet;
+              });
+              return true;
+            },
             child: SheetHome(widget.api, sheet),
           );
         },

@@ -64,11 +64,6 @@ type (
 	EvaluateWorkOut = tasks.EvaluateWorkOut
 )
 
-type StudentWork struct {
-	Exercice    tasks.InstantiatedWork
-	Progression tasks.ProgressionExt
-}
-
 // standalone endpoint to check if an exercice answer is correct
 // note that this API does not handle progression persistence,
 // and do not support RandomMonoquestion either
@@ -78,7 +73,7 @@ func evaluateExercice(db ed.DB, c echo.Context) error {
 		return err
 	}
 
-	out, err := args.Evaluate(db, -1)
+	out, err := args.Evaluate(db, -1, false)
 	if err != nil {
 		return err
 	}

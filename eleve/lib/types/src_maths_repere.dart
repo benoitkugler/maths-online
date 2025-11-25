@@ -18,13 +18,15 @@ class Area {
 Area areaFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Area(
-      stringFromJson(json['Color']), listStringFromJson(json['Points']));
+    stringFromJson(json['Color']),
+    listStringFromJson(json['Points']),
+  );
 }
 
 Map<String, dynamic> areaToJson(Area item) {
   return {
     "Color": stringToJson(item.color),
-    "Points": listStringToJson(item.points)
+    "Points": listStringToJson(item.points),
   };
 }
 
@@ -37,7 +39,12 @@ class Circle {
   final String legend;
 
   const Circle(
-      this.center, this.radius, this.lineColor, this.fillColor, this.legend);
+    this.center,
+    this.radius,
+    this.lineColor,
+    this.fillColor,
+    this.legend,
+  );
 
   @override
   String toString() {
@@ -48,11 +55,12 @@ class Circle {
 Circle circleFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Circle(
-      coordFromJson(json['Center']),
-      doubleFromJson(json['Radius']),
-      stringFromJson(json['LineColor']),
-      stringFromJson(json['FillColor']),
-      stringFromJson(json['Legend']));
+    coordFromJson(json['Center']),
+    doubleFromJson(json['Radius']),
+    stringFromJson(json['LineColor']),
+    stringFromJson(json['FillColor']),
+    stringFromJson(json['Legend']),
+  );
 }
 
 Map<String, dynamic> circleToJson(Circle item) {
@@ -61,7 +69,7 @@ Map<String, dynamic> circleToJson(Circle item) {
     "Radius": doubleToJson(item.radius),
     "LineColor": stringToJson(item.lineColor),
     "FillColor": stringToJson(item.fillColor),
-    "Legend": stringToJson(item.legend)
+    "Legend": stringToJson(item.legend),
   };
 }
 
@@ -99,7 +107,12 @@ class Drawings {
   final List<Area> areas;
 
   const Drawings(
-      this.points, this.segments, this.lines, this.circles, this.areas);
+    this.points,
+    this.segments,
+    this.lines,
+    this.circles,
+    this.areas,
+  );
 
   @override
   String toString() {
@@ -110,11 +123,12 @@ class Drawings {
 Drawings drawingsFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Drawings(
-      dictStringToLabeledPointFromJson(json['Points']),
-      listSegmentFromJson(json['Segments']),
-      listLineFromJson(json['Lines']),
-      listCircleFromJson(json['Circles']),
-      listAreaFromJson(json['Areas']));
+    dictStringToLabeledPointFromJson(json['Points']),
+    listSegmentFromJson(json['Segments']),
+    listLineFromJson(json['Lines']),
+    listCircleFromJson(json['Circles']),
+    listAreaFromJson(json['Areas']),
+  );
 }
 
 Map<String, dynamic> drawingsToJson(Drawings item) {
@@ -123,7 +137,7 @@ Map<String, dynamic> drawingsToJson(Drawings item) {
     "Segments": listSegmentToJson(item.segments),
     "Lines": listLineToJson(item.lines),
     "Circles": listCircleToJson(item.circles),
-    "Areas": listAreaToJson(item.areas)
+    "Areas": listAreaToJson(item.areas),
   };
 }
 
@@ -145,10 +159,11 @@ class Figure {
 Figure figureFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Figure(
-      drawingsFromJson(json['Drawings']),
-      repereBoundsFromJson(json['Bounds']),
-      boolFromJson(json['ShowGrid']),
-      boolFromJson(json['ShowOrigin']));
+    drawingsFromJson(json['Drawings']),
+    repereBoundsFromJson(json['Bounds']),
+    boolFromJson(json['ShowGrid']),
+    boolFromJson(json['ShowOrigin']),
+  );
 }
 
 Map<String, dynamic> figureToJson(Figure item) {
@@ -156,7 +171,7 @@ Map<String, dynamic> figureToJson(Figure item) {
     "Drawings": drawingsToJson(item.drawings),
     "Bounds": repereBoundsToJson(item.bounds),
     "ShowGrid": boolToJson(item.showGrid),
-    "ShowOrigin": boolToJson(item.showOrigin)
+    "ShowOrigin": boolToJson(item.showOrigin),
   };
 }
 
@@ -192,7 +207,7 @@ enum LabelPos {
   topRight,
   bottomRight,
   bottomLeft,
-  hide
+  hide,
 }
 
 extension _LabelPosExt on LabelPos {
@@ -248,13 +263,15 @@ class LabeledPoint {
 LabeledPoint labeledPointFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LabeledPoint(
-      stringFromJson(json['Color']), posPointFromJson(json['Point']));
+    stringFromJson(json['Color']),
+    posPointFromJson(json['Point']),
+  );
 }
 
 Map<String, dynamic> labeledPointToJson(LabeledPoint item) {
   return {
     "Color": stringToJson(item.color),
-    "Point": posPointToJson(item.point)
+    "Point": posPointToJson(item.point),
   };
 }
 
@@ -275,8 +292,12 @@ class Line {
 
 Line lineFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Line(stringFromJson(json['Label']), stringFromJson(json['Color']),
-      doubleFromJson(json['A']), doubleFromJson(json['B']));
+  return Line(
+    stringFromJson(json['Label']),
+    stringFromJson(json['Color']),
+    doubleFromJson(json['A']),
+    doubleFromJson(json['B']),
+  );
 }
 
 Map<String, dynamic> lineToJson(Line item) {
@@ -284,7 +305,7 @@ Map<String, dynamic> lineToJson(Line item) {
     "Label": stringToJson(item.label),
     "Color": stringToJson(item.color),
     "A": doubleToJson(item.a),
-    "B": doubleToJson(item.b)
+    "B": doubleToJson(item.b),
   };
 }
 
@@ -326,15 +347,18 @@ class RepereBounds {
 
 RepereBounds repereBoundsFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return RepereBounds(intFromJson(json['Width']), intFromJson(json['Height']),
-      coordFromJson(json['Origin']));
+  return RepereBounds(
+    intFromJson(json['Width']),
+    intFromJson(json['Height']),
+    coordFromJson(json['Origin']),
+  );
 }
 
 Map<String, dynamic> repereBoundsToJson(RepereBounds item) {
   return {
     "Width": intToJson(item.width),
     "Height": intToJson(item.height),
-    "Origin": coordToJson(item.origin)
+    "Origin": coordToJson(item.origin),
   };
 }
 
@@ -348,7 +372,13 @@ class Segment {
   final SegmentKind kind;
 
   const Segment(
-      this.labelName, this.from, this.to, this.color, this.labelPos, this.kind);
+    this.labelName,
+    this.from,
+    this.to,
+    this.color,
+    this.labelPos,
+    this.kind,
+  );
 
   @override
   String toString() {
@@ -359,12 +389,13 @@ class Segment {
 Segment segmentFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Segment(
-      stringFromJson(json['LabelName']),
-      stringFromJson(json['From']),
-      stringFromJson(json['To']),
-      stringFromJson(json['Color']),
-      labelPosFromJson(json['LabelPos']),
-      segmentKindFromJson(json['Kind']));
+    stringFromJson(json['LabelName']),
+    stringFromJson(json['From']),
+    stringFromJson(json['To']),
+    stringFromJson(json['Color']),
+    labelPosFromJson(json['LabelPos']),
+    segmentKindFromJson(json['Kind']),
+  );
 }
 
 Map<String, dynamic> segmentToJson(Segment item) {
@@ -374,7 +405,7 @@ Map<String, dynamic> segmentToJson(Segment item) {
     "To": stringToJson(item.to),
     "Color": stringToJson(item.color),
     "LabelPos": labelPosToJson(item.labelPos),
-    "Kind": segmentKindToJson(item.kind)
+    "Kind": segmentKindToJson(item.kind),
   };
 }
 
@@ -411,14 +442,17 @@ Map<String, LabeledPoint> dictStringToLabeledPointFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as String, labeledPointFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as String, labeledPointFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToLabeledPointToJson(
-    Map<String, LabeledPoint> item) {
+  Map<String, LabeledPoint> item,
+) {
   return item.map(
-      (k, v) => MapEntry(stringToJson(k).toString(), labeledPointToJson(v)));
+    (k, v) => MapEntry(stringToJson(k).toString(), labeledPointToJson(v)),
+  );
 }
 
 List<Area> listAreaFromJson(dynamic json) {

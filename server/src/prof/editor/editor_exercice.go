@@ -1326,11 +1326,9 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrec
 		progression[i] = ta.QuestionHistory{true}
 	}
 	return preview.LoopbackShowExercice{
-		Exercice: instance,
-		Progression: taAPI.ProgressionExt{
-			NextQuestion: nextQuestion,
-			Questions:    progression,
-		},
+		Exercice:       instance,
+		Progression:    progression,
+		NextQuestion:   nextQuestion,
 		Origin:         questionOrigins,
 		ShowCorrection: showCorrection,
 	}, nil

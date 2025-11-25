@@ -97,7 +97,7 @@ func TestGetStats(t *testing.T) {
 	}
 
 	ct := NewController(db, teacher.Teacher{Id: 1}, pass.Encrypter{})
-	out, err := ct.getMarks(HowemorkMarksIn{IdClassroom: 27, IdTravaux: []ho.IdTravail{77, 79, 82, 86, 87, 88}}, 4)
+	out, err := ct.getMarks(HowemorkMarksIn{IdClassroom: 61, IdTravaux: []ho.IdTravail{444, 510}}, 4)
 	tu.AssertNoErr(t, err)
 
 	_ = out.Marks

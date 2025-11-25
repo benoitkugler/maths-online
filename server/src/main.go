@@ -99,12 +99,13 @@ func getAdminEmails() []string {
 }
 
 func devSetup(e *echo.Echo, tc *teacher.Controller) {
+	fmt.Println("Dev mode:")
 	tokenU, tokenAdmin, err := tc.GetDevTokens()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Token user:", tokenU)
-	fmt.Println("Token admin:", tokenAdmin)
+	fmt.Println("\tToken user:", tokenU)
+	fmt.Println("\tToken admin:", tokenAdmin)
 
 	// also Cross origin requests
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -112,14 +113,14 @@ func devSetup(e *echo.Echo, tc *teacher.Controller) {
 		AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
 		ExposeHeaders: []string{"Content-Disposition"},
 	}))
-	fmt.Println("CORS activé.")
+	fmt.Println("\tCORS activé.")
 
 	devMail := os.Getenv("DEV_MAIL_TO")
 	if devMail == "" {
 		log.Fatal("Missing env. variable DEV_MAIL_TO")
 	}
 	mailer.SetDevMail(devMail)
-	fmt.Println("Mail redirected to ", devMail)
+	fmt.Println("\tMail redirected to ", devMail)
 }
 
 func sanityChecks(db *sql.DB, skipValidation bool) {

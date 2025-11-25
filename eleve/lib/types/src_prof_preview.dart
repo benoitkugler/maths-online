@@ -22,14 +22,17 @@ class LoopackEvaluateQuestionIn {
 LoopackEvaluateQuestionIn loopackEvaluateQuestionInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopackEvaluateQuestionIn(
-      questionPageFromJson(json['Question']), answerPFromJson(json['Answer']));
+    questionPageFromJson(json['Question']),
+    answerPFromJson(json['Answer']),
+  );
 }
 
 Map<String, dynamic> loopackEvaluateQuestionInToJson(
-    LoopackEvaluateQuestionIn item) {
+  LoopackEvaluateQuestionIn item,
+) {
   return {
     "Question": questionPageToJson(item.question),
-    "Answer": answerPToJson(item.answer)
+    "Answer": answerPToJson(item.answer),
   };
 }
 
@@ -49,14 +52,17 @@ class LoopbackEvaluateCeintureIn {
 LoopbackEvaluateCeintureIn loopbackEvaluateCeintureInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackEvaluateCeintureIn(
-      listIntFromJson(json['Questions']), listAnswerPFromJson(json['Answers']));
+    listIntFromJson(json['Questions']),
+    listAnswerPFromJson(json['Answers']),
+  );
 }
 
 Map<String, dynamic> loopbackEvaluateCeintureInToJson(
-    LoopbackEvaluateCeintureIn item) {
+  LoopbackEvaluateCeintureIn item,
+) {
   return {
     "Questions": listIntToJson(item.questions),
-    "Answers": listAnswerPToJson(item.answers)
+    "Answers": listAnswerPToJson(item.answers),
   };
 }
 
@@ -75,11 +81,13 @@ class LoopbackEvaluateCeintureOut {
 LoopbackEvaluateCeintureOut loopbackEvaluateCeintureOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackEvaluateCeintureOut(
-      listQuestionAnswersOutFromJson(json['Answers']));
+    listQuestionAnswersOutFromJson(json['Answers']),
+  );
 }
 
 Map<String, dynamic> loopbackEvaluateCeintureOutToJson(
-    LoopbackEvaluateCeintureOut item) {
+  LoopbackEvaluateCeintureOut item,
+) {
   return {"Answers": listQuestionAnswersOutToJson(item.answers)};
 }
 
@@ -98,11 +106,13 @@ class LoopbackEvaluateQuestionOut {
 LoopbackEvaluateQuestionOut loopbackEvaluateQuestionOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackEvaluateQuestionOut(
-      questionAnswersOutFromJson(json['Answers']));
+    questionAnswersOutFromJson(json['Answers']),
+  );
 }
 
 Map<String, dynamic> loopbackEvaluateQuestionOutToJson(
-    LoopbackEvaluateQuestionOut item) {
+  LoopbackEvaluateQuestionOut item,
+) {
   return {"Answers": questionAnswersOutToJson(item.answers)};
 }
 
@@ -152,17 +162,17 @@ Map<String, dynamic> loopbackServerEventToJson(LoopbackServerEvent item) {
   } else if (item is LoopbackShowCeinture) {
     return {
       'Kind': "LoopbackShowCeinture",
-      'Data': loopbackShowCeintureToJson(item)
+      'Data': loopbackShowCeintureToJson(item),
     };
   } else if (item is LoopbackShowExercice) {
     return {
       'Kind': "LoopbackShowExercice",
-      'Data': loopbackShowExerciceToJson(item)
+      'Data': loopbackShowExerciceToJson(item),
     };
   } else if (item is LoopbackShowQuestion) {
     return {
       'Kind': "LoopbackShowQuestion",
-      'Data': loopbackShowQuestionToJson(item)
+      'Data': loopbackShowQuestionToJson(item),
     };
   } else {
     throw ("unexpected type");
@@ -177,7 +187,11 @@ class LoopbackShowCeinture implements LoopbackServerEvent {
   final bool showCorrection;
 
   const LoopbackShowCeinture(
-      this.questions, this.questionIndex, this.origin, this.showCorrection);
+    this.questions,
+    this.questionIndex,
+    this.origin,
+    this.showCorrection,
+  );
 
   @override
   String toString() {
@@ -188,10 +202,11 @@ class LoopbackShowCeinture implements LoopbackServerEvent {
 LoopbackShowCeinture loopbackShowCeintureFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackShowCeinture(
-      listInstantiatedBeltQuestionFromJson(json['Questions']),
-      intFromJson(json['QuestionIndex']),
-      listQuestionPageFromJson(json['Origin']),
-      boolFromJson(json['ShowCorrection']));
+    listInstantiatedBeltQuestionFromJson(json['Questions']),
+    intFromJson(json['QuestionIndex']),
+    listQuestionPageFromJson(json['Origin']),
+    boolFromJson(json['ShowCorrection']),
+  );
 }
 
 Map<String, dynamic> loopbackShowCeintureToJson(LoopbackShowCeinture item) {
@@ -199,41 +214,50 @@ Map<String, dynamic> loopbackShowCeintureToJson(LoopbackShowCeinture item) {
     "Questions": listInstantiatedBeltQuestionToJson(item.questions),
     "QuestionIndex": intToJson(item.questionIndex),
     "Origin": listQuestionPageToJson(item.origin),
-    "ShowCorrection": boolToJson(item.showCorrection)
+    "ShowCorrection": boolToJson(item.showCorrection),
   };
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowExercice
 class LoopbackShowExercice implements LoopbackServerEvent {
   final InstantiatedWork exercice;
-  final ProgressionExt progression;
+  final Progression progression;
+  final int nextQuestion;
   final bool showCorrection;
   final List<QuestionPage> origin;
 
   const LoopbackShowExercice(
-      this.exercice, this.progression, this.showCorrection, this.origin);
+    this.exercice,
+    this.progression,
+    this.nextQuestion,
+    this.showCorrection,
+    this.origin,
+  );
 
   @override
   String toString() {
-    return "LoopbackShowExercice($exercice, $progression, $showCorrection, $origin)";
+    return "LoopbackShowExercice($exercice, $progression, $nextQuestion, $showCorrection, $origin)";
   }
 }
 
 LoopbackShowExercice loopbackShowExerciceFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackShowExercice(
-      instantiatedWorkFromJson(json['Exercice']),
-      progressionExtFromJson(json['Progression']),
-      boolFromJson(json['ShowCorrection']),
-      listQuestionPageFromJson(json['Origin']));
+    instantiatedWorkFromJson(json['Exercice']),
+    progressionFromJson(json['Progression']),
+    intFromJson(json['NextQuestion']),
+    boolFromJson(json['ShowCorrection']),
+    listQuestionPageFromJson(json['Origin']),
+  );
 }
 
 Map<String, dynamic> loopbackShowExerciceToJson(LoopbackShowExercice item) {
   return {
     "Exercice": instantiatedWorkToJson(item.exercice),
-    "Progression": progressionExtToJson(item.progression),
+    "Progression": progressionToJson(item.progression),
+    "NextQuestion": intToJson(item.nextQuestion),
     "ShowCorrection": boolToJson(item.showCorrection),
-    "Origin": listQuestionPageToJson(item.origin)
+    "Origin": listQuestionPageToJson(item.origin),
   };
 }
 
@@ -245,7 +269,11 @@ class LoopbackShowQuestion implements LoopbackServerEvent {
   final QuestionPage origin;
 
   const LoopbackShowQuestion(
-      this.question, this.params, this.showCorrection, this.origin);
+    this.question,
+    this.params,
+    this.showCorrection,
+    this.origin,
+  );
 
   @override
   String toString() {
@@ -256,10 +284,11 @@ class LoopbackShowQuestion implements LoopbackServerEvent {
 LoopbackShowQuestion loopbackShowQuestionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackShowQuestion(
-      questionFromJson(json['Question']),
-      paramsFromJson(json['Params']),
-      boolFromJson(json['ShowCorrection']),
-      questionPageFromJson(json['Origin']));
+    questionFromJson(json['Question']),
+    paramsFromJson(json['Params']),
+    boolFromJson(json['ShowCorrection']),
+    questionPageFromJson(json['Origin']),
+  );
 }
 
 Map<String, dynamic> loopbackShowQuestionToJson(LoopbackShowQuestion item) {
@@ -267,7 +296,7 @@ Map<String, dynamic> loopbackShowQuestionToJson(LoopbackShowQuestion item) {
     "Question": questionToJson(item.question),
     "Params": paramsToJson(item.params),
     "ShowCorrection": boolToJson(item.showCorrection),
-    "Origin": questionPageToJson(item.origin)
+    "Origin": questionPageToJson(item.origin),
   };
 }
 
@@ -285,17 +314,21 @@ class LoopbackShowQuestionAnswerIn {
 }
 
 LoopbackShowQuestionAnswerIn loopbackShowQuestionAnswerInFromJson(
-    dynamic json_) {
+  dynamic json_,
+) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackShowQuestionAnswerIn(
-      questionPageFromJson(json['Question']), paramsFromJson(json['Params']));
+    questionPageFromJson(json['Question']),
+    paramsFromJson(json['Params']),
+  );
 }
 
 Map<String, dynamic> loopbackShowQuestionAnswerInToJson(
-    LoopbackShowQuestionAnswerIn item) {
+  LoopbackShowQuestionAnswerIn item,
+) {
   return {
     "Question": questionPageToJson(item.question),
-    "Params": paramsToJson(item.params)
+    "Params": paramsToJson(item.params),
   };
 }
 
@@ -312,14 +345,17 @@ class LoopbackShowQuestionAnswerOut {
 }
 
 LoopbackShowQuestionAnswerOut loopbackShowQuestionAnswerOutFromJson(
-    dynamic json_) {
+  dynamic json_,
+) {
   final json = (json_ as Map<String, dynamic>);
   return LoopbackShowQuestionAnswerOut(
-      questionAnswersInFromJson(json['Answers']));
+    questionAnswersInFromJson(json['Answers']),
+  );
 }
 
 Map<String, dynamic> loopbackShowQuestionAnswerOutToJson(
-    LoopbackShowQuestionAnswerOut item) {
+  LoopbackShowQuestionAnswerOut item,
+) {
   return {"Answers": questionAnswersInToJson(item.answers)};
 }
 
@@ -335,7 +371,8 @@ List<dynamic> listAnswerPToJson(List<AnswerP> item) {
 }
 
 List<InstantiatedBeltQuestion> listInstantiatedBeltQuestionFromJson(
-    dynamic json) {
+  dynamic json,
+) {
   if (json == null) {
     return [];
   }
@@ -343,7 +380,8 @@ List<InstantiatedBeltQuestion> listInstantiatedBeltQuestionFromJson(
 }
 
 List<dynamic> listInstantiatedBeltQuestionToJson(
-    List<InstantiatedBeltQuestion> item) {
+  List<InstantiatedBeltQuestion> item,
+) {
   return item.map(instantiatedBeltQuestionToJson).toList();
 }
 

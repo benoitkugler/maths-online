@@ -26,7 +26,7 @@ enum MatiereTag {
   mathematiques,
   physiqueChimie,
   sES,
-  sVT
+  sVT,
 }
 
 extension _MatiereTagExt on MatiereTag {
@@ -41,7 +41,7 @@ extension _MatiereTagExt on MatiereTag {
     "MATHS",
     "PHYSIQUE",
     "SES",
-    "SVT"
+    "SVT",
   ];
   static MatiereTag fromValue(String s) {
     return MatiereTag.values[_values.indexOf(s)];

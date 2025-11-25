@@ -153,7 +153,7 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 			// add each progression to the student note
 			for _, student := range stds { // make sure to consider all students
 				studentProg := byStudent[student.Id]
-				studentMark := bareme.ComputeMark(studentProg.Questions)
+				studentMark := bareme.ComputeMark(studentProg)
 				item := markByStudent[student.Id]
 				item.Mark += float64(studentMark)
 				item.NbTries += studentProg.NbTries()
@@ -164,8 +164,8 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 				for questionIndex, origin := range questionOrigins {
 					questions[origin.Id] = origin
 
-					if len(studentProg.Questions) != 0 {
-						succes, failure := studentProg.Questions[questionIndex].Stats()
+					if len(studentProg) != 0 {
+						succes, failure := studentProg[questionIndex].Stats()
 						v := questionsRes[origin.Id]
 						v[0] += succes
 						v[1] += failure

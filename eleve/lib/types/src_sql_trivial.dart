@@ -19,14 +19,16 @@ class CategoriesQuestions {
 
 CategoriesQuestions categoriesQuestionsFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return CategoriesQuestions(listQuestionCriterionFromJson(json['Tags']),
-      difficultyQueryFromJson(json['Difficulties']));
+  return CategoriesQuestions(
+    listQuestionCriterionFromJson(json['Tags']),
+    difficultyQueryFromJson(json['Difficulties']),
+  );
 }
 
 Map<String, dynamic> categoriesQuestionsToJson(CategoriesQuestions item) {
   return {
     "Tags": listQuestionCriterionToJson(item.tags),
-    "Difficulties": difficultyQueryToJson(item.difficulties)
+    "Difficulties": difficultyQueryToJson(item.difficulties),
   };
 }
 
@@ -54,8 +56,15 @@ class Trivial {
   final IdTeacher idTeacher;
   final String name;
 
-  const Trivial(this.id, this.questions, this.questionTimeout,
-      this.showDecrassage, this.public, this.idTeacher, this.name);
+  const Trivial(
+    this.id,
+    this.questions,
+    this.questionTimeout,
+    this.showDecrassage,
+    this.public,
+    this.idTeacher,
+    this.name,
+  );
 
   @override
   String toString() {
@@ -66,13 +75,14 @@ class Trivial {
 Trivial trivialFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Trivial(
-      intFromJson(json['Id']),
-      categoriesQuestionsFromJson(json['Questions']),
-      intFromJson(json['QuestionTimeout']),
-      boolFromJson(json['ShowDecrassage']),
-      boolFromJson(json['Public']),
-      intFromJson(json['IdTeacher']),
-      stringFromJson(json['Name']));
+    intFromJson(json['Id']),
+    categoriesQuestionsFromJson(json['Questions']),
+    intFromJson(json['QuestionTimeout']),
+    boolFromJson(json['ShowDecrassage']),
+    boolFromJson(json['Public']),
+    intFromJson(json['IdTeacher']),
+    stringFromJson(json['Name']),
+  );
 }
 
 Map<String, dynamic> trivialToJson(Trivial item) {
@@ -83,7 +93,7 @@ Map<String, dynamic> trivialToJson(Trivial item) {
     "ShowDecrassage": boolToJson(item.showDecrassage),
     "Public": boolToJson(item.public),
     "IdTeacher": intToJson(item.idTeacher),
-    "Name": stringToJson(item.name)
+    "Name": stringToJson(item.name),
   };
 }
 

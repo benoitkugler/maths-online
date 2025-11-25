@@ -5,6 +5,7 @@ import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_sql_events.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_sql_teacher.dart';
@@ -20,8 +21,11 @@ final questionComplexe = Question([
   const NumberFieldBlock(0, 10),
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
-  const GeometricConstructionFieldBlock(3, GFPoint(),
-      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+  const GeometricConstructionFieldBlock(
+    3,
+    GFPoint(),
+    FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true)),
+  ),
 ], []);
 
 const questionComplexeAnswers = {
@@ -34,7 +38,7 @@ const questionComplexeAnswers = {
 Question numberQuestion(String title) {
   return Question([
     TextBlock([T(title)], false, false, false),
-    const NumberFieldBlock(0, 10)
+    const NumberFieldBlock(0, 10),
   ], []);
 }
 
@@ -47,11 +51,23 @@ final quI2 = InstantiatedQuestion(2, qu2, DifficultyTag.diff2, []);
 final quI3 = InstantiatedQuestion(3, qu3, DifficultyTag.diffEmpty, []);
 
 final quI1bis = InstantiatedQuestion(
-    1, numberQuestion("Variante 1"), DifficultyTag.diff1, []);
+  1,
+  numberQuestion("Variante 1"),
+  DifficultyTag.diff1,
+  [],
+);
 final quI2bis = InstantiatedQuestion(
-    2, numberQuestion("Variante 2"), DifficultyTag.diff2, []);
+  2,
+  numberQuestion("Variante 2"),
+  DifficultyTag.diff2,
+  [],
+);
 final quI3bis = InstantiatedQuestion(
-    3, numberQuestion("Variante 3"), DifficultyTag.diffEmpty, []);
+  3,
+  numberQuestion("Variante 3"),
+  DifficultyTag.diffEmpty,
+  [],
+);
 
 const qu1Answer = {0: NumberAnswer(0)};
 const qu2Answer = {0: NumberAnswer(1)};
@@ -64,199 +80,258 @@ class _HomeworkTestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Isyro',
-        theme: theme,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: localizations,
-        supportedLocales: locales,
-        home: Builder(
-          builder: (context) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                  onPressed: () => showHomework(context),
-                  child: const Text("Homework")),
-            ],
-          ),
-        ));
+      title: 'Isyro',
+      theme: theme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: localizations,
+      supportedLocales: locales,
+      home: Builder(
+        builder: (context) => Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => showHomework(context),
+              child: const Text("Homework"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void showHomework(BuildContext context) async {
-    await Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (context) => const _Homework()));
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => const _Homework()));
   }
 }
 
 class _API implements HomeworkAPI {
+  final sheets = [
+    SheetProgression(
+      1,
+      Sheet(
+        1,
+        "Feuille en cours",
+        true,
+        DateTime.now().add(const Duration(days: 3)),
+        false,
+        MatiereTag.mathematiques,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(
+          1,
+          "Ex 1",
+          "Nombres complexes",
+          true,
+          [
+            [true],
+            [true],
+            [true],
+          ],
+          2,
+          6,
+        ),
+        const TaskProgressionHeader(
+          2,
+          "Ex 2",
+          "Nombres complexes",
+          true,
+          [
+            [false],
+          ],
+          0,
+          5,
+        ),
+      ],
+    ),
+    SheetProgression(
+      2,
+      Sheet(
+        3,
+        "Autre feuille en cours",
+        true,
+        DateTime.now().add(const Duration(days: 4)),
+        true,
+        MatiereTag.mathematiques,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(
+          1,
+          "Ex 1",
+          "Nombres complexes",
+          false,
+          [],
+          5,
+          6,
+        ),
+        const TaskProgressionHeader(2, "Ex 2", "Entiers", false, [], 3, 5),
+      ],
+    ),
+    SheetProgression(
+      3,
+      Sheet(
+        2,
+        "Feuille périmée",
+        false,
+        DateTime.now().subtract(const Duration(days: 3)),
+        true,
+        MatiereTag.allemand,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(
+          1,
+          "Ex 1",
+          "Patholoigcal loooooooonggggg tittllle .. ..",
+          false,
+          [],
+          0,
+          6,
+        ),
+        const TaskProgressionHeader(2, "Ex 2", "", false, [], 0, 5),
+      ],
+    ),
+    SheetProgression(
+      4,
+      Sheet(
+        4,
+        "Feuille périmée",
+        false,
+        DateTime.now().subtract(const Duration(days: 3)),
+        false,
+        MatiereTag.histoireGeo,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(
+          1,
+          "Ex 1",
+          "",
+          true,
+          [
+            [true],
+          ],
+          6,
+          6,
+        ),
+        const TaskProgressionHeader(2, "Ex 2", "", false, [], 4, 5),
+      ],
+    ),
+    SheetProgression(
+      5,
+      Sheet(
+        5,
+        "Feuille périmée",
+        true,
+        DateTime.now().subtract(const Duration(days: 3)),
+        false,
+        MatiereTag.histoireGeo,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(1, "Ex 1", "", false, [], 0, 6),
+        const TaskProgressionHeader(2, "Ex 2", "", false, [], 0, 5),
+      ],
+    ),
+    SheetProgression(
+      6,
+      Sheet(
+        6,
+        "Feuille périmée",
+        false,
+        DateTime.now().subtract(const Duration(days: 3)),
+        false,
+        MatiereTag.histoireGeo,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(1, "Ex 1", "", false, [], 0, 6),
+        const TaskProgressionHeader(2, "Ex 2", "", false, [], 0, 5),
+      ],
+    ),
+    SheetProgression(
+      7,
+      Sheet(
+        7,
+        "Feuille périmée",
+        true,
+        DateTime.now().subtract(const Duration(days: 3)),
+        false,
+        MatiereTag.histoireGeo,
+        QuestionRepeat.unlimited,
+        0,
+      ),
+      [
+        const TaskProgressionHeader(1, "Ex 1", "", false, [], 0, 6),
+        const TaskProgressionHeader(2, "Ex 2", "", false, [], 0, 5),
+      ],
+    ),
+  ];
+
   @override
   Future<Sheets> loadSheets(bool loadNonNoted) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
-    return [
-      SheetProgression(
-          1,
-          Sheet(
-              1,
-              "Feuille en cours",
-              !loadNonNoted,
-              DateTime.now().add(const Duration(days: 3)),
-              false,
-              MatiereTag.mathematiques,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(
-                1,
-                "Ex 1",
-                "Nombres complexes",
-                true,
-                ProgressionExt([
-                  [true],
-                  [true],
-                  [true],
-                ], 0),
-                2,
-                6),
-            const TaskProgressionHeader(
-                2,
-                "Ex 2",
-                "Nombres complexes",
-                true,
-                ProgressionExt([
-                  [false]
-                ], 0),
-                0,
-                5),
-          ]),
-      SheetProgression(
-          3,
-          Sheet(
-              3,
-              "Autre feuille en cours",
-              !loadNonNoted,
-              DateTime.now().add(const Duration(days: 4)),
-              true,
-              MatiereTag.mathematiques,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(1, "Ex 1", "Nombres complexes", false,
-                ProgressionExt([], 0), 5, 6),
-            const TaskProgressionHeader(
-                2, "Ex 2", "Entiers", false, ProgressionExt([], 0), 3, 5),
-          ]),
-      SheetProgression(
-          2,
-          Sheet(
-              2,
-              "Feuille périmée",
-              !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)),
-              true,
-              MatiereTag.allemand,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(
-                1,
-                "Ex 1",
-                "Patholoigcal loooooooonggggg tittllle .. ..",
-                false,
-                ProgressionExt([], 0),
-                0,
-                6),
-            const TaskProgressionHeader(
-                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
-          ]),
-      SheetProgression(
-          2,
-          Sheet(
-              4,
-              "Feuille périmée",
-              !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)),
-              false,
-              MatiereTag.histoireGeo,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(
-                1,
-                "Ex 1",
-                "",
-                true,
-                ProgressionExt([
-                  [true]
-                ], -1),
-                6,
-                6),
-            const TaskProgressionHeader(
-                2, "Ex 2", "", false, ProgressionExt([], 0), 4, 5),
-          ]),
-      SheetProgression(
-          2,
-          Sheet(
-              5,
-              "Feuille périmée",
-              !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)),
-              false,
-              MatiereTag.histoireGeo,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(
-                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
-            const TaskProgressionHeader(
-                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
-          ]),
-      SheetProgression(
-          2,
-          Sheet(
-              6,
-              "Feuille périmée",
-              !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)),
-              false,
-              MatiereTag.histoireGeo,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(
-                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
-            const TaskProgressionHeader(
-                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
-          ]),
-      SheetProgression(
-          2,
-          Sheet(
-              7,
-              "Feuille périmée",
-              !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)),
-              false,
-              MatiereTag.histoireGeo,
-              QuestionRepeat.unlimited,
-              0),
-          [
-            const TaskProgressionHeader(
-                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
-            const TaskProgressionHeader(
-                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
-          ]),
-    ];
+    return sheets;
+  }
+
+  @override
+  Future<SheetProgression> loadTravail(IdTravail id) {
+    return Future.value(sheets.firstWhere((s) => s.idTravail == id));
   }
 
   @override
   Future<StudentEvaluateTaskOut> evaluateExercice(
-      IdTask idTask, IdTravail idTravail, EvaluateWorkIn ex) {
-    // TODO: implement evaluateExercice
-    throw UnimplementedError();
+    IdTask idTask,
+    IdTravail idTravail,
+    EvaluateWorkIn params,
+  ) {
+    final questionIndex = params.answerIndex;
+    final answer = params.answer.answer;
+    final isCorrect =
+        (answer.data[0] is NumberAnswer) &&
+        questionIndex == (answer.data[0] as NumberAnswer).value;
+    final Progression progression = (params.progression.isEmpty)
+        ? [[], [], []]
+        : params.progression;
+
+    progression[questionIndex].add(isCorrect);
+    return Future.delayed(
+      Duration(milliseconds: 200),
+      () => StudentEvaluateTaskOut(
+        EvaluateWorkOut(
+          ProgressionExt(
+            progression,
+            progression.indexWhere((l) => l.every((sucess) => !sucess)),
+          ),
+          [quI1bis, quI2bis, quI3bis],
+          questionIndex,
+          QuestionAnswersOut({0: isCorrect}, {}),
+        ),
+        isCorrect ? 2 : 0,
+        false,
+        EventNotification([], 0),
+      ),
+    );
   }
 
   @override
   Future<InstantiatedWork> loadWork(IdTask id) async {
-    return InstantiatedWork(WorkID(0, WorkKind.workExercice, false),
-        "Exo de Test", Flow.sequencial, [quI1, quI2, quI3], [2, 3, 1]);
+    return InstantiatedWork(
+      WorkID(0, WorkKind.workExercice, false),
+      "Exo de Test",
+      id % 2 == 0 ? Flow.parallel : Flow.sequencial,
+      [quI1, quI2, quI3],
+      [2, 3, 1],
+    );
   }
 
   @override

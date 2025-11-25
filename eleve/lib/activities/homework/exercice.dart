@@ -20,15 +20,17 @@ abstract class ExerciceAPI {
 }
 
 class ExerciceController {
-  /// [exeAndProg] stores the server instantiated exercice with
-  /// the progression state.
-  StudentWork exeAndProg;
+  /// [exercice] stores the server instantiated exercice
+  InstantiatedWork exercice;
+
+  /// [progression] is the progression state for the given exercice.
+  Progression progression;
 
   final QuestionRepeat questionRepeat;
   final int questionTimeLimit;
 
-  /// [_questionIndex] is the current question, or -1 for the summary
-  int _questionIndex = -1;
+  /// [questionIndex] is the current question, or -1 for the summary
+  int questionIndex = -1;
   ExerciceStep step = .answering;
   List<QuestionController> _questions = [];
 
@@ -36,10 +38,11 @@ class ExerciceController {
   /// and stored while in feedback step.
   /// When going back to summary or retrying, these questions must replace
   /// the one in use
-  List<InstantiatedQuestion> _newQuestions = [];
+  List<InstantiatedQuestion>? _newQuestions;
 
   ExerciceController(
-    this.exeAndProg,
+    this.exercice,
+    this.progression,
     this.questionRepeat,
     this.questionTimeLimit,
   ) {
@@ -48,7 +51,7 @@ class ExerciceController {
   }
 
   List<QuestionController> _createControllers() {
-    return exeAndProg.exercice.questions.map((qu) {
+    return exercice.questions.map((qu) {
       final out = QuestionController.fromQuestion(qu.question);
       out.timeout = questionTimeLimit == 0
           ? null
@@ -84,9 +87,11 @@ class ExerciceController {
   }
 
   // also apply answering step
-  void applyNewQuestions() {
-    exeAndProg = exeAndProg.copyWithQuestions(_newQuestions);
-    _newQuestions = [];
+  void ensureNewQuestions() {
+    if (_newQuestions != null) {
+      exercice = exercice.copyWithQuestions(_newQuestions!);
+      _newQuestions = null;
+    }
     step = .answering;
     _questions = _createControllers();
     _refreshQuestions();
@@ -95,9 +100,9 @@ class ExerciceController {
   /// [updateFromEvaluate] is called after receiving the server
   /// answer. It removes waiting questions and update the questions status.
   void updateFromEvaluate(EvaluateWorkOut resp) {
-    exeAndProg = StudentWork(exeAndProg.exercice, resp.progression);
+    progression = resp.progression.questions;
     step = .displayingFeedback;
-    _questions[_questionIndex].timeout = null;
+    _questions[questionIndex].timeout = null;
     _newQuestions = resp.newQuestions;
 
     final isCorrect = resp.result.isCorrect;
@@ -105,14 +110,14 @@ class ExerciceController {
       // show errors and ask for retry
       /// [_showFeedback] set the given feedback (for the current question)
       /// and set the state to [displayingFeedback]
-      _questions[_questionIndex].setFeedback(resp.result.results);
+      _questions[questionIndex].setFeedback(resp.result.results);
 
       final isOneTry = questionRepeat == QuestionRepeat.oneTry;
-      _questions[_questionIndex].buttonEnabled = !isOneTry;
-      _questions[_questionIndex].buttonLabel = isOneTry
+      _questions[questionIndex].buttonEnabled = !isOneTry;
+      _questions[questionIndex].buttonLabel = isOneTry
           ? "Réponse incorrecte"
           : "Essayer à nouveau...";
-      _questions[_questionIndex].setFieldsEnabled(false);
+      _questions[questionIndex].setFieldsEnabled(false);
     }
 
     _refreshQuestions();
@@ -121,59 +126,36 @@ class ExerciceController {
   /// setQuestionAnswers show the answers for the current question
   /// and enable the question (only used in the prof preview for now)
   void setQuestionAnswers(Answers answers) {
-    _questions[_questionIndex].setAnswers(answers);
-    _questions[_questionIndex].buttonEnabled = true;
-    _questions[_questionIndex].buttonLabel = "Valider";
+    _questions[questionIndex].setAnswers(answers);
+    _questions[questionIndex].buttonEnabled = true;
+    _questions[questionIndex].buttonLabel = "Valider";
   }
 
-  bool isExerciceOver() => exeAndProg.progression.nextQuestion == -1;
-
-  bool get inQuestion => _questionIndex != -1;
+  bool get inQuestion => questionIndex != -1;
 
   /// valid only in [inQuestion] is true;
-  QuestionController get currentQuestion => _questions[_questionIndex];
-
-  bool get goToPreviousEnabled {
-    if (_questionIndex <= 0) return false;
-    final status = getQuestionsStatus();
-    if (status[_questionIndex - 1].visibility == .notAccessible) {
-      return false;
-    }
-    return true;
-  }
+  QuestionController get currentQuestion => _questions[questionIndex];
 
   Enonce get currentCorrection {
-    return exeAndProg.exercice.questions[_questionIndex].question.correction;
+    return exercice.questions[questionIndex].question.correction;
   }
 
   /// checks if the student as already try at least once the current question
   bool get isCurrentCorrectionEnabled {
-    return exeAndProg.progression.questions[_questionIndex].isNotEmpty;
-  }
-
-  bool get goToNextEnabled {
-    final currentIndex = _questionIndex;
-    final hasNextQuestion =
-        exeAndProg.exercice.questions.isNotEmpty &&
-        currentIndex < exeAndProg.exercice.questions.length - 1;
-    final status = getQuestionsStatus();
-    return hasNextQuestion &&
-        status[currentIndex + 1].visibility != .notAccessible;
+    return progression[questionIndex].isNotEmpty;
   }
 
   // computed from the progression
   List<QuestionStatus> getQuestionsStatus() {
-    final exercice = exeAndProg.exercice;
-    final progression = exeAndProg.progression;
     final isOneTry = questionRepeat == QuestionRepeat.oneTry;
 
+    final nextQuestion = progression.nextQuestion();
     return List<QuestionStatus>.generate(exercice.questions.length, (
       questionIndex,
     ) {
       final success = progression.questionSuccess(questionIndex);
       final blockedByFlow =
-          exercice.flow == .sequencial &&
-          progression.nextQuestion < questionIndex;
+          exercice.flow == .sequencial && nextQuestion < questionIndex;
 
       final QVisibility visibility;
       switch (success) {
@@ -208,33 +190,27 @@ enum QSuccess { neverTried, wrong, right }
 typedef QuestionStatus = ({QVisibility visibility, QSuccess success});
 
 extension on QuestionStatus {
-  (Icon, Icon?) get icons {
-    const lock = Icon(Icons.lock, color: Colors.grey);
-    const right = Icon(Icons.check, color: Colors.green);
-    const wrong = Icon(Icons.clear, color: Colors.red);
+  Icon get icon {
     switch (visibility) {
       case .notAccessible:
         switch (success) {
           case .neverTried:
-            return (lock, null);
+            return const Icon(Icons.lock, color: Colors.grey);
           case .right:
-            return (right, lock);
+            return const Icon(Icons.lock, color: Colors.green);
           case .wrong:
-            return (wrong, lock);
+            return const Icon(Icons.lock, color: Colors.red);
         }
       // icons wise, we don't distinguish the two states
       case .disabled:
       case .enabled:
         switch (success) {
           case .neverTried:
-            return (
-              const Icon(Icons.assignment, color: Colors.purpleAccent),
-              null,
-            );
+            return const Icon(Icons.assignment, color: Colors.purpleAccent);
           case .right:
-            return (right, null);
+            return const Icon(Icons.check, color: Colors.green);
           case .wrong:
-            return (wrong, null);
+            return const Icon(Icons.clear, color: Colors.red);
         }
     }
   }
@@ -253,26 +229,20 @@ extension on InstantiatedWork {
   }
 }
 
-extension on StudentWork {
-  StudentWork copyWithQuestions(List<InstantiatedQuestion> questions) {
-    return StudentWork(exercice.copyWithQuestions(questions), progression);
-  }
-}
-
-extension on QuestionAnswersOut {
+extension Q on QuestionAnswersOut {
   /// isCorrect is true if every fields are correct
   bool get isCorrect {
     return results.values.every((success) => success);
   }
 }
 
-extension on ProgressionExt {
+extension P on Progression {
   /// [getQuestion] returns an empty list if progression is empty
   QuestionHistory getQuestion(int index) {
-    if (questions.length <= index) {
+    if (length <= index) {
       return [];
     }
-    return questions[index];
+    return this[index];
   }
 
   bool _isQuestionCompleted(List<bool> history) {
@@ -286,9 +256,14 @@ extension on ProgressionExt {
     return qu.isEmpty ? .neverTried : .wrong;
   }
 
+  /// [nextQuestion] returns the question right after the last succes
+  int nextQuestion() {
+    return lastIndexWhere(_isQuestionCompleted) + 1;
+  }
+
   /// returns `true` if all the questions of the exercice are completed
   bool isCompleted() {
-    return questions.every(_isQuestionCompleted);
+    return every(_isQuestionCompleted);
   }
 }
 
@@ -367,7 +342,6 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
   @override
   Widget build(BuildContext context) {
     final ct = widget.controller;
-    final exP = widget.controller.exeAndProg;
 
     /// show a welcome screen when opening an exercice,
     /// with its questions and bareme
@@ -381,7 +355,7 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
                 horizontal: 6.0,
                 vertical: 10,
               ),
-              child: ColoredTitle(exP.exercice.title, Colors.purple),
+              child: ColoredTitle(ct.exercice.title, Colors.purple),
             ),
             if (ct.questionRepeat == QuestionRepeat.oneTry)
               Card(
@@ -410,7 +384,12 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
                 ),
               ),
             Expanded(
-              child: _QuestionList(exP, ct.getQuestionsStatus(), _goToQuestion),
+              child: _QuestionList(
+                ct.exercice,
+                ct.progression,
+                ct.getQuestionsStatus(),
+                _goToQuestion,
+              ),
             ),
           ],
         ),
@@ -420,7 +399,7 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
 
   void _goToQuestion(int questionIndex) async {
     final ct = widget.controller;
-    ct._questionIndex = questionIndex;
+    ct.questionIndex = questionIndex;
     ct.step = .answering;
     ct._refreshQuestions();
 
@@ -445,9 +424,10 @@ class _ExerciceStartRouteState extends State<ExerciceStartRoute> {
     } else {
       setState(() {
         // properly apply new questions
-        ct.applyNewQuestions();
+        // when validation has been trigerred
+        ct.ensureNewQuestions();
         // go to summary
-        ct._questionIndex = -1;
+        ct.questionIndex = -1;
       });
     }
   }
@@ -477,20 +457,26 @@ class _SuccessSquare extends StatelessWidget {
 }
 
 class _QuestionList extends StatelessWidget {
-  final StudentWork data;
+  final InstantiatedWork exercice;
+  final Progression progression;
   final List<QuestionStatus> status;
 
   final void Function(int index) onSelectQuestion;
 
-  const _QuestionList(this.data, this.status, this.onSelectQuestion);
+  const _QuestionList(
+    this.exercice,
+    this.progression,
+    this.status,
+    this.onSelectQuestion,
+  );
 
   MarkBareme get mark {
     int mark = 0;
     int bareme = 0;
-    for (var i = 0; i < data.exercice.baremes.length; i++) {
-      bareme += data.exercice.baremes[i];
-      if (data.progression.questionSuccess(i) == .right) {
-        mark += data.exercice.baremes[i];
+    for (var i = 0; i < exercice.baremes.length; i++) {
+      bareme += exercice.baremes[i];
+      if (progression.questionSuccess(i) == .right) {
+        mark += exercice.baremes[i];
       }
     }
     return MarkBareme(mark, bareme);
@@ -514,7 +500,7 @@ class _QuestionList extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Wrap(
-                  children: data.progression
+                  children: progression
                       .getQuestion(questionIndex)
                       .map((e) => _SuccessSquare(e))
                       .toList(),
@@ -537,19 +523,19 @@ class _QuestionList extends StatelessWidget {
     return ListView(
       children: [
         ...List<Widget>.generate(
-          data.exercice.questions.length,
+          exercice.questions.length,
           (index) => _QuestionRow(
             status[index],
             "Question ${index + 1}",
-            data.exercice.questions[index].difficulty,
-            data.exercice.baremes[index],
+            exercice.questions[index].difficulty,
+            exercice.baremes[index],
             showDetails: () => _showProgressionDetails(context, index),
             onClick: allowDoQuestion(index)
                 ? () => onSelectQuestion(index)
                 : null,
           ),
         ),
-        if (data.progression.questions.isNotEmpty)
+        if (progression.isNotEmpty)
           ListTile(
             title: const Text("Total"),
             trailing: Text(
@@ -661,30 +647,19 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
         ct.step == .displayingFeedback || ct.currentQuestion.timeout == null;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Question ${ct._questionIndex + 1}"),
+        title: Text("Question ${ct.questionIndex + 1}"),
         actions: [
           if (widget.onShowCorrectAnswer != null)
             TextButton(
               onPressed: widget.onShowCorrectAnswer,
               child: const Text("Afficher la réponse"),
             ),
-          if (widget.deadline == null) ...[
-            // disable when time limit is on
-            IconButton(
-              onPressed: ct.goToPreviousEnabled ? goToPrevious : null,
-              icon: const Icon(Icons.arrow_back),
-            ),
-            IconButton(
-              onPressed: ct.goToNextEnabled ? goToNext : null,
-              icon: const Icon(Icons.arrow_forward),
-            ),
-          ],
         ],
       ),
       body: PopScope(
         canPop: canPop,
         child: QuestionView(
-          ct.exeAndProg.exercice.questions[ct._questionIndex].question,
+          ct.exercice.questions[ct.questionIndex].question,
           ct.currentQuestion,
           onQuestionButtonClick,
           Colors.purpleAccent,
@@ -697,7 +672,12 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     // send an empty response to the server in background
     final evalFuture = _evaluate(QuestionAnswersIn({}));
 
+    final hideBackground =
+        widget.controller.questionRepeat ==
+        .oneTry; // here we have a time limit
+    final color = Theme.of(context).scaffoldBackgroundColor;
     await showDialog<void>(
+      barrierColor: hideBackground ? color.withAlpha(252) : null,
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.orange,
@@ -706,6 +686,12 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
         content: Text(
           "Tu as dépassé la limite de ${widget.controller.questionTimeLimit} sec.",
         ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Retour"),
+          ),
+        ],
       ),
     );
     final resp = await evalFuture;
@@ -714,6 +700,7 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     // go back to exercice home
     if (resp != null) {
       widget.controller.updateFromEvaluate(resp);
+      widget.controller.questionIndex = -1;
     }
     Navigator.of(context).pop();
   }
@@ -764,8 +751,14 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   }
 
   void _onExerciceOver() async {
+    final hideBackground =
+        widget.controller.questionRepeat == .oneTry &&
+        widget.controller.questionTimeLimit != 0;
+    final overlayColor = Theme.of(context).scaffoldBackgroundColor;
+
     // exercice is over
     await showDialog<bool>(
+      barrierColor: hideBackground ? overlayColor.withAlpha(252) : null,
       context: context,
       builder: (context) => const Dialog(child: Congrats()),
     );
@@ -778,14 +771,14 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   // pure function wrapping the API call with error handling
   Future<EvaluateWorkOut?> _evaluate(QuestionAnswersIn answsers) async {
     final ct = widget.controller;
-    final index = ct._questionIndex;
+    final index = ct.questionIndex;
 
     // validate the given answer
     final params = EvaluateWorkIn(
-      ct.exeAndProg.exercice.iD,
-      ct.exeAndProg.progression,
+      ct.exercice.iD,
+      ct.progression,
       index,
-      AnswerP(ct.exeAndProg.exercice.questions[index].params, answsers),
+      AnswerP(ct.exercice.questions[index].params, answsers),
     );
 
     final EvaluateWorkOut resp;
@@ -802,50 +795,60 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
 
   void _onValideQuestion() async {
     final ct = widget.controller;
-    final index = ct._questionIndex;
+    final index = ct.questionIndex;
 
     // always cancel the timeout, if any
     timeLimitTimer?.cancel();
 
     // for sequencial exercices, if we are not at the current question, just go to it
     // and return
-    if (ct.exeAndProg.exercice.flow == Flow.sequencial &&
-        index != ct.exeAndProg.progression.nextQuestion) {
-      _goToQuestion(ct.exeAndProg.progression.nextQuestion);
+    final nextQuestion = ct.progression.nextQuestion();
+    if (ct.exercice.flow == Flow.sequencial && index != nextQuestion) {
+      _goToQuestion(
+        nextQuestion < ct.exercice.questions.length ? nextQuestion : -1,
+      );
       return;
     }
 
     final resp = await _evaluate(ct.currentQuestion.answers());
     if (resp == null) return; // network error
 
+    setState(() {
+      ct.updateFromEvaluate(resp);
+    });
+
     if (resp.progression.nextQuestion == -1) {
       _onExerciceOver();
       return;
     }
 
-    setState(() {
-      ct.updateFromEvaluate(resp);
-    });
-
-    _showValidDialogOrSnack(resp.result.isCorrect);
+    _showValidDialogOrSnack(
+      resp.result.isCorrect,
+      resp.progression.nextQuestion,
+    );
   }
 
   // handle the following cases :
   //  - the answer is correct and there is more to do
   //  - the answer is incorrect and there is a correction to display
   //  - the answer is incorrect and there is no correction to display
-  void _showValidDialogOrSnack(bool isAnswerCorrect) async {
+  void _showValidDialogOrSnack(bool isAnswerCorrect, int nextQuestion) async {
     final ct = widget.controller;
-    final hasNextQuestion =
-        isAnswerCorrect && ct.exeAndProg.progression.nextQuestion != -1;
+    final hasNextQuestion = isAnswerCorrect && nextQuestion != -1;
     final showButtonCorrection =
         widget.showCorrectionButtonOnFail &&
         ct.currentCorrection.isNotEmpty &&
         !isAnswerCorrect;
+    // in oneTry mode, make sure the content of the question
+    // is not accessible after the timeout
+    final hideBackground =
+        ct.questionRepeat == .oneTry && ct.questionTimeLimit != 0;
+    final overlayColor = Theme.of(context).scaffoldBackgroundColor;
 
     if (hasNextQuestion) {
       // show a dialog with next button
       final goToNext = await showDialog<bool>(
+        barrierColor: hideBackground ? overlayColor.withAlpha(252) : null,
         context: context,
         builder: (context) => CorrectAnswerDialog(() {
           Navigator.of(context).pop(true);
@@ -853,32 +856,66 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
       );
       if (!mounted) return;
       if (goToNext ?? false) {
-        _goToQuestion(ct.exeAndProg.progression.nextQuestion);
+        _goToQuestion(nextQuestion);
+      } else {
+        Navigator.of(context).pop();
       }
-    } else if (showButtonCorrection) {
-      // show a "persitent" snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red.shade200,
+      return;
+    } else if (isAnswerCorrect) {
+      return;
+    }
+
+    const text = Text("Dommage, la réponse est incorrecte.");
+    final color = Colors.red.shade300;
+    if (hideBackground) {
+      // dialog mode
+      await showDialog<void>(
+        barrierColor: overlayColor.withAlpha(252),
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Réponse incorrecte"),
+          backgroundColor: color,
+          content: text,
+          actions: showButtonCorrection
+              ? [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                    ),
+                    onPressed: _showCorrection,
+                    child: const Text("Correction"),
+                  ),
+                ]
+              : null,
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } else {
+      // snackbar mode
+      final SnackBar snackBar;
+      if (showButtonCorrection) {
+        // show a "persitent" snackbar
+        snackBar = SnackBar(
+          backgroundColor: color,
+          content: text,
           duration: const Duration(seconds: 120),
-          content: const Text("Dommage, la réponse est incorrecte."),
           action: SnackBarAction(
             backgroundColor: Colors.white,
             label: "Correction",
             onPressed: _showCorrection,
           ),
           actionOverflowThreshold: 0.5,
-        ),
-      );
-    } else if (!isAnswerCorrect) {
-      // just show a short snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red.shade200,
+        );
+      } else {
+        // just show a short snackbar
+        snackBar = SnackBar(
+          backgroundColor: color,
+          content: text,
           duration: const Duration(seconds: 4),
-          content: const Text("Dommage, la réponse est incorrecte."),
-        ),
-      );
+        );
+      }
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
@@ -899,8 +936,8 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
 
   void _onRetryQuestion() {
     setState(() {
-      widget.controller.applyNewQuestions();
-      _initQuestionTimer(); // after building the questions again to have the proper timeout
+      widget.controller.ensureNewQuestions();
+      _initQuestionTimer(); // after building the questions again; to have the proper timeout
     });
   }
 
@@ -908,14 +945,14 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     // remove potential snackbar
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    _goToQuestion(widget.controller._questionIndex - 1);
+    _goToQuestion(widget.controller.questionIndex - 1);
   }
 
   void goToNext() {
     // remove potential snackbar
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    _goToQuestion(widget.controller._questionIndex + 1);
+    _goToQuestion(widget.controller.questionIndex + 1);
   }
 }
 
@@ -946,8 +983,6 @@ class _QuestionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final diff = _difficulties[difficultyTag] ?? "";
-    final (icon1, icon2) = state.icons;
-    final btn1 = OutlinedButton(onPressed: showDetails, child: icon1);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2),
       child: ListTile(
@@ -957,9 +992,7 @@ class _QuestionRow extends StatelessWidget {
         tileColor: state.visibility != .notAccessible && state.success != .right
             ? Colors.purple.shade400.withValues(alpha: 0.5)
             : null,
-        leading: icon2 == null
-            ? btn1
-            : Column(mainAxisSize: .min, children: [btn1, icon2]),
+        leading: OutlinedButton(onPressed: showDetails, child: state.icon),
         title: Text(title),
         subtitle: diff.isEmpty ? null : Text(diff),
         trailing: Text("/ $bareme"),

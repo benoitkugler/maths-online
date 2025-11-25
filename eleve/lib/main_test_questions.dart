@@ -1,11 +1,10 @@
+import 'package:eleve/activities/homework/exercice.dart';
 import 'package:eleve/activities/trivialpoursuit/question.dart';
 import 'package:eleve/decrassage/decrassage.dart';
-import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/question.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_preview.dart';
 import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
@@ -26,49 +25,62 @@ final questionComplexe = Question([
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
   TreeBlock(
+    [
+      [T("A")],
+      [T("B")],
+      [T("C")],
+    ],
+    const TreeNodeAnswer(
       [
-        [T("A")],
-        [T("B")],
-        [T("C")]
+        TreeNodeAnswer(
+          [TreeNodeAnswer([], [], 0), TreeNodeAnswer([], [], 0)],
+          ["", "7"],
+          1,
+        ),
+        TreeNodeAnswer(
+          [TreeNodeAnswer([], [], 0), TreeNodeAnswer([], [], 0)],
+          ["0.1", "x"],
+          0,
+        ),
       ],
-      const TreeNodeAnswer([
-        TreeNodeAnswer([
-          TreeNodeAnswer([], [], 0),
-          TreeNodeAnswer([], [], 0),
-        ], [
-          "",
-          "7"
-        ], 1),
-        TreeNodeAnswer([
-          TreeNodeAnswer([], [], 0),
-          TreeNodeAnswer([], [], 0),
-        ], [
-          "0.1",
-          "x"
-        ], 0),
-      ], [
-        "x",
-        "1/3"
-      ], 0)),
-  TreeFieldBlock([
-    [2, 2],
-    [2, 3],
-  ], [
-    [T("A")],
-    [T("B")],
-    [T("C")]
-  ], 10),
+      ["x", "1/3"],
+      0,
+    ),
+  ),
+  TreeFieldBlock(
+    [
+      [2, 2],
+      [2, 3],
+    ],
+    [
+      [T("A")],
+      [T("B")],
+      [T("C")],
+    ],
+    10,
+  ),
   const GeometricConstructionFieldBlock(
-      3,
-      GFPoint(),
-      FunctionsGraphBlock([], [], [],
-          [FunctionPoint("#FF0000", "A point", Coord(5, 5))], bounds)),
-  const GeometricConstructionFieldBlock(4, GFPoint(),
-      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
-  const GeometricConstructionFieldBlock(5, GFVector("test", true),
-      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
-  const GeometricConstructionFieldBlock(6, GFVectorPair(),
-      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+    3,
+    GFPoint(),
+    FunctionsGraphBlock([], [], [], [
+      FunctionPoint("#FF0000", "A point", Coord(5, 5)),
+    ], bounds),
+  ),
+  const GeometricConstructionFieldBlock(
+    4,
+    GFPoint(),
+    FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true)),
+  ),
+  const GeometricConstructionFieldBlock(
+    5,
+    GFVector("test", true),
+    FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true)),
+  ),
+  const GeometricConstructionFieldBlock(
+    6,
+    GFVectorPair(),
+    FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true)),
+  ),
 ], []);
 
 const questionComplexeAnswers = {
@@ -79,26 +91,32 @@ const questionComplexeAnswers = {
   4: PointAnswer(IntCoord(3, 8)),
   5: DoublePointAnswer(IntCoord(3, 8), IntCoord(3, 8)),
   6: DoublePointPairAnswer(
-      IntCoord(3, 8), IntCoord(3, 8), IntCoord(3, 8), IntCoord(3, 8)),
-  10: TreeAnswer(TreeNodeAnswer([], [], 0))
+    IntCoord(3, 8),
+    IntCoord(3, 8),
+    IntCoord(3, 8),
+    IntCoord(3, 8),
+  ),
+  10: TreeAnswer(TreeNodeAnswer([], [], 0)),
 };
 
 Question numberQuestion(String title, {bool withCorrection = true}) {
   return Question(
-      [
-        TextBlock([T(title)], false, false, false),
-        const NumberFieldBlock(0, 10),
-        const NumberFieldBlock(1, 20),
-      ],
-      withCorrection
-          ? [
-              TextBlock(
-                  List.filled(40, T("Une très belle correction : $title")),
-                  false,
-                  true,
-                  true)
-            ]
-          : []);
+    [
+      TextBlock([T(title)], false, false, false),
+      const NumberFieldBlock(0, 10),
+      const NumberFieldBlock(1, 20),
+    ],
+    withCorrection
+        ? [
+            TextBlock(
+              List.filled(40, T("Une très belle correction : $title")),
+              false,
+              true,
+              true,
+            ),
+          ]
+        : [],
+  );
 }
 
 final qu1 = numberQuestion("Test 1");
@@ -110,11 +128,23 @@ final quI2 = InstantiatedQuestion(2, qu2, DifficultyTag.diff2, []);
 final quI3 = InstantiatedQuestion(3, qu3, DifficultyTag.diffEmpty, []);
 
 final quI1bis = InstantiatedQuestion(
-    1, numberQuestion("Variante 1"), DifficultyTag.diff3, []);
+  1,
+  numberQuestion("Variante 1"),
+  DifficultyTag.diff3,
+  [],
+);
 final quI2bis = InstantiatedQuestion(
-    2, numberQuestion("Variante 2"), DifficultyTag.diff2, []);
+  2,
+  numberQuestion("Variante 2"),
+  DifficultyTag.diff2,
+  [],
+);
 final quI3bis = InstantiatedQuestion(
-    3, numberQuestion("Variante 3"), DifficultyTag.diff2, []);
+  3,
+  numberQuestion("Variante 3"),
+  DifficultyTag.diff2,
+  [],
+);
 
 const qu1Answer = {0: NumberAnswer(0), 1: NumberAnswer(0)};
 const qu2Answer = {0: NumberAnswer(1), 1: NumberAnswer(1)};
@@ -128,91 +158,122 @@ class _QuestionTestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Isyro',
-        theme: theme,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: localizations,
-        supportedLocales: locales,
-        home: Builder(
-          builder: (context) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                  onPressed: () => showSingleQuestion(context),
-                  child: const Text("Single question")),
-              ElevatedButton(
-                  onPressed: () => showTrivialInGame(context),
-                  child: const Text("Trivial: InGame")),
-              ElevatedButton(
-                  onPressed: () => showTrivialLast(context),
-                  child: const Text("Trivial: Last")),
-              ElevatedButton(
-                  onPressed: () => showDecrassage(context),
-                  child: const Text("Decrassage")),
-              ElevatedButton(
-                  onPressed: () => showLoopackQuestion(context),
-                  child: const Text("Loopack: Question")),
-              ElevatedButton(
-                  onPressed: () => showExerciceSequencial(context),
-                  child: const Text("Homework: Sequencial")),
-              ElevatedButton(
-                  onPressed: () => showExerciceParallel(context),
-                  child: const Text("Homework: Parallel")),
-              ElevatedButton(
-                  onPressed: () => showLoopackExerciceSequencial(context),
-                  child: const Text("Loopack: Exercice Sequencial")),
-              ElevatedButton(
-                  onPressed: () => showLoopackExerciceParallel(context),
-                  child: const Text("Loopack: Exercice Parallel")),
-            ],
-          ),
-        ));
+      title: 'Isyro',
+      theme: theme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: localizations,
+      supportedLocales: locales,
+      home: Builder(
+        builder: (context) => Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => showSingleQuestion(context),
+              child: const Text("Single question"),
+            ),
+            ElevatedButton(
+              onPressed: () => showTrivialInGame(context),
+              child: const Text("Trivial: InGame"),
+            ),
+            ElevatedButton(
+              onPressed: () => showTrivialLast(context),
+              child: const Text("Trivial: Last"),
+            ),
+            ElevatedButton(
+              onPressed: () => showDecrassage(context),
+              child: const Text("Decrassage"),
+            ),
+            ElevatedButton(
+              onPressed: () => showLoopackQuestion(context),
+              child: const Text("Loopack: Question"),
+            ),
+            ElevatedButton(
+              onPressed: () => showExerciceSequencial(context),
+              child: const Text("Homework: Sequencial"),
+            ),
+            ElevatedButton(
+              onPressed: () => showExerciceParallel(context),
+              child: const Text("Homework: Parallel"),
+            ),
+            ElevatedButton(
+              onPressed: () => showLoopackExerciceSequencial(context),
+              child: const Text("Loopack: Exercice Sequencial"),
+            ),
+            ElevatedButton(
+              onPressed: () => showLoopackExerciceParallel(context),
+              child: const Text("Loopack: Exercice Parallel"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void showSingleQuestion(BuildContext context) async {
     await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (context) => const _SingleQuestion()));
+      MaterialPageRoute<void>(builder: (context) => const _SingleQuestion()),
+    );
   }
 
   void showTrivialInGame(BuildContext context) async {
     await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (context) => const _TrivialInGame()));
+      MaterialPageRoute<void>(builder: (context) => const _TrivialInGame()),
+    );
   }
 
   void showTrivialLast(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => _TrivialLast(() => Navigator.of(context).pop())));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => _TrivialLast(() => Navigator.of(context).pop()),
+      ),
+    );
   }
 
   void showDecrassage(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => _Decrassage(() => Navigator.of(context).pop())));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => _Decrassage(() => Navigator.of(context).pop()),
+      ),
+    );
   }
 
   void showLoopackQuestion(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
         builder: (context) =>
-            _LoopbackQuestion(() => Navigator.of(context).pop())));
+            _LoopbackQuestion(() => Navigator.of(context).pop()),
+      ),
+    );
   }
 
   void showExerciceSequencial(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => const _ExerciceSequential()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _ExerciceSequential(),
+      ),
+    );
   }
 
   void showExerciceParallel(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => const _ExerciceParallel()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => const _ExerciceParallel()),
+    );
   }
 
   void showLoopackExerciceSequencial(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => const _LoopbackExerciceSequential()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _LoopbackExerciceSequential(),
+      ),
+    );
   }
 
   void showLoopackExerciceParallel(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => const _LoopbackExerciceParallel()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _LoopbackExerciceParallel(),
+      ),
+    );
   }
 }
 
@@ -227,10 +288,11 @@ class _SingleQuestionState extends State<_SingleQuestion> {
   final question = Question([
     TextBlock([T("sdsmldù")], false, false, false),
     ImageBlock(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sucrose_molecule.svg/250px-Sucrose_molecule.svg.png",
-        200),
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sucrose_molecule.svg/250px-Sucrose_molecule.svg.png",
+      200,
+    ),
     FormulaBlock("kslmd + dmld + sdmsd + sdlsd *555 + 66 + 66 6 +99"),
-    VariationTableFieldBlock("f(x)", [1, 2], 1)
+    VariationTableFieldBlock("f(x)", [1, 2], 1),
   ], []);
   late final QuestionController controller;
   @override
@@ -245,22 +307,26 @@ class _SingleQuestionState extends State<_SingleQuestion> {
       appBar: AppBar(
         actions: [
           TextButton(
-              onPressed: () {
-                setState(() {
-                  controller.buttonLabel = "berk";
-                  controller.setFeedback({0: true, 1: false});
-                });
-              },
-              child: const Text("error")),
+            onPressed: () {
+              setState(() {
+                controller.buttonLabel = "berk";
+                controller.setFeedback({0: true, 1: false});
+              });
+            },
+            child: const Text("error"),
+          ),
           TextButton(
-              onPressed: () {
-                setState(() {
-                  controller.buttonLabel = "à nouveau";
-                  controller
-                      .setAnswers({0: NumberAnswer(10), 1: NumberAnswer(20)});
+            onPressed: () {
+              setState(() {
+                controller.buttonLabel = "à nouveau";
+                controller.setAnswers({
+                  0: NumberAnswer(10),
+                  1: NumberAnswer(20),
                 });
-              },
-              child: const Text("answser")),
+              });
+            },
+            child: const Text("answser"),
+          ),
         ],
       ),
       body: QuestionView(question, controller, () {}, Colors.blueAccent),
@@ -274,14 +340,16 @@ class _TrivialInGame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InGameQuestionRoute(
-        ShowQuestion(60, Categorie.blue, 0, questionComplexe),
-        (a) => onValid(a, context));
+      ShowQuestion(60, Categorie.blue, 0, questionComplexe),
+      (a) => onValid(a, context),
+    );
   }
 
   void onValid(QuestionAnswersIn answers, BuildContext context) async {
     await showDialog<void>(
-        context: context,
-        builder: (context) => Dialog(child: Text("Sending $answers")));
+      context: context,
+      builder: (context) => Dialog(child: Text("Sending $answers")),
+    );
     if (!context.mounted) return;
     Navigator.of(context).pop();
   }
@@ -315,12 +383,14 @@ class _DecrassageAPI implements DecrassageAPI {
 
   @override
   Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer) async {
-    return QuestionAnswersOut({
-      0: (answer.answer.answer.data[0] as NumberAnswer).value ==
-          answer.idQuestion.toDouble()
-    }, {
-      0: NumberAnswer(answer.idQuestion.toDouble())
-    });
+    return QuestionAnswersOut(
+      {
+        0:
+            (answer.answer.answer.data[0] as NumberAnswer).value ==
+            answer.idQuestion.toDouble(),
+      },
+      {0: NumberAnswer(answer.idQuestion.toDouble())},
+    );
   }
 }
 
@@ -349,8 +419,12 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   @override
   void initState() {
     controller = LoopackQuestionController(
-      LoopbackShowQuestion(questionComplexe, [], false,
-          const server_questions.QuestionPage(null, null, null)),
+      LoopbackShowQuestion(
+        questionComplexe,
+        [],
+        false,
+        const server_questions.QuestionPage(null, null, null),
+      ),
     );
     super.initState();
   }
@@ -374,7 +448,9 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
     const rep = {0: true, 1: false, 2: true, 3: true};
 
     final snack = LoopbackQuestionW.serverValidation(
-        const QuestionAnswersOut(rep, {}), () {});
+      const QuestionAnswersOut(rep, {}),
+      () {},
+    );
     ScaffoldMessenger.of(context).showSnackBar(snack);
     setState(() {
       controller.setFeedback(rep);
@@ -382,24 +458,20 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   }
 }
 
-final workParallel = StudentWork(
-  InstantiatedWork(
-      const WorkID(0, WorkKind.workExercice, true),
-      "Identités remarquables (parallèle)",
-      Flow.parallel,
-      [quI1, quI2, quI3],
-      [1, 1, 2]),
-  ProgressionExt([[], [], []], 0),
+final workParallel = InstantiatedWork(
+  const WorkID(0, WorkKind.workExercice, true),
+  "Identités remarquables (parallèle)",
+  Flow.parallel,
+  [quI1, quI2, quI3],
+  [1, 1, 2],
 );
 
-final workSequencial = StudentWork(
-  InstantiatedWork(
-      const WorkID(0, WorkKind.workExercice, true),
-      "Identités remarquables (séquentiel)",
-      Flow.sequencial,
-      [quI1, quI2, quI3],
-      [1, 1, 2]),
-  ProgressionExt([[], [], []], 0),
+final workSequencial = InstantiatedWork(
+  const WorkID(0, WorkKind.workExercice, true),
+  "Identités remarquables (séquentiel)",
+  Flow.sequencial,
+  [quI1, quI2, quI3],
+  [1, 1, 2],
 );
 
 class _ExerciceSequentialAPI implements ExerciceAPI {
@@ -410,18 +482,20 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
     final questionIndex = params.answerIndex;
     final answer = params.answer.answer;
     // the correct answer is the index of the question
-    final isCorrect = (answer.data[0] is NumberAnswer) &&
+    final isCorrect =
+        (answer.data[0] is NumberAnswer) &&
         questionIndex == (answer.data[0] as NumberAnswer).value;
-    params.progression.questions[questionIndex].add(isCorrect);
+    params.progression[questionIndex].add(isCorrect);
     final nextQuestion = isCorrect
         ? (questionIndex == 2 ? -1 : questionIndex + 1)
         : questionIndex;
     print("nextQuestion $nextQuestion");
     return EvaluateWorkOut(
-        ProgressionExt(params.progression.questions, nextQuestion),
-        [quI1bis, quI2bis, quI3bis],
-        questionIndex,
-        QuestionAnswersOut({0: isCorrect}, {}));
+      ProgressionExt(params.progression, nextQuestion),
+      [quI1bis, quI2bis, quI3bis],
+      questionIndex,
+      QuestionAnswersOut({0: isCorrect}, {}),
+    );
   }
 }
 
@@ -430,8 +504,15 @@ class _ExerciceSequential extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceStartRoute(_ExerciceSequentialAPI(),
-        ExerciceController(workSequencial, QuestionRepeat.oneTry, 10));
+    return ExerciceStartRoute(
+      _ExerciceSequentialAPI(),
+      ExerciceController(
+        workSequencial,
+        [[], [], []],
+        QuestionRepeat.oneTry,
+        10,
+      ),
+    );
   }
 }
 
@@ -445,13 +526,24 @@ class _LoopbackExerciceSequential extends StatefulWidget {
 
 class _LoopbackExerciceSequentialState
     extends State<_LoopbackExerciceSequential> {
-  ExerciceController ct =
-      ExerciceController(workSequencial, QuestionRepeat.unlimited, 0);
+  ExerciceController ct = ExerciceController(
+    workSequencial,
+    [[], [], []],
+    QuestionRepeat.unlimited,
+    0,
+  );
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceStartRoute(_ExerciceSequentialAPI(), ct,
-        initialQuestion: 1, onShowCorrectAnswer: onShowCorrectAnswer);
+    return ExerciceStartRoute(
+      _ExerciceSequentialAPI(),
+      ct,
+      editorPreviewParams: (
+        initialQuestion: 1,
+        instantShowCorrection: false,
+        onShowCorrectAnswer: onShowCorrectAnswer,
+      ),
+    );
   }
 
   void onShowCorrectAnswer() async {
@@ -471,17 +563,19 @@ class _ExerciceParallelAPI implements ExerciceAPI {
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final questionIndex = params.answerIndex;
     final answer = params.answer.answer;
-    final isCorrect = (answer.data[0] is NumberAnswer) &&
+    final isCorrect =
+        (answer.data[0] is NumberAnswer) &&
         questionIndex == (answer.data[0] as NumberAnswer).value;
-    params.progression.questions[questionIndex].add(isCorrect);
+    params.progression[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        ProgressionExt(
-            params.progression.questions,
-            params.progression.questions
-                .indexWhere((l) => l.every((sucess) => !sucess))),
-        [quI1bis, quI2bis, quI3bis],
-        questionIndex,
-        QuestionAnswersOut({0: isCorrect}, {}));
+      ProgressionExt(
+        params.progression,
+        params.progression.indexWhere((l) => l.every((sucess) => !sucess)),
+      ),
+      [quI1bis, quI2bis, quI3bis],
+      questionIndex,
+      QuestionAnswersOut({0: isCorrect}, {}),
+    );
   }
 }
 
@@ -490,8 +584,10 @@ class _ExerciceParallel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceStartRoute(_ExerciceParallelAPI(),
-        ExerciceController(workParallel, QuestionRepeat.unlimited, 10));
+    return ExerciceStartRoute(
+      _ExerciceParallelAPI(),
+      ExerciceController(workParallel, [[], [], []], QuestionRepeat.oneTry, 10),
+    );
   }
 }
 
@@ -504,15 +600,23 @@ class _LoopbackExerciceParallel extends StatefulWidget {
 }
 
 class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
-  ExerciceController ct =
-      ExerciceController(workParallel, QuestionRepeat.unlimited, 0);
+  ExerciceController ct = ExerciceController(
+    workParallel,
+    [[], [], []],
+    QuestionRepeat.unlimited,
+    0,
+  );
 
   @override
   Widget build(BuildContext context) {
     return ExerciceStartRoute(
       _ExerciceParallelAPI(),
       ct,
-      onShowCorrectAnswer: onShowCorrectAnswer,
+      editorPreviewParams: (
+        initialQuestion: null,
+        instantShowCorrection: false,
+        onShowCorrectAnswer: onShowCorrectAnswer,
+      ),
     );
   }
 

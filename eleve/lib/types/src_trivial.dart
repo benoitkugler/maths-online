@@ -178,8 +178,12 @@ class GameEnd implements ServerEvent {
   final List<String> winnerNames;
   final Map<PlayerID, EventNotification> advances;
 
-  const GameEnd(this.questionDecrassageIds, this.winners, this.winnerNames,
-      this.advances);
+  const GameEnd(
+    this.questionDecrassageIds,
+    this.winners,
+    this.winnerNames,
+    this.advances,
+  );
 
   @override
   String toString() {
@@ -190,19 +194,21 @@ class GameEnd implements ServerEvent {
 GameEnd gameEndFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return GameEnd(
-      dictStringToListIntFromJson(json['QuestionDecrassageIds']),
-      listStringFromJson(json['Winners']),
-      listStringFromJson(json['WinnerNames']),
-      dictStringToEventNotificationFromJson(json['Advances']));
+    dictStringToListIntFromJson(json['QuestionDecrassageIds']),
+    listStringFromJson(json['Winners']),
+    listStringFromJson(json['WinnerNames']),
+    dictStringToEventNotificationFromJson(json['Advances']),
+  );
 }
 
 Map<String, dynamic> gameEndToJson(GameEnd item) {
   return {
-    "QuestionDecrassageIds":
-        dictStringToListIntToJson(item.questionDecrassageIds),
+    "QuestionDecrassageIds": dictStringToListIntToJson(
+      item.questionDecrassageIds,
+    ),
     "Winners": listStringToJson(item.winners),
     "WinnerNames": listStringToJson(item.winnerNames),
-    "Advances": dictStringToEventNotificationToJson(item.advances)
+    "Advances": dictStringToEventNotificationToJson(item.advances),
   };
 }
 
@@ -241,15 +247,18 @@ class GameState {
 
 GameState gameStateFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return GameState(dictStringToPlayerStatusFromJson(json['Players']),
-      stringFromJson(json['PlayerTurn']), intFromJson(json['PawnTile']));
+  return GameState(
+    dictStringToPlayerStatusFromJson(json['Players']),
+    stringFromJson(json['PlayerTurn']),
+    intFromJson(json['PawnTile']),
+  );
 }
 
 Map<String, dynamic> gameStateToJson(GameState item) {
   return {
     "Players": dictStringToPlayerStatusToJson(item.players),
     "PlayerTurn": stringToJson(item.playerTurn),
-    "PawnTile": intToJson(item.pawnTile)
+    "PawnTile": intToJson(item.pawnTile),
   };
 }
 
@@ -280,8 +289,13 @@ class LobbyUpdate implements ServerEvent {
   final bool isJoining;
   final Map<PlayerID, int> playerRanks;
 
-  const LobbyUpdate(this.playerPseudos, this.pseudo, this.iD, this.isJoining,
-      this.playerRanks);
+  const LobbyUpdate(
+    this.playerPseudos,
+    this.pseudo,
+    this.iD,
+    this.isJoining,
+    this.playerRanks,
+  );
 
   @override
   String toString() {
@@ -292,11 +306,12 @@ class LobbyUpdate implements ServerEvent {
 LobbyUpdate lobbyUpdateFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return LobbyUpdate(
-      dictStringToStringFromJson(json['PlayerPseudos']),
-      stringFromJson(json['Pseudo']),
-      stringFromJson(json['ID']),
-      boolFromJson(json['IsJoining']),
-      dictStringToIntFromJson(json['PlayerRanks']));
+    dictStringToStringFromJson(json['PlayerPseudos']),
+    stringFromJson(json['Pseudo']),
+    stringFromJson(json['ID']),
+    boolFromJson(json['IsJoining']),
+    dictStringToIntFromJson(json['PlayerRanks']),
+  );
 }
 
 Map<String, dynamic> lobbyUpdateToJson(LobbyUpdate item) {
@@ -305,7 +320,7 @@ Map<String, dynamic> lobbyUpdateToJson(LobbyUpdate item) {
     "Pseudo": stringToJson(item.pseudo),
     "ID": stringToJson(item.iD),
     "IsJoining": boolToJson(item.isJoining),
-    "PlayerRanks": dictStringToIntToJson(item.playerRanks)
+    "PlayerRanks": dictStringToIntToJson(item.playerRanks),
   };
 }
 
@@ -368,13 +383,15 @@ class PlayerAnswerResult {
 PlayerAnswerResult playerAnswerResultFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return PlayerAnswerResult(
-      boolFromJson(json['Success']), boolFromJson(json['AskForMask']));
+    boolFromJson(json['Success']),
+    boolFromJson(json['AskForMask']),
+  );
 }
 
 Map<String, dynamic> playerAnswerResultToJson(PlayerAnswerResult item) {
   return {
     "Success": boolToJson(item.success),
-    "AskForMask": boolToJson(item.askForMask)
+    "AskForMask": boolToJson(item.askForMask),
   };
 }
 
@@ -395,16 +412,17 @@ class PlayerAnswerResults implements ServerEvent {
 PlayerAnswerResults playerAnswerResultsFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return PlayerAnswerResults(
-      categorieFromJson(json['Categorie']),
-      dictStringToPlayerAnswerResultFromJson(json['Results']),
-      dictStringToEventNotificationFromJson(json['Advances']));
+    categorieFromJson(json['Categorie']),
+    dictStringToPlayerAnswerResultFromJson(json['Results']),
+    dictStringToEventNotificationFromJson(json['Advances']),
+  );
 }
 
 Map<String, dynamic> playerAnswerResultsToJson(PlayerAnswerResults item) {
   return {
     "Categorie": categorieToJson(item.categorie),
     "Results": dictStringToPlayerAnswerResultToJson(item.results),
-    "Advances": dictStringToEventNotificationToJson(item.advances)
+    "Advances": dictStringToEventNotificationToJson(item.advances),
   };
 }
 
@@ -469,7 +487,9 @@ class PlayerReconnected implements ServerEvent {
 PlayerReconnected playerReconnectedFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return PlayerReconnected(
-      stringFromJson(json['ID']), stringFromJson(json['Pseudo']));
+    stringFromJson(json['ID']),
+    stringFromJson(json['Pseudo']),
+  );
 }
 
 Map<String, dynamic> playerReconnectedToJson(PlayerReconnected item) {
@@ -485,7 +505,12 @@ class PlayerStatus {
   final int rank;
 
   const PlayerStatus(
-      this.name, this.review, this.success, this.isInactive, this.rank);
+    this.name,
+    this.review,
+    this.success,
+    this.isInactive,
+    this.rank,
+  );
 
   @override
   String toString() {
@@ -496,11 +521,12 @@ class PlayerStatus {
 PlayerStatus playerStatusFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return PlayerStatus(
-      stringFromJson(json['Name']),
-      questionReviewFromJson(json['Review']),
-      successFromJson(json['Success']),
-      boolFromJson(json['IsInactive']),
-      intFromJson(json['Rank']));
+    stringFromJson(json['Name']),
+    questionReviewFromJson(json['Review']),
+    successFromJson(json['Success']),
+    boolFromJson(json['IsInactive']),
+    intFromJson(json['Rank']),
+  );
 }
 
 Map<String, dynamic> playerStatusToJson(PlayerStatus item) {
@@ -509,7 +535,7 @@ Map<String, dynamic> playerStatusToJson(PlayerStatus item) {
     "Review": questionReviewToJson(item.review),
     "Success": successToJson(item.success),
     "IsInactive": boolToJson(item.isInactive),
-    "Rank": intToJson(item.rank)
+    "Rank": intToJson(item.rank),
   };
 }
 
@@ -529,13 +555,15 @@ class PlayerTurn implements ServerEvent {
 PlayerTurn playerTurnFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return PlayerTurn(
-      stringFromJson(json['PlayerName']), stringFromJson(json['Player']));
+    stringFromJson(json['PlayerName']),
+    stringFromJson(json['Player']),
+  );
 }
 
 Map<String, dynamic> playerTurnToJson(PlayerTurn item) {
   return {
     "PlayerName": stringToJson(item.playerName),
-    "Player": stringToJson(item.player)
+    "Player": stringToJson(item.player),
   };
 }
 
@@ -553,17 +581,21 @@ class PlayersStillInQuestionResult implements ServerEvent {
 }
 
 PlayersStillInQuestionResult playersStillInQuestionResultFromJson(
-    dynamic json_) {
+  dynamic json_,
+) {
   final json = (json_ as Map<String, dynamic>);
-  return PlayersStillInQuestionResult(listStringFromJson(json['Players']),
-      listStringFromJson(json['PlayerNames']));
+  return PlayersStillInQuestionResult(
+    listStringFromJson(json['Players']),
+    listStringFromJson(json['PlayerNames']),
+  );
 }
 
 Map<String, dynamic> playersStillInQuestionResultToJson(
-    PlayersStillInQuestionResult item) {
+  PlayersStillInQuestionResult item,
+) {
   return {
     "Players": listStringToJson(item.players),
-    "PlayerNames": listStringToJson(item.playerNames)
+    "PlayerNames": listStringToJson(item.playerNames),
   };
 }
 
@@ -583,15 +615,18 @@ class PossibleMoves implements ServerEvent {
 
 PossibleMoves possibleMovesFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return PossibleMoves(stringFromJson(json['PlayerName']),
-      listIntFromJson(json['Tiles']), stringFromJson(json['Player']));
+  return PossibleMoves(
+    stringFromJson(json['PlayerName']),
+    listIntFromJson(json['Tiles']),
+    stringFromJson(json['Player']),
+  );
 }
 
 Map<String, dynamic> possibleMovesToJson(PossibleMoves item) {
   return {
     "PlayerName": stringToJson(item.playerName),
     "Tiles": listIntToJson(item.tiles),
-    "Player": stringToJson(item.player)
+    "Player": stringToJson(item.player),
   };
 }
 
@@ -616,7 +651,7 @@ QR qRFromJson(dynamic json_) {
 Map<String, dynamic> qRToJson(QR item) {
   return {
     "IdQuestion": intToJson(item.idQuestion),
-    "Success": boolToJson(item.success)
+    "Success": boolToJson(item.success),
   };
 }
 
@@ -635,14 +670,16 @@ class QuestionReview {
 
 QuestionReview questionReviewFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return QuestionReview(listQRFromJson(json['QuestionHistory']),
-      listIntFromJson(json['MarkedQuestions']));
+  return QuestionReview(
+    listQRFromJson(json['QuestionHistory']),
+    listIntFromJson(json['MarkedQuestions']),
+  );
 }
 
 Map<String, dynamic> questionReviewToJson(QuestionReview item) {
   return {
     "QuestionHistory": listQRToJson(item.questionHistory),
-    "MarkedQuestions": listIntToJson(item.markedQuestions)
+    "MarkedQuestions": listIntToJson(item.markedQuestions),
   };
 }
 
@@ -706,7 +743,7 @@ Map<String, dynamic> serverEventToJson(ServerEvent item) {
   } else if (item is PlayerAnswerResults) {
     return {
       'Kind': "PlayerAnswerResults",
-      'Data': playerAnswerResultsToJson(item)
+      'Data': playerAnswerResultsToJson(item),
     };
   } else if (item is PlayerJoin) {
     return {'Kind': "PlayerJoin", 'Data': playerJoinToJson(item)};
@@ -719,7 +756,7 @@ Map<String, dynamic> serverEventToJson(ServerEvent item) {
   } else if (item is PlayersStillInQuestionResult) {
     return {
       'Kind': "PlayersStillInQuestionResult",
-      'Data': playersStillInQuestionResultToJson(item)
+      'Data': playersStillInQuestionResultToJson(item),
     };
   } else if (item is PossibleMoves) {
     return {'Kind': "PossibleMoves", 'Data': possibleMovesToJson(item)};
@@ -738,7 +775,11 @@ class ShowQuestion implements ServerEvent {
   final Question question;
 
   const ShowQuestion(
-      this.timeoutSeconds, this.categorie, this.iD, this.question);
+    this.timeoutSeconds,
+    this.categorie,
+    this.iD,
+    this.question,
+  );
 
   @override
   String toString() {
@@ -749,10 +790,11 @@ class ShowQuestion implements ServerEvent {
 ShowQuestion showQuestionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return ShowQuestion(
-      intFromJson(json['TimeoutSeconds']),
-      categorieFromJson(json['Categorie']),
-      intFromJson(json['ID']),
-      questionFromJson(json['Question']));
+    intFromJson(json['TimeoutSeconds']),
+    categorieFromJson(json['Categorie']),
+    intFromJson(json['ID']),
+    questionFromJson(json['Question']),
+  );
 }
 
 Map<String, dynamic> showQuestionToJson(ShowQuestion item) {
@@ -760,7 +802,7 @@ Map<String, dynamic> showQuestionToJson(ShowQuestion item) {
     "TimeoutSeconds": intToJson(item.timeoutSeconds),
     "Categorie": categorieToJson(item.categorie),
     "ID": intToJson(item.iD),
-    "Question": questionToJson(item.question)
+    "Question": questionToJson(item.question),
   };
 }
 
@@ -780,13 +822,15 @@ class StateUpdate {
 StateUpdate stateUpdateFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StateUpdate(
-      eventsFromJson(json['Events']), gameStateFromJson(json['State']));
+    eventsFromJson(json['Events']),
+    gameStateFromJson(json['State']),
+  );
 }
 
 Map<String, dynamic> stateUpdateToJson(StateUpdate item) {
   return {
     "Events": eventsToJson(item.events),
-    "State": gameStateToJson(item.state)
+    "State": gameStateToJson(item.state),
   };
 }
 
@@ -823,26 +867,31 @@ Map<String, dynamic> wantNextTurnToJson(WantNextTurn item) {
 }
 
 Map<PlayerID, EventNotification> dictStringToEventNotificationFromJson(
-    dynamic json) {
+  dynamic json,
+) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, eventNotificationFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as PlayerID, eventNotificationFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToEventNotificationToJson(
-    Map<PlayerID, EventNotification> item) {
-  return item.map((k, v) =>
-      MapEntry(stringToJson(k).toString(), eventNotificationToJson(v)));
+  Map<PlayerID, EventNotification> item,
+) {
+  return item.map(
+    (k, v) => MapEntry(stringToJson(k).toString(), eventNotificationToJson(v)),
+  );
 }
 
 Map<PlayerID, int> dictStringToIntFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, intFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as PlayerID, intFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToIntToJson(Map<PlayerID, int> item) {
@@ -853,56 +902,68 @@ Map<PlayerID, List<IdQuestion>> dictStringToListIntFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, listIntFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as PlayerID, listIntFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToListIntToJson(
-    Map<PlayerID, List<IdQuestion>> item) {
-  return item
-      .map((k, v) => MapEntry(stringToJson(k).toString(), listIntToJson(v)));
+  Map<PlayerID, List<IdQuestion>> item,
+) {
+  return item.map(
+    (k, v) => MapEntry(stringToJson(k).toString(), listIntToJson(v)),
+  );
 }
 
 Map<PlayerID, PlayerAnswerResult> dictStringToPlayerAnswerResultFromJson(
-    dynamic json) {
+  dynamic json,
+) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, playerAnswerResultFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as PlayerID, playerAnswerResultFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToPlayerAnswerResultToJson(
-    Map<PlayerID, PlayerAnswerResult> item) {
-  return item.map((k, v) =>
-      MapEntry(stringToJson(k).toString(), playerAnswerResultToJson(v)));
+  Map<PlayerID, PlayerAnswerResult> item,
+) {
+  return item.map(
+    (k, v) => MapEntry(stringToJson(k).toString(), playerAnswerResultToJson(v)),
+  );
 }
 
 Map<PlayerID, PlayerStatus> dictStringToPlayerStatusFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, playerStatusFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as PlayerID, playerStatusFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToPlayerStatusToJson(
-    Map<PlayerID, PlayerStatus> item) {
+  Map<PlayerID, PlayerStatus> item,
+) {
   return item.map(
-      (k, v) => MapEntry(stringToJson(k).toString(), playerStatusToJson(v)));
+    (k, v) => MapEntry(stringToJson(k).toString(), playerStatusToJson(v)),
+  );
 }
 
 Map<PlayerID, String> dictStringToStringFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, stringFromJson(v)));
+  return (json as Map<String, dynamic>).map(
+    (k, v) => MapEntry(k as PlayerID, stringFromJson(v)),
+  );
 }
 
 Map<String, dynamic> dictStringToStringToJson(Map<PlayerID, String> item) {
-  return item
-      .map((k, v) => MapEntry(stringToJson(k).toString(), stringToJson(v)));
+  return item.map(
+    (k, v) => MapEntry(stringToJson(k).toString(), stringToJson(v)),
+  );
 }
 
 List<bool> listBoolFromJson(dynamic json) {

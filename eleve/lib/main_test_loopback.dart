@@ -21,8 +21,11 @@ final questionComplexe = Question([
   const NumberFieldBlock(0, 10),
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
-  const GeometricConstructionFieldBlock(3, GFPoint(),
-      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+  const GeometricConstructionFieldBlock(
+    3,
+    GFPoint(),
+    FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true)),
+  ),
 ], []);
 
 const questionComplexeAnswers = {
@@ -33,14 +36,21 @@ const questionComplexeAnswers = {
 };
 
 Question numberQuestion(String title) {
-  return Question([
-    TextBlock([T(title)], false, false, false),
-    const NumberFieldBlock(0, 10)
-  ], [
-    TextBlock([T("Une jolie correction")], true, true, false),
-    TextBlock(
-        [T("Avec un super lien https://www.google.com")], true, true, false)
-  ]);
+  return Question(
+    [
+      TextBlock([T(title)], false, false, false),
+      const NumberFieldBlock(0, 10),
+    ],
+    [
+      TextBlock([T("Une jolie correction")], true, true, false),
+      TextBlock(
+        [T("Avec un super lien https://www.google.com")],
+        true,
+        true,
+        false,
+      ),
+    ],
+  );
 }
 
 const origin = server_questions.QuestionPage(null, null, null);
@@ -51,38 +61,45 @@ class _LoopbackTestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Isyro',
-        theme: theme,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: localizations,
-        supportedLocales: locales,
-        home: Builder(
-          builder: (context) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                  onPressed: () => showPaused(context),
-                  child: const Text("Loopack: Paused")),
-              ElevatedButton(
-                  onPressed: () => showQuestion(context),
-                  child: const Text("Loopack: Question")),
-              ElevatedButton(
-                  onPressed: () => showExercice(context),
-                  child: const Text("Loopack: Exercice")),
-              ElevatedButton(
-                  onPressed: () => showCeintures(context),
-                  child: const Text("Loopack: Ceintures")),
-            ],
-          ),
-        ));
+      title: 'Isyro',
+      theme: theme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: localizations,
+      supportedLocales: locales,
+      home: Builder(
+        builder: (context) => Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => showPaused(context),
+              child: const Text("Loopack: Paused"),
+            ),
+            ElevatedButton(
+              onPressed: () => showQuestion(context),
+              child: const Text("Loopack: Question"),
+            ),
+            ElevatedButton(
+              onPressed: () => showExercice(context),
+              child: const Text("Loopack: Exercice"),
+            ),
+            ElevatedButton(
+              onPressed: () => showCeintures(context),
+              child: const Text("Loopack: Ceintures"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showRoute(LoopbackServerEvent event, BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-      settings: const RouteSettings(name: "rootLoopback"),
-      builder: (context) =>
-          EditorLoopback(event, _LoopbackAPI(), rootRoute: "rootLoopback"),
-    ));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: "rootLoopback"),
+        builder: (context) =>
+            EditorLoopback(event, _LoopbackAPI(), rootRoute: "rootLoopback"),
+      ),
+    );
   }
 
   void showPaused(BuildContext context) async {
@@ -95,23 +112,31 @@ class _LoopbackTestApp extends StatelessWidget {
 
   void showExercice(BuildContext context) async {
     return _showRoute(
-        LoopbackShowExercice(workSequencial, ProgressionExt([[], [], []], 0),
-            true, [origin, origin, origin]),
-        context);
+      LoopbackShowExercice(
+        workSequencial,
+        [[], [], []],
+        -1,
+        true,
+        [origin, origin, origin],
+      ),
+      context,
+    );
   }
 
   void showCeintures(BuildContext context) async {
     return _showRoute(
-        LoopbackShowCeinture(
-            [
-              InstantiatedBeltQuestion(1, qu1, []),
-              InstantiatedBeltQuestion(2, qu1, []),
-              InstantiatedBeltQuestion(3, qu1, []),
-            ],
-            0,
-            [origin, origin, origin],
-            false),
-        context);
+      LoopbackShowCeinture(
+        [
+          InstantiatedBeltQuestion(1, qu1, []),
+          InstantiatedBeltQuestion(2, qu1, []),
+          InstantiatedBeltQuestion(3, qu1, []),
+        ],
+        0,
+        [origin, origin, origin],
+        false,
+      ),
+      context,
+    );
   }
 }
 
@@ -122,11 +147,12 @@ class _LoopbackTestApp extends StatelessWidget {
 // );
 
 final workSequencial = InstantiatedWork(
-    const WorkID(0, WorkKind.workExercice, true),
-    "Identités remarquables (séquentiel)",
-    Flow.sequencial,
-    [quI1, quI2, quI3],
-    [1, 1, 2]);
+  const WorkID(0, WorkKind.workExercice, true),
+  "Identités remarquables (séquentiel)",
+  Flow.sequencial,
+  [quI1, quI2, quI3],
+  [1, 1, 2],
+);
 
 class _LoopbackAPI implements LoopbackAPI {
   _LoopbackAPI();
@@ -137,42 +163,53 @@ class _LoopbackAPI implements LoopbackAPI {
     final answer = params.answer;
     final isCorrect =
         questionIndex == (answer.answer.data[0] as NumberAnswer).value;
-    params.progression.questions[questionIndex].add(isCorrect);
+    params.progression[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        ProgressionExt(
-            params.progression.questions,
-            isCorrect
-                ? (questionIndex == 2 ? -1 : questionIndex + 1)
-                : questionIndex),
-        [quI1bis, quI2bis, quI3bis],
-        questionIndex,
-        QuestionAnswersOut({0: isCorrect}, {}));
+      ProgressionExt(
+        params.progression,
+        isCorrect
+            ? (questionIndex == 2 ? -1 : questionIndex + 1)
+            : questionIndex,
+      ),
+      [quI1bis, quI2bis, quI3bis],
+      questionIndex,
+      QuestionAnswersOut({0: isCorrect}, {}),
+    );
   }
 
   @override
   Future<LoopbackEvaluateQuestionOut> evaluateQuestionAnswer(
-      QuestionAnswersIn data, LoopbackShowQuestion origin) async {
+    QuestionAnswersIn data,
+    LoopbackShowQuestion origin,
+  ) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
 
-    return LoopbackEvaluateQuestionOut(QuestionAnswersOut(
-        {0: (data.data[0] as NumberAnswer).value == qu1Answer[0]!.value},
-        qu1Answer));
+    return LoopbackEvaluateQuestionOut(
+      QuestionAnswersOut({
+        0: (data.data[0] as NumberAnswer).value == qu1Answer[0]!.value,
+      }, qu1Answer),
+    );
   }
 
   @override
   Future<LoopbackShowQuestionAnswerOut> showQuestionAnswer(
-      server_questions.QuestionPage originPage, Params originParams) async {
+    server_questions.QuestionPage originPage,
+    Params originParams,
+  ) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     return const LoopbackShowQuestionAnswerOut(QuestionAnswersIn(qu1Answer));
   }
 
   @override
   Future<LoopbackEvaluateCeintureOut> evaluateCeinture(
-      LoopbackEvaluateCeintureIn args) async {
+    LoopbackEvaluateCeintureIn args,
+  ) async {
     await Future<void>.delayed(const Duration(milliseconds: 100));
-    return LoopbackEvaluateCeintureOut(args.answers.map((an) {
-      final isCorrect = 0 == (an.answer.data[0] as NumberAnswer).value;
-      return QuestionAnswersOut({0: isCorrect}, {});
-    }).toList());
+    return LoopbackEvaluateCeintureOut(
+      args.answers.map((an) {
+        final isCorrect = 0 == (an.answer.data[0] as NumberAnswer).value;
+        return QuestionAnswersOut({0: isCorrect}, {});
+      }).toList(),
+    );
   }
 }

@@ -104,34 +104,60 @@ func TestEvaluateExercice(t *testing.T) {
 
 	ex, questions, monoquestion, _ := createEx(t, db.DB, tc.Id)
 
-	progExt := ProgressionExt{
-		Questions: make([]ta.QuestionHistory, len(questions)),
-	}
+	prog := Progression(make([]ta.QuestionHistory, len(questions)))
 
 	// no error since the exercice is parallel
 	_, err = EvaluateWorkIn{
 		ID:          newWorkIDFromMono(monoquestion.Id),
-		Progression: progExt,
-	}.Evaluate(db, -1)
+		Progression: prog,
+	}.Evaluate(db, -1, false)
 	tu.AssertNoErr(t, err)
 
 	out, err := EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
-		Progression: progExt,
+		Progression: prog,
 		AnswerIndex: 0,
 		Answer:      AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
-	}.Evaluate(db, -1)
+	}.Evaluate(db, -1, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Progression.NextQuestion == 0) // wrong answer
 
 	out, err = EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
-		Progression: progExt,
+		Progression: prog,
+		AnswerIndex: 0,
+		Answer:      AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
+	}.Evaluate(db, -1, true)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.Progression.NextQuestion == 1) // wrong answer in one try mode
+
+	out, err = EvaluateWorkIn{
+		ID:          newWorkIDFromEx(ex.Id),
+		Progression: prog,
 		AnswerIndex: 0,
 		Answer:      AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
-	}.Evaluate(db, -1)
+	}.Evaluate(db, -1, false)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Progression.NextQuestion == 1) // correct answer
+}
+
+func Test_inferNextQuestion(t *testing.T) {
+	for _, test := range []struct {
+		progression Progression
+		isOneTry    bool
+		exp         int
+	}{
+		{Progression{{}}, false, 0},
+		{Progression{{true}, {}}, false, 1},
+		{Progression{{true}, {}, {true}}, false, 1},
+		{Progression{{true}, {false}}, false, 1},
+		{Progression{{true}, {false}}, true, -1},
+		{Progression{{true}, {false}, {}}, true, 2},
+		{Progression{{true}, {true}}, false, -1},
+		{Progression{{true}, {true}}, true, -1},
+	} {
+		tu.Assert(t, test.progression.inferNextQuestion(test.isOneTry) == test.exp)
+	}
 }
 
 func TestProgression(t *testing.T) {
@@ -169,7 +195,6 @@ func TestProgression(t *testing.T) {
 	out, err := LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out[task.Id].HasProgression)
-	tu.Assert(t, out[task.Id].Progression.NextQuestion == 1)
 
 	// test with monoquestion
 	task, err = ta.Task{IdMonoquestion: monoquestion.Id.AsOptional()}.Insert(db.DB)
@@ -190,7 +215,6 @@ func TestProgression(t *testing.T) {
 	out, err = LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out[task.Id].HasProgression)
-	tu.Assert(t, out[task.Id].Progression.NextQuestion == 1)
 
 	// test with random mono
 	task, err = ta.Task{IdRandomMonoquestion: randomMono.Id.AsOptional()}.Insert(db.DB)
@@ -216,7 +240,6 @@ func TestProgression(t *testing.T) {
 	out, err = LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out[task.Id].HasProgression)
-	tu.Assert(t, out[task.Id].Progression.NextQuestion == 1)
 }
 
 func Test_selectVariants(t *testing.T) {
