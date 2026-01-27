@@ -1,6 +1,6 @@
 {
     "name": "prof",
-    "version": "1.9.7",
+    "version": "1.9.8",
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc --noEmit && vite build",
@@ -30,6 +30,6 @@
         "unplugin-fonts": "^1.1.1",
         "vite": "^4.5.1",
         "vite-plugin-vuetify": "^1.0.2",
-        "vue-tsc": "^1.8.27"
+        "vue-tsc": "^3.2"
     }
 }

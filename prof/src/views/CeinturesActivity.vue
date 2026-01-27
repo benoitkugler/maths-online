@@ -43,16 +43,22 @@
                   <tbody>
                     <tr>
                       <th></th>
-                      <th v-for="(k, v) in DomainLabels" :key="v" class="pa-2">
+                      <th
+                        v-for="item in selectItems(DomainLabels)"
+                        :key="item.value"
+                        class="pa-2"
+                      >
                         <v-card
                           link
-                          @click="currentDomain = v"
+                          @click="currentDomain = item.value"
                           :color="
-                            currentDomain == v ? 'grey-lighten-3' : undefined
+                            currentDomain == item.value
+                              ? 'grey-lighten-3'
+                              : undefined
                           "
                           height="50px"
                           ><v-card-text class="pa-1 font-weight-bold">
-                            {{ k }}
+                            {{ item.title }}
                           </v-card-text></v-card
                         >
                       </th>
@@ -178,7 +184,7 @@ import StageQuestionsEditor from "@/components/ceintures/StageQuestionsEditor.vu
 import { Advance, Domain, Rank, Stage } from "@/controller/api_gen";
 import { GetSchemeOut, DomainLabels, RankLabels } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { sameStage } from "@/controller/utils";
+import { sameStage, selectItems } from "@/controller/utils";
 import { computed } from "vue";
 import { ref } from "vue";
 import { onMounted } from "vue";

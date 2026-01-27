@@ -3,7 +3,7 @@
     size="large"
     class="pr-2"
     style="cursor: grab"
-    @dragstart="(e) => emit('start', e)"
+    @dragstart="(e: DragEvent) => emit('start', e)"
     draggable="true"
     :color="props.color"
     icon="mdi-drag-vertical"
