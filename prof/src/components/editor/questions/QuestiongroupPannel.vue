@@ -17,8 +17,7 @@
     :all-tags="props.allTags"
     v-model="variantIndex"
     @back="backToList"
-    @update-title="updateTitle"
-    @update-tags="saveTags"
+    @update-title-and-tags="saveTitleAndTags"
     @update-variant="updateVariant"
     @duplicate-variant="duplicateVariante"
     @delete-variant="deleteVariante"
@@ -72,6 +71,8 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
+defineExpose({ startEditQuestion });
+
 const router = useRouter();
 
 const group = ref(copy(props.group));
@@ -89,18 +90,6 @@ const variantIndex = ref(0);
 const readonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
-
-function updateTitle(t: string) {
-  group.value.Group.Title = t;
-  updateQuestiongroup();
-}
-
-async function updateQuestiongroup() {
-  if (readonly.value) return;
-  const res = await controller.EditorUpdateQuestiongroup(group.value.Group);
-  if (res === undefined) return;
-  controller.showMessage("Question modifiée avec succès.");
-}
 
 const deletedBlocked = ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
@@ -136,6 +125,10 @@ async function deleteVariante(que: VariantG) {
 
 const scafold = ref<InstanceType<typeof ResourceScafold> | null>(null);
 
+function startEditQuestion() {
+  scafold.value?.startEdit();
+}
+
 async function duplicateVariante(variant: VariantG) {
   const newQuestion = await controller.EditorDuplicateQuestion({
     id: variant.Id,
@@ -151,16 +144,19 @@ async function duplicateVariante(variant: VariantG) {
   if (scafold.value) scafold.value.showEditVariant(newQuestion);
 }
 
-async function saveTags(newTags: Tags) {
-  const rep = await controller.EditorUpdateQuestionTags({
+async function saveTitleAndTags(newTitle: string, newTags: Tags) {
+  if (readonly.value) return; // should not happen
+  const rep = await controller.EditorUpdateQuestiongroup({
     Id: group.value.Group.Id,
+    Title: newTitle,
     Tags: newTags,
   });
   if (rep === undefined) {
     return;
   }
-  controller.showMessage("Etiquettes modifiées avec succès.");
+  controller.showMessage("Question modifiée avec succès.");
 
+  group.value.Group.Title = newTitle;
   group.value.Tags = newTags;
 }
 

@@ -582,32 +582,6 @@ func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) EditorUpdateQuestiongroup(c echo.Context) error {
-	userID := tcAPI.JWTTeacher(c)
-
-	var args ed.Questiongroup
-	if err := c.Bind(&args); err != nil {
-		return fmt.Errorf("invalid parameters: %s", err)
-	}
-
-	group, err := ed.SelectQuestiongroup(ct.db, args.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	if group.IdTeacher != userID {
-		return errAccessForbidden
-	}
-
-	group.Title = args.Title
-	_, err = group.Update(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	return c.NoContent(200)
-}
-
 type QuestionUpdateVisiblityIn struct {
 	ID     ed.IdQuestiongroup
 	Public bool
@@ -845,20 +819,22 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	return out, nil
 }
 
-type UpdateQuestiongroupTagsIn struct {
-	Id   ed.IdQuestiongroup
-	Tags ed.Tags
+type UpdateQuestiongroupIn struct {
+	Id    ed.IdQuestiongroup
+	Title string
+	Tags  ed.Tags
 }
 
-func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
+// EditorUpdateQuestiongroup updates title and tags
+func (ct *Controller) EditorUpdateQuestiongroup(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	var args UpdateQuestiongroupTagsIn
+	var args UpdateQuestiongroupIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.updateQuestionTags(args, userID)
+	err := ct.updateQuestiongroup(args, userID)
 	if err != nil {
 		return err
 	}
@@ -866,7 +842,7 @@ func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateQuestionTags(params UpdateQuestiongroupTagsIn, userID uID) error {
+func (ct *Controller) updateQuestiongroup(params UpdateQuestiongroupIn, userID uID) error {
 	group, err := ed.SelectQuestiongroup(ct.db, params.Id)
 	if err != nil {
 		return utils.SQLError(err)
@@ -875,19 +851,20 @@ func (ct *Controller) updateQuestionTags(params UpdateQuestiongroupTagsIn, userI
 		return errAccessForbidden
 	}
 
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return err
-	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		group.Title = params.Title
+		_, err = group.Update(tx)
+		if err != nil {
+			return err
+		}
 
-	err = ed.UpdateQuestiongroupTags(tx, params.Tags, params.Id)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
+		err = ed.UpdateQuestiongroupTags(tx, params.Tags, params.Id)
+		if err != nil {
+			return err
+		}
 
-	err = tx.Commit()
-	return err
+		return nil
+	})
 }
 
 func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) CheckQuestionParametersOut {

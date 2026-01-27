@@ -101,7 +101,7 @@
                 :group="questionToResource(questionGroup)"
                 :all-tags="props.tags"
                 :is-question="true"
-                @clicked="startEdit(questionGroup)"
+                @clicked="startEdit(questionGroup, false)"
                 @duplicate="duplicate(questionGroup)"
                 @delete="groupToDelete = questionGroup"
                 @create-review="reviewToCreate = questionGroup.Group"
@@ -159,7 +159,12 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "edit", group: QuestiongroupExt, questions: Question[]): void;
+  (
+    e: "edit",
+    group: QuestiongroupExt,
+    questions: Question[],
+    isNew: boolean
+  ): void;
   (e: "back"): void;
 }>();
 
@@ -217,16 +222,16 @@ async function createQuestiongroup() {
   if (out == undefined) {
     return;
   }
-  await startEdit(out);
+  await startEdit(out, true);
 }
 
-async function startEdit(group: QuestiongroupExt) {
+async function startEdit(group: QuestiongroupExt, isNew: boolean) {
   // load the variants
   const out = await controller.EditorGetQuestions({ id: group.Group.Id });
   if (out == undefined) {
     return;
   }
-  emit("edit", group, out);
+  emit("edit", group, out, isNew);
 }
 
 async function duplicate(group: QuestiongroupExt) {

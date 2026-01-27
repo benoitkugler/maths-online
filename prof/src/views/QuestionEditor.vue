@@ -18,6 +18,7 @@
       :variants="currentVariants"
       :all-tags="allKnownTags"
       @back="backToList"
+      ref="pannel"
     ></QuestiongroupPannel>
     <keep-alive>
       <QuestiongroupList
@@ -41,7 +42,6 @@ import {
   type Question,
   type QuestiongroupExt,
   type TagsDB,
-  type LoopbackShowQuestion,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import ClientPreview from "../components/editor/ClientPreview.vue";
@@ -49,7 +49,7 @@ import QuestiongroupList from "../components/editor/questions/QuestiongroupList.
 import QuestiongroupPannel from "../components/editor/questions/QuestiongroupPannel.vue";
 import FolderView from "../components/editor/FolderView.vue";
 import { emptyTagsDB } from "@/controller/editor";
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, useTemplateRef } from "vue";
 
 const viewMode = ref<"details" | "folder">("folder");
 
@@ -102,13 +102,21 @@ function backToList() {
   preview.value?.pause();
 }
 
-function editQuestion(group: QuestiongroupExt, variants: Question[]) {
+const pannel = useTemplateRef("pannel");
+function editQuestion(
+  group: QuestiongroupExt,
+  variants: Question[],
+  isNew: boolean
+) {
   currentGroup.value = group;
   currentVariants.value = variants;
   viewKind.value = "editor";
+  if (isNew) {
+    nextTick(() => pannel.value?.startEditQuestion());
+  }
 }
 
-const list = ref<InstanceType<typeof QuestiongroupList> | null>(null);
+const list = useTemplateRef("list");
 function goAndCreateQuestiongroup() {
   viewMode.value = "details";
   nextTick(() => {

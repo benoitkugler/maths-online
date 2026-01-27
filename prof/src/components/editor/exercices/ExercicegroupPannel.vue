@@ -17,8 +17,7 @@
     :all-tags="props.allTags"
     v-model="variantIndex"
     @back="backToList"
-    @update-title="updateTitle"
-    @update-tags="saveTags"
+    @update-title-and-tags="saveTitleAndTags"
     @update-variant="updateVariant"
     @duplicate-variant="duplicateVariante"
     @delete-variant="deleteVariante"
@@ -51,7 +50,7 @@ import { useRouter } from "vue-router";
 import UsesCard from "../UsesCard.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
 import ResourceScafold from "../ResourceScafold.vue";
-import { ref } from "vue";
+import { ref, useTemplateRef } from "vue";
 import { computed } from "vue";
 
 interface Props {
@@ -64,6 +63,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "back"): void;
 }>();
+
+defineExpose({ startEditExercice });
 
 const router = useRouter();
 
@@ -83,23 +84,6 @@ const resource = computed<ResourceGroup>(() => ({
   Variants: ownVariants.value,
   Origin: group.value.Origin,
 }));
-
-function updateTitle(t: string) {
-  group.value.Group.Title = t;
-  updateExercicegroup();
-}
-
-const editor = ref<InstanceType<typeof ExerciceVariantPannel> | null>(null);
-
-async function updateExercicegroup() {
-  if (isReadonly.value) return;
-  const res = await controller.EditorUpdateExercicegroup(group.value.Group);
-  if (res === undefined) return;
-  controller.showMessage("Exercice modifié avec succès.");
-
-  // refresh the preview
-  editor.value?.refreshExercicePreview();
-}
 
 const deletedBlocked = ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
@@ -135,7 +119,11 @@ async function deleteVariante(variant: VariantG) {
   }
 }
 
-const scafold = ref<InstanceType<typeof ResourceScafold> | null>(null);
+const scafold = useTemplateRef("scafold");
+
+function startEditExercice() {
+  scafold.value?.startEdit();
+}
 
 async function duplicateVariante(exercice: VariantG) {
   const newExercice = await controller.EditorDuplicateExercice({
@@ -152,17 +140,24 @@ async function duplicateVariante(exercice: VariantG) {
   if (scafold.value) scafold.value.showEditVariant(newExercice);
 }
 
-async function saveTags(newTags: Tags) {
-  const rep = await controller.EditorUpdateExerciceTags({
+const editor = ref<InstanceType<typeof ExerciceVariantPannel> | null>(null);
+
+async function saveTitleAndTags(newTitle: string, newTags: Tags) {
+  const rep = await controller.EditorUpdateExercicegroup({
     Id: group.value.Group.Id,
+    Title: newTitle,
     Tags: newTags,
   });
   if (rep === undefined) {
     return;
   }
-  controller.showMessage("Etiquettes modifiées avec succès.");
+  controller.showMessage("Exercice modifié avec succès.");
 
+  group.value.Group.Title = newTitle;
   group.value.Tags = newTags;
+
+  // refresh the preview
+  editor.value?.refreshExercicePreview();
 }
 
 function backToList() {

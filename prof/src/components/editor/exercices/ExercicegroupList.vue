@@ -100,7 +100,7 @@
                 :group="exerciceToResource(exerciceGroup)"
                 :all-tags="props.tags"
                 :is-question="false"
-                @clicked="startEdit(exerciceGroup)"
+                @clicked="startEdit(exerciceGroup, false)"
                 @duplicate="duplicate(exerciceGroup)"
                 @delete="groupToDelete = exerciceGroup"
                 @create-review="reviewToCreate = exerciceGroup.Group"
@@ -139,7 +139,6 @@ import {
   PublicStatus,
   type TaskUses,
   type Sheet,
-  Int,
   IdExercicegroup,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -161,7 +160,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "edit", group: ExercicegroupExt): void;
+  (e: "edit", group: ExercicegroupExt, isNew: boolean): void;
   (e: "back"): void;
 }>();
 
@@ -253,12 +252,12 @@ async function createExercicegroup() {
   }
   controller.showMessage("Exercice crée avec succès.");
 
-  await startEdit(out);
+  await startEdit(out, true);
 }
 
-async function startEdit(group: ExercicegroupExt) {
+async function startEdit(group: ExercicegroupExt, isNew: boolean) {
   // we defer loading of the exercice in the pannel
-  emit("edit", group);
+  emit("edit", group, isNew);
 }
 
 async function updatePublic(id: IdExercicegroup, isPublic: boolean) {

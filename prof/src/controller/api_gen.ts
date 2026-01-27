@@ -959,14 +959,16 @@ export interface TaskDetails {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TaskUses
 export type TaskUses = TaskDetails[] | null;
-// github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupTagsIn
-export interface UpdateExercicegroupTagsIn {
+// github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupIn
+export interface UpdateExercicegroupIn {
   Id: IdExercicegroup;
+  Title: string;
   Tags: Tags;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateQuestiongroupTagsIn
-export interface UpdateQuestiongroupTagsIn {
+// github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateQuestiongroupIn
+export interface UpdateQuestiongroupIn {
   Id: IdQuestiongroup;
+  Title: string;
   Tags: Tags;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.AddExerciceToTaskIn
@@ -1119,6 +1121,7 @@ export interface LoopbackShowCeinture {
 export interface LoopbackShowExercice {
   Exercice: unknown;
   Progression: unknown;
+  NextQuestion: Int;
   ShowCorrection: boolean;
   Origin: QuestionPage[] | null;
 }
@@ -1963,7 +1966,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  /** Returns an URL */
+  /** Returns an URL with method GET */
   TeacherExportStudentsAdvance(id_classroom: IdClassroom, token: string) {
     return (
       this.baseURL +
@@ -2466,7 +2469,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorUpdateQuestiongroup performs the request and handles the error */
-  async EditorUpdateQuestiongroup(params: Questiongroup) {
+  async EditorUpdateQuestiongroup(params: UpdateQuestiongroupIn) {
     const fullUrl = this.baseURL + "/api/prof/editor/questiongroup";
     this.startRequest();
     try {
@@ -2487,18 +2490,6 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders(), params: { id: String(params["id"]) } },
       );
       return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** EditorUpdateQuestionTags performs the request and handles the error */
-  async EditorUpdateQuestionTags(params: UpdateQuestiongroupTagsIn) {
-    const fullUrl = this.baseURL + "/api/prof/editor/questiongroup/tags";
-    this.startRequest();
-    try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
     } catch (error) {
       this.handleError(error);
     }
@@ -2637,7 +2628,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorUpdateExercicegroup performs the request and handles the error */
-  async EditorUpdateExercicegroup(params: Exercicegroup) {
+  async EditorUpdateExercicegroup(params: UpdateExercicegroupIn) {
     const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup";
     this.startRequest();
     try {
@@ -2658,18 +2649,6 @@ export abstract class AbstractAPI {
         { headers: this.getHeaders(), params: { id: String(params["id"]) } },
       );
       return rep.data;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /** EditorUpdateExerciceTags performs the request and handles the error */
-  async EditorUpdateExerciceTags(params: UpdateExercicegroupTagsIn) {
-    const fullUrl = this.baseURL + "/api/prof/editor/exercicegroup/tags";
-    this.startRequest();
-    try {
-      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return true;
     } catch (error) {
       this.handleError(error);
     }

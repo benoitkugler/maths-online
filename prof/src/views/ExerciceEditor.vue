@@ -26,6 +26,7 @@
       :group="currentExercicegroup"
       :all-tags="allKnownTags"
       @back="backToList"
+      ref="pannel"
     ></exercicegroup-pannel>
   </div>
 </template>
@@ -38,11 +39,10 @@ import {
   type Index,
   type Query,
   type TagsDB,
-  type LoopbackShowExercice,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { emptyTagsDB } from "@/controller/editor";
-import { nextTick, ref, onMounted } from "vue";
+import { nextTick, ref, onMounted, useTemplateRef } from "vue";
 import ClientPreview from "../components/editor/ClientPreview.vue";
 import ExercicegroupList from "../components/editor/exercices/ExercicegroupList.vue";
 import ExercicegroupPannel from "../components/editor/exercices/ExercicegroupPannel.vue";
@@ -87,11 +87,15 @@ function showFolder(index: [LevelTag, string]) {
   viewMode.value = "details";
 }
 
-async function editExercice(ex: ExercicegroupExt) {
+const pannel = useTemplateRef("pannel");
+async function editExercice(ex: ExercicegroupExt, isNew: boolean) {
   currentExercicegroup.value = ex;
+  if (isNew) {
+    nextTick(() => pannel.value?.startEditExercice());
+  }
 }
 
-const list = ref<InstanceType<typeof ExercicegroupList> | null>(null);
+const list = useTemplateRef("list");
 function goAndCreateExercicegroup() {
   viewMode.value = "details";
   nextTick(() => {

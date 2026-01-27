@@ -245,30 +245,52 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 	return out, nil
 }
 
+type UpdateExercicegroupIn struct {
+	Id    ed.IdExercicegroup
+	Title string
+	Tags  ed.Tags
+}
+
+// EditorUpdateExercicegroup updates title and tags
 func (ct *Controller) EditorUpdateExercicegroup(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	var args ed.Exercicegroup
+	var args UpdateExercicegroupIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	group, err := ed.SelectExercicegroup(ct.db, args.Id)
+	err := ct.updateExercicegroup(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateExercicegroup(params UpdateExercicegroupIn, userID uID) error {
+	group, err := ed.SelectExercicegroup(ct.db, params.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-
 	if group.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
-	group.Title = args.Title
-	_, err = group.Update(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		group.Title = params.Title
+		_, err = group.Update(tx)
+		if err != nil {
+			return err
+		}
 
-	return c.NoContent(200)
+		err = ed.UpdateExercicegroupTags(tx, params.Tags, params.Id)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // EditorDuplicateExercice duplicate one variant inside a group.
@@ -551,51 +573,6 @@ func (ct *Controller) createExercicegroup(userID uID) (ExercicegroupExt, error) 
 		Variants: []ExerciceHeader{newExerciceHeader(ex)},
 	}
 	return out, nil
-}
-
-type UpdateExercicegroupTagsIn struct {
-	Id   ed.IdExercicegroup
-	Tags ed.Tags
-}
-
-func (ct *Controller) EditorUpdateExerciceTags(c echo.Context) error {
-	userID := tcAPI.JWTTeacher(c)
-
-	var args UpdateExercicegroupTagsIn
-	if err := c.Bind(&args); err != nil {
-		return fmt.Errorf("invalid parameters: %s", err)
-	}
-
-	err := ct.updateExerciceTags(args, userID)
-	if err != nil {
-		return err
-	}
-
-	return c.NoContent(200)
-}
-
-func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userID uID) error {
-	group, err := ed.SelectExercicegroup(ct.db, params.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	if group.IdTeacher != userID {
-		return errAccessForbidden
-	}
-
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	err = ed.UpdateExercicegroupTags(tx, params.Tags, params.Id)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	err = tx.Commit()
-	return err
 }
 
 // EditorDeleteExercice remove the given exercice, also cleaning

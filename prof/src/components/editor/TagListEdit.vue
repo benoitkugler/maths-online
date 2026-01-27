@@ -1,104 +1,89 @@
 <template>
-  <v-card title="Modifier les étiquettes">
-    <v-card-text class="my-1">
-      <v-row>
-        <v-col cols="12">
-          <v-select
-            density="compact"
-            variant="outlined"
-            :model-value="matiereTag"
-            @update:model-value="(t) => updateMatiere(t as string)"
-            :color="MatiereColor"
-            label="Matière"
-            :items="Object.keys(MatiereTagLabels)"
-            hide-details
-          ></v-select>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="6">
-          <v-combobox
-            :model-value="levelTag"
-            @update:model-value="(t) => updateLevel(t as string)"
-            :items="levelTags"
-            label="Niveau (classe)"
-            variant="outlined"
-            density="compact"
-            :color="LevelColor"
-            hide-details
-          ></v-combobox>
-        </v-col>
-        <v-col cols="6">
-          <v-combobox
-            :model-value="subLevelTags"
-            @update:model-value="(t) => updateSubLevels(t as string[])"
-            label="Filière"
-            :items="subLevelItems"
-            variant="outlined"
-            density="compact"
-            :color="SubLevelColor"
-            multiple
-            hint="Optionnelle."
-            persistent-hint
-            chips
-          ></v-combobox>
-        </v-col>
-      </v-row>
-      <!-- sublevel -->
-      <v-row>
-        <v-col cols="12">
-          <v-combobox
-            :model-value="chapterTag"
-            @update:model-value="(t) => updateChapter(t as string)"
-            :items="chapterTags"
-            label="Chapitre"
-            variant="outlined"
-            density="compact"
-            :color="ChapterColor"
-            hide-details
-          ></v-combobox>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="12">
-          <v-combobox
-            :model-value="trivMathTag"
-            @update:model-value="(t) => updateIsyTriv(t as string[])"
-            label="Isy'Triv"
-            :items="trivMathTags"
-            variant="outlined"
-            density="compact"
-            :color="IsyTrivColor"
-            multiple
-            hint="Etiquettes supplémentaires permettant de définir les catégories de questions dans l'activité Isy'Triv."
-            persistent-hint
-            chips
-            closable-chips
-          ></v-combobox>
-        </v-col>
-      </v-row>
-    </v-card-text>
-    <v-card-actions>
-      <v-alert
-        v-if="!areTagsDistinct"
-        color="warning"
+  <v-row>
+    <v-col cols="12">
+      <v-select
         density="compact"
-        class="ml-2"
-      >
-        Les étiquettes doivent être distinctes.
-      </v-alert>
-      <v-spacer></v-spacer>
-      <v-btn
-        class="my-1"
-        color="success"
-        @click="emit('save')"
-        :disabled="!saveEnabled || !areTagsDistinct"
         variant="outlined"
-      >
-        Enregistrer
-      </v-btn>
-    </v-card-actions>
-  </v-card>
+        :model-value="matiereTag"
+        @update:model-value="(t) => updateMatiere(t as string)"
+        :color="MatiereColor"
+        label="Matière"
+        :items="Object.keys(MatiereTagLabels)"
+        hide-details
+      ></v-select>
+    </v-col>
+  </v-row>
+  <v-row>
+    <v-col cols="6">
+      <v-combobox
+        :model-value="levelTag"
+        @update:model-value="(t) => updateLevel(t as string)"
+        :items="levelTags"
+        label="Niveau (classe)"
+        variant="outlined"
+        density="compact"
+        :color="LevelColor"
+        hide-details
+      ></v-combobox>
+    </v-col>
+    <v-col cols="6">
+      <v-combobox
+        :model-value="subLevelTags"
+        @update:model-value="(t) => updateSubLevels(t as string[])"
+        label="Filière"
+        :items="subLevelItems"
+        variant="outlined"
+        density="compact"
+        :color="SubLevelColor"
+        multiple
+        hint="Optionnelle."
+        persistent-hint
+        chips
+      ></v-combobox>
+    </v-col>
+  </v-row>
+  <!-- sublevel -->
+  <v-row>
+    <v-col cols="12">
+      <v-combobox
+        :model-value="chapterTag"
+        @update:model-value="(t) => updateChapter(t as string)"
+        :items="chapterTags"
+        label="Chapitre"
+        variant="outlined"
+        density="compact"
+        :color="ChapterColor"
+        hide-details
+      ></v-combobox>
+    </v-col>
+  </v-row>
+  <v-row>
+    <v-col cols="12">
+      <v-combobox
+        :model-value="trivMathTag"
+        @update:model-value="(t) => updateIsyTriv(t as string[])"
+        label="Isy'Triv"
+        :items="trivMathTags"
+        variant="outlined"
+        density="compact"
+        :color="IsyTrivColor"
+        multiple
+        hint="Etiquettes supplémentaires permettant de définir les catégories de questions dans l'activité Isy'Triv."
+        persistent-hint
+        chips
+        closable-chips
+      ></v-combobox>
+    </v-col>
+  </v-row>
+
+  <v-alert
+    v-if="!areTagsDistinct"
+    color="warning"
+    density="compact"
+    class="ml-2"
+  >
+    Les étiquettes doivent être distinctes.
+  </v-alert>
 </template>
 
 <script setup lang="ts">
@@ -121,14 +106,12 @@ import { computed } from "vue";
 interface Props {
   modelValue: TagSection[];
   allTags: TagsDB;
-  saveEnabled: boolean;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update:model-value", v: TagSection[]): void;
-  (e: "save"): void;
 }>();
 
 const matiereTag = computed(

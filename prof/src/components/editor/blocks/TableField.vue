@@ -7,93 +7,95 @@
     <v-col cols="10" align-self="center">
       <div style="overflow-x: auto; max-width: 70vh">
         <table style="table-layout: fixed">
-          <tr>
-            <td></td>
-            <th v-if="props.modelValue.VerticalHeaders != null"></th>
-            <td
-              v-for="index in rowLength"
-              style="text-align: center"
-              :key="index"
-            >
-              <v-btn
-                icon
-                size="x-small"
-                flat
-                @click="removeColumn(index - 1)"
-                title="Supprimer la colonne"
+          <tbody>
+            <tr>
+              <td></td>
+              <th v-if="props.modelValue.VerticalHeaders != null"></th>
+              <td
+                v-for="index in rowLength"
+                style="text-align: center"
+                :key="index"
               >
-                <v-icon icon="mdi-close" color="red"></v-icon>
-              </v-btn>
-            </td>
-          </tr>
-          <tr v-if="props.modelValue.HorizontalHeaders != null">
-            <td></td>
-            <th v-if="props.modelValue.VerticalHeaders != null"></th>
-            <th
-              v-for="(_, index) in props.modelValue.HorizontalHeaders"
-              style="text-align: center; width: 40px"
-              :key="index"
-            >
-              <text-part-field
-                :model-value="props.modelValue.HorizontalHeaders[index]!"
-                @update:model-value="
+                <v-btn
+                  icon
+                  size="x-small"
+                  flat
+                  @click="removeColumn(index - 1)"
+                  title="Supprimer la colonne"
+                >
+                  <v-icon icon="mdi-close" color="red"></v-icon>
+                </v-btn>
+              </td>
+            </tr>
+            <tr v-if="props.modelValue.HorizontalHeaders != null">
+              <td></td>
+              <th v-if="props.modelValue.VerticalHeaders != null"></th>
+              <th
+                v-for="(_, index) in props.modelValue.HorizontalHeaders"
+                style="text-align: center; width: 40px"
+                :key="index"
+              >
+                <text-part-field
+                  :model-value="props.modelValue.HorizontalHeaders[index]!"
+                  @update:model-value="
                 v => {
                     props.modelValue.HorizontalHeaders![index] = v;
                 emitUpdate();
                 }
               "
-              >
-              </text-part-field>
-            </th>
-          </tr>
-          <tr
-            v-for="(row, index) in props.modelValue.Answer || []"
-            :key="index"
-          >
-            <td style="text-align: center; width: 20px">
-              <v-btn
-                icon
-                size="x-small"
-                flat
-                @click="removeRow(index)"
-                title="Supprimer la ligne"
-              >
-                <v-icon icon="mdi-close" color="red"></v-icon>
-              </v-btn>
-            </td>
-            <th
-              v-if="props.modelValue.VerticalHeaders != null"
-              style="min-width: 80px"
+                >
+                </text-part-field>
+              </th>
+            </tr>
+            <tr
+              v-for="(row, index) in props.modelValue.Answer || []"
+              :key="index"
             >
-              <text-part-field
-                :model-value="props.modelValue.VerticalHeaders[index]!"
-                @update:model-value="
+              <td style="text-align: center; width: 20px">
+                <v-btn
+                  icon
+                  size="x-small"
+                  flat
+                  @click="removeRow(index)"
+                  title="Supprimer la ligne"
+                >
+                  <v-icon icon="mdi-close" color="red"></v-icon>
+                </v-btn>
+              </td>
+              <th
+                v-if="props.modelValue.VerticalHeaders != null"
+                style="min-width: 80px"
+              >
+                <text-part-field
+                  :model-value="props.modelValue.VerticalHeaders[index]!"
+                  @update:model-value="
                 v => {props.modelValue.VerticalHeaders![index] = v;
 emitUpdate();
                 }
               "
+                >
+                </text-part-field>
+              </th>
+              <td
+                v-for="(x, j) in row"
+                :key="j"
+                style="text-align: center; min-width: 80px"
               >
-              </text-part-field>
-            </th>
-            <td
-              v-for="(x, j) in row"
-              :key="j"
-              style="text-align: center; min-width: 80px"
-            >
-              <v-text-field
-                variant="underlined"
-                density="compact"
-                hide-details
-                :color="expressionColor"
-                :model-value="x"
-                @update:model-value="v => {
+                <v-text-field
+                  variant="underlined"
+                  density="compact"
+                  hide-details
+                  :color="expressionColor"
+                  :model-value="x"
+                  @update:model-value="v => {
                     row![j] = v;
                     emitUpdate();
                 }"
-              >
-              </v-text-field>
-            </td>
-          </tr>
+                >
+                </v-text-field>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </v-col>

@@ -52,20 +52,49 @@
   </v-dialog>
 
   <v-dialog
-    :model-value="tagsToEdit != null"
-    @update:model-value="tagsToEdit = null"
+    :model-value="titleAndTagsToEdit != null"
+    @update:model-value="titleAndTagsToEdit = null"
     max-width="800"
   >
-    <TagListEdit
-      v-if="tagsToEdit != null"
-      v-model="tagsToEdit"
-      :all-tags="props.allTags"
-      :save-enabled="areEditedTagsDistinct"
-      @save="
-        emit('updateTags', tagsToEdit!);
-        tagsToEdit = null;
-      "
-    ></TagListEdit>
+    <v-card
+      title="Modifier le titre et les étiquettes"
+      v-if="titleAndTagsToEdit != null"
+    >
+      <v-card-text class="my-1">
+        <v-row>
+          <v-col>
+            <v-text-field
+              density="compact"
+              variant="outlined"
+              v-model="titleAndTagsToEdit.title"
+              label="Titre"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <TagListEdit
+          v-model="titleAndTagsToEdit.tags"
+          :all-tags="props.allTags"
+        ></TagListEdit>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          :disabled="
+            !areEditedTagsDistinct &&
+            props.resource.Title == titleAndTagsToEdit.title
+          "
+          @click="
+            emit(
+              'updateTitleAndTags',
+              titleAndTagsToEdit.title,
+              titleAndTagsToEdit.tags
+            );
+            titleAndTagsToEdit = null;
+          "
+          >Enregistrer</v-btn
+        >
+      </v-card-actions>
+    </v-card>
   </v-dialog>
 
   <v-card class="mt-2">
@@ -80,77 +109,35 @@
         >
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
-
-        <v-tooltip content-class="bg-grey-lighten-4">
-          <template v-slot:activator="{ props: innerProps }">
-            <v-badge
-              v-bind="innerProps"
-              :content="props.resource.Tags?.length || 0"
-              :color="ChapterColor"
-              class="mr-3"
-            >
-              <v-btn
-                icon
-                size="x-small"
-                :color="LevelColor"
-                @click="tagsToEdit = copy(props.resource.Tags || [])"
-                :disabled="props.readonly"
-              >
-                <v-icon size="small">mdi-tag</v-icon>
-              </v-btn>
-            </v-badge>
-          </template>
-          <v-row no-gutters justify="center" v-if="props.resource.Tags?.length">
-            <v-col
-              v-for="(tag, index) in props.resource.Tags"
-              :key="index"
-              cols="auto"
-            >
-              <tag-chip :tag="tag"> </tag-chip>
-            </v-col>
-          </v-row>
-          <span v-else>Aucune étiquette</span>
-        </v-tooltip>
       </v-col>
 
-      <v-col align-self="center" :cols="titleToEdit == null ? 4 : 8">
-        <v-hover
-          v-slot="{ isHovering, props: innerProps }"
-          v-if="titleToEdit == null"
+      <v-col :cols="5" class="px-2">
+        <v-card
+          :subtitle="props.resource.Title || 'Aucun titre'"
+          @[!props.readonly&&`click`]="startEdit"
         >
-          <v-card-subtitle
-            v-bind="innerProps"
-            :style="{
-              'white-space': 'unset',
-              cursor: props.readonly ? 'unset' : 'text',
-              border:
-                isHovering && !props.readonly
-                  ? '1px solid grey'
-                  : '1px solid transparent',
-            }"
-            :class="{ 'text-subtitle-1': true, rounded: true, 'py-3': true }"
-            @click="props.readonly ? {} : (titleToEdit = props.resource.Title)"
-            >{{ props.resource.Title || "Aucun titre" }}
-          </v-card-subtitle>
-        </v-hover>
-        <v-text-field
-          v-else
-          color="grey"
-          class="mt-1"
-          label="Titre de la ressource"
-          variant="outlined"
-          density="compact"
-          v-model="titleToEdit"
-          autofocus
-          @focus="($event.target as HTMLInputElement)?.select()"
-          hide-details
-          @blur="onDoneEditTitle"
-        ></v-text-field>
+          <v-card-text class="pa-2 pt-0">
+            <v-row no-gutters justify="start"
+              ><v-col>
+                <v-row no-gutters v-if="props.resource.Tags?.length">
+                  <v-col
+                    v-for="(tag, index) in props.resource.Tags"
+                    :key="index"
+                    cols="auto"
+                  >
+                    <tag-chip :tag="tag"> </tag-chip>
+                  </v-col>
+                </v-row>
+                <span v-else>Aucune étiquette</span>
+              </v-col></v-row
+            >
+          </v-card-text>
+        </v-card>
       </v-col>
 
       <v-spacer></v-spacer>
       <!-- Variants tabs -->
-      <v-col cols="6" align-self="center" v-if="titleToEdit == null">
+      <v-col cols="6" align-self="center">
         <v-tabs
           density="compact"
           show-arrows
@@ -245,8 +232,6 @@
 <script setup lang="ts">
 import {
   areTagsEquals,
-  ChapterColor,
-  LevelColor,
   type ResourceGroup,
   type VariantG,
 } from "@/controller/editor";
@@ -270,14 +255,20 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "back"): void;
   (e: "update:model-value", v: number): void;
-  (e: "updateTitle", title: string): void;
-  (e: "updateTags", tags: Tags): void;
+  (e: "updateTitleAndTags", title: string, tags: Tags): void;
   (e: "updateVariant", v: VariantG): void;
   (e: "duplicateVariant", v: VariantG): void;
   (e: "deleteVariant", v: VariantG): void;
 }>();
 
-defineExpose({ showEditVariant });
+defineExpose({ showEditVariant, startEdit });
+
+function startEdit() {
+  titleAndTagsToEdit.value = {
+    title: props.resource.Title,
+    tags: copy(props.resource.Tags || []),
+  };
+}
 
 function showEditVariant(variant: VariantG) {
   variantToEdit.value = copy(variant);
@@ -297,19 +288,12 @@ const variantToDelete = ref<VariantG | null>(null);
 
 const variantToEdit = ref<VariantG | null>(null);
 
-const titleToEdit = ref<string | null>(null);
-function onDoneEditTitle() {
-  const newTitle = titleToEdit.value || "";
-  // avoid useless query
-  if (newTitle != props.resource.Title) {
-    emit("updateTitle", newTitle);
-  }
-  titleToEdit.value = null;
-}
-
-const tagsToEdit = ref<TagSection[] | null>(null);
+const titleAndTagsToEdit = ref<{ tags: TagSection[]; title: string } | null>(
+  null
+);
 const areEditedTagsDistinct = computed(
-  () => !areTagsEquals(props.resource.Tags, tagsToEdit.value)
+  () =>
+    !areTagsEquals(props.resource.Tags, titleAndTagsToEdit.value?.tags || [])
 );
 </script>
 

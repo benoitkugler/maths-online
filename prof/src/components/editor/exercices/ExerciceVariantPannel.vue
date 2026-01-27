@@ -48,7 +48,17 @@
       </v-row>
     </template>
   </QuestionPageEditor>
-
+  <v-row v-else justify="center" class="my-4">
+    <v-col cols="auto">
+      <v-btn
+        @click="createQuestion"
+        class="mr-1"
+        :disabled="props.readonly"
+        prepend-icon="mdi-plus"
+        >Ajouter une question</v-btn
+      >
+    </v-col>
+  </v-row>
   <v-dialog max-width="800" v-model="showSkeletonDetails">
     <SkeletonDetails
       v-if="exercice != null"
