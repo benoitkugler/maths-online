@@ -50,6 +50,7 @@ import {
   IdQuestion,
   IdReview,
   ImageBlock,
+  LevelTag,
 } from "./api_gen";
 import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
@@ -706,9 +707,36 @@ export function filterTags(
 export function emptyTagsDB(): TagsDB {
   return {
     Levels: [],
-    ChaptersByLevel: {},
-    TrivByChapters: {},
-    SubLevelsByLevel: {},
+    ChaptersByLevel: {
+      [LevelTag.CPGE]: null,
+      [LevelTag.Cinquieme]: null,
+      [LevelTag.Premiere]: null,
+      [LevelTag.Quatrieme]: null,
+      [LevelTag.Seconde]: null,
+      [LevelTag.Sixieme]: null,
+      [LevelTag.Terminale]: null,
+      [LevelTag.Troisieme]: null,
+    },
+    TrivByChapters: {
+      [LevelTag.CPGE]: null,
+      [LevelTag.Cinquieme]: null,
+      [LevelTag.Premiere]: null,
+      [LevelTag.Quatrieme]: null,
+      [LevelTag.Seconde]: null,
+      [LevelTag.Sixieme]: null,
+      [LevelTag.Terminale]: null,
+      [LevelTag.Troisieme]: null,
+    },
+    SubLevelsByLevel: {
+      [LevelTag.CPGE]: null,
+      [LevelTag.Cinquieme]: null,
+      [LevelTag.Premiere]: null,
+      [LevelTag.Quatrieme]: null,
+      [LevelTag.Seconde]: null,
+      [LevelTag.Sixieme]: null,
+      [LevelTag.Terminale]: null,
+      [LevelTag.Troisieme]: null,
+    },
   };
 }
 

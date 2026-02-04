@@ -586,6 +586,7 @@ export interface LoopbackShowCeinture {
 export interface LoopbackShowExercice {
   Exercice: unknown;
   Progression: unknown;
+  NextQuestion: Int;
   ShowCorrection: boolean;
   Origin: QuestionPage[] | null;
 }

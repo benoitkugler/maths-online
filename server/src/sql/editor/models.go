@@ -163,6 +163,10 @@ const (
 type LevelTag string
 
 const (
+	Sixieme   LevelTag = "6EME" // Sixième
+	Cinquieme LevelTag = "5EME" // Cinquième
+	Quatrieme LevelTag = "4EME" // Quatrième
+	Troisieme LevelTag = "3EME" // Troisième
 	Seconde   LevelTag = "2NDE" // Seconde
 	Premiere  LevelTag = "1ERE" // Première
 	Terminale LevelTag = "TERM" // Terminale

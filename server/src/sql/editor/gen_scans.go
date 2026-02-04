@@ -133,47 +133,6 @@ func DeleteExercicesByIDs(tx DB, ids ...IdExercice) ([]IdExercice, error) {
 	return ScanIdExerciceArray(rows)
 }
 
-// ByIdGroup returns a map with 'IdGroup' as keys.
-func (items Exercices) ByIdGroup() map[IdExercicegroup]Exercices {
-	out := make(map[IdExercicegroup]Exercices)
-	for _, target := range items {
-		dict := out[target.IdGroup]
-		if dict == nil {
-			dict = make(Exercices)
-		}
-		dict[target.Id] = target
-		out[target.IdGroup] = dict
-	}
-	return out
-}
-
-// IdGroups returns the list of ids of IdGroup
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items Exercices) IdGroups() []IdExercicegroup {
-	out := make([]IdExercicegroup, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdGroup)
-	}
-	return out
-}
-
-func SelectExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) (Exercices, error) {
-	rows, err := tx.Query("SELECT id, idgroup, subtitle, parameters, difficulty FROM exercices WHERE idgroup = ANY($1)", IdExercicegroupArrayToPQ(idGroups_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanExercices(rows)
-}
-
-func DeleteExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) ([]IdExercice, error) {
-	rows, err := tx.Query("DELETE FROM exercices WHERE idgroup = ANY($1) RETURNING id", IdExercicegroupArrayToPQ(idGroups_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdExerciceArray(rows)
-}
-
 func scanOneExerciceQuestion(row scanner) (ExerciceQuestion, error) {
 	var item ExerciceQuestion
 	err := row.Scan(
@@ -289,7 +248,7 @@ func (items ExerciceQuestions) ByIdExercice() map[IdExercice]ExerciceQuestions {
 }
 
 // IdExercices returns the list of ids of IdExercice
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ExerciceQuestions) IdExercices() []IdExercice {
 	out := make([]IdExercice, len(items))
@@ -325,7 +284,7 @@ func (items ExerciceQuestions) ByIdQuestion() map[IdQuestion]ExerciceQuestion {
 }
 
 // IdQuestions returns the list of ids of IdQuestion
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ExerciceQuestions) IdQuestions() []IdQuestion {
 	out := make([]IdQuestion, len(items))
@@ -369,6 +328,47 @@ func SelectExerciceQuestionByIdExerciceAndIndex(tx DB, idExercice IdExercice, in
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+// ByIdGroup returns a map with 'IdGroup' as keys.
+func (items Exercices) ByIdGroup() map[IdExercicegroup]Exercices {
+	out := make(map[IdExercicegroup]Exercices)
+	for _, target := range items {
+		dict := out[target.IdGroup]
+		if dict == nil {
+			dict = make(Exercices)
+		}
+		dict[target.Id] = target
+		out[target.IdGroup] = dict
+	}
+	return out
+}
+
+// IdGroups returns the list of ids of IdGroup
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Exercices) IdGroups() []IdExercicegroup {
+	out := make([]IdExercicegroup, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdGroup)
+	}
+	return out
+}
+
+func SelectExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) (Exercices, error) {
+	rows, err := tx.Query("SELECT id, idgroup, subtitle, parameters, difficulty FROM exercices WHERE idgroup = ANY($1)", IdExercicegroupArrayToPQ(idGroups_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercices(rows)
+}
+
+func DeleteExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) (Exercices, error) {
+	rows, err := tx.Query("DELETE FROM exercices WHERE idgroup = ANY($1) RETURNING id, idgroup, subtitle, parameters, difficulty", IdExercicegroupArrayToPQ(idGroups_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercices(rows)
 }
 
 func scanOneExercicegroup(row scanner) (Exercicegroup, error) {
@@ -474,47 +474,6 @@ func DeleteExercicegroupById(tx DB, id IdExercicegroup) (Exercicegroup, error) {
 // Deletes the Exercicegroup in the database and returns the ids.
 func DeleteExercicegroupsByIDs(tx DB, ids ...IdExercicegroup) ([]IdExercicegroup, error) {
 	rows, err := tx.Query("DELETE FROM exercicegroups WHERE id = ANY($1) RETURNING id", IdExercicegroupArrayToPQ(ids))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdExercicegroupArray(rows)
-}
-
-// ByIdTeacher returns a map with 'IdTeacher' as keys.
-func (items Exercicegroups) ByIdTeacher() map[teacher.IdTeacher]Exercicegroups {
-	out := make(map[teacher.IdTeacher]Exercicegroups)
-	for _, target := range items {
-		dict := out[target.IdTeacher]
-		if dict == nil {
-			dict = make(Exercicegroups)
-		}
-		dict[target.Id] = target
-		out[target.IdTeacher] = dict
-	}
-	return out
-}
-
-// IdTeachers returns the list of ids of IdTeacher
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items Exercicegroups) IdTeachers() []teacher.IdTeacher {
-	out := make([]teacher.IdTeacher, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdTeacher)
-	}
-	return out
-}
-
-func SelectExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Exercicegroups, error) {
-	rows, err := tx.Query("SELECT id, title, public, idteacher FROM exercicegroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanExercicegroups(rows)
-}
-
-func DeleteExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdExercicegroup, error) {
-	rows, err := tx.Query("DELETE FROM exercicegroups WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -634,7 +593,7 @@ func (items ExercicegroupTags) ByIdExercicegroup() map[IdExercicegroup]Exerciceg
 }
 
 // IdExercicegroups returns the list of ids of IdExercicegroup
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ExercicegroupTags) IdExercicegroups() []IdExercicegroup {
 	out := make([]IdExercicegroup, len(items))
@@ -668,6 +627,47 @@ func SelectExercicegroupTagByIdExercicegroupAndTag(tx DB, idExercicegroup IdExer
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+// ByIdTeacher returns a map with 'IdTeacher' as keys.
+func (items Exercicegroups) ByIdTeacher() map[teacher.IdTeacher]Exercicegroups {
+	out := make(map[teacher.IdTeacher]Exercicegroups)
+	for _, target := range items {
+		dict := out[target.IdTeacher]
+		if dict == nil {
+			dict = make(Exercicegroups)
+		}
+		dict[target.Id] = target
+		out[target.IdTeacher] = dict
+	}
+	return out
+}
+
+// IdTeachers returns the list of ids of IdTeacher
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Exercicegroups) IdTeachers() []teacher.IdTeacher {
+	out := make([]teacher.IdTeacher, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTeacher)
+	}
+	return out
+}
+
+func SelectExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Exercicegroups, error) {
+	rows, err := tx.Query("SELECT id, title, public, idteacher FROM exercicegroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercicegroups(rows)
+}
+
+func DeleteExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Exercicegroups, error) {
+	rows, err := tx.Query("DELETE FROM exercicegroups WHERE idteacher = ANY($1) RETURNING id, title, public, idteacher", teacher.IdTeacherArrayToPQ(idTeachers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercicegroups(rows)
 }
 
 func scanOneQuestion(row scanner) (Question, error) {
@@ -783,6 +783,19 @@ func DeleteQuestionsByIDs(tx DB, ids ...IdQuestion) ([]IdQuestion, error) {
 	return ScanIdQuestionArray(rows)
 }
 
+// NeedExercices returns the list of non null NeedExercice
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Questions) NeedExercices() []IdExercice {
+	var out []IdExercice
+	for _, target := range items {
+		if id := target.NeedExercice; id.Valid {
+			out = append(out, id.ID)
+		}
+	}
+	return out
+}
+
 func SelectQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) (Questions, error) {
 	rows, err := tx.Query("SELECT id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction FROM questions WHERE needexercice = ANY($1)", IdExerciceArrayToPQ(needExercices_))
 	if err != nil {
@@ -791,12 +804,25 @@ func SelectQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) (Questi
 	return ScanQuestions(rows)
 }
 
-func DeleteQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) ([]IdQuestion, error) {
-	rows, err := tx.Query("DELETE FROM questions WHERE needexercice = ANY($1) RETURNING id", IdExerciceArrayToPQ(needExercices_))
+func DeleteQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) (Questions, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE needexercice = ANY($1) RETURNING id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction", IdExerciceArrayToPQ(needExercices_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdQuestionArray(rows)
+	return ScanQuestions(rows)
+}
+
+// IdGroups returns the list of non null IdGroup
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Questions) IdGroups() []IdQuestiongroup {
+	var out []IdQuestiongroup
+	for _, target := range items {
+		if id := target.IdGroup; id.Valid {
+			out = append(out, id.ID)
+		}
+	}
+	return out
 }
 
 func SelectQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) (Questions, error) {
@@ -807,12 +833,12 @@ func SelectQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) (Questions, 
 	return ScanQuestions(rows)
 }
 
-func DeleteQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) ([]IdQuestion, error) {
-	rows, err := tx.Query("DELETE FROM questions WHERE idgroup = ANY($1) RETURNING id", IdQuestiongroupArrayToPQ(idGroups_))
+func DeleteQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) (Questions, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE idgroup = ANY($1) RETURNING id, subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction", IdQuestiongroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdQuestionArray(rows)
+	return ScanQuestions(rows)
 }
 
 // SelectQuestionByIdAndNeedExercice return zero or one item, thanks to a UNIQUE SQL constraint.
@@ -934,47 +960,6 @@ func DeleteQuestiongroupsByIDs(tx DB, ids ...IdQuestiongroup) ([]IdQuestiongroup
 	return ScanIdQuestiongroupArray(rows)
 }
 
-// ByIdTeacher returns a map with 'IdTeacher' as keys.
-func (items Questiongroups) ByIdTeacher() map[teacher.IdTeacher]Questiongroups {
-	out := make(map[teacher.IdTeacher]Questiongroups)
-	for _, target := range items {
-		dict := out[target.IdTeacher]
-		if dict == nil {
-			dict = make(Questiongroups)
-		}
-		dict[target.Id] = target
-		out[target.IdTeacher] = dict
-	}
-	return out
-}
-
-// IdTeachers returns the list of ids of IdTeacher
-// contained in this table.
-// They are not garanteed to be distinct.
-func (items Questiongroups) IdTeachers() []teacher.IdTeacher {
-	out := make([]teacher.IdTeacher, 0, len(items))
-	for _, target := range items {
-		out = append(out, target.IdTeacher)
-	}
-	return out
-}
-
-func SelectQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Questiongroups, error) {
-	rows, err := tx.Query("SELECT id, title, public, idteacher FROM questiongroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanQuestiongroups(rows)
-}
-
-func DeleteQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdQuestiongroup, error) {
-	rows, err := tx.Query("DELETE FROM questiongroups WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIdQuestiongroupArray(rows)
-}
-
 func scanOneQuestiongroupTag(row scanner) (QuestiongroupTag, error) {
 	var item QuestiongroupTag
 	err := row.Scan(
@@ -1088,7 +1073,7 @@ func (items QuestiongroupTags) ByIdQuestiongroup() map[IdQuestiongroup]Questiong
 }
 
 // IdQuestiongroups returns the list of ids of IdQuestiongroup
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items QuestiongroupTags) IdQuestiongroups() []IdQuestiongroup {
 	out := make([]IdQuestiongroup, len(items))
@@ -1122,6 +1107,47 @@ func SelectQuestiongroupTagByIdQuestiongroupAndTag(tx DB, idQuestiongroup IdQues
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+// ByIdTeacher returns a map with 'IdTeacher' as keys.
+func (items Questiongroups) ByIdTeacher() map[teacher.IdTeacher]Questiongroups {
+	out := make(map[teacher.IdTeacher]Questiongroups)
+	for _, target := range items {
+		dict := out[target.IdTeacher]
+		if dict == nil {
+			dict = make(Questiongroups)
+		}
+		dict[target.Id] = target
+		out[target.IdTeacher] = dict
+	}
+	return out
+}
+
+// IdTeachers returns the list of ids of IdTeacher
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Questiongroups) IdTeachers() []teacher.IdTeacher {
+	out := make([]teacher.IdTeacher, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTeacher)
+	}
+	return out
+}
+
+func SelectQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Questiongroups, error) {
+	rows, err := tx.Query("SELECT id, title, public, idteacher FROM questiongroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestiongroups(rows)
+}
+
+func DeleteQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Questiongroups, error) {
+	rows, err := tx.Query("DELETE FROM questiongroups WHERE idteacher = ANY($1) RETURNING id, title, public, idteacher", teacher.IdTeacherArrayToPQ(idTeachers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestiongroups(rows)
 }
 
 func IdExerciceArrayToPQ(ids []IdExercice) pq.Int64Array {

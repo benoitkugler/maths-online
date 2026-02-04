@@ -246,7 +246,7 @@ func (items ReviewExercices) ByIdReview() map[IdReview]ReviewExercice {
 }
 
 // IdReviews returns the list of ids of IdReview
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewExercices) IdReviews() []IdReview {
 	out := make([]IdReview, len(items))
@@ -292,7 +292,7 @@ func (items ReviewExercices) ByIdExercice() map[editor.IdExercicegroup]ReviewExe
 }
 
 // IdExercices returns the list of ids of IdExercice
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewExercices) IdExercices() []editor.IdExercicegroup {
 	out := make([]editor.IdExercicegroup, len(items))
@@ -443,7 +443,7 @@ func (items ReviewParticipations) ByIdReview() map[IdReview]ReviewParticipations
 }
 
 // IdReviews returns the list of ids of IdReview
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewParticipations) IdReviews() []IdReview {
 	out := make([]IdReview, len(items))
@@ -479,7 +479,7 @@ func (items ReviewParticipations) ByIdTeacher() map[teacher.IdTeacher]ReviewPart
 }
 
 // IdTeachers returns the list of ids of IdTeacher
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewParticipations) IdTeachers() []teacher.IdTeacher {
 	out := make([]teacher.IdTeacher, len(items))
@@ -626,7 +626,7 @@ func (items ReviewQuestions) ByIdReview() map[IdReview]ReviewQuestion {
 }
 
 // IdReviews returns the list of ids of IdReview
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewQuestions) IdReviews() []IdReview {
 	out := make([]IdReview, len(items))
@@ -672,7 +672,7 @@ func (items ReviewQuestions) ByIdQuestion() map[editor.IdQuestiongroup]ReviewQue
 }
 
 // IdQuestions returns the list of ids of IdQuestion
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewQuestions) IdQuestions() []editor.IdQuestiongroup {
 	out := make([]editor.IdQuestiongroup, len(items))
@@ -819,7 +819,7 @@ func (items ReviewSheets) ByIdReview() map[IdReview]ReviewSheet {
 }
 
 // IdReviews returns the list of ids of IdReview
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewSheets) IdReviews() []IdReview {
 	out := make([]IdReview, len(items))
@@ -865,7 +865,7 @@ func (items ReviewSheets) ByIdSheet() map[homework.IdSheet]ReviewSheet {
 }
 
 // IdSheets returns the list of ids of IdSheet
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewSheets) IdSheets() []homework.IdSheet {
 	out := make([]homework.IdSheet, len(items))
@@ -1012,7 +1012,7 @@ func (items ReviewTrivials) ByIdReview() map[IdReview]ReviewTrivial {
 }
 
 // IdReviews returns the list of ids of IdReview
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewTrivials) IdReviews() []IdReview {
 	out := make([]IdReview, len(items))
@@ -1058,7 +1058,7 @@ func (items ReviewTrivials) ByIdTrivial() map[trivial.IdTrivial]ReviewTrivial {
 }
 
 // IdTrivials returns the list of ids of IdTrivial
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ReviewTrivials) IdTrivials() []trivial.IdTrivial {
 	out := make([]trivial.IdTrivial, len(items))

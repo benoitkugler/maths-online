@@ -128,6 +128,25 @@ func (item SelfaccessTrivial) Delete(tx DB) error {
 	return err
 }
 
+// SelectSelfaccessTrivialsByIdTrivialAndIdTeacher selects the items matching the given fields.
+func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
+	rows, err := tx.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2", idTrivial, idTeacher)
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
+// DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2 RETURNING idclassroom, idtrivial, idteacher", idTrivial, idTeacher)
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
 // ByIdClassroom returns a map with 'IdClassroom' as keys.
 func (items SelfaccessTrivials) ByIdClassroom() map[teacher.IdClassroom]SelfaccessTrivials {
 	out := make(map[teacher.IdClassroom]SelfaccessTrivials)
@@ -138,7 +157,7 @@ func (items SelfaccessTrivials) ByIdClassroom() map[teacher.IdClassroom]Selfacce
 }
 
 // IdClassrooms returns the list of ids of IdClassroom
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items SelfaccessTrivials) IdClassrooms() []teacher.IdClassroom {
 	out := make([]teacher.IdClassroom, len(items))
@@ -174,7 +193,7 @@ func (items SelfaccessTrivials) ByIdTrivial() map[IdTrivial]SelfaccessTrivials {
 }
 
 // IdTrivials returns the list of ids of IdTrivial
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items SelfaccessTrivials) IdTrivials() []IdTrivial {
 	out := make([]IdTrivial, len(items))
@@ -210,7 +229,7 @@ func (items SelfaccessTrivials) ByIdTeacher() map[teacher.IdTeacher]SelfaccessTr
 }
 
 // IdTeachers returns the list of ids of IdTeacher
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items SelfaccessTrivials) IdTeachers() []teacher.IdTeacher {
 	out := make([]teacher.IdTeacher, len(items))
@@ -230,25 +249,6 @@ func SelectSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeache
 
 func DeleteSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (SelfaccessTrivials, error) {
 	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idteacher = ANY($1) RETURNING idclassroom, idtrivial, idteacher", teacher.IdTeacherArrayToPQ(idTeachers_))
-	if err != nil {
-		return nil, err
-	}
-	return ScanSelfaccessTrivials(rows)
-}
-
-// SelectSelfaccessTrivialsByIdTrivialAndIdTeacher selects the items matching the given fields.
-func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
-	rows, err := tx.Query("SELECT idclassroom, idtrivial, idteacher FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2", idTrivial, idTeacher)
-	if err != nil {
-		return nil, err
-	}
-	return ScanSelfaccessTrivials(rows)
-}
-
-// DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher deletes the item matching the given fields, returning
-// the deleted items.
-func DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2 RETURNING idclassroom, idtrivial, idteacher", idTrivial, idTeacher)
 	if err != nil {
 		return nil, err
 	}
@@ -400,12 +400,12 @@ func SelectTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Trivia
 	return ScanTrivials(rows)
 }
 
-func DeleteTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdTrivial, error) {
-	rows, err := tx.Query("DELETE FROM trivials WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
+func DeleteTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Trivials, error) {
+	rows, err := tx.Query("DELETE FROM trivials WHERE idteacher = ANY($1) RETURNING id, questions, questiontimeout, showdecrassage, public, idteacher, name", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdTrivialArray(rows)
+	return ScanTrivials(rows)
 }
 
 func loadJSON(out any, src any) error {

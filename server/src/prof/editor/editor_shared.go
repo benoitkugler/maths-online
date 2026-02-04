@@ -28,10 +28,10 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 }
 
 type TagsDB struct {
-	Levels           []string
-	ChaptersByLevel  map[string][]string            // level -> chapters
-	TrivByChapters   map[string]map[string][]string // level -> chapter -> triv maths
-	SubLevelsByLevel map[string][]string            // level -> sublevels
+	Levels           []ed.LevelTag
+	ChaptersByLevel  map[ed.LevelTag][]string            // level -> chapters
+	TrivByChapters   map[ed.LevelTag]map[string][]string // level -> chapter -> triv maths
+	SubLevelsByLevel map[ed.LevelTag][]string            // level -> sublevels
 }
 
 // LoadTags returns all the tags visible by [userID], merging
@@ -63,13 +63,6 @@ func LoadTags(db ed.DB, userID uID) (out TagsDB, _ error) {
 	indexes := append(
 		questionsToTagGroups(questionGroups, questionTags),
 		exercicesToTagGroups(exerciceGroups, exerciceTags)...,
-	)
-	// add common suggestions
-	indexes = append(indexes,
-		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.Seconde}},
-		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.Premiere}},
-		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.Terminale}},
-		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.CPGE}},
 	)
 
 	return buildTagsDB(indexes), nil
@@ -379,6 +372,7 @@ func exercicesToTagGroups(exercices ed.Exercicegroups, tags ed.ExercicegroupTags
 	return out
 }
 
+// always usea fixed list for Levels
 func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 	tmp := make(map[ed.LevelTag]map[string]map[string]bool) // level -> chapter -> trivs (maybe empty)
 	tmp2 := make(map[ed.LevelTag]map[string]bool)           // level -> sublevels
@@ -407,14 +401,9 @@ func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 		}
 		tmp2[level] = mSub
 	}
-	out.ChaptersByLevel = make(map[string][]string)
-	out.TrivByChapters = make(map[string]map[string][]string)
+	out.ChaptersByLevel = make(map[ed.LevelTag][]string)
+	out.TrivByChapters = make(map[ed.LevelTag]map[string][]string)
 	for level, m := range tmp {
-		level := string(level)
-		// fill the level
-		if level != "" {
-			out.Levels = append(out.Levels, level)
-		}
 		// fill the chapters
 		trivOut := out.TrivByChapters[level]
 		if trivOut == nil {
@@ -436,16 +425,26 @@ func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 
 		sort.Strings(out.ChaptersByLevel[level])
 	}
-	sort.Strings(out.Levels)
 
-	out.SubLevelsByLevel = make(map[string][]string)
+	out.Levels = []ed.LevelTag{
+		ed.Sixieme,
+		ed.Cinquieme,
+		ed.Quatrieme,
+		ed.Troisieme,
+		ed.Seconde,
+		ed.Premiere,
+		ed.Terminale,
+		ed.CPGE,
+	}
+
+	out.SubLevelsByLevel = make(map[ed.LevelTag][]string)
 	for level, subs := range tmp2 {
 		l := make([]string, 0, len(subs))
 		for sub := range subs {
 			l = append(l, sub)
 		}
 		sort.Strings(l)
-		out.SubLevelsByLevel[string(level)] = l
+		out.SubLevelsByLevel[level] = l
 	}
 
 	return out

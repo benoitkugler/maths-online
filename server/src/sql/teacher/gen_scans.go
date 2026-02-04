@@ -244,7 +244,7 @@ func (items ClassroomCodes) ByIdClassroom() map[IdClassroom]ClassroomCodes {
 }
 
 // IdClassrooms returns the list of ids of IdClassroom
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items ClassroomCodes) IdClassrooms() []IdClassroom {
 	out := make([]IdClassroom, len(items))
@@ -424,12 +424,12 @@ func SelectStudentsByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (Students
 	return ScanStudents(rows)
 }
 
-func DeleteStudentsByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) ([]IdStudent, error) {
-	rows, err := tx.Query("DELETE FROM students WHERE idclassroom = ANY($1) RETURNING id", IdClassroomArrayToPQ(idClassrooms_))
+func DeleteStudentsByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (Students, error) {
+	rows, err := tx.Query("DELETE FROM students WHERE idclassroom = ANY($1) RETURNING id, name, surname, birthday, idclassroom, clients", IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanIdStudentArray(rows)
+	return ScanStudents(rows)
 }
 
 func scanOneTeacher(row scanner) (Teacher, error) {
@@ -655,7 +655,7 @@ func (items TeacherClassrooms) ByIdTeacher() map[IdTeacher]TeacherClassrooms {
 }
 
 // IdTeachers returns the list of ids of IdTeacher
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items TeacherClassrooms) IdTeachers() []IdTeacher {
 	out := make([]IdTeacher, len(items))
@@ -691,7 +691,7 @@ func (items TeacherClassrooms) ByIdClassroom() map[IdClassroom]TeacherClassrooms
 }
 
 // IdClassrooms returns the list of ids of IdClassroom
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items TeacherClassrooms) IdClassrooms() []IdClassroom {
 	out := make([]IdClassroom, len(items))

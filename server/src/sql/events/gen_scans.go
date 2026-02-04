@@ -134,7 +134,7 @@ func (items Events) ByIdStudent() map[teacher.IdStudent]Events {
 }
 
 // IdStudents returns the list of ids of IdStudent
-// contained in this link table.
+// contained in this table.
 // They are not garanteed to be distinct.
 func (items Events) IdStudents() []teacher.IdStudent {
 	out := make([]teacher.IdStudent, len(items))

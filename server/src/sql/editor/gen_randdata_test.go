@@ -81,7 +81,7 @@ func randIdQuestiongroup() IdQuestiongroup {
 }
 
 func randLevelTag() LevelTag {
-	choix := [...]LevelTag{CPGE, Premiere, Seconde, Terminale}
+	choix := [...]LevelTag{CPGE, Cinquieme, Premiere, Quatrieme, Seconde, Sixieme, Terminale, Troisieme}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

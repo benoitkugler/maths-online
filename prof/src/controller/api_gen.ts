@@ -947,10 +947,13 @@ export interface SaveQuestionMetaIn {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TagsDB
 export interface TagsDB {
-  Levels: string[] | null;
-  ChaptersByLevel: Record<string, string[] | null> | null;
-  TrivByChapters: Record<string, Record<string, string[] | null> | null> | null;
-  SubLevelsByLevel: Record<string, string[] | null> | null;
+  Levels: LevelTag[] | null;
+  ChaptersByLevel: Record<LevelTag, string[] | null> | null;
+  TrivByChapters: Record<
+    LevelTag,
+    Record<string, string[] | null> | null
+  > | null;
+  SubLevelsByLevel: Record<LevelTag, string[] | null> | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TaskDetails
 export interface TaskDetails {
@@ -1552,17 +1555,25 @@ export type IdQuestiongroup = Int & { __opaque_int__: "IdQuestiongroup" };
 // github.com/benoitkugler/maths-online/server/src/sql/editor.LevelTag
 export const LevelTag = {
   CPGE: "CPGE",
+  Cinquieme: "5EME",
   Premiere: "1ERE",
+  Quatrieme: "4EME",
   Seconde: "2NDE",
+  Sixieme: "6EME",
   Terminale: "TERM",
+  Troisieme: "3EME",
 } as const;
 export type LevelTag = (typeof LevelTag)[keyof typeof LevelTag];
 
 export const LevelTagLabels: Record<LevelTag, string> = {
   [LevelTag.CPGE]: "CPGE",
+  [LevelTag.Cinquieme]: "Cinquième",
   [LevelTag.Premiere]: "Première",
+  [LevelTag.Quatrieme]: "Quatrième",
   [LevelTag.Seconde]: "Seconde",
+  [LevelTag.Sixieme]: "Sixième",
   [LevelTag.Terminale]: "Terminale",
+  [LevelTag.Troisieme]: "Troisième",
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/editor.OptionalIdExercice

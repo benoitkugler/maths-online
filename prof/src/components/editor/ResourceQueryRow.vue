@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Query, TagsDB } from "@/controller/api_gen";
+import type { LevelTag, Query, TagsDB } from "@/controller/api_gen";
 import { ChapterColor, LevelColor, SubLevelColor } from "@/controller/editor";
 import { computed } from "vue";
 import OriginSelect from "../OriginSelect.vue";
@@ -117,8 +117,8 @@ const emit = defineEmits<{
 const levelTags = computed(() => {
   return (props.allTags.Levels || [])
     .map((tag) => ({
-      title: tag,
-      value: tag,
+      title: tag as LevelTag | "Non classé",
+      value: tag as string,
     }))
     .concat({ title: "Non classé", value: "" });
 });
@@ -126,7 +126,7 @@ const levelTags = computed(() => {
 const chapterTags = computed(() => {
   const all = new Set<string>();
   props.modelValue.LevelTags?.forEach((levelTag) => {
-    const l = (props.allTags.ChaptersByLevel || {})[levelTag];
+    const l = (props.allTags.ChaptersByLevel || {})[levelTag as LevelTag];
     l?.forEach((v) => all.add(v));
   });
   const out = Array.from(all.values());
@@ -142,7 +142,7 @@ const chapterTags = computed(() => {
 const subLevelTags = computed(() => {
   const all = new Set<string>();
   props.modelValue.LevelTags?.forEach((levelTag) => {
-    const l = (props.allTags.SubLevelsByLevel || {})[levelTag];
+    const l = (props.allTags.SubLevelsByLevel || {})[levelTag as LevelTag];
     l?.forEach((v) => all.add(v));
   });
   const out = Array.from(all.values());

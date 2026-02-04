@@ -186,7 +186,6 @@ import {
   type TaskExt,
   type RandomMonoquestion,
   MissingTasksHint,
-  LevelTag,
 } from "@/controller/api_gen";
 import {
   onDragListItemStart,

@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import {
+  LevelTag,
   MatiereTagLabels,
   Section,
   type TagsDB,
@@ -124,7 +125,9 @@ function updateMatiere(t: string) {
   emit("update:model-value", newL);
 }
 const levelTag = computed(
-  () => props.modelValue.find((ts) => ts.Section == Section.Level)?.Tag || ""
+  () =>
+    (props.modelValue.find((ts) => ts.Section == Section.Level)?.Tag ||
+      "") as LevelTag
 );
 function updateLevel(t: string) {
   const newL = props.modelValue
