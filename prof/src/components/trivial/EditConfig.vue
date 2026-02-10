@@ -187,6 +187,8 @@ function allTags(tags: QuestionCriterion[]) {
 }
 
 function updateCategorie(index: number, cat: QuestionCriterion) {
+  console.log(index, cat);
+
   inner.value.Questions.Tags[index] = cat;
   fetchHintForMissing();
 }

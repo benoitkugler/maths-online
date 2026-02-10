@@ -87,10 +87,11 @@ function addIntersection() {
   }
   newTags.push(...(props.lastMatiereLevelChapter.sublevels || []));
 
-  const l = props.modelValue.concat(newTags);
+  const l = props.modelValue;
+  l.push(newTags);
   emit("update:model-value", l);
   nextTick(() => {
-    rows.value[rows.value.length - 1].startEdit();
+    rows.value[rows.value.length - 1]?.startEdit();
   });
 }
 

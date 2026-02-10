@@ -1,11 +1,14 @@
 <template>
   <v-dialog v-model="isEditing" :retain-focus="false" max-width="800">
-    <tag-list-edit
-      v-model="tmpList"
-      :all-tags="allTags"
-      @save="endEdit"
-      :save-enabled="saveEnabled"
-    ></tag-list-edit>
+    <v-card title="Modifier les étiquettes">
+      <v-card-text>
+        <tag-list-edit v-model="tmpList" :all-tags="allTags"></tag-list-edit>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn :disabled="!saveEnabled" @click="endEdit">Enregistrer</v-btn>
+      </v-card-actions>
+    </v-card>
   </v-dialog>
 
   <v-sheet
@@ -41,7 +44,7 @@
 
 <script setup lang="ts">
 import { Section, type TagsDB, type TagSection } from "@/controller/api_gen";
-import { tagString } from "@/controller/editor";
+import { areTagsEquals, tagString } from "@/controller/editor";
 import TagListEdit from "./TagListEdit.vue";
 import TagChip from "./utils/TagChip.vue";
 import { copy } from "@/controller/utils";
@@ -79,10 +82,7 @@ function startEdit() {
 }
 
 const saveEnabled = computed(() => {
-  if (tmpList.value.length != props.modelValue.length) {
-    return true;
-  }
-  return !tmpList.value.every((tag, index) => props.modelValue[index] == tag);
+  return !areTagsEquals(tmpList.value, props.modelValue);
 });
 
 const sorted = computed(() => {
