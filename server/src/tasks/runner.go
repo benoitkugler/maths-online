@@ -626,11 +626,13 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent, isOneTry b
 
 	// enforce invariant for existing progressions
 	if L1, L2 := len(qus), len(args.Progression); L1 != L2 {
-		return EvaluateWorkOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
+		return EvaluateWorkOut{}, fmt.Errorf("internal error in Evaluate(work=%v,student=%d): inconsistent progression length %d != %d",
+			args.ID, idStudent, L1, L2)
 	}
 
 	if args.AnswerIndex < 0 || args.AnswerIndex >= len(qus) {
-		return EvaluateWorkOut{}, fmt.Errorf("internal error: invalid answer index %d", args.AnswerIndex)
+		return EvaluateWorkOut{}, fmt.Errorf("internal error in Evaluate(work=%v,student=%d): invalid answer index %d",
+			args.ID, idStudent, args.AnswerIndex)
 	}
 
 	resp, err := EvaluateQuestion(qus[args.AnswerIndex].Enonce, args.Answer)
