@@ -24,8 +24,7 @@
 
 <script setup lang="ts">
 import type { GroupsStrategyAuto, Int } from "@/controller/api_gen";
-import { ref } from "vue";
-import { VCombobox } from "vuetify/lib/components/index.mjs";
+import { useTemplateRef } from "vue";
 
 interface Props {
   modelValue: GroupsStrategyAuto;
@@ -37,7 +36,7 @@ const emit = defineEmits<{
 
 const props = defineProps<Props>();
 
-const field = ref<InstanceType<typeof VCombobox> | null>(null);
+const field = useTemplateRef("field");
 
 // onUpdate is called on delete or when typing Enter
 function onUpdate(v: unknown) {

@@ -99,9 +99,7 @@
 import { type SetFieldBlock, type Variable } from "@/controller/api_gen";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 import { ExpressionColor } from "@/controller/editor";
-import { nextTick } from "vue";
-import { ref } from "vue";
-import { VTextField } from "vuetify/lib/components/index.mjs";
+import { nextTick, useTemplateRef } from "vue";
 
 interface Props {
   modelValue: SetFieldBlock;
@@ -131,7 +129,7 @@ function removeAdditionalProposal(index: number) {
   emit("update:modelValue", l);
 }
 
-const answerField = ref<InstanceType<typeof VTextField> | null>(null);
+const answerField = useTemplateRef("answerField");
 
 function insertSpecial(s: string) {
   if (answerField.value == null) return 0;
