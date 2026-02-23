@@ -5,15 +5,50 @@
     subtitle="Liste des élèves"
   >
     <template v-slot:append>
-      <v-btn
-        class="mx-2"
-        @click="generateClassroomCode"
-        title="Générer un code pour rattacher des élèves à la classe"
-        variant="text"
-        :disabled="!students.length || classroomCode != null"
-      >
-        Code de connection
-      </v-btn>
+      <v-btn-group elevation="1" class="mx-2">
+        <v-btn
+          @click="generateClassroomCode"
+          title="Générer un code pour rattacher des élèves à la classe"
+          variant="text"
+          :disabled="!students.length || classroomCode != null"
+        >
+          Code de connection
+        </v-btn>
+        <v-btn icon :disabled="!students.length || classroomCode != null">
+          <v-icon>mdi-clock</v-icon>
+          <v-menu
+            activator="parent"
+            location="left"
+            :close-on-content-click="false"
+            v-model="showDurationMenu"
+          >
+            <v-card title="Choisir la durée de validité" width="300px">
+              <v-card-text>
+                <v-text-field
+                  type="number"
+                  min="2"
+                  max="21"
+                  v-model.number="codeDuration"
+                  label="Durée de validité (en jour)"
+                ></v-text-field>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer> </v-spacer>
+                <v-btn
+                  @click="
+                    showDurationMenu = false;
+                    generateClassroomCode();
+                  "
+                  :disabled="!students.length || classroomCode != null"
+                >
+                  Générer le code
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-menu>
+        </v-btn>
+      </v-btn-group>
+
       <v-divider vertical></v-divider>
       <v-btn class="mx-2 my-1" @click="addStudent" title="Créer un profil">
         <v-icon icon="mdi-plus" color="success"></v-icon>
@@ -50,11 +85,11 @@
       <v-alert
         closable
         color="info"
-        style="text-align: center; font-size: 24pt"
+        style="text-align: center; font-size: 36pt"
         :model-value="classroomCode != null"
         @update:model-value="classroomCode = null"
       >
-        <v-chip size="30pt" class="pa-2 my-2">{{ classroomCode }}</v-chip>
+        <v-chip size="36pt" class="pa-2 my-2">{{ classroomCode }}</v-chip>
       </v-alert>
 
       <v-list>
@@ -262,7 +297,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Classroom, Student, StudentExt } from "@/controller/api_gen";
+import type { Classroom, Int, Student, StudentExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, formatDate, formatTime } from "@/controller/utils";
 import { onMounted, onUnmounted, ref } from "vue";
@@ -365,11 +400,15 @@ async function importStudents() {
   await fetchStudents();
 }
 
+const showDurationMenu = ref(false);
+const codeDuration = ref<Int>(2 as Int);
+
 const classroomCode = ref<string | null>(null);
 let timerId: ReturnType<typeof setTimeout>;
 async function generateClassroomCode() {
   const res = await controller.TeacherGenerateClassroomCode({
     "id-classroom": props.classroom.id,
+    days: codeDuration.value,
   });
   if (res == undefined) {
     return;

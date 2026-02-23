@@ -2156,7 +2156,10 @@ export abstract class AbstractAPI {
   }
 
   /** TeacherGenerateClassroomCode performs the request and handles the error */
-  async TeacherGenerateClassroomCode(params: { "id-classroom": Int }) {
+  async TeacherGenerateClassroomCode(params: {
+    "id-classroom": Int;
+    days: Int;
+  }) {
     const fullUrl = this.baseURL + "/api/prof/classrooms/students/connect";
     this.startRequest();
     try {
@@ -2164,7 +2167,10 @@ export abstract class AbstractAPI {
         fullUrl,
         {
           headers: this.getHeaders(),
-          params: { "id-classroom": String(params["id-classroom"]) },
+          params: {
+            "id-classroom": String(params["id-classroom"]),
+            days: String(params["days"]),
+          },
         },
       );
       return rep.data;

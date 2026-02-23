@@ -21,9 +21,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// 2 days
-const classroomCodeDuration = 2 * 24 * time.Hour
-
 type ClassroomExt struct {
 	Classroom tc.Classroom
 
@@ -642,12 +639,17 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 		return err
 	}
 
+	durationInDays, err := utils.QueryParamInt[int](c, "days")
+	if err != nil {
+		return err
+	}
+
 	// check the access
 	if _, err = ct.checkAcces(userID, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
-	code, err := ct.generateClassroomCode(tc.IdClassroom(idClassroom))
+	code, err := ct.generateClassroomCode(tc.IdClassroom(idClassroom), durationInDays)
 	if err != nil {
 		return err
 	}
@@ -656,13 +658,24 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
+func (ct *Controller) generateClassroomCode(id tc.IdClassroom, durationInDays int) (string, error) {
+	// sanitize the duration
+	if !(2 <= durationInDays && durationInDays <= 21) {
+		return "", fmt.Errorf("internal erro: invalid duration %d", durationInDays)
+	}
+	const oneDay = 24 * time.Hour
+	duration := time.Duration(durationInDays) * oneDay
+
 	// load the existing codes
 	ccs, err := tc.SelectAllClassroomCodes(ct.db)
 	if err != nil {
 		return "", utils.SQLError(err)
 	}
 	m := ccs.Codes()
+
+	if len(m) >= 10_000 { // 4 0-9 digits : 10^4
+		return "", errors.New("internal error: maximum number of codes reached")
+	}
 
 	// generate the code
 	code := utils.RandomID(true, 4, func(s string) bool { return m[s] })
@@ -671,14 +684,14 @@ func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
 	err = tc.ClassroomCode{
 		IdClassroom: id,
 		Code:        code,
-		ExpiresAt:   tc.Time(time.Now().Add(classroomCodeDuration)),
+		ExpiresAt:   tc.Time(time.Now().Add(duration)),
 	}.Insert(ct.db)
 	if err != nil {
 		return "", utils.SQLError(err)
 	}
 
 	// time its removal
-	time.AfterFunc(classroomCodeDuration, func() { tc.CleanupClassroomCodes(ct.db) })
+	time.AfterFunc(duration, func() { tc.CleanupClassroomCodes(ct.db) })
 
 	return code, nil
 }

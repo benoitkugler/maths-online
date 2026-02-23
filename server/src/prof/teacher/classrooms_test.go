@@ -204,3 +204,26 @@ func TestClientJSON(t *testing.T) {
 	b, _ := json.Marshal(cl)
 	fmt.Println(string(b))
 }
+
+func TestClassroomCode(t *testing.T) {
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
+	defer db.Remove()
+
+	t1, err := tc.Teacher{FavoriteMatiere: tc.Mathematiques}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := Controller{db: db.DB, admin: tc.Teacher{Id: t1.Id}}
+
+	cl1, err := ct.createClassroom(t1.Id)
+	tu.AssertNoErr(t, err)
+
+	_, err = ct.generateClassroomCode(cl1.Id, 1)
+	tu.Assert(t, err != nil)
+
+	_, err = ct.generateClassroomCode(cl1.Id, 12)
+	tu.AssertNoErr(t, err)
+
+	codes, err := tc.SelectAllClassroomCodes(ct.db)
+	tu.AssertNoErr(t, err)
+	fmt.Println(time.Time(codes[0].ExpiresAt))
+}
