@@ -1,3 +1,4 @@
+import 'package:eleve/activities/automatismes/automatismes.dart';
 import 'package:eleve/activities/ceintures/api.dart';
 import 'package:eleve/activities/ceintures/ceintures.dart';
 import 'package:eleve/activities/homework/homework.dart';
@@ -16,8 +17,7 @@ import 'package:http/http.dart' as http;
 import 'package:upgrader/upgrader.dart';
 
 Future<Audio> loadAudioFromSettings(SettingsStorage handler) async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // required to load the settings path
+  WidgetsFlutterBinding.ensureInitialized(); // required to load the settings path
 
   final audio = Audio();
   final settings = await handler.load();
@@ -31,23 +31,29 @@ class EleveApp extends StatelessWidget {
   final BuildMode buildMode;
   final Upgrader? checkUprades;
 
-  const EleveApp(this.audioPlayer, this.settingsHandler, this.buildMode,
-      {super.key, this.checkUprades});
+  const EleveApp(
+    this.audioPlayer,
+    this.settingsHandler,
+    this.buildMode, {
+    super.key,
+    this.checkUprades,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Isyro',
-        theme: theme,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: localizations,
-        supportedLocales: locales,
-        home: _AppScaffold(
-          audioPlayer,
-          settingsHandler,
-          buildMode,
-          checkUprades: checkUprades,
-        ));
+      title: 'Isyro',
+      theme: theme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: localizations,
+      supportedLocales: locales,
+      home: _AppScaffold(
+        audioPlayer,
+        settingsHandler,
+        buildMode,
+        checkUprades: checkUprades,
+      ),
+    );
   }
 }
 
@@ -57,9 +63,13 @@ class _AppScaffold extends StatefulWidget {
   final BuildMode buildMode;
   final Upgrader? checkUprades;
 
-  const _AppScaffold(this.audioPlayer, this.handler, this.buildMode,
-      {Key? key, this.checkUprades})
-      : super(key: key);
+  const _AppScaffold(
+    this.audioPlayer,
+    this.handler,
+    this.buildMode, {
+    Key? key,
+    this.checkUprades,
+  }) : super(key: key);
 
   @override
   State<_AppScaffold> createState() => __AppScaffoldState();
@@ -87,28 +97,33 @@ class __AppScaffoldState extends State<_AppScaffold> {
 
   void _showAudioSettings() {
     final ct = widget.audioPlayer.playlist;
-    final onPop = Navigator.of(context)
-        .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
+    final onPop = Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
     onPop.then((_) async {
       widget.audioPlayer.setSongs(ct);
       settings.songs = ct;
       await widget.handler.save(settings); // commit on disk
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        content: const Text("Playlist mise à jour."),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          content: const Text("Playlist mise à jour."),
+        ),
+      );
 
       // notify the server and show event
       final studentID = settings.studentID;
       if (studentID.isNotEmpty) {
-        final resp = await http.get(widget.buildMode.serverURL(
+        final resp = await http.get(
+          widget.buildMode.serverURL(
             "/api/student/set-playlist",
-            query: {studentIDKey: studentID}));
+            query: {studentIDKey: studentID},
+          ),
+        );
         try {
           final notif = eventNotificationFromJson(checkServerError(resp.body));
-          print("${notif.events}  ${notif.points}");
         } catch (e) {
           // silently fail
         }
@@ -118,8 +133,10 @@ class __AppScaffoldState extends State<_AppScaffold> {
 
   void _showProfile() async {
     final newSettings = await Navigator.of(context).push(
-        MaterialPageRoute<UserSettings>(
-            builder: (_) => Settings(widget.buildMode, widget.handler)));
+      MaterialPageRoute<UserSettings>(
+        builder: (_) => Settings(widget.buildMode, widget.handler),
+      ),
+    );
     if (newSettings != null) {
       setState(() {
         settings = newSettings;
@@ -153,36 +170,68 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _launchTrivialPoursuit() async {
-    final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
+    final onDone = await Navigator.of(context).push(
+      MaterialPageRoute<bool>(
         builder: (context) =>
-            MathActivityStart(() => Navigator.of(context).pop(true))));
+            MathActivityStart(() => Navigator.of(context).pop(true)),
+      ),
+    );
     if (onDone == null) return;
     if (!mounted) return;
 
     widget.audioPlayer.run();
-    await Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-            body: TrivialGameSelect(TrivialSettings(widget.buildMode, settings),
-                _saveTrivialMeta))));
+          body: TrivialGameSelect(
+            TrivialSettings(widget.buildMode, settings),
+            _saveTrivialMeta,
+          ),
+        ),
+      ),
+    );
     widget.audioPlayer.pause();
   }
 
   void _launchHomework() async {
     widget.audioPlayer.run();
     final isIdentified = settings.studentID.isNotEmpty;
-    await Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
         builder: (_) => isIdentified
             ? HomeworkStart(
-                ServerHomeworkAPI(widget.buildMode, settings.studentID))
-            : const HomeworkDisabled()));
+                ServerHomeworkAPI(widget.buildMode, settings.studentID),
+              )
+            : const HomeworkDisabled(),
+      ),
+    );
     widget.audioPlayer.pause();
   }
 
   void _launchCeintures() async {
     widget.audioPlayer.run();
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => CeinturesStart(ServerCeinturesAPI(widget.buildMode),
-            settings, _saveCeinturesAnonymousID)));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CeinturesStart(
+          ServerCeinturesAPI(widget.buildMode),
+          settings,
+          _saveCeinturesAnonymousID,
+        ),
+      ),
+    );
+    widget.audioPlayer.pause();
+  }
+
+  void _launchAutomatismes() async {
+    widget.audioPlayer.run();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AutomatismesStart(
+          AutomatismesServerAPI(widget.buildMode),
+          settings,
+        ),
+      ),
+    );
     widget.audioPlayer.pause();
   }
 
@@ -219,11 +268,12 @@ class __AppScaffoldState extends State<_AppScaffold> {
                       TrivialActivityIcon(_launchTrivialPoursuit),
                       HomeworkActivityIcon(_launchHomework),
                       CeinturesActivityIcon(_launchCeintures),
+                      AutomatismesActivityIcon(_launchAutomatismes),
                     ],
                   ),
-                )
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -264,11 +314,14 @@ class _WelcomeDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Bienvenue sur Isyro !"),
-      content:
-          const Text("Pour commencer, et si tu personnalisais ton appli ?"),
+      content: const Text(
+        "Pour commencer, et si tu personnalisais ton appli ?",
+      ),
       actions: [
         TextButton(
-            onPressed: goToSettings, child: const Text("Editer mon profil"))
+          onPressed: goToSettings,
+          child: const Text("Editer mon profil"),
+        ),
       ],
     );
   }
