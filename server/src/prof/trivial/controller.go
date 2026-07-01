@@ -41,7 +41,7 @@ type uID = teacher.IdTeacher
 
 // Controller is the top level (singleton) objects
 // handling requests related to trivial pousuit setups
-// It delegates to trivial-poursuit.GameController for the
+// It delegates to trivial.GameController for the
 // actual game logic handling.
 type Controller struct {
 	db         *sql.DB

@@ -132,7 +132,7 @@ type createGame struct {
 	Options tv.Options
 }
 
-// createGame locks, creates, registers and starts the eveng loop of new game
+// createGame locks, creates, registers and starts the eveng loop of the new game
 func (gs *gameStore) createGame(params createGame) {
 	game := tv.NewRoom(tv.RoomID(params.ID.String()), params.Options, successHandler{key: gs.studentKey, db: gs.db, players: gs.playerIDs})
 

@@ -225,6 +225,7 @@ func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent te
 }
 
 // StartSelfaccess starts a game previously created by [StudentLaunchSelfaccess]
+// or [StudentLaunchTrivialAutomatisme]
 // TODO: secure this access
 func (ct *Controller) StudentStartSelfaccess(c echo.Context) error {
 	gameID := c.QueryParam("game-id")

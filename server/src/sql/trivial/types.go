@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"slices"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
@@ -31,6 +32,26 @@ type CategoriesQuestions struct {
 	Tags [trivial.NbCategories]QuestionCriterion
 	// Union. An empty slice means no selection : all variants are accepted.
 	Difficulties editor.DifficultyQuery
+}
+
+// Common returns the tags found in all categories and all alternatives
+func (query CategoriesQuestions) Common() editor.Tags {
+	allAlternatives := slices.Concat(query.Tags[:]...)
+	m := make(map[editor.TagSection]int)
+	for _, l := range allAlternatives {
+		for _, tag := range l {
+			tag.Tag = editor.NormalizeTag(tag.Tag)
+			m[tag] += 1
+		}
+	}
+	var out editor.Tags
+	for k, i := range m {
+		if i == len(allAlternatives) {
+			out = append(out, k)
+		}
+	}
+	sort.Sort(out)
+	return out
 }
 
 // Normalize removes empty intersections and normalizes tags, for each

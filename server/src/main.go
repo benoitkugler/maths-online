@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/benoitkugler/maths-online/server/src/automatismes"
 	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/benoitkugler/maths-online/server/src/prof/ceintures"
@@ -195,6 +196,7 @@ func main() {
 	vit := &vitrine.Controller{Smtp: smtp, AdminMails: adminEmails}
 	review := reviews.NewController(db, admin, smtp)
 	ce := ceintures.NewController(db, admin, studentKey)
+	auto := automatismes.NewController(db, admin, studentKey)
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -212,7 +214,7 @@ func main() {
 		devSetup(e, tc)
 	}
 
-	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review, ce)
+	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review, ce, auto)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -309,7 +311,7 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
 	vit *vitrine.Controller, review *reviews.Controller,
-	ce *ceintures.Controller,
+	ce *ceintures.Controller, auto *automatismes.Controller,
 ) {
 	setupProfAPI(e, tvc, edit, tc, home, review, ce)
 
@@ -340,6 +342,12 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/api/student/trivial/selfaccess", tvc.StudentGetSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/launch", tvc.StudentLaunchSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/start", tvc.StudentStartSelfaccess)
+	// student automatismes
+	e.POST("/api/student/automatismes", auto.StudentGetAutomatismes)
+	e.GET("/api/student/automatismes/question", auto.StudentInstantiateQuestion)
+	e.POST("/api/student/automatismes/question", auto.StudentEvaluateQuestion)
+	e.GET("/api/student/automatismes/trivials/launch", tvc.StudentLaunchTrivialAutomatisme)
+
 	// student ceintures access
 	e.POST("/api/student/ceintures", ce.CeinturesGetEvolution)
 	e.PUT("/api/student/ceintures", ce.CeinturesCreateEvolution)

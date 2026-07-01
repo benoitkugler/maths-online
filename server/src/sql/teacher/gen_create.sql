@@ -106,7 +106,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Device', 'Time'))
+            bool_and(KEY IN ('Device', 'Time'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Device')
@@ -128,7 +128,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Name', 'URL'))
+            bool_and(KEY IN ('Name', 'URL'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Name')
