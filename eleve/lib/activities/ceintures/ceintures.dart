@@ -36,17 +36,13 @@ class CeinturesActivityIcon extends StatelessWidget {
 
 class CeinturesStart extends StatefulWidget {
   final CeinturesAPI api;
-  final UserSettings settings;
-  final void Function(String id) saveAnonymousID;
-  const CeinturesStart(
-    this.api,
-    this.settings,
-    this.saveAnonymousID, {
-    super.key,
-  });
+  final SettingsHandler settings;
+  const CeinturesStart(this.api, this.settings, {super.key});
 
-  StudentTokens get tokens =>
-      StudentTokens(settings.ceinturesAnonymousID, settings.studentID);
+  StudentTokens get tokens => StudentTokens(
+    settings.settings.ceinturesAnonymousID,
+    settings.settings.studentID,
+  );
 
   @override
   State<CeinturesStart> createState() => _CeinturesStartState();
@@ -88,14 +84,14 @@ class _CeinturesStartState extends State<CeinturesStart> {
     final CreateEvolutionOut res;
     try {
       res = await widget.api.createEvolution(
-        CreateEvolutionIn(widget.settings.studentID, level),
+        CreateEvolutionIn(widget.settings.settings.studentID, level),
       );
     } catch (e) {
       if (!mounted) return;
       showError("Impossible de créer le parcours.", e, context);
       return;
     }
-    widget.saveAnonymousID(res.anonymousID);
+    widget.settings.saveCeinturesAnonymousID(res.anonymousID);
     setState(() {
       loader = Future.sync(() => GetEvolutionOut(true, res.evolution));
     });

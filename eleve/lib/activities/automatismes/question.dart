@@ -54,7 +54,7 @@ class _AutomatismeQuestionWState extends State<AutomatismeQuestionW> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(title: const Text("Correction")),
           body: CorrectionView(
             widget.question.question.correction,
             Colors.greenAccent,
@@ -110,6 +110,9 @@ class _AutomatismeQuestionWState extends State<AutomatismeQuestionW> {
         SnackBar(
           content: const Text("Réponse incorrecte."),
           backgroundColor: Colors.red.shade300,
+          action: widget.question.question.correction.isNotEmpty
+              ? SnackBarAction(label: "Correction", onPressed: _showCorrection)
+              : null,
         ),
       );
     }

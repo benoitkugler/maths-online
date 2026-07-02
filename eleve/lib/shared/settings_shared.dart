@@ -24,8 +24,8 @@ class UserSettings {
     Map<String, String>? trivialGameMetas,
     this.hasBeenLaunched = false,
     this.ceinturesAnonymousID = "",
-  })  : trivialGameMetas = trivialGameMetas ?? {},
-        songs = songs ?? Audio.defaultPlaylist;
+  }) : trivialGameMetas = trivialGameMetas ?? {},
+       songs = songs ?? Audio.defaultPlaylist;
 
   String toJson() {
     return jsonEncode({
@@ -46,15 +46,17 @@ class UserSettings {
       songs = PlaylistController.fromJson(dict["songs"]);
     }
 
-    final gameMetas = (dict["trivialGameMetas"] ?? <String, dynamic>{})
-        as Map<String, dynamic>;
+    final gameMetas =
+        (dict["trivialGameMetas"] ?? <String, dynamic>{})
+            as Map<String, dynamic>;
 
     return UserSettings(
       studentPseudo: (dict[studentPseudoKey] ?? "") as String,
       studentID: (dict[studentIDKey] ?? "") as String,
       songs: songs ?? Audio.defaultPlaylist,
-      trivialGameMetas:
-          gameMetas.map((key, value) => MapEntry(key, value as String)),
+      trivialGameMetas: gameMetas.map(
+        (key, value) => MapEntry(key, value as String),
+      ),
       hasBeenLaunched: (dict["hasBeenLaunched"] ?? false) as bool,
       ceinturesAnonymousID: (dict["ceinturesAnonymousID"] ?? "") as String,
     );
@@ -64,6 +66,55 @@ class UserSettings {
 abstract class SettingsStorage {
   Future<UserSettings> load();
   Future<void> save(UserSettings settings);
+}
+
+/// SettingsHandler holds an active [UserSettings] and a [SettingsStorage]
+class SettingsHandler {
+  final SettingsStorage _storage;
+  UserSettings _settings = UserSettings();
+
+  SettingsHandler(this._storage);
+
+  UserSettings get settings => _settings;
+
+  Future<void> init() async {
+    _settings = await _storage.load();
+  }
+
+  Future<void> saveStudentID(String studentID) async {
+    _settings.studentID = studentID;
+    await _storage.save(_settings);
+  }
+
+  Future<void> saveStudentPseudo(String studentPseudo) async {
+    _settings.studentPseudo = studentPseudo;
+    await _storage.save(_settings);
+  }
+
+  Future<void> saveSongs(PlaylistController songs) async {
+    _settings.songs = songs;
+    await _storage.save(_settings);
+  }
+
+  Future<void> saveHasBeenLaunched() async {
+    _settings.hasBeenLaunched = true;
+    await _storage.save(_settings);
+  }
+
+  Future<void> saveTrivialMeta(String gameCode, String gameMeta) async {
+    _settings.trivialGameMetas[gameCode] = gameMeta;
+    await _storage.save(_settings);
+  }
+
+  Future<void> removeTrivialMeta(String gameCode) async {
+    _settings.trivialGameMetas.remove(gameCode);
+    await _storage.save(_settings);
+  }
+
+  Future<void> saveCeinturesAnonymousID(String id) async {
+    _settings.ceinturesAnonymousID = id;
+    await _storage.save(_settings);
+  }
 }
 
 Future<String> loadUserDeviceName() async {

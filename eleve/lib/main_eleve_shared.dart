@@ -59,13 +59,13 @@ class EleveApp extends StatelessWidget {
 
 class _AppScaffold extends StatefulWidget {
   final Audio audioPlayer;
-  final SettingsStorage handler;
+  final SettingsStorage storage;
   final BuildMode buildMode;
   final Upgrader? checkUprades;
 
   const _AppScaffold(
     this.audioPlayer,
-    this.handler,
+    this.storage,
     this.buildMode, {
     Key? key,
     this.checkUprades,
@@ -76,7 +76,7 @@ class _AppScaffold extends StatefulWidget {
 }
 
 class __AppScaffoldState extends State<_AppScaffold> {
-  UserSettings settings = UserSettings();
+  late final SettingsHandler settings;
 
   @override
   void initState() {
@@ -85,12 +85,11 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _loadSettings() async {
-    final set = await widget.handler.load();
-    setState(() {
-      settings = set;
-    });
+    settings = SettingsHandler(widget.storage);
+    await settings.init();
+    setState(() {});
 
-    if (!settings.hasBeenLaunched) {
+    if (!settings.settings.hasBeenLaunched) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showWelcomeScreen());
     }
   }
@@ -102,8 +101,8 @@ class __AppScaffoldState extends State<_AppScaffold> {
     ).push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
     onPop.then((_) async {
       widget.audioPlayer.setSongs(ct);
-      settings.songs = ct;
-      await widget.handler.save(settings); // commit on disk
+
+      await settings.saveSongs(ct);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -114,7 +113,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
       );
 
       // notify the server and show event
-      final studentID = settings.studentID;
+      final studentID = settings.settings.studentID;
       if (studentID.isNotEmpty) {
         final resp = await http.get(
           widget.buildMode.serverURL(
@@ -132,16 +131,11 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _showProfile() async {
-    final newSettings = await Navigator.of(context).push(
+    Navigator.of(context).push(
       MaterialPageRoute<UserSettings>(
-        builder: (_) => Settings(widget.buildMode, widget.handler),
+        builder: (_) => Settings(widget.buildMode, settings),
       ),
     );
-    if (newSettings != null) {
-      setState(() {
-        settings = newSettings;
-      });
-    }
   }
 
   void _showWelcomeScreen() async {
@@ -153,20 +147,9 @@ class __AppScaffoldState extends State<_AppScaffold> {
     );
 
     // in any case, register the screen has been seen
-    settings.hasBeenLaunched = true;
-    widget.handler.save(settings);
+    settings.saveHasBeenLaunched();
 
     if (goTo != null && goTo) _showProfile();
-  }
-
-  void _saveTrivialMeta(String gameCode, String gameMeta) async {
-    settings.trivialGameMetas[gameCode] = gameMeta;
-    await widget.handler.save(settings);
-  }
-
-  void _saveCeinturesAnonymousID(String id) async {
-    settings.ceinturesAnonymousID = id;
-    await widget.handler.save(settings);
   }
 
   void _launchTrivialPoursuit() async {
@@ -183,10 +166,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-          body: TrivialGameSelect(
-            TrivialSettings(widget.buildMode, settings),
-            _saveTrivialMeta,
-          ),
+          body: TrivialGameSelect(TrivialSettings(widget.buildMode, settings)),
         ),
       ),
     );
@@ -195,12 +175,15 @@ class __AppScaffoldState extends State<_AppScaffold> {
 
   void _launchHomework() async {
     widget.audioPlayer.run();
-    final isIdentified = settings.studentID.isNotEmpty;
+    final isIdentified = settings.settings.studentID.isNotEmpty;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => isIdentified
             ? HomeworkStart(
-                ServerHomeworkAPI(widget.buildMode, settings.studentID),
+                ServerHomeworkAPI(
+                  widget.buildMode,
+                  settings.settings.studentID,
+                ),
               )
             : const HomeworkDisabled(),
       ),
@@ -212,11 +195,8 @@ class __AppScaffoldState extends State<_AppScaffold> {
     widget.audioPlayer.run();
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => CeinturesStart(
-          ServerCeinturesAPI(widget.buildMode),
-          settings,
-          _saveCeinturesAnonymousID,
-        ),
+        builder: (_) =>
+            CeinturesStart(ServerCeinturesAPI(widget.buildMode), settings),
       ),
     );
     widget.audioPlayer.pause();
@@ -228,7 +208,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
       MaterialPageRoute<void>(
         builder: (_) => AutomatismesStart(
           AutomatismesServerAPI(widget.buildMode),
-          settings,
+          TrivialSettings(widget.buildMode, settings),
         ),
       ),
     );

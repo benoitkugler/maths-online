@@ -7,9 +7,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 class Settings extends StatefulWidget {
   final BuildMode buildMode;
-  final SettingsStorage handler;
+  final SettingsHandler handler;
 
-  const Settings(this.buildMode, this.handler, {Key? key}) : super(key: key);
+  const Settings(this.buildMode, this.handler, {super.key});
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -29,9 +29,8 @@ class _SettingsState extends State<Settings> {
   }
 
   void _loadUserSettings() async {
-    final newSettings = await widget.handler.load();
     setState(() {
-      settings = newSettings;
+      settings = widget.handler.settings;
     });
   }
 
@@ -53,18 +52,22 @@ class _SettingsState extends State<Settings> {
     setState(() {
       settings.studentPseudo = pseudo;
     });
-    await widget.handler.save(settings);
+    await widget.handler.saveStudentPseudo(pseudo);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      content: const Text("Paramètres enregistrés"),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: const Text("Paramètres enregistrés"),
+      ),
+    );
   }
 
   void _showJoinClassroom() async {
     final idCrypted = await Navigator.of(context).push(
-        MaterialPageRoute<String>(
-            builder: (context) => JoinClassroomRoute(widget.buildMode)));
+      MaterialPageRoute<String>(
+        builder: (context) => JoinClassroomRoute(widget.buildMode),
+      ),
+    );
     if (idCrypted == null) {
       return;
     }
@@ -72,11 +75,14 @@ class _SettingsState extends State<Settings> {
     setState(() {
       settings.studentID = idCrypted;
     });
-    await widget.handler.save(settings);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      content: const Text("Classe rejointe avec succès."),
-    ));
+    await widget.handler.saveStudentID(idCrypted);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: const Text("Classe rejointe avec succès."),
+      ),
+    );
   }
 
   void _onInvalidStudentID() async {
@@ -84,15 +90,13 @@ class _SettingsState extends State<Settings> {
     setState(() {
       settings.studentID = "";
     });
-    await widget.handler.save(settings);
+    await widget.handler.saveStudentID("");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Profil"),
-      ),
+      appBar: AppBar(title: const Text("Profil")),
       body: WillPopScope(
         onWillPop: () async {
           Navigator.of(context).pop(settings);
@@ -105,23 +109,31 @@ class _SettingsState extends State<Settings> {
             children: [
               Expanded(
                 child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            border:
-                                Border.all(color: Colors.lightBlue, width: 2),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(6)),
-                          ),
-                          child: settings.studentID.isEmpty
-                              ? _NotRegistred(settings.studentPseudo,
-                                  _savePseudo, _showJoinClassroom)
-                              : ClassroomCard(widget.buildMode,
-                                  settings.studentID, _onInvalidStudentID)),
-                    ]),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.lightBlue, width: 2),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
+                      ),
+                      child: settings.studentID.isEmpty
+                          ? _NotRegistred(
+                              settings.studentPseudo,
+                              _savePseudo,
+                              _showJoinClassroom,
+                            )
+                          : ClassroomCard(
+                              widget.buildMode,
+                              settings.studentID,
+                              _onInvalidStudentID,
+                            ),
+                    ),
+                  ],
+                ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,7 +149,7 @@ class _SettingsState extends State<Settings> {
                       style: const TextStyle(fontStyle: FontStyle.italic),
                     ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -151,9 +163,12 @@ class _NotRegistred extends StatefulWidget {
   final void Function(String) onSavePseudo;
   final void Function() onJoinClassroom;
 
-  const _NotRegistred(this.pseudo, this.onSavePseudo, this.onJoinClassroom,
-      {Key? key})
-      : super(key: key);
+  const _NotRegistred(
+    this.pseudo,
+    this.onSavePseudo,
+    this.onJoinClassroom, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<_NotRegistred> createState() => _NotRegistredState();
@@ -185,10 +200,7 @@ class _NotRegistredState extends State<_NotRegistred> {
             children: [
               const Icon(Icons.no_accounts),
               const SizedBox(width: 12),
-              Text(
-                "Invité",
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text("Invité", style: Theme.of(context).textTheme.titleLarge),
             ],
           ),
           const SizedBox(height: 24),
@@ -198,18 +210,20 @@ class _NotRegistredState extends State<_NotRegistred> {
               const Text("Pseudo : "),
               Text(widget.pseudo),
               IconButton(
-                  splashRadius: 24,
-                  onPressed: showEditPseudo,
-                  icon: const Icon(Icons.edit))
+                splashRadius: 24,
+                onPressed: showEditPseudo,
+                icon: const Icon(Icons.edit),
+              ),
             ],
           ),
           const SizedBox(height: 24),
           const Divider(thickness: 4),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-              onPressed: widget.onJoinClassroom,
-              icon: const Icon(Icons.manage_accounts),
-              label: const Text("Rejoindre une classe"))
+            onPressed: widget.onJoinClassroom,
+            icon: const Icon(Icons.manage_accounts),
+            label: const Text("Rejoindre une classe"),
+          ),
         ],
       ),
     );
@@ -217,29 +231,32 @@ class _NotRegistredState extends State<_NotRegistred> {
 
   void showEditPseudo() async {
     final valid = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: const Text("Modifier son pseudo"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    autofocus: true,
-                    textAlign: TextAlign.center,
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                        labelText: "Pseudo",
-                        hintText: "Définit ton nom de joueur..."),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop(true);
-                      },
-                      child: const Text("Enregistrer"))
-                ],
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Modifier son pseudo"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              autofocus: true,
+              textAlign: TextAlign.center,
+              controller: _controller,
+              decoration: const InputDecoration(
+                labelText: "Pseudo",
+                hintText: "Définit ton nom de joueur...",
               ),
-            ));
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text("Enregistrer"),
+            ),
+          ],
+        ),
+      ),
+    );
     if (valid ?? false) widget.onSavePseudo(_controller.text);
   }
 }

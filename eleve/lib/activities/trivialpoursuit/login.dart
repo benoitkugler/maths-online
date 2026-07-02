@@ -22,25 +22,21 @@ class SaveGameMetaNotification extends Notification {
 
 class TrivialSettings {
   final BuildMode buildMode;
-  final UserSettings settings;
+  final SettingsHandler settings;
 
   const TrivialSettings(this.buildMode, this.settings);
 
-  /// [saveGameMeta] is called to trigger game meta on-disk save
-  Future<GameAcces> _login(
-    String code,
-    void Function(String, String) saveGameMeta,
-  ) async {
+  Future<GameAcces> _login(String code) async {
     const sessionIDKey = "session-id";
     // we assume that the time to type the code is enough to load the settings
     final uri = buildMode.serverURL(
       "/trivial/game/setup",
       query: {
         sessionIDKey: code,
-        studentIDKey: settings.studentID,
+        studentIDKey: settings.settings.studentID,
         // send (optional) meta so that we may reconnect
         TrivialPoursuitController.gameMetaKey:
-            settings.trivialGameMetas[code] ?? "",
+            settings.settings.trivialGameMetas[code] ?? "",
       },
     );
 
@@ -49,16 +45,15 @@ class TrivialSettings {
     // body is either the expect GameMeta or an error
     if (body.containsKey("GameMeta")) {
       final gameMeta = body["GameMeta"] as String;
-      // save in memory...
-      settings.trivialGameMetas[code] = gameMeta;
-      // ... and trigger on disk save as well, so
+
+      // save in memory and on disk save as well, so
       // that reconnection is possible accross app restart
-      saveGameMeta(code, gameMeta);
+      await settings.saveTrivialMeta(code, gameMeta);
 
       return GameAcces(
         code,
-        settings.studentID,
-        settings.studentPseudo,
+        settings.settings.studentID,
+        settings.settings.studentPseudo,
         gameMeta,
       );
     }
@@ -83,7 +78,7 @@ class TrivialSettings {
           ),
           body: NotificationListener<GameTerminatedNotification>(
             onNotification: (n) {
-              settings.trivialGameMetas.remove(data.code);
+              settings.removeTrivialMeta(data.code);
               return true;
             },
             child: TrivialPoursuitController(buildMode, data, isSelfLaunched),
@@ -120,9 +115,8 @@ class _CodeTile extends StatelessWidget {
 /// user to choose between in classroom/self access games
 class TrivialGameSelect extends StatelessWidget {
   final TrivialSettings settings;
-  final void Function(String gameCode, String gameMeta) saveMeta;
 
-  const TrivialGameSelect(this.settings, this.saveMeta, {super.key});
+  const TrivialGameSelect(this.settings, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +132,7 @@ class TrivialGameSelect extends StatelessWidget {
             () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => Scaffold(body: _Loggin(settings, saveMeta)),
+                  builder: (_) => Scaffold(body: _Loggin(settings)),
                 ),
               );
             },
@@ -148,7 +142,7 @@ class TrivialGameSelect extends StatelessWidget {
             "Créer une partie",
             "Je veux démarrer une partie et partager le code avec des amis.",
             const Icon(Icons.add_box_outlined),
-            settings.settings.studentID.isEmpty
+            settings.settings.settings.studentID.isEmpty
                 ? null
                 : () {
                     Navigator.of(context).push(
@@ -157,7 +151,7 @@ class TrivialGameSelect extends StatelessWidget {
                           appBar: AppBar(
                             title: const Text("Démarrer une partie"),
                           ),
-                          body: _SelfaccessList(settings, saveMeta),
+                          body: _SelfaccessList(settings),
                         ),
                       ),
                     );
@@ -171,9 +165,8 @@ class TrivialGameSelect extends StatelessWidget {
 
 class _SelfaccessList extends StatefulWidget {
   final TrivialSettings settings;
-  final void Function(String gameCode, String gameMeta) saveMeta;
 
-  const _SelfaccessList(this.settings, this.saveMeta);
+  const _SelfaccessList(this.settings);
 
   @override
   State<_SelfaccessList> createState() => __SelfaccessListState();
@@ -193,7 +186,7 @@ class __SelfaccessListState extends State<_SelfaccessList> {
   void _fetchTrivials() async {
     final uri = widget.settings.buildMode.serverURL(
       "/api/student/trivial/selfaccess",
-      query: {studentIDKey: widget.settings.settings.studentID},
+      query: {studentIDKey: widget.settings.settings.settings.studentID},
     );
 
     try {
@@ -217,7 +210,7 @@ class __SelfaccessListState extends State<_SelfaccessList> {
     final uri = widget.settings.buildMode.serverURL(
       "/api/student/trivial/selfaccess/launch",
       query: {
-        studentIDKey: widget.settings.settings.studentID,
+        studentIDKey: widget.settings.settings.settings.studentID,
         "trivial-id": trivial.id.toString(),
       },
     );
@@ -237,9 +230,7 @@ class __SelfaccessListState extends State<_SelfaccessList> {
     launching = false;
     if (!mounted) return;
 
-    Navigator.of(
-      context,
-    ).push(launchGameRoute(data, widget.settings, widget.saveMeta));
+    Navigator.of(context).push(launchGameRoute(data, widget.settings));
   }
 
   // void _joinGame(String code) async {
@@ -279,12 +270,11 @@ class __SelfaccessListState extends State<_SelfaccessList> {
 MaterialPageRoute<void> launchGameRoute(
   LaunchSelfaccessOut data,
   TrivialSettings settings,
-  void Function(String gameCode, String gameMeta) saveMeta,
 ) {
   return MaterialPageRoute<void>(
     builder: (context) => _GameLaunchedScreen(data.gameID, () async {
       try {
-        final res = await settings._login(data.gameID, saveMeta);
+        final res = await settings._login(data.gameID);
         if (!context.mounted) return;
         settings._showGameBoard(res, context, true);
       } catch (e) {
@@ -384,9 +374,8 @@ class TrivialRow extends StatelessWidget {
 /// a TrivialPoursuit game
 class _Loggin extends StatefulWidget {
   final TrivialSettings settings;
-  final void Function(String gameCode, String gameMeta) saveMeta;
 
-  const _Loggin(this.settings, this.saveMeta);
+  const _Loggin(this.settings);
 
   @override
   _LogginState createState() => _LogginState();
@@ -429,7 +418,7 @@ class _LogginState extends State<_Loggin> {
 
   void _launchTrivialPoursuit(String code) async {
     try {
-      final data = await widget.settings._login(code, widget.saveMeta);
+      final data = await widget.settings._login(code);
       if (!mounted) return;
       final route = widget.settings._showGameBoard(data, context, false);
       route.then((value) {

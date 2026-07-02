@@ -5,9 +5,9 @@ import 'package:eleve/activities/trivialpoursuit/login.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_automatismes.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_trivial.dart';
 import 'package:flutter/material.dart';
@@ -15,10 +15,16 @@ import 'package:http/http.dart' as http;
 
 abstract class AutomatismesAPI {
   Future<GetAutomatismesOut> load(GetAutomatismesIn args);
+
   Future<InstantiatedAutomatismeQuestion> instantiateQuestion(
     IdQuestiongroup id,
   );
   Future<QuestionAnswersOut> evaluateQuestion(EvaluateAutomatismeIn _);
+
+  Future<LaunchSelfaccessOut> launchTrivial(
+    String clientId,
+    IdTrivial idTrivial,
+  );
 }
 
 class AutomatismesServerAPI implements AutomatismesAPI {
@@ -54,6 +60,23 @@ class AutomatismesServerAPI implements AutomatismesAPI {
   }
 
   @override
+  Future<LaunchSelfaccessOut> launchTrivial(
+    String clientId,
+    IdTrivial idTrivial,
+  ) async {
+    const serverEndpoint = "/api/student/automatismes/trivials/launch";
+    final uri = buildMode.serverURL(
+      serverEndpoint,
+      query: {"client-id": clientId, "trivial-id": idTrivial.toString()},
+    );
+    final resp = await http.get(
+      uri,
+      headers: {'Content-type': 'application/json'},
+    );
+    return launchSelfaccessOutFromJson(checkServerError(resp.body));
+  }
+
+  @override
   Future<QuestionAnswersOut> evaluateQuestion(
     EvaluateAutomatismeIn args,
   ) async {
@@ -70,7 +93,7 @@ class AutomatismesServerAPI implements AutomatismesAPI {
 
 class AutomatismesStart extends StatefulWidget {
   final AutomatismesAPI api;
-  final UserSettings settings;
+  final TrivialSettings settings;
 
   const AutomatismesStart(this.api, this.settings, {super.key});
 
@@ -123,9 +146,16 @@ class _AutomatismesStartState extends State<AutomatismesStart> {
                   sublevel = s.first;
                 }),
               ),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: isLoading ? null : _load,
-              child: const Text("Afficher"),
+              label: const Text("Afficher"),
+              icon: isLoading
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(),
+                    )
+                  : null,
             ),
           ],
         ),
@@ -142,19 +172,24 @@ class _AutomatismesStartState extends State<AutomatismesStart> {
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (context) => _AutomatismesKindSelect(widget.api, res),
+          builder: (context) =>
+              _AutomatismesKindSelect(widget.api, widget.settings, res),
         ),
       );
     } catch (e) {
       showError("Chargement des données", e, context);
     }
+    setState(() {
+      isLoading = false;
+    });
   }
 }
 
 class _AutomatismesKindSelect extends StatelessWidget {
   final AutomatismesAPI api;
+  final TrivialSettings settings;
   final GetAutomatismesOut data;
-  const _AutomatismesKindSelect(this.api, this.data);
+  const _AutomatismesKindSelect(this.api, this.settings, this.data);
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +206,8 @@ class _AutomatismesKindSelect extends StatelessWidget {
                 ? null
                 : () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => _TrivialList(api, data.trivials),
+                      builder: (_) =>
+                          _TrivialList(api, settings, data.trivials),
                     ),
                   ),
           ),
@@ -194,25 +230,55 @@ class _AutomatismesKindSelect extends StatelessWidget {
   }
 }
 
-class _TrivialList extends StatelessWidget {
+class _TrivialList extends StatefulWidget {
   final AutomatismesAPI api;
+  final TrivialSettings settings;
   final List<Trivial> list;
 
-  const _TrivialList(this.api, this.list);
+  const _TrivialList(this.api, this.settings, this.list);
 
+  @override
+  State<_TrivialList> createState() => _TrivialListState();
+}
+
+class _TrivialListState extends State<_TrivialList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Choisir un Isy'Triv")),
       body: ListView(
-        children: list
+        children: widget.list
             .map((trivial) => TrivialRow(trivial, () => _launch(trivial)))
             .toList(),
       ),
     );
   }
 
-  void _launch(Trivial trivial) {}
+  void _launch(Trivial trivial) async {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Lancement de la partie"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [CircularProgressIndicator()],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    try {
+      final res = await widget.api.launchTrivial(
+        widget.settings.settings.settings.studentID,
+        trivial.id,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(); // remove dialog
+      Navigator.of(context).push(launchGameRoute(res, widget.settings));
+    } catch (e) {
+      showError("Chargement des données", e, context);
+      Navigator.of(context).pop(); // remove dialog
+    }
+  }
 }
 
 class _QuestionList extends StatefulWidget {
@@ -246,7 +312,13 @@ class _QuestionListState extends State<_QuestionList> {
   void _load(Questiongroup question) async {
     showDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(title: const Text("Chargement")),
+      builder: (_) => AlertDialog(
+        title: const Text("Chargement"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [CircularProgressIndicator()],
+        ),
+      ),
       barrierDismissible: false,
     );
     try {
