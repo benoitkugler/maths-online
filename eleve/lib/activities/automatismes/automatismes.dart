@@ -102,7 +102,7 @@ class AutomatismesStart extends StatefulWidget {
 }
 
 class _AutomatismesStartState extends State<AutomatismesStart> {
-  var level = LevelTag.troisieme;
+  var level = LevelTag.premiere;
   var sublevel = "SPE";
   var isLoading = false;
 
@@ -358,7 +358,7 @@ class AutomatismesActivityIcon extends StatelessWidget {
         ),
         const Padding(
           padding: EdgeInsets.only(top: 8, bottom: 6),
-          child: Text("Automatismes"),
+          child: Text("AutoMath'ismes"),
         ),
       ],
     );
