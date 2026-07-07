@@ -1,7 +1,12 @@
 <template>
   <base-sign-table
-    v-model="props.modelValue.Answer"
-    @update:model-value="emit('update:modelValue', props.modelValue)"
+    :model-value="props.modelValue.Answer"
+    @update:model-value="
+      (v) => {
+        props.modelValue.Answer = v;
+        emit('update:modelValue', props.modelValue);
+      }
+    "
   ></base-sign-table>
 </template>
 

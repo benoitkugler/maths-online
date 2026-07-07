@@ -42,7 +42,10 @@
         <td style="text-align: center">
           <expression-field
             :model-value="x"
-            @update:model-value="s => props.modelValue.Xs![index] = s"
+            @update:model-value="s => {
+                props.modelValue.Xs![index] = s;
+                emit('update:modelValue', props.modelValue)   
+            }"
             center
             width="50px"
           >
@@ -66,6 +69,7 @@
       <td class="px-2">
         <interpolated-text
           v-model="fn.Label"
+          @update:model-value="emit('update:modelValue', props.modelValue)"
           force-latex
           center
         ></interpolated-text>
@@ -75,7 +79,10 @@
           <v-btn
             size="small"
             rounded
-            @click="fn.Signs![j - 1] = !fn.Signs![j - 1]"
+            @click="() => {
+                fn.Signs![j - 1] = !fn.Signs![j - 1];
+                emit('update:modelValue', props.modelValue) 
+            }"
           >
             <b>
               {{ fn.Signs![j - 1] ? "+" : "-" }}
@@ -85,7 +92,10 @@
         <td style="text-align: center">
           <sign-symbol-field
             :model-value="fn.FxSymbols![j]"
-            @update:model-value="v => fn.FxSymbols![j]=v"
+            @update:model-value="v => {
+                fn.FxSymbols![j]=v;
+                emit('update:modelValue', props.modelValue);
+            }                "
           >
           </sign-symbol-field>
         </td>
@@ -128,7 +138,7 @@ const latexColor = colorByKind[TextKind.StaticMath];
 
 function addColumn() {
   props.modelValue.Xs?.push("5");
-  props.modelValue.Functions?.forEach(fn => {
+  props.modelValue.Functions?.forEach((fn) => {
     if (fn.FxSymbols?.length) {
       // do not add sign if there is only on x
       fn.Signs?.push(true);
@@ -140,7 +150,7 @@ function addColumn() {
 
 function removeColumn(index: number) {
   props.modelValue.Xs?.splice(index, 1);
-  props.modelValue.Functions?.forEach(fn => {
+  props.modelValue.Functions?.forEach((fn) => {
     fn.FxSymbols?.splice(index, 1);
     fn.Signs?.splice(index == 0 ? 0 : index - 1, 1);
   });
@@ -152,13 +162,14 @@ function addRow() {
   props.modelValue.Functions = (props.modelValue.Functions || []).concat({
     Label: "f(x)",
     FxSymbols: Array.from(new Array(L), () => SignSymbol.Nothing),
-    Signs: L == 0 ? [] : Array.from(new Array(L - 1), () => true)
+    Signs: L == 0 ? [] : Array.from(new Array(L - 1), () => true),
   });
   emit("update:modelValue", props.modelValue);
 }
 
 function removeRow(index: number) {
   props.modelValue.Functions?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
 }
 </script>
 

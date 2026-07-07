@@ -1,7 +1,7 @@
 <template>
   <base-sign-table
     :model-value="props.modelValue"
-    @update:model-value="emit('update:modelValue', props.modelValue)"
+    @update:model-value="(v) => emit('update:modelValue', v)"
   ></base-sign-table>
 </template>
 
