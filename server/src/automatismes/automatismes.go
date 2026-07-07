@@ -89,6 +89,7 @@ func (ct *Controller) getQuestions(args GetAutomatismesIn) ([]editor.Questiongro
 	}
 
 	slices.SortFunc(out, func(a, b editor.Questiongroup) int { return cmp.Compare(a.Id, b.Id) })
+	slices.SortStableFunc(out, func(a, b editor.Questiongroup) int { return cmp.Compare(a.Title, b.Title) })
 
 	return out, nil
 }
