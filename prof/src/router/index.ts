@@ -9,6 +9,7 @@ import HomeViewVue from "@/views/HomeView.vue";
 import CeinturesActivityVue from "@/views/CeinturesActivity.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import ResetPasswordVue from "@/views/ResetPassword.vue";
+import TutorialList from "@/views/TutorialList.vue";
 
 const router = createRouter({
   history: createWebHistory("/prof/"),
@@ -60,6 +61,12 @@ const router = createRouter({
       name: "reviews",
       component: ReviewListVue,
       meta: { Label: "Publications" },
+    },
+    {
+      path: "/tutos",
+      name: "tutos",
+      component: TutorialList,
+      meta: { Label: "Tutoriels vidéos" },
     },
     {
       path: "/settings",

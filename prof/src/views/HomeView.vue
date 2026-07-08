@@ -72,7 +72,14 @@
                   icon="mdi-message-draw"
                 ></link-card>
               </v-col>
-              <v-col cols="4"></v-col>
+              <v-col cols="4">
+                <link-card
+                  route-name="tutos"
+                  color="info"
+                  title="Accéder à une aide vidéo"
+                  icon="mdi-help"
+                ></link-card>
+              </v-col>
               <v-col cols="4">
                 <link-card
                   :route-name="studentAppLink"
