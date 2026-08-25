@@ -32,6 +32,16 @@ func TestGetTrivialAutomatismesIn_match(t *testing.T) {
 				SubLevels: []string{"TECHNO"},
 			}, true,
 		},
+		{
+			GetAutomatismesIn{editor.Troisieme, ""}, editor.TagGroup{
+				TagIndex: editor.TagIndex{Level: editor.Troisieme},
+			}, true,
+		},
+		{
+			GetAutomatismesIn{editor.Troisieme, "TECHNO"}, editor.TagGroup{
+				TagIndex: editor.TagIndex{Level: editor.Troisieme},
+			}, false,
+		},
 	}
 	for _, tt := range tests {
 		got := tt.args.match(tt.questions)

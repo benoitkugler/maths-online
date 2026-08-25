@@ -204,8 +204,8 @@ class __AppScaffoldState extends State<_AppScaffold> {
 
   void _launchAutomatismes() async {
     widget.audioPlayer.run();
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final goToTrivials = await Navigator.of(context).push(
+      MaterialPageRoute<bool>(
         builder: (_) => AutomatismesStart(
           AutomatismesServerAPI(widget.buildMode),
           TrivialSettings(widget.buildMode, settings),
@@ -213,6 +213,9 @@ class __AppScaffoldState extends State<_AppScaffold> {
       ),
     );
     widget.audioPlayer.pause();
+    if (goToTrivials ?? false) {
+      _launchTrivialPoursuit();
+    }
   }
 
   @override

@@ -94,7 +94,6 @@ class AutomatismesServerAPI implements AutomatismesAPI {
 class AutomatismesStart extends StatefulWidget {
   final AutomatismesAPI api;
   final TrivialSettings settings;
-
   const AutomatismesStart(this.api, this.settings, {super.key});
 
   @override
@@ -172,14 +171,16 @@ class _AutomatismesStartState extends State<AutomatismesStart> {
     try {
       var res = await widget.api.load(GetAutomatismesIn(level, sublevel));
       if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
+
+      final goToTrivials = await Navigator.of(context).push(
+        MaterialPageRoute<bool>(
           builder: (context) =>
               _AutomatismesKindSelect(widget.api, widget.settings, res),
         ),
       );
+      if ((goToTrivials ?? false) && mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      showError("Chargement des données", e, context);
+      if (mounted) showError("Chargement des données", e, context);
     }
     setState(() {
       isLoading = false;
@@ -206,12 +207,17 @@ class _AutomatismesKindSelect extends StatelessWidget {
             const Icon(Icons.gamepad),
             data.trivials.isEmpty
                 ? null
-                : () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) =>
-                          _TrivialList(api, settings, data.trivials),
-                    ),
-                  ),
+                : () async {
+                    final goToTrivials = await Navigator.of(context).push(
+                      MaterialPageRoute<bool>(
+                        builder: (_) =>
+                            _TrivialList(api, settings, data.trivials),
+                      ),
+                    );
+                    if ((goToTrivials ?? false) && context.mounted) {
+                      Navigator.of(context).pop(true);
+                    }
+                  },
           ),
           const Divider(thickness: 4),
           LaunchCard(
@@ -248,10 +254,25 @@ class _TrivialListState extends State<_TrivialList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Choisir un Isy'Triv")),
-      body: ListView(
-        children: widget.list
-            .map((trivial) => TrivialRow(trivial, () => _launch(trivial)))
-            .toList(),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: ListView(
+              children: widget.list
+                  .map((trivial) => TrivialRow(trivial, () => _launch(trivial)))
+                  .toList(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pop(true),
+              label: Text("Rejoindre une partie en cours"),
+              icon: const Icon(Icons.key),
+            ),
+          ),
+        ],
       ),
     );
   }
