@@ -13,7 +13,7 @@
               class="py-1"
               density="compact"
               :model-value="modeEnonce ? 0 : 1"
-              @update:model-value="(i:number) => (modeEnonce = i == 0)"
+              @update:model-value="(i: number) => (modeEnonce = i == 0)"
             >
               <v-btn size="small">énoncé</v-btn>
               <v-btn size="small">Correction</v-btn>
@@ -186,14 +186,17 @@
       subtitle="Importer un fichier généré depuis l'éditeur, au format .isyro.json"
     >
       <v-card-text>
-        <v-file-input v-model="importedFiles" label="Fichier" accept=".json">
+        <v-file-input
+          v-model="importedFile"
+          label="Fichier"
+          accept=".json"
+          :multiple="false"
+        >
         </v-file-input>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn :disabled="!importedFiles.length" @click="onImportJSON"
-          >Importer</v-btn
-        >
+        <v-btn :disabled="!importedFile" @click="onImportJSON">Importer</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -246,7 +249,7 @@ watch(
     if (newV.id != oldV.id) {
       isDirty.value = false; // reset since it is unknown
     }
-  }
+  },
 );
 
 defineExpose({ updatePreview, previewData });
@@ -275,7 +278,7 @@ onUnmounted(() => {
 });
 
 const hasEditorSimplified = computed(
-  () => controller.settings.HasEditorSimplified
+  () => controller.settings.HasEditorSimplified,
 );
 
 function update() {
@@ -291,10 +294,10 @@ function restoreHistory(snapshot: QuestionPage) {
 const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
 
 const questionEnonceNode = ref<InstanceType<typeof QuestionContent> | null>(
-  null
+  null,
 );
 const questionCorrectionNode = ref<InstanceType<typeof QuestionContent> | null>(
-  null
+  null,
 );
 function addBlock(kind: BlockKind) {
   // this triggers an update event
@@ -355,7 +358,7 @@ async function save() {
     controller.showMessage(
       props.readonly
         ? "Question générée avec succès."
-        : "Question enregistrée avec succès."
+        : "Question enregistrée avec succès.",
     );
     errorContent.value = null;
     errorParameters.value = null;
@@ -431,12 +434,12 @@ function doImportJSON(json: string) {
 }
 
 const showImportJSON = ref(false);
-const importedFiles = ref<File[]>([]);
+const importedFile = ref<File | null>(null);
 async function onImportJSON() {
   showImportJSON.value = false;
-  if (!importedFiles.value.length) return;
+  if (!importedFile.value) return;
 
-  const file = importedFiles.value[0];
+  const file = importedFile.value;
   const content = await file.text();
   doImportJSON(content);
 }
