@@ -1,4 +1,4 @@
-import 'package:web/web.dart';
+import 'package:web/web.dart' as web;
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_eleve_shared.dart';
@@ -10,7 +10,7 @@ void main() async {
   initQuotes();
 
   // on the web, we enable dev mode with query param
-  final uri = Uri.parse(window.location.href);
+  final uri = Uri.parse(web.window.location.href);
   final mode = uri.queryParameters["mode"];
   final bm = APISetting.fromString(mode ?? "");
 

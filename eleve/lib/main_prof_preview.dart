@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:js' as js;
-import 'dart:html' as html;
+import 'dart:js_interop' as js;
+import 'package:web/web.dart' as web;
 
 import 'package:eleve/activities/trivialpoursuit/categories.dart';
 import 'package:eleve/build_mode.dart';
@@ -15,7 +15,7 @@ void main() {
   // the static app is called via an url setting the session ID
   // note that the MaterialApp routing erase these parameters,
   // so that we need to fetch it early
-  final uri = Uri.parse(js.context['location']['href'] as String);
+  final uri = Uri.parse(web.window.location.href);
   // final id = uri.queryParameters["sessionID"]!;
   final mode = uri.queryParameters["mode"];
   final bm = APISetting.fromString(mode ?? "");
@@ -54,16 +54,19 @@ class _Monitor extends StatefulWidget {
 }
 
 class _MonitorState extends State<_Monitor> {
-  late final StreamSubscription<html.MessageEvent> subs;
+  late final StreamSubscription<web.MessageEvent> subs;
 
   QuestionContent? event;
 
   @override
   void initState() {
-    subs = html.window.onMessage.listen((event) {
-      listen(event.data as String);
+    subs = web.window.onMessage.listen((event) {
+      listen((event.data as js.JSString).toDart);
     });
-    html.window.parent?.postMessage(jsonEncode({"PREVIEW_READY": true}), "*");
+    web.window.parent?.postMessage(
+      jsonEncode({"PREVIEW_READY": true}).toJS,
+      "*".toJS,
+    );
     super.initState();
   }
 
@@ -92,16 +95,15 @@ class _MonitorState extends State<_Monitor> {
   Widget build(BuildContext context) {
     final content = event;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Question en cours"),
-      ),
+      appBar: AppBar(title: const Text("Question en cours")),
       body: content == null
           ? const Center(child: Text("Chargement..."))
           : QuestionView(
               content.question,
               QuestionController.fromQuestion(content.question),
               () {},
-              content.categorie.color),
+              content.categorie.color,
+            ),
     );
   }
 }
