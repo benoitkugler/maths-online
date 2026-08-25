@@ -129,6 +129,8 @@ class _AutomatismesStartState extends State<AutomatismesStart> {
               selected: {level},
               onSelectionChanged: (s) => setState(() {
                 level = s.first;
+                // properly reset the sublevel
+                sublevel = "";
               }),
             ),
             if (level == .premiere)
