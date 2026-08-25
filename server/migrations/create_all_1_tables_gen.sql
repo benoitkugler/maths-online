@@ -1,6 +1,5 @@
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
-    IdTeacher integer NOT NULL,
     Name text NOT NULL,
     MaxRankThreshold integer NOT NULL
 );
@@ -28,6 +27,11 @@ CREATE TABLE teachers (
     HasSimplifiedEditor boolean NOT NULL,
     Contact jsonb NOT NULL,
     FavoriteMatiere text CHECK (FavoriteMatiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
+);
+
+CREATE TABLE teacher_classrooms (
+    IdTeacher integer NOT NULL,
+    IdClassroom integer NOT NULL
 );
 
 CREATE TABLE exercices (

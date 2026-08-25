@@ -10,32 +10,13 @@ import {
   Visibility,
   type Block,
   type CoordExpression,
-  type ExpressionFieldBlock,
-  type FigureBlock,
-  type FormulaBlock,
-  type FunctionPointsFieldBlock,
-  type FunctionsGraphBlock,
-  type NumberFieldBlock,
-  type OrderedListFieldBlock,
   type Origin,
   type ProofAssertion,
-  type ProofFieldBlock,
-  type RadioFieldBlock,
   type SignTableBlock,
-  type SignTableFieldBlock,
-  type TableBlock,
-  type TableFieldBlock,
   type Tags,
   type TagsDB,
-  type TextBlock,
-  type TreeFieldBlock,
   type Variable,
-  type VariationTableBlock,
-  type VariationTableFieldBlock,
-  type VectorFieldBlock,
   type TreeNodeAnswer,
-  type TreeBlock,
-  type GeometricConstructionFieldBlock,
   GeoFieldKind,
   FiguresOrGraphsKind,
   PublicStatus,
@@ -45,11 +26,9 @@ import {
   Parameters,
   Enonce,
   ErrQuestionInvalid,
-  SetFieldBlock,
   IdExercice,
   IdQuestion,
   IdReview,
-  ImageBlock,
   LevelTag,
 } from "./api_gen";
 import { LoopbackServerEvent } from "./loopback_gen";
@@ -328,6 +307,8 @@ export function newBlock(kind: BlockKind): Block {
           FunctionVariations: [],
           Areas: [],
           Points: [],
+          ShowGrid: true,
+          ShowOrigin: true,
         },
       };
     }
@@ -683,7 +664,7 @@ export interface VariantG {
 export function filterTags(
   candidates: string[],
   query: string,
-  blackList: string[]
+  blackList: string[],
 ) {
   const pagination = 6;
   const blackListSet = new Set(blackList);

@@ -102,11 +102,12 @@ type FunctionPoint struct {
 	Coord  repere.Coord
 }
 type FunctionsGraphBlock struct {
-	Functions []functiongrapher.FunctionGraph
-	Sequences []functiongrapher.SequenceGraph
-	Areas     []FunctionArea
-	Points    []FunctionPoint
-	Bounds    repere.RepereBounds
+	Functions            []functiongrapher.FunctionGraph
+	Sequences            []functiongrapher.SequenceGraph
+	Areas                []FunctionArea
+	Points               []FunctionPoint
+	Bounds               repere.RepereBounds
+	ShowGrid, ShowOrigin bool
 }
 
 type TableBlock struct {

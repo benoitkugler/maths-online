@@ -843,11 +843,12 @@ type FunctionPoint struct {
 // curves and colored areas
 // Function are identifier by their [Label]
 type FunctionsGraphBlock struct {
-	FunctionExprs      []FunctionDefinition
-	FunctionVariations []VariationTableBlock
-	SequenceExprs      []FunctionDefinition // displayed as discrete sequences
-	Areas              []FunctionArea
-	Points             []FunctionPoint
+	FunctionExprs        []FunctionDefinition
+	FunctionVariations   []VariationTableBlock
+	SequenceExprs        []FunctionDefinition // displayed as discrete sequences
+	Areas                []FunctionArea
+	Points               []FunctionPoint
+	ShowGrid, ShowOrigin bool
 }
 
 func (fg FunctionsGraphBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
@@ -951,7 +952,7 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 }
 
 func (fg FunctionsGraphBlock) instantiateG(params ex.Vars) (FunctionsGraphInstance, error) {
-	out := FunctionsGraphInstance{}
+	out := FunctionsGraphInstance{ShowGrid: fg.ShowGrid, ShowOrigin: fg.ShowOrigin}
 
 	byNames := make(map[string][]domainCurves)
 

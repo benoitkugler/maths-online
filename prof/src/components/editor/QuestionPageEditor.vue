@@ -24,11 +24,10 @@
 
           <v-col cols="auto" align-self="center">
             <v-menu offset-y close-on-content-click>
-              <template v-slot:activator="{ isActive, props }">
+              <template #activator="{ props: menuProps }">
                 <v-btn
                   title="Ajouter un bloc de contenu (énoncé ou champ de réponse)"
-                  v-on="{ isActive }"
-                  v-bind="props"
+                  v-bind="menuProps"
                   size="small"
                   :disabled="!question"
                 >

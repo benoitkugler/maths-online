@@ -540,7 +540,7 @@ function emitUpdate() {
 const expressionColor = colorByKind[TextKind.Expression];
 
 const pointsNamesHints = computed(() =>
-  (props.modelValue.Drawings.Points || []).map((p) => p.Name)
+  (props.modelValue.Drawings.Points || []).map((p) => p.Name),
 );
 
 function addPoint() {
@@ -629,7 +629,7 @@ function deleteArea(index: number) {
 }
 
 const availablePoints = computed(() =>
-  extractPoints(props.availableParameters)
+  extractPoints(props.availableParameters),
 );
 
 function onTypePointName(index: number, name: string) {

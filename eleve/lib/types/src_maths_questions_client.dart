@@ -751,6 +751,8 @@ class FunctionsGraphBlock implements Block, FigureOrGraph {
   final List<FunctionArea> areas;
   final List<FunctionPoint> points;
   final RepereBounds bounds;
+  final bool showGrid;
+  final bool showOrigin;
 
   const FunctionsGraphBlock(
     this.functions,
@@ -758,11 +760,13 @@ class FunctionsGraphBlock implements Block, FigureOrGraph {
     this.areas,
     this.points,
     this.bounds,
+    this.showGrid,
+    this.showOrigin,
   );
 
   @override
   String toString() {
-    return "FunctionsGraphBlock($functions, $sequences, $areas, $points, $bounds)";
+    return "FunctionsGraphBlock($functions, $sequences, $areas, $points, $bounds, $showGrid, $showOrigin)";
   }
 }
 
@@ -774,6 +778,8 @@ FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
     listFunctionAreaFromJson(json['Areas']),
     listFunctionPointFromJson(json['Points']),
     repereBoundsFromJson(json['Bounds']),
+    boolFromJson(json['ShowGrid']),
+    boolFromJson(json['ShowOrigin']),
   );
 }
 
@@ -784,6 +790,8 @@ Map<String, dynamic> functionsGraphBlockToJson(FunctionsGraphBlock item) {
     "Areas": listFunctionAreaToJson(item.areas),
     "Points": listFunctionPointToJson(item.points),
     "Bounds": repereBoundsToJson(item.bounds),
+    "ShowGrid": boolToJson(item.showGrid),
+    "ShowOrigin": boolToJson(item.showOrigin),
   };
 }
 

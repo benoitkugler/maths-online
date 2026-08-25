@@ -1,6 +1,7 @@
 {
     "name": "prof",
-    "version": "1.10.3",
+    "version": "1.10.4",
+    "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc --noEmit && vite build",
@@ -9,27 +10,27 @@
     },
     "dependencies": {
         "@mdi/font": "7.0.96",
-        "axios": "^1.13.5",
-        "core-js": "^3.48.0",
-        "katex": "^0.16.32",
+        "axios": "^1.19.0",
+        "core-js": "^3.50.0",
+        "katex": "^0.16.47",
         "roboto-fontface": "^0.10.0",
-        "vue": "^3.5.28",
+        "vue": "^3.5.41",
         "vue-router": "^4.6.4",
-        "vuetify": "^3.12.0"
+        "vuetify": "^3.13.2"
     },
     "devDependencies": {
-        "@babel/types": "^7.29.0",
+        "@babel/types": "^7.29.8",
         "@types/katex": "^0.16.8",
         "@types/node": "^18.19.130",
         "@vitejs/plugin-vue": "^4.6.2",
         "@vue/eslint-config-typescript": "^11.0.3",
         "eslint": "^8.57.1",
         "eslint-plugin-vue": "^9.33.0",
-        "sass": "^1.97.3",
+        "sass": "^1.103.1",
         "typescript": "^5.9.3",
         "unplugin-fonts": "^1.4.0",
-        "vite": "^8.1.0",
+        "vite": "^8.2.2",
         "vite-plugin-vuetify": "^2.1.3",
-        "vue-tsc": "^3.2.5"
+        "vue-tsc": "^3.3.11"
     }
 }

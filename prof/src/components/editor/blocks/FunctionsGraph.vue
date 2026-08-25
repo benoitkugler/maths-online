@@ -232,10 +232,12 @@
                     :items="functionsNamesItems"
                     item
                     :model-value="nameToSelection(area.Top)"
-                    @update:model-value="   (s) => {
-                        area.Top = nameFromSelection(s as string); 
-                        emitUpdate()
-                    }                    "
+                    @update:model-value="
+                      (s) => {
+                        area.Top = nameFromSelection(s as string);
+                        emitUpdate();
+                      }
+                    "
                     :color="expressionColor"
                   ></v-combobox>
                 </v-col>
@@ -260,8 +262,9 @@
                     @update:model-value="
                       (s) => {
                         area.Bottom = nameFromSelection(s as string);
-                         emitUpdate();
-                        }                  "
+                        emitUpdate();
+                      }
+                    "
                     :color="expressionColor"
                   ></v-combobox>
                 </v-col>
@@ -318,10 +321,12 @@
                 :items="functionsNamesItems"
                 item
                 :model-value="nameToSelection(point.Function)"
-                @update:model-value="(s) => {
+                @update:model-value="
+                  (s) => {
                     point.Function = nameFromSelection(s as string);
-                     emitUpdate();
-                }"
+                    emitUpdate();
+                  }
+                "
                 :color="expressionColor"
               ></v-combobox>
             </v-col>
@@ -350,6 +355,32 @@
         <v-divider></v-divider>
       </div>
     </v-list>
+  </v-card>
+
+  <!-- options partagées -->
+  <v-card class="my-1" subtitle="Options de la figure">
+    <v-card-text>
+      <v-row no-gutters>
+        <v-col md="6">
+          <v-checkbox
+            density="compact"
+            hide-details
+            label="Afficher la grille"
+            v-model="props.modelValue.ShowGrid"
+            @update:model-value="emitUpdate"
+          ></v-checkbox>
+        </v-col>
+        <v-col md="6">
+          <v-checkbox
+            density="compact"
+            hide-details
+            label="Afficher l'origine"
+            v-model="props.modelValue.ShowOrigin"
+            @update:model-value="emitUpdate"
+          ></v-checkbox>
+        </v-col>
+      </v-row>
+    </v-card-text>
   </v-card>
 </template>
 
@@ -447,7 +478,7 @@ function updateVar(index: number, v: VariationTableBlock) {
 const functionsNamesItems = computed(() => {
   const set: { [key: string]: boolean } = {};
   props.modelValue.FunctionExprs?.forEach(
-    (fn) => (set[fn.Decoration.Label] = true)
+    (fn) => (set[fn.Decoration.Label] = true),
   );
   props.modelValue.FunctionVariations?.forEach((fn) => (set[fn.Label] = true));
   set[abscisseAxis] = true; // add empty string as horizontal axis

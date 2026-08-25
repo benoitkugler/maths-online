@@ -62,9 +62,15 @@ final questionComplexe = Question([
   const GeometricConstructionFieldBlock(
     3,
     GFPoint(),
-    FunctionsGraphBlock([], [], [], [
-      FunctionPoint("#FF0000", "A point", Coord(5, 5)),
-    ], bounds),
+    FunctionsGraphBlock(
+      [],
+      [],
+      [],
+      [FunctionPoint("#FF0000", "A point", Coord(5, 5))],
+      bounds,
+      true,
+      true,
+    ),
   ),
   const GeometricConstructionFieldBlock(
     4,

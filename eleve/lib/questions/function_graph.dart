@@ -14,24 +14,17 @@ class FunctionsGraphW extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metrics = RepereMetrics(graphs.bounds, context);
-    final painter = BezierCurvesPainter(metrics,
-        functions: graphs.functions,
-        sequences: graphs.sequences,
-        areas: graphs.areas,
-        points: graphs.points);
-    final texts = painter.extractTexts();
-    return BaseRepere(
+    final painter = BezierCurvesPainter(
       metrics,
-      true,
-      true,
-      [
-        CustomPaint(
-          size: metrics.size,
-          painter: painter,
-        ),
-      ],
-      texts,
+      functions: graphs.functions,
+      sequences: graphs.sequences,
+      areas: graphs.areas,
+      points: graphs.points,
     );
+    final texts = painter.extractTexts();
+    return BaseRepere(metrics, graphs.showGrid, graphs.showOrigin, [
+      CustomPaint(size: metrics.size, painter: painter),
+    ], texts);
   }
 }
 
@@ -87,7 +80,8 @@ class BezierCurvesPainter extends CustomPainterText {
     final labelPos = fn.segments[labelIndex].p0;
     // adjust the position based on space available
     final visualLabelPos = metrics.logicalToVisual(labelPos);
-    final putBottom = (visualLabelPos.dy >
+    final putBottom =
+        (visualLabelPos.dy >
         metrics.size.height / 2); // visual y grows from the top
     final putLeft = (visualLabelPos.dx > metrics.size.width / 2);
     LabelPos pos;
@@ -97,8 +91,10 @@ class BezierCurvesPainter extends CustomPainterText {
       pos = putLeft ? LabelPos.topLeft : LabelPos.topRight;
     }
     return PositionnedText(
-        fn.decoration.label, PosPoint(Coord(labelPos.x, labelPos.y + 1), pos),
-        color: fromHex(fn.decoration.color));
+      fn.decoration.label,
+      PosPoint(Coord(labelPos.x, labelPos.y + 1), pos),
+      color: fromHex(fn.decoration.color),
+    );
   }
 
   PositionnedText? _sequenceText(SequenceGraph seq) {
@@ -106,9 +102,11 @@ class BezierCurvesPainter extends CustomPainterText {
     if (seq.points.isEmpty) return null;
     // display the label at the right of the last point
     final last = seq.points.last;
-    return PositionnedText(seq.decoration.label,
-        PosPoint(Coord(last.x + 0.3, last.y), LabelPos.right),
-        color: color);
+    return PositionnedText(
+      seq.decoration.label,
+      PosPoint(Coord(last.x + 0.3, last.y), LabelPos.right),
+      color: color,
+    );
   }
 
   // returns null if the legend is empty
@@ -119,7 +117,8 @@ class BezierCurvesPainter extends CustomPainterText {
 
     // adjust the position based on space available
     final visualLabelPos = metrics.logicalToVisual(point.coord);
-    final putBottom = (visualLabelPos.dy >
+    final putBottom =
+        (visualLabelPos.dy >
         metrics.size.height / 2); // visual y grows from the top
     final putLeft = (visualLabelPos.dx > metrics.size.width / 2);
     LabelPos pos;
@@ -128,8 +127,11 @@ class BezierCurvesPainter extends CustomPainterText {
     } else {
       pos = putLeft ? LabelPos.topLeft : LabelPos.topRight;
     }
-    return PositionnedText(point.legend, PosPoint(point.coord, pos),
-        color: fromHex(point.color));
+    return PositionnedText(
+      point.legend,
+      PosPoint(point.coord, pos),
+      color: fromHex(point.color),
+    );
   }
 
   Path _buildPath(List<BezierCurve> segments) {
@@ -186,21 +188,23 @@ class BezierCurvesPainter extends CustomPainterText {
     final color = fromHex(area.color);
     final path = _buildPath(area.path);
     canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.fill
-          ..color = color);
+      path,
+      Paint()
+        ..style = PaintingStyle.fill
+        ..color = color,
+    );
   }
 
   void _paintPoint(Canvas canvas, FunctionPoint point) {
     final color = fromHex(point.color);
     final center = metrics.logicalToVisual(point.coord);
     canvas.drawCircle(
-        center,
-        2,
-        Paint()
-          ..style = PaintingStyle.fill
-          ..color = color);
+      center,
+      2,
+      Paint()
+        ..style = PaintingStyle.fill
+        ..color = color,
+    );
   }
 
   @override

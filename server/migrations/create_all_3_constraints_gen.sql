@@ -1,11 +1,14 @@
 ALTER TABLE teachers
     ADD UNIQUE (Mail);
 
-ALTER TABLE classrooms
-    ADD UNIQUE (Id, IdTeacher);
+ALTER TABLE teacher_classrooms
+    ADD UNIQUE (IdTeacher, IdClassroom);
 
-ALTER TABLE classrooms
-    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+ALTER TABLE teacher_classrooms
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE teacher_classrooms
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
 
 ALTER TABLE classroom_codes
     ADD UNIQUE (Code);
@@ -129,7 +132,7 @@ ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE selfaccess_trivials
-    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES classrooms (Id, IdTeacher) ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES teacher_classrooms (IdClassroom, IdTeacher) ON DELETE CASCADE;
 
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;

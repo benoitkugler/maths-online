@@ -501,6 +501,8 @@ func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 	s.SequenceExprs = randSliceque_FunctionDefinition()
 	s.Areas = randSliceque_FunctionArea()
 	s.Points = randSliceque_FunctionPoint()
+	s.ShowGrid = randbool()
+	s.ShowOrigin = randbool()
 
 	return s
 }

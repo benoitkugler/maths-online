@@ -1027,14 +1027,16 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('FunctionExprs', 'FunctionVariations', 'SequenceExprs', 'Areas', 'Points'))
+            bool_and(KEY IN ('FunctionExprs', 'FunctionVariations', 'SequenceExprs', 'Areas', 'Points', 'ShowGrid', 'ShowOrigin'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_FunctionDefinition (data -> 'FunctionExprs')
         AND gomacro_validate_json_array_ques_VariationTableBlock (data -> 'FunctionVariations')
         AND gomacro_validate_json_array_ques_FunctionDefinition (data -> 'SequenceExprs')
         AND gomacro_validate_json_array_ques_FunctionArea (data -> 'Areas')
-        AND gomacro_validate_json_array_ques_FunctionPoint (data -> 'Points');
+        AND gomacro_validate_json_array_ques_FunctionPoint (data -> 'Points')
+        AND gomacro_validate_json_boolean (data -> 'ShowGrid')
+        AND gomacro_validate_json_boolean (data -> 'ShowOrigin');
     RETURN is_valid;
 END;
 $$

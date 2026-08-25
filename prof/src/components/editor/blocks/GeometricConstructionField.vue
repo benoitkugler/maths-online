@@ -30,7 +30,7 @@
 
   <GFPointW
     v-if="props.modelValue.Field.Kind == GeoFieldKind.GFPoint"
-    :model-value="(props.modelValue.Field.Data as GFPoint)"
+    :model-value="props.modelValue.Field.Data as GFPoint"
     @update:model-value="
       (v) => {
         props.modelValue.Field.Data = v;
@@ -40,7 +40,7 @@
   ></GFPointW>
   <GFVectorW
     v-else-if="props.modelValue.Field.Kind == GeoFieldKind.GFVector"
-    :model-value="(props.modelValue.Field.Data as GFVector)"
+    :model-value="props.modelValue.Field.Data as GFVector"
     @update:model-value="
       (v) => {
         props.modelValue.Field.Data = v;
@@ -50,7 +50,7 @@
   ></GFVectorW>
   <GFAffineLineW
     v-else-if="props.modelValue.Field.Kind == GeoFieldKind.GFAffineLine"
-    :model-value="(props.modelValue.Field.Data as GFAffineLine)"
+    :model-value="props.modelValue.Field.Data as GFAffineLine"
     @update:model-value="
       (v) => {
         props.modelValue.Field.Data = v;
@@ -60,7 +60,7 @@
   ></GFAffineLineW>
   <GFVectorPairW
     v-else-if="props.modelValue.Field.Kind == GeoFieldKind.GFVectorPair"
-    :model-value="(props.modelValue.Field.Data as GFVectorPair)"
+    :model-value="props.modelValue.Field.Data as GFVectorPair"
     @update:model-value="
       (v) => {
         props.modelValue.Field.Data = v;
@@ -91,7 +91,7 @@
   </v-select>
   <figure-block-vue
     v-if="props.modelValue.Background.Kind == FiguresOrGraphsKind.FigureBlock"
-    :model-value="(props.modelValue.Background.Data as FigureBlock)"
+    :model-value="props.modelValue.Background.Data as FigureBlock"
     @update:model-value="
       (v) => {
         props.modelValue.Background.Data = v;
@@ -105,7 +105,7 @@
       props.modelValue.Background.Kind ==
       FiguresOrGraphsKind.FunctionsGraphBlock
     "
-    :model-value="(props.modelValue.Background.Data as FunctionsGraphBlock)"
+    :model-value="props.modelValue.Background.Data as FunctionsGraphBlock"
     @update:model-value="
       (v) => {
         props.modelValue.Background.Data = v;
@@ -192,6 +192,8 @@ function onChangeBackgroundKind(kind: FiguresOrGraphsKind) {
         FunctionVariations: [],
         Areas: [],
         Points: [],
+        ShowGrid: true,
+        ShowOrigin: true,
       };
   }
 }

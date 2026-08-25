@@ -166,6 +166,8 @@ export interface FunctionsGraphBlock {
   SequenceExprs: FunctionDefinition[] | null;
   Areas: FunctionArea[] | null;
   Points: FunctionPoint[] | null;
+  ShowGrid: boolean;
+  ShowOrigin: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.GFAffineLine
 export interface GFAffineLine {

@@ -241,10 +241,11 @@ type FigureInstance client.FigureBlock
 func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 
 type FunctionsGraphInstance struct {
-	Functions []functiongrapher.FunctionGraph
-	Sequences []functiongrapher.SequenceGraph
-	Areas     []client.FunctionArea
-	Points    []client.FunctionPoint
+	Functions            []functiongrapher.FunctionGraph
+	Sequences            []functiongrapher.SequenceGraph
+	Areas                []client.FunctionArea
+	Points               []client.FunctionPoint
+	ShowGrid, ShowOrigin bool
 }
 
 func (fg FunctionsGraphInstance) toClient() client.Block { return fg.toClientG() }
@@ -262,11 +263,13 @@ func (fg FunctionsGraphInstance) toClientG() client.FunctionsGraphBlock {
 	}
 
 	return client.FunctionsGraphBlock{
-		Functions: fg.Functions,
-		Sequences: fg.Sequences,
-		Areas:     fg.Areas,
-		Points:    fg.Points,
-		Bounds:    functiongrapher.BoundingBox(allSegments),
+		Functions:  fg.Functions,
+		Sequences:  fg.Sequences,
+		Areas:      fg.Areas,
+		Points:     fg.Points,
+		Bounds:     functiongrapher.BoundingBox(allSegments),
+		ShowGrid:   fg.ShowGrid,
+		ShowOrigin: fg.ShowOrigin,
 	}
 }
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:js' as js;
-import 'dart:html' as html;
+import 'dart:js_interop' as js;
+import 'package:web/web.dart' as web;
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/loopback/loopback.dart';
@@ -14,7 +14,7 @@ void main() {
   // the static app is called via an url setting the session ID
   // note that the MaterialApp routing erase these parameters,
   // so that we need to fetch it early
-  final uri = Uri.parse(js.context['location']['href'] as String);
+  final uri = Uri.parse(web.window.location.href);
   // final id = uri.queryParameters["sessionID"]!;
   final mode = uri.queryParameters["mode"];
   final bm = APISetting.fromString(mode ?? "");
@@ -28,7 +28,7 @@ void main() {
 class LoopbackApp extends StatelessWidget {
   final BuildMode buildMode;
 
-  const LoopbackApp(this.buildMode, {Key? key}) : super(key: key);
+  const LoopbackApp(this.buildMode, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,22 +48,22 @@ class LoopbackApp extends StatelessWidget {
 class _EditorLoopback extends StatefulWidget {
   final BuildMode buildMode;
 
-  const _EditorLoopback(this.buildMode, {Key? key}) : super(key: key);
+  const _EditorLoopback(this.buildMode);
 
   @override
   State<_EditorLoopback> createState() => _EditorLoopbackState();
 }
 
 class _EditorLoopbackState extends State<_EditorLoopback> {
-  late final StreamSubscription<html.MessageEvent> subs;
+  late final StreamSubscription<web.MessageEvent> subs;
   late final LoopbackServerAPI _api;
 
   LoopbackServerEvent event = const LoopbackPaused();
 
   @override
   void initState() {
-    subs = html.window.onMessage.listen((event) {
-      listen(event.data as String);
+    subs = web.window.onMessage.listen((event) {
+      listen((event.data as js.JSString).toDart);
     });
     _api = LoopbackServerAPI(widget.buildMode);
     super.initState();
