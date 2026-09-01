@@ -2,7 +2,7 @@
   <v-card
     class="mx-auto pa-1"
     :title="props.classroom.name"
-    subtitle="Liste des élèves"
+    :subtitle="`Liste des élèves (${students.length})`"
   >
     <template v-slot:append>
       <v-btn-group elevation="1" class="mx-2">
@@ -68,7 +68,7 @@
         :href="
           controller.TeacherExportStudentsAdvance(
             props.classroom.id,
-            controller.getToken()
+            controller.getToken(),
           )
         "
       >
@@ -286,7 +286,7 @@
             color="success"
             @click="importStudents"
             variant="text"
-            :disabled="!uploadedFile.length"
+            :disabled="!uploadedFile"
           >
             Importer
           </v-btn>
@@ -383,20 +383,19 @@ async function updateStudent() {
 }
 
 const showUploadFile = ref(false);
-const uploadedFile = ref<File[]>([]);
+const uploadedFile = ref<File | null>(null);
 async function importStudents() {
   showUploadFile.value = false;
-  if (uploadedFile.value.length == 0) {
-    return;
-  }
+  if (!uploadedFile.value) return;
+
   const res = await controller.TeacherImportStudents(
     { "id-classroom": String(props.classroom.id) },
-    uploadedFile.value[0]
+    uploadedFile.value,
   );
   if (res === undefined) return;
   controller.showMessage("Liste importée avec succès.");
 
-  uploadedFile.value = [];
+  uploadedFile.value = null;
   await fetchStudents();
 }
 
