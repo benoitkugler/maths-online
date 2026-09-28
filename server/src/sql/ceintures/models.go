@@ -41,6 +41,9 @@ type Beltquestion struct {
 	// Title is a description of the question, only displayed
 	// to the teacher
 	Title string
+
+	// LevelMin is the first level this question should be displayed at
+	LevelMin Level
 }
 
 func (qu Beltquestion) Page() questions.QuestionPage {

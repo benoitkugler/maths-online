@@ -186,6 +186,7 @@ func scanOneBeltquestion(row scanner) (Beltquestion, error) {
 		&item.Correction,
 		&item.Repeat,
 		&item.Title,
+		&item.LevelMin,
 	)
 	return item, err
 }
@@ -194,7 +195,7 @@ func ScanBeltquestion(row *sql.Row) (Beltquestion, error) { return scanOneBeltqu
 
 // SelectAll returns all the items in the beltquestions table.
 func SelectAllBeltquestions(db DB) (Beltquestions, error) {
-	rows, err := db.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions")
+	rows, err := db.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title, levelmin FROM beltquestions")
 	if err != nil {
 		return nil, err
 	}
@@ -203,13 +204,13 @@ func SelectAllBeltquestions(db DB) (Beltquestions, error) {
 
 // SelectBeltquestion returns the entry matching 'id'.
 func SelectBeltquestion(tx DB, id IdBeltquestion) (Beltquestion, error) {
-	row := tx.QueryRow("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions WHERE id = $1", id)
+	row := tx.QueryRow("SELECT id, domain, rank, parameters, enonce, correction, repeat, title, levelmin FROM beltquestions WHERE id = $1", id)
 	return ScanBeltquestion(row)
 }
 
 // SelectBeltquestions returns the entry matching the given 'ids'.
 func SelectBeltquestions(tx DB, ids ...IdBeltquestion) (Beltquestions, error) {
-	rows, err := tx.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions WHERE id = ANY($1)", IdBeltquestionArrayToPQ(ids))
+	rows, err := tx.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title, levelmin FROM beltquestions WHERE id = ANY($1)", IdBeltquestionArrayToPQ(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -254,28 +255,28 @@ func ScanBeltquestions(rs *sql.Rows) (Beltquestions, error) {
 // Insert one Beltquestion in the database and returns the item with id filled.
 func (item Beltquestion) Insert(tx DB) (out Beltquestion, err error) {
 	row := tx.QueryRow(`INSERT INTO beltquestions (
-		domain, rank, parameters, enonce, correction, repeat, title
+		domain, rank, parameters, enonce, correction, repeat, title, levelmin
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
-		) RETURNING id, domain, rank, parameters, enonce, correction, repeat, title;
-		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Title)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) RETURNING id, domain, rank, parameters, enonce, correction, repeat, title, levelmin;
+		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Title, item.LevelMin)
 	return ScanBeltquestion(row)
 }
 
 // Update Beltquestion in the database and returns the new version.
 func (item Beltquestion) Update(tx DB) (out Beltquestion, err error) {
 	row := tx.QueryRow(`UPDATE beltquestions SET (
-		domain, rank, parameters, enonce, correction, repeat, title
+		domain, rank, parameters, enonce, correction, repeat, title, levelmin
 		) = (
-		$1, $2, $3, $4, $5, $6, $7
-		) WHERE id = $8 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title;
-		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Title, item.Id)
+		$1, $2, $3, $4, $5, $6, $7, $8
+		) WHERE id = $9 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title, levelmin;
+		`, item.Domain, item.Rank, item.Parameters, item.Enonce, item.Correction, item.Repeat, item.Title, item.LevelMin, item.Id)
 	return ScanBeltquestion(row)
 }
 
 // Deletes the Beltquestion and returns the item
 func DeleteBeltquestionById(tx DB, id IdBeltquestion) (Beltquestion, error) {
-	row := tx.QueryRow("DELETE FROM beltquestions WHERE id = $1 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title;", id)
+	row := tx.QueryRow("DELETE FROM beltquestions WHERE id = $1 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title, levelmin;", id)
 	return ScanBeltquestion(row)
 }
 
@@ -290,7 +291,7 @@ func DeleteBeltquestionsByIDs(tx DB, ids ...IdBeltquestion) ([]IdBeltquestion, e
 
 // SelectBeltquestionsByDomainAndRank selects the items matching the given fields.
 func SelectBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item Beltquestions, err error) {
-	rows, err := tx.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title FROM beltquestions WHERE Domain = $1 AND Rank = $2", domain, rank)
+	rows, err := tx.Query("SELECT id, domain, rank, parameters, enonce, correction, repeat, title, levelmin FROM beltquestions WHERE Domain = $1 AND Rank = $2", domain, rank)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +301,7 @@ func SelectBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item B
 // DeleteBeltquestionsByDomainAndRank deletes the item matching the given fields, returning
 // the deleted items.
 func DeleteBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item Beltquestions, err error) {
-	rows, err := tx.Query("DELETE FROM beltquestions WHERE Domain = $1 AND Rank = $2 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title", domain, rank)
+	rows, err := tx.Query("DELETE FROM beltquestions WHERE Domain = $1 AND Rank = $2 RETURNING id, domain, rank, parameters, enonce, correction, repeat, title, levelmin", domain, rank)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package ceintures
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -166,6 +167,14 @@ func instantiateQuestions(selected []ce.Beltquestion) ([]tasks.InstantiatedBeltQ
 }
 
 func (ct *Controller) selectQuestions(args SelectQuestionsIn) (SelectQuestionsOut, error) {
+	evolution, has, err := ct.getEvolution(args.Tokens)
+	if err != nil {
+		return SelectQuestionsOut{}, err
+	}
+	if !has { // should not happen
+		return SelectQuestionsOut{}, errors.New("internal error: no Evolution found")
+	}
+	studentLevel := evolution.Level
 	// We could check that the stage is actually reachable by the student,
 	// but we "trust" the client for now
 	questions, err := ce.SelectAllBeltquestions(ct.db)
@@ -175,15 +184,18 @@ func (ct *Controller) selectQuestions(args SelectQuestionsIn) (SelectQuestionsOu
 	byStage := byStage(questions)
 
 	var selected []ce.Beltquestion
-	// include every question (with their repetition)
+	// include every question with correct level (with their repetition)
 	origin := byStage[args.Stage]
 	for _, qu := range origin {
+		if studentLevel < qu.LevelMin {
+			continue // ignore the question, too hard
+		}
 		for i := 0; i < qu.Repeat; i++ {
 			selected = append(selected, qu)
 		}
 	}
 	if len(selected) == 0 {
-		return SelectQuestionsOut{}, fmt.Errorf("Erreur interne: question manquante !")
+		return SelectQuestionsOut{}, fmt.Errorf("Erreur interne: question manquante pour ce niveau !")
 	}
 
 	// randomize

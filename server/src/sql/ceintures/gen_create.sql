@@ -14,7 +14,8 @@ CREATE TABLE beltquestions (
     Enonce jsonb NOT NULL,
     Correction jsonb NOT NULL,
     Repeat integer NOT NULL,
-    Title text NOT NULL
+    Title text NOT NULL,
+    LevelMin smallint CHECK (LevelMin IN (0, 1, 2, 3)) NOT NULL
 );
 
 -- constraints

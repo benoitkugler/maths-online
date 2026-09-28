@@ -40,8 +40,20 @@
               </v-text-field>
             </v-col>
           </v-row>
-          <v-row
-            ><v-col>
+          <v-row>
+            <v-col>
+              <v-select
+                label="Niveau minimal requis"
+                hint="La question est masquée aux élèves en dessous de ce niveau."
+                persistent-hint
+                variant="outlined"
+                density="compact"
+                v-model="settingsToEdit.LevelMin"
+                :items="selectItems(LevelLabels)"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
               <v-select
                 label="Nombre de répétitions"
                 variant="outlined"
@@ -246,12 +258,13 @@ import {
   Stage,
   LoopbackShowCeinture,
   Int,
+  LevelLabels,
 } from "@/controller/api_gen";
 import { ref, watch } from "vue";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { computed } from "vue";
-import { copy, rankColors } from "@/controller/utils";
+import { copy, rankColors, selectItems } from "@/controller/utils";
 import RankIcon from "./RankIcon.vue";
 import QuestionPageEditor from "../editor/QuestionPageEditor.vue";
 import { QuestionPage, SaveQuestionOut } from "@/controller/editor";
@@ -333,7 +346,7 @@ async function writeChanges(qu: QuestionPage) {
 }
 
 async function saveQuestion(
-  isCorrection: boolean
+  isCorrection: boolean,
 ): Promise<SaveQuestionOut | undefined> {
   const res = await controller.CeinturesSaveQuestion({
     Question: question.value,
@@ -364,12 +377,14 @@ async function updateQuestion() {
     Id: qu.Id,
     Repeat: qu.Repeat,
     Title: qu.Title,
+    LevelMin: qu.LevelMin,
   });
   if (res === undefined) return;
 
   const toUpdate = questions.value.find((q) => q.Id == qu.Id)!;
   toUpdate.Repeat = qu.Repeat;
   toUpdate.Title = qu.Title;
+  toUpdate.LevelMin = qu.LevelMin;
 
   controller.showMessage("Réglages modifiés avec succès.");
 }

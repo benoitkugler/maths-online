@@ -739,6 +739,7 @@ export interface UpdateBeltquestionIn {
   Id: IdBeltquestion;
   Repeat: Int;
   Title: string;
+  LevelMin: Level;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.studentAdvance
 export interface studentAdvance {
@@ -1422,6 +1423,7 @@ export interface Beltquestion {
   Correction: Enonce;
   Repeat: Int;
   Title: string;
+  LevelMin: Level;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
 export const Domain = {

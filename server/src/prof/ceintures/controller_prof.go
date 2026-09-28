@@ -171,9 +171,10 @@ func (ct *Controller) createQuestion(stage Stage) (ce.Beltquestion, error) {
 }
 
 type UpdateBeltquestionIn struct {
-	Id     ce.IdBeltquestion
-	Repeat int
-	Title  string
+	Id       ce.IdBeltquestion
+	Repeat   int
+	Title    string
+	LevelMin ce.Level
 }
 
 func (ct *Controller) CeinturesUpdateQuestion(c echo.Context) error {
@@ -194,6 +195,7 @@ func (ct *Controller) CeinturesUpdateQuestion(c echo.Context) error {
 	}
 	qu.Repeat = args.Repeat
 	qu.Title = args.Title
+	qu.LevelMin = args.LevelMin
 
 	_, err = qu.Update(ct.db)
 	if err != nil {
