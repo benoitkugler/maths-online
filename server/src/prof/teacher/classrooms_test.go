@@ -37,23 +37,29 @@ func Test_parsePronoteName(t *testing.T) {
 }
 
 func Test_parsePronoteStudentList(t *testing.T) {
-	f, err := os.Open("students_sample_2024.csv")
-	if err != nil {
-		t.Skipf("Sample not available: %s", err)
+	for _, test := range []struct {
+		file  string
+		count int
+	}{
+		{"students_sample_2024.csv", 31},
+		{"students_sample_2025.csv", 24},
+		{"students_sample_2026.csv", 19},
+		{"students_sample_2026_client.csv", 24},
+	} {
+		t.Run(test.file, func(t *testing.T) {
+			f, err := os.Open(test.file)
+			if err != nil {
+				t.Skipf("Sample not available: %s", err)
+			}
+
+			out, err := parsePronoteStudentList(f)
+			tu.AssertNoErr(t, err)
+			tu.Assert(t, len(out) == test.count)
+			for _, student := range out {
+				tu.Assert(t, student.Name != "" && student.Surname != "" && student.Birthday.Time().Year() > 2000)
+			}
+		})
 	}
-
-	out, err := parsePronoteStudentList(f)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out) == 31)
-
-	f, err = os.Open("students_sample_2025.csv")
-	if err != nil {
-		t.Skipf("Sample not available: %s", err)
-	}
-
-	out, err = parsePronoteStudentList(f)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out) == 24)
 }
 
 func Test_importPronoteFile(t *testing.T) {

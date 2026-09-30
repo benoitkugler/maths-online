@@ -416,9 +416,23 @@ func parsePronoteName(s string) (name, surname string) {
 }
 
 func parsePronoteStudentList(file io.Reader) ([]tc.Student, error) {
-	r := csv.NewReader(file)
-	r.Comma = ';'
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("Fichier d'élèves illisible : %s", err)
+	}
+	// we support two formats : Pronote Web App and Pronote Desktop Client
+	// ; only appears in the former
+	header, _, _ := bytes.Cut(content, []byte{'\n'})
+	isPronoteWeb := bytes.ContainsRune(header, ';')
+
+	r := csv.NewReader(bytes.NewReader(content))
 	r.LazyQuotes = true
+
+	if isPronoteWeb {
+		r.Comma = ';'
+	} else {
+		r.Comma = ','
+	}
 
 	lines, err := r.ReadAll()
 	if err != nil {
@@ -433,7 +447,7 @@ func parsePronoteStudentList(file io.Reader) ([]tc.Student, error) {
 
 	out := make([]tc.Student, len(lines))
 	for i, line := range lines {
-		out[i], err = parseStudent(line)
+		out[i], err = parseStudent(line, isPronoteWeb)
 		if err != nil {
 			return nil, err
 		}
@@ -442,13 +456,19 @@ func parsePronoteStudentList(file io.Reader) ([]tc.Student, error) {
 	return out, nil
 }
 
-func parseStudent(line []string) (tc.Student, error) {
+func parseStudent(line []string, isPronoteWeb bool) (tc.Student, error) {
 	const pronoteDateLayout = "02/01/2006"
 
-	if len(line) < 4 {
+	if len(line) < 3 {
 		return tc.Student{}, errors.New("Fichier d'élèves invalide : champs manquants")
 	}
-	name, surname := parsePronoteName(line[0])
+
+	var name, surname string
+	if isPronoteWeb { // NAME Surname in the first field
+		name, surname = parsePronoteName(line[0])
+	} else {
+		name, surname = line[0], line[1]
+	}
 
 	birthday, err := time.Parse(pronoteDateLayout, line[2])
 	if err != nil {
