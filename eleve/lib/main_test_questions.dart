@@ -391,11 +391,10 @@ class _DecrassageAPI implements DecrassageAPI {
   Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer) async {
     return QuestionAnswersOut(
       {
-        0:
-            (answer.answer.answer.data[0] as NumberAnswer).value ==
-            answer.idQuestion.toDouble(),
+        0: (answer.answer.answer.data[0] as NumberAnswer).value == 0,
+        1: (answer.answer.answer.data[1] as NumberAnswer).value == 1,
       },
-      {0: NumberAnswer(answer.idQuestion.toDouble())},
+      {0: NumberAnswer(0), 1: NumberAnswer(1)},
     );
   }
 }

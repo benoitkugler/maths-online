@@ -5,13 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 TextSpan _hyperlink(String text, Uri url, TextStyle style) {
   return TextSpan(
     style: style.copyWith(
-        color: Colors.lightBlue.shade200, decoration: TextDecoration.underline),
+      color: Colors.lightBlue.shade200,
+      decoration: TextDecoration.underline,
+    ),
     text: text,
     recognizer: TapGestureRecognizer()
       ..onTap = () async {
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        }
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       },
   );
 }
@@ -36,8 +36,9 @@ List<TextSpan> parseURLs(String text, TextStyle style) {
   for (var match in re.allMatches(text)) {
     if (match.start > currentIndex) {
       // add normal text
-      out.add(TextSpan(
-          text: text.substring(currentIndex, match.start), style: style));
+      out.add(
+        TextSpan(text: text.substring(currentIndex, match.start), style: style),
+      );
     }
     final urlText = match.group(0)!;
     // handle the potential url
