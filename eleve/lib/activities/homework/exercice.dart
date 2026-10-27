@@ -644,7 +644,10 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
 
   // called when the app is about to be hidden
   void _onHide() {
-    print("Hidden !");
+    if (widget.controller.questionRepeat == .oneTry &&
+        widget.controller.questionTimeLimit != 0) {
+      _onLeave();
+    }
   }
 
   @override
@@ -675,6 +678,41 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
         ),
       ),
     );
+  }
+
+  // send a wrong answer and return
+  void _onLeave() async {
+    // send an empty response to the server in background
+    final evalFuture = _evaluate(QuestionAnswersIn({}));
+
+    final color = Theme.of(context).scaffoldBackgroundColor;
+    await showDialog<void>(
+      barrierColor: color.withAlpha(252),
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.orange,
+        icon: const Icon(Icons.timer),
+        title: const Text("Question abandonnée"),
+        content: Text(
+          "Tu as quitté l'application, ta réponse est comptée comme fausse.",
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Retour"),
+          ),
+        ],
+      ),
+    );
+    final resp = await evalFuture;
+    if (!mounted) return;
+
+    // go back to exercice home
+    if (resp != null) {
+      widget.controller.updateFromEvaluate(resp);
+      widget.controller.questionIndex = -1;
+    }
+    Navigator.of(context).pop();
   }
 
   void _onTimeLimitReached() async {
