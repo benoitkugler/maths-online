@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Pin is a centered view asking for a game code
 class Pin extends StatelessWidget {

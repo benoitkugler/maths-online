@@ -1,6 +1,6 @@
 import 'package:eleve/shared/hyperlink.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 abstract class FieldController {

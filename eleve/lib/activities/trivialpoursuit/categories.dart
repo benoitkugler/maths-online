@@ -1,5 +1,5 @@
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// map question categories to colors
 extension CategorieColor on Categorie {

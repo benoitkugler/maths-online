@@ -1,7 +1,7 @@
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'categories.dart';
 

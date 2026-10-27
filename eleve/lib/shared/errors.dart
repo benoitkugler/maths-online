@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// checkServerError throws if the serveur returns an error message.
 /// It should be called on the response body, before deserializing,

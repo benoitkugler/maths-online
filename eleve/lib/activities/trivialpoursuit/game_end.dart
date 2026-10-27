@@ -4,7 +4,7 @@ import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/decrassage/decrassage.dart';
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class GameEndPannel extends StatelessWidget {
   final BuildMode buildMode;

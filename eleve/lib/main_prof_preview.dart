@@ -9,7 +9,7 @@ import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   // the static app is called via an url setting the session ID

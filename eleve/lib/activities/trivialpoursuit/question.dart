@@ -2,7 +2,7 @@ import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_trivial.dart' hide Answer;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'categories.dart';
 

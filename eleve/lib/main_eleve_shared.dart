@@ -12,7 +12,7 @@ import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_sql_events.dart';
-import 'package:flutter/material.dart' hide Flow;
+import 'package:material_ui/material_ui.dart' hide Flow;
 import 'package:http/http.dart' as http;
 import 'package:upgrader/upgrader.dart';
 

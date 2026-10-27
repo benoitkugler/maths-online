@@ -10,7 +10,7 @@ import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_tasks.dart';
-import 'package:flutter/material.dart' hide Flow;
+import 'package:material_ui/material_ui.dart' hide Flow;
 
 abstract class ExerciceAPI {
   /// [evaluate] must evaluate the exercice answers and return the feedback and the new version
@@ -589,10 +589,13 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   Timer? deadlineTimer;
   Timer? timeLimitTimer;
 
+  // used to detect when the app will be hidden
+  late AppLifecycleListener lifeCycle;
+
   @override
   void initState() {
-    _init();
     super.initState();
+    _init();
   }
 
   @override
@@ -605,10 +608,12 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   void dispose() {
     deadlineTimer?.cancel();
     timeLimitTimer?.cancel();
+    lifeCycle.dispose();
     super.dispose();
   }
 
   void _init() {
+    lifeCycle = AppLifecycleListener(onHide: _onHide);
     noticeSandbox = widget.noticeSandbox;
 
     // cancel the timer
@@ -635,6 +640,11 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
     if (timeout != null) {
       timeLimitTimer = Timer(timeout, _onTimeLimitReached);
     }
+  }
+
+  // called when the app is about to be hidden
+  void _onHide() {
+    print("Hidden !");
   }
 
   @override

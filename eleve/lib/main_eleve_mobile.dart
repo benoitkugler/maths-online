@@ -2,7 +2,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_eleve_shared.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/settings_mobile.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:upgrader/upgrader.dart';
 
 final bm = buildModeFromEnv();

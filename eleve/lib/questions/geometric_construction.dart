@@ -3,7 +3,7 @@ import 'package:eleve/questions/function_graph.dart';
 import 'package:eleve/questions/repere.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class _PointController extends GeometricConstructionController {
   IntCoord? point;

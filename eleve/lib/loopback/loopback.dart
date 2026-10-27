@@ -14,7 +14,7 @@ import 'package:eleve/types/src_maths_questions.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:eleve/types/src_prof_preview.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract class LoopbackController {}
 

@@ -1,7 +1,7 @@
 import 'package:eleve/classroom/student_advance.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class GameLobby extends StatelessWidget {
   final Map<PlayerID, String> players;

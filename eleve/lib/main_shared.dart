@@ -1,20 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
 
 const Color darkBlue = Color(0xFF104986);
 
 final theme = ThemeData.dark().copyWith(
   scaffoldBackgroundColor: darkBlue,
-  cardTheme: ThemeData.dark()
-      .cardTheme
-      .copyWith(color: darkBlue.withValues(alpha: 0.7)),
+  cardTheme: ThemeData.dark().cardTheme.copyWith(
+    color: darkBlue.withValues(alpha: 0.7),
+  ),
 );
 
-const localizations = [
-  GlobalMaterialLocalizations.delegate,
-  GlobalWidgetsLocalizations.delegate,
-  GlobalCupertinoLocalizations.delegate,
-];
+const localizations = GlobalMaterialLocalizations.delegates;
 
 const locales = [
   Locale('fr', ''), // French, no country code

@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:eleve/types/src_sql_ceintures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class UnlockAnimation extends StatefulWidget {
   final Color color;

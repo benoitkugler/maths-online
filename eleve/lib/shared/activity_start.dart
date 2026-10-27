@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _variants = [
   "Pour réaliser une bonne recette de mathématiques, prendre un zeste de _stylo_, une _demi-feuille_ de brouillon et une _calculatrice_ bien chargée, et manier le tout une bonne quinzaine de minutes.",

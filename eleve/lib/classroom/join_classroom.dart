@@ -6,7 +6,7 @@ import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_teacher.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:http/http.dart' as http;
 
 class JoinClassroomRoute extends StatefulWidget {

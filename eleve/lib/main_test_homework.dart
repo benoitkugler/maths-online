@@ -10,7 +10,7 @@ import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_sql_teacher.dart';
 import 'package:eleve/types/src_tasks.dart';
-import 'package:flutter/material.dart' hide Flow;
+import 'package:material_ui/material_ui.dart' hide Flow;
 
 void main() async {
   runApp(const _HomeworkTestApp());

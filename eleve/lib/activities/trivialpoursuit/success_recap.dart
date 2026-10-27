@@ -1,7 +1,7 @@
 import 'package:eleve/classroom/student_advance.dart';
 import 'package:eleve/activities/trivialpoursuit/pie.dart';
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 List<PlayerID> sortedPlayers(Map<PlayerID, PlayerStatus> successes) {
   final list = successes.keys.toList();

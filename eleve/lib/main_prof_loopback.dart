@@ -8,7 +8,7 @@ import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/types/src_prof_preview.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   // the static app is called via an url setting the session ID

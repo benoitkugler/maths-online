@@ -5,7 +5,7 @@ import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 TreeShape shape(TreeNodeAnswer tree) {
   if (tree.children.isEmpty) {

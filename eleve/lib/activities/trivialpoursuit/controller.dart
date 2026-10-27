@@ -15,7 +15,7 @@ import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_maths_questions_client.dart' hide Answer;
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
 

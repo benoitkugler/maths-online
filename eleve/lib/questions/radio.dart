@@ -1,6 +1,6 @@
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class RadioController extends FieldController {
   List<TextLine> proposals;

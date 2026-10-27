@@ -6,7 +6,7 @@ import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_tasks.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:http/http.dart' as http;
 
 /// [DecrassageAPI] provides the logic to load a list

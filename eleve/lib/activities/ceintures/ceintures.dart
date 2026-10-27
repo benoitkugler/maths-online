@@ -6,7 +6,7 @@ import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_ceintures.dart';
 import 'package:eleve/types/src_sql_ceintures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CeinturesActivityIcon extends StatelessWidget {
   final void Function() onTap;

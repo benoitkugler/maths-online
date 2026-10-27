@@ -3,7 +3,7 @@ import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/sign_table.dart';
 import 'package:eleve/questions/table.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class _FunctionSign {
   final List<SignSymbol> fxs; // with length [signsLength+1]

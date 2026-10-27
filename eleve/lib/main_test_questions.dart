@@ -13,7 +13,7 @@ import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:eleve/types/src_trivial.dart';
-import 'package:flutter/material.dart' hide Flow;
+import 'package:material_ui/material_ui.dart' hide Flow;
 
 void main() async {
   runApp(const _QuestionTestApp());

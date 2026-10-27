@@ -6,7 +6,7 @@ import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_tasks.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension on TaskProgressionHeader {
   TaskProgressionHeader copyWith({

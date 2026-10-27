@@ -4,7 +4,7 @@ import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_preview.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class LoopackQuestionController implements LoopbackController {
   final LoopbackShowQuestion data;

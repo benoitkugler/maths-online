@@ -9,7 +9,7 @@ import 'package:eleve/shared/hyperlink.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_teacher.dart';
 import 'package:eleve/types/src_sql_events.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:http/http.dart' as http;
 
 class ClassroomCard extends StatefulWidget {

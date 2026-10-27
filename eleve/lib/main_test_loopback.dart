@@ -8,7 +8,7 @@ import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
-import 'package:flutter/material.dart' hide Flow;
+import 'package:material_ui/material_ui.dart' hide Flow;
 
 // test application for the editor loopback app,
 // using local data

@@ -3,7 +3,7 @@ import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/table.dart';
 import 'package:eleve/questions/variation_table.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// [_VTController] is the controller for one table (the length is known)
 class _VTController {

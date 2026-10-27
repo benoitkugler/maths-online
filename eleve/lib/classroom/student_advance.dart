@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:eleve/shared/progression_bar.dart';
 import 'package:eleve/types/src_sql_events.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AdvanceSummary extends StatelessWidget {
   final StudentAdvance advance;

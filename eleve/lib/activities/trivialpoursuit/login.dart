@@ -9,7 +9,7 @@ import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_trivial.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 

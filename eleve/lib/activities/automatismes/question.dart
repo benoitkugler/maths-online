@@ -6,7 +6,7 @@ import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_automatismes.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_tasks.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AutomatismeQuestionW extends StatefulWidget {
   final InstantiatedAutomatismeQuestion question;
