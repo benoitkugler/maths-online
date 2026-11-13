@@ -1,3 +1,4 @@
+import 'package:eleve/activities/homework/congratulations.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/fields.dart';
@@ -34,7 +35,9 @@ class _URLApp extends StatelessWidget {
                   12,
                 ),
               ),
-            ],
+              Congrats(allCorrect: true, mark: 5,bareme: 4),  
+              Congrats(allCorrect: false, mark: 3,bareme: 4),  
+          ],
           ),
         ),
       ),

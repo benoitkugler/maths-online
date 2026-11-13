@@ -438,6 +438,18 @@ class MarkBareme {
   MarkBareme(this.mark, this.bareme);
 }
 
+MarkBareme computeMark(InstantiatedWork exercice, Progression progression) {
+  var mark = 0;
+  var bareme = 0;
+  for (var i = 0; i < exercice.baremes.length; i++) {
+    bareme += exercice.baremes[i];
+    if (progression.questionSuccess(i) == .right) {
+      mark += exercice.baremes[i];
+    }
+  }
+  return MarkBareme(mark, bareme);
+}
+
 class _SuccessSquare extends StatelessWidget {
   final bool success;
   const _SuccessSquare(this.success);
@@ -469,17 +481,7 @@ class _QuestionList extends StatelessWidget {
     this.onSelectQuestion,
   );
 
-  MarkBareme get mark {
-    int mark = 0;
-    int bareme = 0;
-    for (var i = 0; i < exercice.baremes.length; i++) {
-      bareme += exercice.baremes[i];
-      if (progression.questionSuccess(i) == .right) {
-        mark += exercice.baremes[i];
-      }
-    }
-    return MarkBareme(mark, bareme);
-  }
+  MarkBareme get mark => computeMark(exercice, progression);
 
   void _showProgressionDetails(BuildContext context, int questionIndex) {
     showDialog<void>(
@@ -798,16 +800,25 @@ class _QuestionsRouteState extends State<_QuestionsRoute> {
   }
 
   void _onExerciceOver() async {
+    final ct = widget.controller;
+    final mb = computeMark(ct.exercice, ct.progression);
+    final allCorrect =
+        ct.progression.isNotEmpty && ct.progression.isCompleted();
     final hideBackground =
-        widget.controller.questionRepeat == .oneTry &&
-        widget.controller.questionTimeLimit != 0;
+        ct.questionRepeat == .oneTry && ct.questionTimeLimit != 0;
     final overlayColor = Theme.of(context).scaffoldBackgroundColor;
 
     // exercice is over
     await showDialog<bool>(
       barrierColor: hideBackground ? overlayColor.withAlpha(252) : null,
       context: context,
-      builder: (context) => const Dialog(child: Congrats()),
+      builder: (context) => Dialog(
+        child: Congrats(
+          allCorrect: allCorrect,
+          mark: mb.mark,
+          bareme: mb.bareme,
+        ),
+      ),
     );
     if (!mounted) return;
 
